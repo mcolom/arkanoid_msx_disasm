@@ -681,7 +681,7 @@ l4445h:
 	ret z			;4466	c8 	. 
 	call nz,048c8h		;4467	c4 c8 48 	. . H 
 	ret			;446a	c9 	. 
-	call z,sub_50c9h		;446b	cc c9 50 	. . P 
+	call z,0x50c9		;446b	cc c9 50 	. . P 
 	jp z,0cad4h		;446e	ca d4 ca 	. . . 
 	ld e,b			;4471	58 	X 
 	set 3,h		;4472	cb dc 	. . 
@@ -2050,7 +2050,7 @@ l4eb4h:
 	call 04380h		;4ed9	cd 80 43 	. . C 
 	ret			;4edc	c9 	. 
 l4eddh:
-	ld iy,l5005h		;4edd	fd 21 05 50 	. ! . P 
+	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
 	ld ix,l50efh		;4ee1	dd 21 ef 50 	. ! . P 
 	ld a,(0e00ch)		;4ee5	3a 0c e0 	: . . 
 	or a			;4ee8	b7 	. 
@@ -2194,213 +2194,15 @@ sub_4fe0h:
 	ld (0e544h),a		;4ffe	32 44 e5 	2 D . 
 	call sub_53b9h		;5001	cd b9 53 	. . S 
 	ret			;5004	c9 	. 
-l5005h:
-	ld d,h			;5005	54 	T 
-	ld c,b			;5006	48 	H 
-	ld b,l			;5007	45 	E 
-	jr nz,l504fh		;5008	20 45 	  E 
-	ld d,d			;500a	52 	R 
-	ld b,c			;500b	41 	A 
-	jr nz,l504fh		;500c	20 41 	  A 
-	ld c,(hl)			;500e	4e 	N 
-	ld b,h			;500f	44 	D 
-	jr nz,l5066h		;5010	20 54 	  T 
-	ld c,c			;5012	49 	I 
-	ld c,l			;5013	4d 	M 
-	ld b,l			;5014	45 	E 
-	jr nz,l5066h		;5015	20 4f 	  O 
-	ld b,(hl)			;5017	46 	F 
-	jr nz,l503ah		;5018	20 20 	    
-	jr nz,l503ch		;501a	20 20 	    
-	jr nz,l503eh		;501c	20 20 	    
-	jr nz,l5074h		;501e	20 54 	  T 
-l5020h:
-	ld c,b			;5020	48 	H 
-	ld c,c			;5021	49 	I 
-	ld d,e			;5022	53 	S 
-	jr nz,l5078h		;5023	20 53 	  S 
-	ld d,h			;5025	54 	T 
-	ld c,a			;5026	4f 	O 
-	ld d,d			;5027	52 	R 
-	ld e,c			;5028	59 	Y 
-	jr nz,l5074h		;5029	20 49 	  I 
-	ld d,e			;502b	53 	S 
-	jr nz,$+87		;502c	20 55 	  U 
-	ld c,(hl)			;502e	4e 	N 
-	ld c,e			;502f	4b 	K 
-	ld c,(hl)			;5030	4e 	N 
-	ld c,a			;5031	4f 	O 
-	ld d,a			;5032	57 	W 
-	ld c,(hl)			;5033	4e 	N 
-	ld l,020h		;5034	2e 20 	.   
-	jr nz,l5058h		;5036	20 20 	    
-	jr nz,l507bh		;5038	20 41 	  A 
-l503ah:
-	ld b,(hl)			;503a	46 	F 
-	ld d,h			;503b	54 	T 
-l503ch:
-	ld b,l			;503c	45 	E 
-	ld d,d			;503d	52 	R 
-l503eh:
-	jr nz,l5094h		;503e	20 54 	  T 
-	ld c,b			;5040	48 	H 
-	ld b,l			;5041	45 	E 
-	jr nz,$+79		;5042	20 4d 	  M 
-	ld c,a			;5044	4f 	O 
-	ld d,h			;5045	54 	T 
-	ld c,b			;5046	48 	H 
-	ld b,l			;5047	45 	E 
-	ld d,d			;5048	52 	R 
-	ld d,e			;5049	53 	S 
-	ld c,b			;504a	48 	H 
-	ld c,c			;504b	49 	I 
-	ld d,b			;504c	50 	P 
-	jr nz,$+34		;504d	20 20 	    
-l504fh:
-	jr nz,l5071h		;504f	20 20 	    
-	jr nz,l5073h		;5051	20 20 	    
-	ld (l5241h),hl		;5053	22 41 52 	" A R 
-	ld c,e			;5056	4b 	K 
-	ld b,c			;5057	41 	A 
-l5058h:
-	ld c,(hl)			;5058	4e 	N 
-	ld c,a			;5059	4f 	O 
-	ld c,c			;505a	49 	I 
-	ld b,h			;505b	44 	D 
-	ld (l5720h),hl		;505c	22 20 57 	"   W 
-	ld b,c			;505f	41 	A 
-	ld d,e			;5060	53 	S 
-	jr nz,l50a7h		;5061	20 44 	  D 
-	ld b,l			;5063	45 	E 
-	ld d,e			;5064	53 	S 
-	ld d,h			;5065	54 	T 
-l5066h:
-	ld d,d			;5066	52 	R 
-	ld c,a			;5067	4f 	O 
-	ld e,c			;5068	59 	Y 
-	ld b,l			;5069	45 	E 
-	ld b,h			;506a	44 	D 
-	inc l			;506b	2c 	, 
-	jr nz,l50afh		;506c	20 41 	  A 
-	jr nz,$+85		;506e	20 53 	  S 
-	ld d,b			;5070	50 	P 
-l5071h:
-	ld b,c			;5071	41 	A 
-	ld b,e			;5072	43 	C 
-l5073h:
-	ld b,l			;5073	45 	E 
-l5074h:
-	ld b,e			;5074	43 	C 
-l5075h:
-	ld d,d			;5075	52 	R 
-	ld b,c			;5076	41 	A 
-	ld b,(hl)			;5077	46 	F 
-l5078h:
-	ld d,h			;5078	54 	T 
-	jr nz,l509dh		;5079	20 22 	  " 
-l507bh:
-	ld d,(hl)			;507b	56 	V 
-	ld b,c			;507c	41 	A 
-	ld d,l			;507d	55 	U 
-	ld d,e			;507e	53 	S 
-	ld (02020h),hl		;507f	22 20 20 	"     
-	jr nz,l50a4h		;5082	20 20 	    
-	jr nz,l50a6h		;5084	20 20 	    
-	jr nz,l50dbh		;5086	20 53 	  S 
-	ld b,e			;5088	43 	C 
-	ld d,d			;5089	52 	R 
-	ld b,c			;508a	41 	A 
-	ld c,l			;508b	4d 	M 
-	ld b,d			;508c	42 	B 
-	ld c,h			;508d	4c 	L 
-	ld b,l			;508e	45 	E 
-	ld b,h			;508f	44 	D 
-	jr nz,$+67		;5090	20 41 	  A 
-	ld d,a			;5092	57 	W 
-	ld b,c			;5093	41 	A 
-l5094h:
-	ld e,c			;5094	59 	Y 
-	jr nz,l50ddh		;5095	20 46 	  F 
-	ld d,d			;5097	52 	R 
-	ld c,a			;5098	4f 	O 
-	ld c,l			;5099	4d 	M 
-	jr nz,l50e5h		;509a	20 49 	  I 
-	ld d,h			;509c	54 	T 
-l509dh:
-	ld l,020h		;509d	2e 20 	.   
-	jr nz,l50c1h		;509f	20 20 	    
-	ld b,d			;50a1	42 	B 
-	ld d,l			;50a2	55 	U 
-	ld d,h			;50a3	54 	T 
-l50a4h:
-	jr nz,$+81		;50a4	20 4f 	  O 
-l50a6h:
-	ld c,(hl)			;50a6	4e 	N 
-l50a7h:
-	ld c,h			;50a7	4c 	L 
-	ld e,c			;50a8	59 	Y 
-	jr nz,l50ffh		;50a9	20 54 	  T 
-	ld c,a			;50ab	4f 	O 
-	jr nz,l50f0h		;50ac	20 42 	  B 
-	ld b,l			;50ae	45 	E 
-l50afh:
-	jr nz,l50d1h		;50af	20 20 	    
-	jr nz,$+34		;50b1	20 20 	    
-	jr nz,$+34		;50b3	20 20 	    
-	jr nz,l50d7h		;50b5	20 20 	    
-	jr nz,l50d9h		;50b7	20 20 	    
-	jr nz,l50dbh		;50b9	20 20 	    
-	ld d,h			;50bb	54 	T 
-	ld d,d			;50bc	52 	R 
-	ld b,c			;50bd	41 	A 
-	ld d,b			;50be	50 	P 
-	ld d,b			;50bf	50 	P 
-	ld b,l			;50c0	45 	E 
-l50c1h:
-	ld b,h			;50c1	44 	D 
-	jr nz,l510dh		;50c2	20 49 	  I 
-	ld c,(hl)			;50c4	4e 	N 
-	jr nz,$+85		;50c5	20 53 	  S 
-	ld d,b			;50c7	50 	P 
-	ld b,c			;50c8	41 	A 
-sub_50c9h:
-	ld b,e			;50c9	43 	C 
-	ld b,l			;50ca	45 	E 
-	jr nz,l5124h		;50cb	20 57 	  W 
-	ld b,c			;50cd	41 	A 
-	ld d,d			;50ce	52 	R 
-	ld d,b			;50cf	50 	P 
-	ld b,l			;50d0	45 	E 
-l50d1h:
-	ld b,h			;50d1	44 	D 
-	jr nz,l50f4h		;50d2	20 20 	    
-	jr nz,$+68		;50d4	20 42 	  B 
-	ld e,c			;50d6	59 	Y 
-l50d7h:
-	jr nz,$+85		;50d7	20 53 	  S 
-l50d9h:
-	ld c,a			;50d9	4f 	O 
-	ld c,l			;50da	4d 	M 
-l50dbh:
-	ld b,l			;50db	45 	E 
-	ld c,a			;50dc	4f 	O 
-l50ddh:
-	ld c,(hl)			;50dd	4e 	N 
-	ld b,l			;50de	45 	E 
-	ld l,02eh		;50df	2e 2e 	. . 
-	ld l,02eh		;50e1	2e 2e 	. . 
-	ld l,02eh		;50e3	2e 2e 	. . 
-l50e5h:
-	jr nz,l5107h		;50e5	20 20 	    
-	jr nz,$+34		;50e7	20 20 	    
-	jr nz,$+34		;50e9	20 20 	    
-	jr nz,l510dh		;50eb	20 20 	    
-	jr nz,$+34		;50ed	20 20 	    
+
+STORY_STR:
+    db "THE ERA AND TIME OF       THIS STORY IS UNKNOWN.    AFTER THE MOTHERSHIP      \"ARKANOID\" WAS DESTROYED, A SPACECRAFT \"VAUS\"       SCRAMBLED AWAY FROM IT.   BUT ONLY TO BE            TRAPPED IN SPACE WARPED   BY SOMEONE......          "
+
 l50efh:
 	ld b,e			;50ef	43 	C 
 l50f0h:
-	jr l5075h		;50f0	18 83 	. . 
-	jr l50d7h		;50f2	18 e3 	. . 
+	jr 0x5075		;50f0	18 83 	. . 
+	jr 0x50d7		;50f2	18 e3 	. . 
 l50f4h:
 	jr l5119h		;50f4	18 23 	. # 
 	add hl,de			;50f6	19 	. 
@@ -3046,7 +2848,7 @@ l54c0h:
 	ld d,h			;54c1	54 	T 
 	ld c,a			;54c2	4f 	O 
 	ld c,(hl)			;54c3	4e 	N 
-	ld sp,l5020h		;54c4	31 20 50 	1   P 
+	ld sp,0x5020		;54c4	31 20 50 	1   P 
 	ld c,h			;54c7	4c 	L 
 	ld b,c			;54c8	41 	A 
 l54c9h:
@@ -18265,7 +18067,7 @@ laa5ch:
 	ret z			;aa7d	c8 	. 
 	call nz,048c8h		;aa7e	c4 c8 48 	. . H 
 	ret			;aa81	c9 	. 
-	call z,sub_50c9h		;aa82	cc c9 50 	. . P 
+	call z,0x50c9		;aa82	cc c9 50 	. . P 
 	jp z,0cad4h		;aa85	ca d4 ca 	. . . 
 	ld e,b			;aa88	58 	X 
 	set 3,h		;aa89	cb dc 	. . 
