@@ -6,6 +6,12 @@
 
 include 'headers/bios.asm'
 
+BALL_Y: equ 0xe0f5
+BALL_X: equ 0xe0f6
+
+VAUS_X:  equ 0xe0ce
+VAUS_X2: equ 0xe53e
+
 	org	04000h
 
     ; MSX ROM header
@@ -2120,7 +2126,7 @@ l4f60h:
 l4f6bh:
 	ld hl,00000h		;4f6b	21 00 00 	! . . 
 	ld (0e53ch),hl		;4f6e	22 3c e5 	" < . 
-	ld (0e53eh),hl		;4f71	22 3e e5 	" > . 
+	ld (VAUS_X2),hl		;4f71	22 3e e5 	" > . 
 	ld (0e540h),hl		;4f74	22 40 e5 	" @ . 
 	ld (0e542h),hl		;4f77	22 42 e5 	" B . 
 l4f7ah:
@@ -7412,7 +7418,7 @@ l690fh:
 	ld a,(0e0f6h)		;6916	3a f6 e0 	: . . 
 	sub 010h		;6919	d6 10 	. . 
 	ld (iy+001h),a		;691b	fd 77 01 	. w . 
-	ld (0e53eh),a		;691e	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;691e	32 3e e5 	2 > . 
 	jp l6972h		;6921	c3 72 69 	. r i 
 l6924h:
 	ld a,(0e00ch)		;6924	3a 0c e0 	: . . 
@@ -7429,7 +7435,7 @@ l6924h:
 	ld a,(hl)			;6939	7e 	~ 
 	add a,(iy+001h)		;693a	fd 86 01 	. . . 
 	ld (iy+001h),a		;693d	fd 77 01 	. w . 
-	ld (0e53eh),a		;6940	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;6940	32 3e e5 	2 > . 
 	jp l6972h		;6943	c3 72 69 	. r i 
 l6946h:
 	ld b,008h		;6946	06 08 	. . 
@@ -7452,20 +7458,20 @@ l6965h:
 	ld (0e54ah),a		;6968	32 4a e5 	2 J . 
 	ld a,b			;696b	78 	x 
 	ld (iy+001h),a		;696c	fd 77 01 	. w . 
-	ld (0e53eh),a		;696f	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;696f	32 3e e5 	2 > . 
 l6972h:
 	ld a,(ix+005h)		;6972	dd 7e 05 	. ~ . 
 	cp 001h		;6975	fe 01 	. . 
 	jp z,l6a17h		;6977	ca 17 6a 	. . j 
 	cp 002h		;697a	fe 02 	. . 
 	jp z,l69eah		;697c	ca ea 69 	. . i 
-	ld a,(0e53eh)		;697f	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;697f	3a 3e e5 	: > . 
 	cp 099h		;6982	fe 99 	. . 
 	jp c,l69abh		;6984	da ab 69 	. . i 
 	cp 0e6h		;6987	fe e6 	. . 
 	jr nc,l69abh		;6989	30 20 	0   
 	ld a,098h		;698b	3e 98 	> . 
-	ld (0e53eh),a		;698d	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;698d	32 3e e5 	2 > . 
 	ld a,(0e326h)		;6990	3a 26 e3 	: & . 
 	or a			;6993	b7 	. 
 	jp z,l69abh		;6994	ca ab 69 	. . i 
@@ -7477,19 +7483,19 @@ l6972h:
 	call sub_9710h		;69a5	cd 10 97 	. . . 
 	jp l69bch		;69a8	c3 bc 69 	. . i 
 l69abh:
-	ld a,(0e53eh)		;69ab	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;69ab	3a 3e e5 	: > . 
 	cp 0f0h		;69ae	fe f0 	. . 
 	jp nc,l69b7h		;69b0	d2 b7 69 	. . i 
 	cp 009h		;69b3	fe 09 	. . 
 	jr nc,l69bch		;69b5	30 05 	0 . 
 l69b7h:
 	ld a,008h		;69b7	3e 08 	> . 
-	ld (0e53eh),a		;69b9	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;69b9	32 3e e5 	2 > . 
 l69bch:
 	ld a,(ix+006h)		;69bc	dd 7e 06 	. ~ . 
 	cp 001h		;69bf	fe 01 	. . 
 	jp z,l69d6h		;69c1	ca d6 69 	. . i 
-	ld a,(0e53eh)		;69c4	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;69c4	3a 3e e5 	: > . 
 	ld b,004h		;69c7	06 04 	. . 
 l69c9h:
 	ld (iy+001h),a		;69c9	fd 77 01 	. w . 
@@ -7499,7 +7505,7 @@ l69c9h:
 	djnz l69c9h		;69d3	10 f4 	. . 
 	ret			;69d5	c9 	. 
 l69d6h:
-	ld a,(0e53eh)		;69d6	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;69d6	3a 3e e5 	: > . 
 	ld (iy+001h),a		;69d9	fd 77 01 	. w . 
 	add a,010h		;69dc	c6 10 	. . 
 	ld (iy+005h),a		;69de	fd 77 05 	. w . 
@@ -7508,13 +7514,13 @@ l69d6h:
 	ld (iy+00dh),a		;69e6	fd 77 0d 	. w . 
 	ret			;69e9	c9 	. 
 l69eah:
-	ld a,(0e53eh)		;69ea	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;69ea	3a 3e e5 	: > . 
 	cp 088h		;69ed	fe 88 	. . 
 	jp c,l69abh		;69ef	da ab 69 	. . i 
 	cp 0e6h		;69f2	fe e6 	. . 
 	jp nc,l69abh		;69f4	d2 ab 69 	. . i 
 	ld a,088h		;69f7	3e 88 	> . 
-	ld (0e53eh),a		;69f9	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;69f9	32 3e e5 	2 > . 
 	ld a,(0e326h)		;69fc	3a 26 e3 	: & . 
 	or a			;69ff	b7 	. 
 	jp z,l69abh		;6a00	ca ab 69 	. . i 
@@ -7529,25 +7535,25 @@ l6a17h:
 	ld a,(ix+006h)		;6a17	dd 7e 06 	. ~ . 
 	or a			;6a1a	b7 	. 
 	jp nz,l6a5dh		;6a1b	c2 5d 6a 	. ] j 
-	ld a,(0e53eh)		;6a1e	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6a1e	3a 3e e5 	: > . 
 	cp 083h		;6a21	fe 83 	. . 
 	jp c,l6a30h		;6a23	da 30 6a 	. 0 j 
 	cp 09eh		;6a26	fe 9e 	. . 
 	jp nc,l6a30h		;6a28	d2 30 6a 	. 0 j 
 	ld a,082h		;6a2b	3e 82 	> . 
-	ld (0e53eh),a		;6a2d	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;6a2d	32 3e e5 	2 > . 
 l6a30h:
 	cp 0fah		;6a30	fe fa 	. . 
 	jp nc,l6a3fh		;6a32	d2 3f 6a 	. ? j 
 	cp 009h		;6a35	fe 09 	. . 
 	jp nc,l6a3fh		;6a37	d2 3f 6a 	. ? j 
 	ld a,008h		;6a3a	3e 08 	> . 
-	ld (0e53eh),a		;6a3c	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;6a3c	32 3e e5 	2 > . 
 l6a3fh:
 	ld a,(ix+006h)		;6a3f	dd 7e 06 	. ~ . 
 	cp 001h		;6a42	fe 01 	. . 
 	jp z,l6a72h		;6a44	ca 72 6a 	. r j 
-	ld a,(0e53eh)		;6a47	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6a47	3a 3e e5 	: > . 
 	ld (iy+001h),a		;6a4a	fd 77 01 	. w . 
 	add a,010h		;6a4d	c6 10 	. . 
 	ld (iy+005h),a		;6a4f	fd 77 05 	. w . 
@@ -7557,13 +7563,13 @@ l6a3fh:
 	ld (iy+00dh),a		;6a59	fd 77 0d 	. w . 
 	ret			;6a5c	c9 	. 
 l6a5dh:
-	ld a,(0e53eh)		;6a5d	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6a5d	3a 3e e5 	: > . 
 	cp 092h		;6a60	fe 92 	. . 
 	jp c,l6a30h		;6a62	da 30 6a 	. 0 j 
 	cp 0c8h		;6a65	fe c8 	. . 
 	jp nc,l6a30h		;6a67	d2 30 6a 	. 0 j 
 	ld a,0a0h		;6a6a	3e a0 	> . 
-	ld (0e53eh),a		;6a6c	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;6a6c	32 3e e5 	2 > . 
 	jp l6a30h		;6a6f	c3 30 6a 	. 0 j 
 l6a72h:
 	ld a,(ix+007h)		;6a72	dd 7e 07 	. ~ . 
@@ -7575,7 +7581,7 @@ l6a72h:
 	jp z,l6ac7h		;6a81	ca c7 6a 	. . j 
 	cp 005h		;6a84	fe 05 	. . 
 	jp z,l6a9eh		;6a86	ca 9e 6a 	. . j 
-	ld a,(0e53eh)		;6a89	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6a89	3a 3e e5 	: > . 
 	ld (iy+001h),a		;6a8c	fd 77 01 	. w . 
 	add a,00ch		;6a8f	c6 0c 	. . 
 	ld (iy+005h),a		;6a91	fd 77 05 	. w . 
@@ -7586,7 +7592,7 @@ l6a72h:
 l6a9eh:
 	ret			;6a9e	c9 	. 
 l6a9fh:
-	ld a,(0e53eh)		;6a9f	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6a9f	3a 3e e5 	: > . 
 	ld (iy+001h),a		;6aa2	fd 77 01 	. w . 
 	add a,006h		;6aa5	c6 06 	. . 
 	ld (iy+005h),a		;6aa7	fd 77 05 	. w . 
@@ -7595,7 +7601,7 @@ l6a9fh:
 	ld (iy+00dh),a		;6aaf	fd 77 0d 	. w . 
 	ret			;6ab2	c9 	. 
 l6ab3h:
-	ld a,(0e53eh)		;6ab3	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6ab3	3a 3e e5 	: > . 
 	ld (iy+001h),a		;6ab6	fd 77 01 	. w . 
 	add a,00ch		;6ab9	c6 0c 	. . 
 	ld (iy+005h),a		;6abb	fd 77 05 	. w . 
@@ -7604,7 +7610,7 @@ l6ab3h:
 	ld (iy+00dh),a		;6ac3	fd 77 0d 	. w . 
 	ret			;6ac6	c9 	. 
 l6ac7h:
-	ld a,(0e53eh)		;6ac7	3a 3e e5 	: > . 
+	ld a,(VAUS_X2)		;6ac7	3a 3e e5 	: > . 
 	ld (iy+001h),a		;6aca	fd 77 01 	. w . 
 	add a,008h		;6acd	c6 08 	. . 
 	ld (iy+005h),a		;6acf	fd 77 05 	. w . 
@@ -8155,7 +8161,7 @@ l6f12h:
 	djnz l6f12h		;6f1b	10 f5 	. . 
 	pop iy		;6f1d	fd e1 	. . 
 	ld a,000h		;6f1f	3e 00 	> . 
-	ld (0e53eh),a		;6f21	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;6f21	32 3e e5 	2 > . 
 	ld (ix+006h),000h		;6f24	dd 36 06 00 	. 6 . . 
 	ld a,002h		;6f28	3e 02 	> . 
 	ld (0e022h),a		;6f2a	32 22 e0 	2 " . 
@@ -8331,7 +8337,7 @@ l707ch:
 	or a			;707f	b7 	. 
 	jp nz,l70a6h		;7080	c2 a6 70 	. . p 
 	ld (ix+000h),001h		;7083	dd 36 00 01 	. 6 . . 
-	ld a,(0e0ceh)		;7087	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;7087	3a ce e0 	: . . 
 	add a,010h		;708a	c6 10 	. . 
 	ld (iy+000h),0aeh		;708c	fd 36 00 ae 	. 6 . . 
 	ld (iy+001h),a		;7090	fd 77 01 	. w . 
@@ -8684,7 +8690,7 @@ l732ch:
 	ld a,001h		;7333	3e 01 	> . 
 	ld (0e570h),a		;7335	32 70 e5 	2 p . 
 	ld c,000h		;7338	0e 00 	. . 
-	ld a,(0e0ceh)		;733a	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;733a	3a ce e0 	: . . 
 	add a,010h		;733d	c6 10 	. . 
 	cp 051h		;733f	fe 51 	. Q 
 	jp c,l7346h		;7341	da 46 73 	. F s 
@@ -9107,7 +9113,7 @@ l7647h:
 	pop de			;7655	d1 	. 
 	ld bc,00004h		;7656	01 04 00 	. . . 
 	ldir		;7659	ed b0 	. . 
-	ld a,(0e0ceh)		;765b	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;765b	3a ce e0 	: . . 
 	sub 008h		;765e	d6 08 	. . 
 	and 0f0h		;7660	e6 f0 	. . 
 	srl a		;7662	cb 3f 	. ? 
@@ -9500,7 +9506,7 @@ l7999h:
 	djnz l794fh		;79a2	10 ab 	. . 
 	ret			;79a4	c9 	. 
 sub_79a5h:
-	ld ix,0e0f5h		;79a5	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL_Y		;79a5	dd 21 f5 e0 	. ! . . 
 	ld a,(0e24eh)		;79a9	3a 4e e2 	: N . 
 	or a			;79ac	b7 	. 
 	jp z,l79c2h		;79ad	ca c2 79 	. . y 
@@ -15840,7 +15846,7 @@ sub_9710h:
 	ld (0e262h),a		;9714	32 62 e2 	2 b . 
 	ld (0e276h),a		;9717	32 76 e2 	2 v . 
 	ld a,0c0h		;971a	3e c0 	> . 
-	ld (0e0f5h),a		;971c	32 f5 e0 	2 . . 
+	ld (BALL_Y),a		;971c	32 f5 e0 	2 . . 
 	ld (0e0f9h),a		;971f	32 f9 e0 	2 . . 
 	ld (0e0fdh),a		;9722	32 fd e0 	2 . . 
 	ret			;9725	c9 	. 
@@ -16012,7 +16018,7 @@ l986ah:
 sub_9872h:
 	xor a			;9872	af 	. 
 	ld (0e2ach),a		;9873	32 ac e2 	2 . . 
-	ld ix,0e0f5h		;9876	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL_Y		;9876	dd 21 f5 e0 	. ! . . 
 	ld iy,0e24eh		;987a	fd 21 4e e2 	. ! N . 
 l987eh:
 	push ix		;987e	dd e5 	. . 
@@ -16109,7 +16115,7 @@ l9917h:
 	ld hl,0e324h		;991c	21 24 e3 	! $ . 
 	bit 1,(hl)		;991f	cb 4e 	. N 
 	jp nz,l9930h		;9921	c2 30 99 	. 0 . 
-	ld a,(0e0ceh)		;9924	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;9924	3a ce e0 	: . . 
 	add a,(iy+010h)		;9927	fd 86 10 	. . . 
 	ld (ix+001h),a		;992a	dd 77 01 	. w . 
 	jp l99b8h		;992d	c3 b8 99 	. . . 
@@ -16463,7 +16469,7 @@ sub_9ba8h:
 	ret c			;9bb2	d8 	. 
 	cp 0adh		;9bb3	fe ad 	. . 
 	ret nc			;9bb5	d0 	. 
-	ld a,(0e0ceh)		;9bb6	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;9bb6	3a ce e0 	: . . 
 	add a,001h		;9bb9	c6 01 	. . 
 	cp (ix+001h)		;9bbb	dd be 01 	. . . 
 	ret nc			;9bbe	d0 	. 
@@ -16475,7 +16481,7 @@ sub_9ba8h:
 	ld c,00ah		;9bcb	0e 0a 	. . 
 	ld b,039h		;9bcd	06 39 	. 9 
 l9bcfh:
-	ld a,(0e0ceh)		;9bcf	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;9bcf	3a ce e0 	: . . 
 	add a,b			;9bd2	80 	. 
 	cp (ix+001h)		;9bd3	dd be 01 	. . . 
 	ret c			;9bd6	d8 	. 
@@ -16490,7 +16496,7 @@ l9bebh:
 	push bc			;9beb	c5 	. 
 	ld (iy+00eh),0f0h		;9bec	fd 36 0e f0 	. 6 . . 
 	ld (iy+001h),001h		;9bf0	fd 36 01 01 	. 6 . . 
-	ld a,(0e0ceh)		;9bf4	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;9bf4	3a ce e0 	: . . 
 	ld c,a			;9bf7	4f 	O 
 	ld a,(ix+001h)		;9bf8	dd 7e 01 	. ~ . 
 	sub c			;9bfb	91 	. 
@@ -16502,7 +16508,7 @@ l9c05h:
 	ld a,(iy+002h)		;9c05	fd 7e 02 	. ~ . 
 	neg		;9c08	ed 44 	. D 
 	ld (iy+002h),a		;9c0a	fd 77 02 	. w . 
-	ld a,(0e0ceh)		;9c0d	3a ce e0 	: . . 
+	ld a,(VAUS_X)		;9c0d	3a ce e0 	: . . 
 	ld b,a			;9c10	47 	G 
 	ld a,(ix+001h)		;9c11	dd 7e 01 	. ~ . 
 	sub b			;9c14	90 	. 
@@ -17438,7 +17444,7 @@ la4bah:
 	inc a			;a4ba	3c 	< 
 la4bbh:
 	ld b,a			;a4bb	47 	G 
-	ld (0e53eh),a		;a4bc	32 3e e5 	2 > . 
+	ld (VAUS_X2),a		;a4bc	32 3e e5 	2 > . 
 	ld a,(0e2c7h)		;a4bf	3a c7 e2 	: . . 
 	bit 7,(iy+003h)		;a4c2	fd cb 03 7e 	. . . ~ 
 	jp z,la4cch		;a4c6	ca cc a4 	. . . 
@@ -19670,7 +19676,7 @@ sub_b2c1h:
 	pop iy		;b2c3	fd e1 	. . 
 	ld b,003h		;b2c5	06 03 	. . 
 	ld iy,0e24eh		;b2c7	fd 21 4e e2 	. ! N . 
-	ld ix,0e0f5h		;b2cb	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL_Y		;b2cb	dd 21 f5 e0 	. ! . . 
 lb2cfh:
 	ld a,(iy+000h)		;b2cf	fd 7e 00 	. ~ . 
 	or a			;b2d2	b7 	. 
@@ -19714,7 +19720,7 @@ lb30fh:
 	ld l,(ix+000h)		;b329	dd 6e 00 	. n . 
 	ld h,(ix+001h)		;b32c	dd 66 01 	. f . 
 	ld b,003h		;b32f	06 03 	. . 
-	ld ix,0e0f5h		;b331	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL_Y		;b331	dd 21 f5 e0 	. ! . . 
 	ld de,00004h		;b335	11 04 00 	. . . 
 lb338h:
 	ld (ix+000h),l		;b338	dd 75 00 	. u . 
