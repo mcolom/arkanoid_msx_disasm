@@ -1,0 +1,6 @@
+gi_*
+*.rom
+__pycache__
+a.bin
+compiled
+.vscode
