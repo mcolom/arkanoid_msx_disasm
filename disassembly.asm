@@ -1719,10 +1719,12 @@ sub_4b8ah:
 	ld bc,00300h		;4bd8	01 00 03 	. . . 
 	call FILVRM		;4bdb	cd 56 00 	. V . 
 	call sub_4fe0h		;4bde	cd e0 4f 	. . O 
+
 	ld hl,l543eh		;4be1	21 3e 54 	! > T 
 	ld de,018c0h		;4be4	11 c0 18 	. . . 
 	ld bc,00060h		;4be7	01 60 00 	. ` . 
 	call LDIRVM		;4bea	cd 5c 00 	. \ . 
+
 	ld ix,0e0cdh		;4bed	dd 21 cd e0 	. ! . . 
 	ld (ix+000h),034h		;4bf1	dd 36 00 34 	. 6 . 4 
 	ld (ix+001h),094h		;4bf5	dd 36 01 94 	. 6 . . 
@@ -1734,22 +1736,31 @@ sub_4b8ah:
 	ld de,019a8h		;4c09	11 a8 19 	. . . 
 	ld bc,00011h		;4c0c	01 11 00 	. . . 
 	call LDIRVM		;4c0f	cd 5c 00 	. \ . 
-	ld hl,054deh		;4c12	21 de 54 	! . T 
-	ld de,01a84h		;4c15	11 84 1a 	. . . 
-	ld bc,00018h		;4c18	01 18 00 	. . . 
-	call LDIRVM		;4c1b	cd 5c 00 	. \ . 
-	ld hl,l54f6h		;4c1e	21 f6 54 	! . T 
-	ld de,01ac6h		;4c21	11 c6 1a 	. . . 
-	ld bc,00013h		;4c24	01 13 00 	. . . 
-	call LDIRVM		;4c27	cd 5c 00 	. \ . 
-	ld hl,l5509h		;4c2a	21 09 55 	! . U 
-	ld de,01a2bh		;4c2d	11 2b 1a 	. + . 
-	ld bc,0000bh		;4c30	01 0b 00 	. . . 
-	call LDIRVM		;4c33	cd 5c 00 	. \ . 
-	ld hl,l5514h		;4c36	21 14 55 	! . U 
-	ld de,01a4bh		;4c39	11 4b 1a 	. K . 
-	ld bc,0000bh		;4c3c	01 0b 00 	. . . 
-	call LDIRVM		;4c3f	cd 5c 00 	. \ . 
+
+    ; Print TAITO's (c) string
+	ld hl,TAITO_CORP_STR		;4c12	21 de 54
+	ld de,01a84h		        ;4c15	11 84 1a
+	ld bc,00018h		        ;4c18	01 18 00
+	call LDIRVM		            ;4c1b	cd 5c 00
+
+    ; Print "ALL RIGHTS RESERVED"
+	ld hl,ALL_RIGHTS_RESERVED_STR		;4c1e	21 f6 54
+	ld de,01ac6h		                ;4c21	11 c6 1a
+	ld bc,00013h		                ;4c24	01 13 00
+	call LDIRVM		                    ;4c27	cd 5c 00
+
+    ; Draw upper half of Taito's logo
+	ld hl,l5509h		;4c2a	21 09 55
+	ld de,01a2bh		;4c2d	11 2b 1a
+	ld bc,0000bh		;4c30	01 0b 00
+	call LDIRVM		    ;4c33	cd 5c 00
+
+    ; Draw lower half of Taito's logo
+	ld hl,l5514h		;4c36	21 14 55
+	ld de,01a4bh		;4c39	11 4b 1a
+	ld bc,0000bh		;4c3c	01 0b 00
+	call LDIRVM		    ;4c3f	cd 5c 00
+
 	ld a,000h		;4c42	3e 00 	> . 
 	ld (0e53fh),a		;4c44	32 3f e5 	2 ? . 
 	ret			;4c47	c9 	. 
@@ -1777,7 +1788,7 @@ l4c62h:
 l4c73h:
 	ld a,002h		;4c73	3e 02 	> . 
 	ld (0e53ch),a		;4c75	32 3c e5 	2 < . 
-	ld hl,l54cch		;4c78	21 cc 54 	! . T 
+	ld hl,GAME_START_STR		;4c78	21 cc 54 	! . T 
 	ld de,019a8h		;4c7b	11 a8 19 	. . . 
 	ld bc,00011h		;4c7e	01 11 00 	. . . 
 	call LDIRVM		;4c81	cd 5c 00 	. \ . 
@@ -2804,7 +2815,7 @@ l5460h:
 	jr l54aah		;548d	18 1b 	. . 
 	ld e,021h		;548f	1e 21 	. ! 
 	dec h			;5491	25 	% 
-	jr z,l54efh		;5492	28 5b 	( [ 
+	jr z,0x54ef		;5492	28 5b 	( [ 
 	ld e,(hl)			;5494	5e 	^ 
 	ld h,d			;5495	62 	b 
 	nop			;5496	00 	. 
@@ -2828,7 +2839,7 @@ l54aah:
 	cpl			;54aa	2f 	/ 
 	ccf			;54ab	3f 	? 
 	dec hl			;54ac	2b 	+ 
-	jr nz,l54e9h		;54ad	20 3a 	  : 
+	jr nz,0x54e9		;54ad	20 3a 	  : 
 	dec sp			;54af	3b 	; 
 	inc a			;54b0	3c 	< 
 	dec a			;54b1	3d 	= 
@@ -2855,62 +2866,16 @@ l54c9h:
 	ld e,c			;54c9	59 	Y 
 	ld b,l			;54ca	45 	E 
 	ld d,d			;54cb	52 	R 
-l54cch:
-	jr nz,l54eeh		;54cc	20 20 	    
-	jr nz,l5517h		;54ce	20 47 	  G 
-	ld b,c			;54d0	41 	A 
-	ld c,l			;54d1	4d 	M 
-	ld b,l			;54d2	45 	E 
-	jr nz,$+85		;54d3	20 53 	  S 
-	ld d,h			;54d5	54 	T 
-	ld b,c			;54d6	41 	A 
-	ld d,d			;54d7	52 	R 
-	ld d,h			;54d8	54 	T 
-	jr nz,l54fbh		;54d9	20 20 	    
-	jr nz,l54fdh		;54db	20 20 	    
-	jr nz,l551fh		;54dd	20 40 	  @ 
-	jr nz,l5535h		;54df	20 54 	  T 
-	ld b,c			;54e1	41 	A 
-	ld c,c			;54e2	49 	I 
-	ld d,h			;54e3	54 	T 
-	ld c,a			;54e4	4f 	O 
-	jr nz,l552ah		;54e5	20 43 	  C 
-	ld c,a			;54e7	4f 	O 
-	ld d,d			;54e8	52 	R 
-l54e9h:
-	ld d,b			;54e9	50 	P 
-	ld c,a			;54ea	4f 	O 
-	ld d,d			;54eb	52 	R 
-	ld b,c			;54ec	41 	A 
-	ld d,h			;54ed	54 	T 
-l54eeh:
-	ld c,c			;54ee	49 	I 
-l54efh:
-	ld c,a			;54ef	4f 	O 
-	ld c,(hl)			;54f0	4e 	N 
-	jr nz,$+51		;54f1	20 31 	  1 
-	add hl,sp			;54f3	39 	9 
-	jr c,l552ch		;54f4	38 36 	8 6 
-l54f6h:
-	ld b,c			;54f6	41 	A 
-	ld c,h			;54f7	4c 	L 
-	ld c,h			;54f8	4c 	L 
-	jr nz,l554dh		;54f9	20 52 	  R 
-l54fbh:
-	ld c,c			;54fb	49 	I 
-	ld b,a			;54fc	47 	G 
-l54fdh:
-	ld c,b			;54fd	48 	H 
-	ld d,h			;54fe	54 	T 
-	ld d,e			;54ff	53 	S 
-	jr nz,l5554h		;5500	20 52 	  R 
-	ld b,l			;5502	45 	E 
-	ld d,e			;5503	53 	S 
-	ld b,l			;5504	45 	E 
-	ld d,d			;5505	52 	R 
-	ld d,(hl)			;5506	56 	V 
-	ld b,l			;5507	45 	E 
-	ld b,h			;5508	44 	D 
+
+GAME_START_STR:
+    db "   GAME START     "
+    
+TAITO_CORP_STR:
+    db "@ TAITO CORPORATION 1986" 
+
+ALL_RIGHTS_RESERVED_STR:
+    db "ALL RIGHTS RESERVED"
+
 l5509h:
 	ld h,e			;5509	63 	c 
 	ld h,l			;550a	65 	e 
