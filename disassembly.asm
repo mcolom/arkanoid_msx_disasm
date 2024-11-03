@@ -1917,7 +1917,9 @@ l4d30h:
 	or a			;4d36	b7 	. 
 	jp z,l4d46h		;4d37	ca 46 4d 	. F M 
 	call DRAW_UP_SCORES		;4d3a	cd e0 4f 	. . O 
-	call sub_5101h		;4d3d	cd 01 51 	. . Q 
+    ; Write "ROUND 1"
+	call DRAW_ROUND_MESSAGE		;4d3d	cd 01 51 	. . Q 
+
 	ld hl,00030h		;4d40	21 30 00 	! 0 . 
 	call 04380h		;4d43	cd 80 43 	. . C 
 l4d46h:
@@ -2275,19 +2277,21 @@ l50f4h:
 l50ffh:
 	add a,e			;50ff	83 	. 
 	ld a,(de)			;5100	1a 	. 
-sub_5101h:
-	ld hl,l5144h		;5101	21 44 51 	! D Q 
-	ld de,0194ch		;5104	11 4c 19 	. L . 
-l5107h:
-	ld bc,00005h		;5107	01 05 00 	. . . 
-	call LDIRVM		;510a	cd 5c 00 	. \ . 
+
+; Draws the "ROUND x" message
+DRAW_ROUND_MESSAGE:
+    ; Write "ROUND "
+	ld hl,l5144h		;5101	21 44 51
+	ld de,0194ch		;5104	11 4c 19
+	ld bc,00005h		;5107	01 05 00
+	call LDIRVM		    ;510a	cd 5c 00
 l510dh:
-	ld a,(LEVEL_DISP)		;510d	3a 1c e0 	: . . 
-	add a,001h		;5110	c6 01 	. . 
-	daa			;5112	27 	' 
-	ld e,a			;5113	5f 	_ 
-	push de			;5114	d5 	. 
-	srl a		;5115	cb 3f 	. ? 
+	ld a,(LEVEL_DISP)		;510d	3a 1c e0
+	add a,001h		        ;5110	c6 01
+	daa			            ;5112	27
+	ld e,a			        ;5113	5f
+	push de			        ;5114	d5
+	srl a		            ;5115	cb 3f
 	srl a		;5117	cb 3f 	. ? 
 l5119h:
 	srl a		;5119	cb 3f 	. ? 
@@ -2313,6 +2317,7 @@ l5131h:
 	ld hl,01953h		;513d	21 53 19 	! S . 
 	call WRTVRM		;5140	cd 4d 00 	. M . 
 	ret			;5143	c9 	. 
+
 l5144h:
 	ld d,d			;5144	52 	R 
 	ld c,a			;5145	4f 	O 
