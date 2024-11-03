@@ -19,6 +19,7 @@ EXTRA_BALLS: equ 0xe325
 
 ; First level is zero
 LEVEL: equ 0xe01b
+LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
 
 FINAL_LEVEL: equ 32
 
@@ -2245,7 +2246,7 @@ l5107h:
 	ld bc,00005h		;5107	01 05 00 	. . . 
 	call LDIRVM		;510a	cd 5c 00 	. \ . 
 l510dh:
-	ld a,(0e01ch)		;510d	3a 1c e0 	: . . 
+	ld a,(LEVEL_DISP)		;510d	3a 1c e0 	: . . 
 	add a,001h		;5110	c6 01 	. . 
 	daa			;5112	27 	' 
 	ld e,a			;5113	5f 	_ 
@@ -8313,7 +8314,7 @@ sub_7204h:
 	ld de,01adah		;7207	11 da 1a 	. . . 
 	ld bc,00005h		;720a	01 05 00 	. . . 
 	call LDIRVM		;720d	cd 5c 00 	. \ . 
-	ld a,(0e01ch)		;7210	3a 1c e0 	: . . 
+	ld a,(LEVEL_DISP)		;7210	3a 1c e0 	: . . 
 	add a,001h		;7213	c6 01 	. . 
 	daa			;7215	27 	' 
 	ld e,a			;7216	5f 	_ 
@@ -9598,10 +9599,10 @@ l7babh:
 	ld a,e			;7bae	7b 	{ 
 	rlca			;7baf	07 	. 
 	ld a,h			;7bb0	7c 	| 
-	ld a,(0e01ch)		;7bb1	3a 1c e0 	: . . 
+	ld a,(LEVEL_DISP)		;7bb1	3a 1c e0 	: . . 
 	add a,001h		;7bb4	c6 01 	. . 
 	daa			;7bb6	27 	' 
-	ld (0e01ch),a		;7bb7	32 1c e0 	2 . . 
+	ld (LEVEL_DISP),a		;7bb7	32 1c e0 	2 . . 
 	ld hl,LEVEL		;7bba	21 1b e0 	! . . 
 	inc (hl)			;7bbd	34 	4 
 	ld a,(hl)			;7bbe	7e
