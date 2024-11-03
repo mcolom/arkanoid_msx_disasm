@@ -27,6 +27,14 @@ CAPSULES_LEFT: equ 0xe023
 
 FINAL_LEVEL: equ 32
 
+ALIEN_STATUS: equ 0xe4c7
+; [ToDo] Incomplete table
+; [ToDo] We must have entries for each alien, not only one
+; 00 00 --> Absent
+; 03 01 --> Moving normally
+; 03 02 --> Exploding
+
+
 	org	04000h
 
     ; MSX ROM header
@@ -8471,7 +8479,7 @@ l7319h:
 	ld hl,l7353h		;7323	21 53 73 	! S s 
 	add hl,de			;7326	19 	. 
 	ld b,(hl)			;7327	46 	F 
-	ld iy,0e4c7h		;7328	fd 21 c7 e4 	. ! . . 
+	ld iy,ALIEN_STATUS		;7328	fd 21 c7 e4 	. ! . . 
 l732ch:
 	ld a,(iy+001h)		;732c	fd 7e 01 	. ~ . 
 	or a			;732f	b7 	. 
@@ -8534,7 +8542,7 @@ sub_7377h:
 	ld hl,l7353h		;737d	21 53 73 	! S s 
 	add hl,de			;7380	19 	. 
 	ld b,(hl)			;7381	46 	F 
-	ld iy,0e4c7h		;7382	fd 21 c7 e4 	. ! . . 
+	ld iy,ALIEN_STATUS		;7382	fd 21 c7 e4 	. ! . . 
 l7386h:
 	ld a,(iy+001h)		;7386	fd 7e 01 	. ~ . 
 	or a			;7389	b7 	. 
@@ -15645,7 +15653,7 @@ sub_9726h:
 	ret z			    ;972b	c8
 	xor a			;972c	af 	. 
 	ld (0e53ch),a		;972d	32 3c e5 	2 < . 
-	ld iy,0e4c7h		;9730	fd 21 c7 e4 	. ! . . 
+	ld iy,ALIEN_STATUS		;9730	fd 21 c7 e4 	. ! . . 
 	ld ix,0e101h		;9734	dd 21 01 e1 	. ! . . 
 l9738h:
 	ld a,(iy+001h)		;9738	fd 7e 01 	. ~ . 
