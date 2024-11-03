@@ -285,7 +285,7 @@ l41b1h:
 	call sub_7241h		;41c6	cd 41 72 	. A r 
 	ld a,001h		;41c9	3e 01 	> . 
 	ld (0e544h),a		;41cb	32 44 e5 	2 D . 
-	call sub_53b9h		;41ce	cd b9 53 	. . S 
+	call DRAW_UP_SCORE_NUMBERS		;41ce	cd b9 53 	. . S 
 	jp l41dah		;41d1	c3 da 41 	. . A 
 	call sub_7b94h		;41d4	cd 94 7b 	. . { 
 	jp l41dah		;41d7	c3 da 41 	. . A 
@@ -1742,11 +1742,12 @@ sub_4b8ah:
 	ld de,01000h		;4bca	11 00 10 	. . . 
 	call sub_4220h		;4bcd	cd 20 42 	.   B 
 	call sub_41ffh		;4bd0	cd ff 41 	. . A 
+
 	ld hl,01800h		;4bd3	21 00 18 	! . . 
 	ld a,000h		;4bd6	3e 00 	> . 
 	ld bc,00300h		;4bd8	01 00 03 	. . . 
 	call FILVRM		;4bdb	cd 56 00 	. V . 
-	call sub_4fe0h		;4bde	cd e0 4f 	. . O 
+	call DRAW_UP_SCORES		;4bde	cd e0 4f 	. . O 
 
 	ld hl,l543eh		;4be1	21 3e 54 	! > T 
 	ld de,018c0h		;4be4	11 c0 18 	. . . 
@@ -1760,10 +1761,12 @@ sub_4b8ah:
 	ld (ix+003h),00ah		;4bfd	dd 36 03 0a 	. 6 . . 
 	ld a,001h		;4c01	3e 01 	> . 
 	ld (0e53ch),a		;4c03	32 3c e5 	2 < . 
-	ld hl,054b3h		;4c06	21 b3 54 	! . T 
-	ld de,019a8h		;4c09	11 a8 19 	. . . 
-	ld bc,00011h		;4c0c	01 11 00 	. . . 
-	call LDIRVM		;4c0f	cd 5c 00 	. \ . 
+
+    ; Write "PRESS START BUTTON"
+	ld hl,PUSH_START_BUTTON_STR		;4c06	21 b3 54
+	ld de,019a8h		            ;4c09	11 a8 19
+	ld bc, 17		                ;4c0c	01 11 00  len("PUSH START BUTTON")
+	call LDIRVM		                ;4c0f	cd 5c 00
 
     ; Print TAITO's (c) string
 	ld hl,TAITO_CORP_STR		;4c12	21 de 54
@@ -1913,7 +1916,7 @@ l4d30h:
 	ld a,(0e00bh)		;4d33	3a 0b e0 	: . . 
 	or a			;4d36	b7 	. 
 	jp z,l4d46h		;4d37	ca 46 4d 	. F M 
-	call sub_4fe0h		;4d3a	cd e0 4f 	. . O 
+	call DRAW_UP_SCORES		;4d3a	cd e0 4f 	. . O 
 	call sub_5101h		;4d3d	cd 01 51 	. . Q 
 	ld hl,00030h		;4d40	21 30 00 	! 0 . 
 	call 04380h		;4d43	cd 80 43 	. . C 
@@ -1944,7 +1947,7 @@ l4d46h:
 	call FILVRM		;4d89	cd 56 00 	. V . 
 	ld a,001h		;4d8c	3e 01 	> . 
 	ld (0e544h),a		;4d8e	32 44 e5 	2 D . 
-	call sub_53b9h		;4d91	cd b9 53 	. . S 
+	call DRAW_UP_SCORE_NUMBERS		;4d91	cd b9 53 	. . S 
 	ld hl,l551fh		;4d94	21 1f 55 	! . U 
 	ld de,01839h		;4d97	11 39 18 	. 9 . 
 	ld bc,00004h		;4d9a	01 04 00 	. . . 
@@ -2224,20 +2227,30 @@ l4fbbh:
 	call 04380h		;4fd9	cd 80 43 	. . C 
 	call sub_4227h		;4fdc	cd 27 42 	. ' B 
 	ret			;4fdf	c9 	. 
-sub_4fe0h:
+
+DRAW_UP_SCORES:
+    ; Draw "SCORE    HIGH SCORE" at the top of the screen
 	ld hl,l549eh		;4fe0	21 9e 54 	! . T 
 	ld de,01800h		;4fe3	11 00 18 	. . . 
 	ld bc,00015h		;4fe6	01 15 00 	. . . 
 	call LDIRVM		;4fe9	cd 5c 00 	. \ . 
-	ld hl,01827h		;4fec	21 27 18 	! ' . 
+
+	; Write "0" below "SCORE"
+    ld hl,01827h		;4fec	21 27 18 	! ' . 
 	ld a,030h		;4fef	3e 30 	> 0 
 	call WRTVRM		;4ff1	cd 4d 00 	. M . 
+    
+    ; Write "0" below "HIGH SCORE"
 	ld hl,01832h		;4ff4	21 32 18 	! 2 . 
 	ld a,030h		;4ff7	3e 30 	> 0 
 	call WRTVRM		;4ff9	cd 4d 00 	. M . 
+    
 	ld a,000h		;4ffc	3e 00 	> . 
 	ld (0e544h),a		;4ffe	32 44 e5 	2 D . 
-	call sub_53b9h		;5001	cd b9 53 	. . S 
+    
+    ; Write the score number.
+    ; For example, "160    50000"
+	call DRAW_UP_SCORE_NUMBERS		;5001	cd b9 53
 	ret			;5004	c9 	. 
 
 STORY_STR:
@@ -2710,7 +2723,9 @@ sub_538ah:
 	ld bc,00003h		;53b3	01 03 00 	. . . 
 	lddr		;53b6	ed b8 	. . 
 	ret			;53b8	c9 	. 
-sub_53b9h:
+
+; Draws the number of the score in top of the screen
+DRAW_UP_SCORE_NUMBERS:
 	ld hl,0e58eh		;53b9	21 8e e5 	! . . 
 	ld de,0e015h		;53bc	11 15 e0 	. . . 
 	call sub_5420h		;53bf	cd 20 54 	.   T 
@@ -2738,6 +2753,7 @@ sub_53b9h:
 	ld bc,00006h		;5400	01 06 00 	. . . 
 	call LDIRVM		;5403	cd 5c 00 	. \ . 
 	ret			;5406	c9 	. 
+
 l5407h:
 	ld hl,0e58eh		;5407	21 8e e5 	! . . 
 	ld de,018f9h		;540a	11 f9 18 	. . . 
@@ -2860,8 +2876,11 @@ l5460h:
 	nop			;549b	00 	. 
 	nop			;549c	00 	. 
 	nop			;549d	00 	. 
+
+
+
 l549eh:
-	jr nz,l54c0h		;549e	20 20 	    
+	jr nz,0x54c0		;549e	20 20 	    
 	jr nz,$+60		;54a0	20 3a 	  : 
 	dec sp			;54a2	3b 	; 
 	inc a			;54a3	3c 	< 
@@ -2877,22 +2896,11 @@ l54aah:
 	dec sp			;54af	3b 	; 
 	inc a			;54b0	3c 	< 
 	dec a			;54b1	3d 	= 
-	ld a,050h		;54b2	3e 50 	> P 
-	ld d,l			;54b4	55 	U 
-	ld d,e			;54b5	53 	S 
-	ld c,b			;54b6	48 	H 
-	jr nz,l550ch		;54b7	20 53 	  S 
-	ld d,h			;54b9	54 	T 
-	ld b,c			;54ba	41 	A 
-	ld d,d			;54bb	52 	R 
-	ld d,h			;54bc	54 	T 
-	jr nz,$+68		;54bd	20 42 	  B 
-	ld d,l			;54bf	55 	U 
-l54c0h:
-	ld d,h			;54c0	54 	T 
-	ld d,h			;54c1	54 	T 
-	ld c,a			;54c2	4f 	O 
-	ld c,(hl)			;54c3	4e 	N 
+    db 0x3e
+    
+PUSH_START_BUTTON_STR:  ;54b3
+    db "PUSH START BUTTON"
+
 	ld sp,0x5020		;54c4	31 20 50 	1   P 
 	ld c,h			;54c7	4c 	L 
 	ld b,c			;54c8	41 	A 
@@ -9647,7 +9655,7 @@ l7babh:
 	ld hl,0001eh		;7be3	21 1e 00 	! . . 
 	call 04380h		;7be6	cd 80 43 	. . C 
 	call sub_4227h		;7be9	cd 27 42 	. ' B 
-	call sub_4fe0h		;7bec	cd e0 4f 	. . O 
+	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
 	ld hl,l7c6dh		;7bef	21 6d 7c 	! m | 
 	ld de,01b00h		;7bf2	11 00 1b 	. . . 
 	ld bc,00010h		;7bf5	01 10 00 	. . . 
