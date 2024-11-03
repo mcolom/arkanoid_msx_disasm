@@ -12,6 +12,11 @@ BALL_X: equ 0xe0f6
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
 
+; Extra balls, apart from the current.
+; For example, after getting the cyan brick, there are
+; 3 balls = 2 EXTRA_BALLS.
+EXTRA_BALLS: equ 0xe325
+
 	org	04000h
 
     ; MSX ROM header
@@ -106,10 +111,10 @@ ROM_START:
 	call FILVRM		    ;4089	cd 56 00
     
     ; Clear VRAM sprite attribute table
-	ld hl,01b00h		;408c	21 00 1b 	! . . 
-	ld bc,00080h		;408f	01 80 00 	. . . 
-	xor a			;4092	af 	. 
-	call FILVRM		;4093	cd 56 00 	. V . 
+	ld hl,01b00h		;408c	21 00 1b
+	ld bc,00080h		;408f	01 80 00
+	xor a			    ;4092	af
+	call FILVRM		    ;4093	cd 56 00
     
 	ld hl,l9024h		;4096	21 24 90 	! $ . 
 	ld de,00000h		;4099	11 00 00 	. . . 
@@ -146,13 +151,13 @@ l40d7h:
 	ld (0e5c0h),a		;40e8	32 c0 e5 	2 . . 
 	call sub_b4e8h		;40eb	cd e8 b4 	. . . 
 
-	ei			;40ee	fb 	. 
+	ei			    ;40ee
 
     ; Print "PAUSE"
-	ld hl,PAUSE_STR		;40ef	21 1b 42 	! . B 
-	ld de,01a3ah		;40f2	11 3a 1a 	. : . 
+	ld hl,PAUSE_STR		;40ef	21 1b 42
+	ld de,01a3ah		;40f2	11 3a 1a
 	ld bc,5 		    ;40f5	01 05 00    len("PAUSE")=5
-	call LDIRVM		;40f8	cd 5c 00 	. \ . 
+	call LDIRVM		    ;40f8	cd 5c 00
 
 l40fbh:
 	halt			;40fb	76 	v 
@@ -16169,7 +16174,7 @@ sub_9b2ah:
 	ldir		;9b36	ed b0 	. . 
 	ld (ix+000h),0c0h		;9b38	dd 36 00 c0 	. 6 . . 
 	ld (ix+003h),000h		;9b3c	dd 36 03 00 	. 6 . . 
-	ld hl,0e325h		;9b40	21 25 e3 	! % . 
+	ld hl,EXTRA_BALLS		;9b40	21 25 e3 	! % . 
 	ld a,(hl)			;9b43	7e 	~ 
 	or a			;9b44	b7 	. 
 	jp z,l9b4ah		;9b45	ca 4a 9b 	. J . 
@@ -19071,7 +19076,7 @@ sub_b00fh:
 	push hl			;b013	e5 	. 
 	push de			;b014	d5 	. 
 	push bc			;b015	c5 	. 
-	ld a,(0e325h)		;b016	3a 25 e3 	: % . 
+	ld a,(EXTRA_BALLS)		;b016	3a 25 e3 	: % . 
 	or a			;b019	b7 	. 
 	jp nz,lb020h		;b01a	c2 20 b0 	.   . 
 	call sub_b028h		;b01d	cd 28 b0 	. ( . 
@@ -19378,7 +19383,7 @@ lb22ah:
 	ld (0e324h),a		;b244	32 24 e3 	2 $ . 
 lb247h:
 	ld a,002h		;b247	3e 02 	> . 
-	ld (0e325h),a		;b249	32 25 e3 	2 % . 
+	ld (EXTRA_BALLS),a		;b249	32 25 e3 	2 % . 
 	call sub_b2a7h		;b24c	cd a7 b2 	. . . 
 	call sub_b2c1h		;b24f	cd c1 b2 	. . . 
 	ret			;b252	c9 	. 
