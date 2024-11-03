@@ -22,6 +22,7 @@ LEVEL: equ 0xe01b
 LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
 
 LIVES: equ 0xe01d
+BRICKS_LEFT: equ 0xe038
 
 FINAL_LEVEL: equ 32
 
@@ -4481,7 +4482,7 @@ sub_5c15h:
 	ld d,000h		;5c27	16 00 	. . 
 	add hl,de			;5c29	19 	. 
 	ld a,(hl)			;5c2a	7e 	~ 
-	ld (0e038h),a		;5c2b	32 38 e0 	2 8 . 
+	ld (BRICKS_LEFT),a		;5c2b	32 38 e0 	2 8 . 
 	ld hl,0e039h		;5c2e	21 39 e0 	! 9 . 
 	ld de,0e03ah		;5c31	11 3a e0 	. : . 
 	ld a,(LEVEL)		;5c34	3a 1b e0 	: . . 
@@ -18185,10 +18186,12 @@ lab6ah:
 	jp m,0cdf9h		;ab78	fa f9 cd 	. . . 
 	inc b			;ab7b	04 	. 
 	sub (hl)			;ab7c	96 	. 
-	ld a,(0e038h)		;ab7d	3a 38 e0 	: 8 . 
-	dec a			;ab80	3d 	= 
-	ld (0e038h),a		;ab81	32 38 e0 	2 8 . 
-	jr nz,sub_ab8fh		;ab84	20 09 	  . 
+
+	ld a,(BRICKS_LEFT)		;ab7d	3a 38 e0
+	dec a			        ;ab80	3d
+	ld (BRICKS_LEFT),a		;ab81	32 38 e0
+	jr nz,sub_ab8fh		    ;ab84	20 09
+
 	xor a			;ab86	af 	. 
 	ld (0e022h),a		;ab87	32 22 e0 	2 " . 
 	ld a,002h		;ab8a	3e 02 	> . 
@@ -19103,9 +19106,10 @@ lb020h:
 	pop ix		;b025	dd e1 	. . 
 	ret			;b027	c9 	. 
 sub_b028h:
-	ld a,(0e038h)		;b028	3a 38 e0 	: 8 . 
-	cp 004h		;b02b	fe 04 	. . 
-	ret c			;b02d	d8 	. 
+    ; Capsules won't fall if there are less than 4 bricks remaining
+	ld a,(BRICKS_LEFT)		;b028	3a 38 e0
+	cp 4		            ;b02b	fe 04
+	ret c			        ;b02d	d8
 	ld ix,0e317h		;b02e	dd 21 17 e3 	. ! . . 
 	ld iy,0e0c9h		;b032	fd 21 c9 e0 	. ! . . 
 	ld a,(0e317h)		;b036	3a 17 e3 	: . . 
