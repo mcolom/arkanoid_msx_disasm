@@ -27,12 +27,17 @@ CAPSULES_LEFT: equ 0xe023
 
 FINAL_LEVEL: equ 32
 
+; Alien table
+; Each entry is 20 positions
 ALIEN_STATUS: equ 0xe4c7
 ; [ToDo] Incomplete table
 ; [ToDo] We must have entries for each alien, not only one
-; 00 00 --> Absent
-; 03 01 --> Moving normally
-; 03 02 --> Exploding
+
+; <UNKNOWN>
+; <ACTION>: 0=absent, 1=moving normally
+; <ACTION>: 0=not exploding, 1=exploding
+
+;ALIEN_ST_2: equ 0xe4db
 
 
 	org	04000h
