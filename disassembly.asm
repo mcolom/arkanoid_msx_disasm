@@ -21,6 +21,8 @@ EXTRA_BALLS: equ 0xe325
 LEVEL: equ 0xe01b
 LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
 
+LIVES: equ 0xe01d
+
 FINAL_LEVEL: equ 32
 
 	org	04000h
@@ -1852,13 +1854,19 @@ l4cc6h:
 	ld a,(0e001h)		;4ce0	3a 01 e0 	: . . 
 	or a			;4ce3	b7 	. 
 	jp z,l4ce9h		;4ce4	ca e9 4c 	. . L 
-	ld c,0f0h		;4ce7	0e f0 	. . 
+    
+    ; Cheat
+    ; To get 240 lives, at the title screen, hold Up + Down, press the Graph key 4 times and then
+    ; press Space to start the game.
+    ; https://gamefaqs.gamespot.com/msx/932003-arkanoid/cheats
+	ld c, 240   		;4ce7	0e f0
 l4ce9h:
-	ld a,c			;4ce9	79 	y 
-	ld (0e01dh),a		;4cea	32 1d e0 	2 . . 
-	ld hl,00000h		;4ced	21 00 00 	! . . 
-	ld (0e001h),hl		;4cf0	22 01 e0 	" . . 
-	ld a,(0e003h)		;4cf3	3a 03 e0 	: . . 
+	ld a,c			    ;4ce9	79
+	ld (LIVES),a		;4cea	32 1d e0
+
+	ld hl,00000h		;4ced	21 00 00
+	ld (0e001h),hl		;4cf0	22 01 e0
+	ld a,(0e003h)		;4cf3	3a 03 e0
 	or a			;4cf6	b7 	. 
 	jp z,l4d00h		;4cf7	ca 00 4d 	. . M 
 	ld hl,(0e005h)		;4cfa	2a 05 e0 	* . . 
@@ -2608,8 +2616,8 @@ sub_5319h:
 	jp c,l5336h		;5332	da 36 53 	. 6 S 
 	ret nz			;5335	c0 	. 
 l5336h:
-	ld hl,0e01dh		;5336	21 1d e0 	! . . 
-	inc (hl)			;5339	34 	4 
+	ld hl,LIVES		    ;5336	21 1d e0
+	inc (hl)			;5339	34 	4
 	call sub_71b9h		;533a	cd b9 71 	. . q 
 	ld a,0c5h		;533d	3e c5 	> . 
 	call sub_5befh		;533f	cd ef 5b 	. . [ 
@@ -8260,14 +8268,15 @@ l71a1h:
 	ld (bc),a			;71b7	02 	. 
 	dec b			;71b8	05 	. 
 sub_71b9h:
-	ld a,(0e01dh)		;71b9	3a 1d e0 	: . . 
+	ld a,(LIVES)		;71b9	3a 1d e0 	: . . 
 	or a			;71bc	b7 	. 
 	ret z			;71bd	c8 	. 
-	ld a,(0e01dh)		;71be	3a 1d e0 	: . . 
+	ld a,(LIVES)		;71be	3a 1d e0 	: . . 
 l71c1h:
-	cp 006h		;71c1	fe 06 	. . 
-	jp c,l71c8h		;71c3	da c8 71 	. . q 
-	ld a,006h		;71c6	3e 06 	> . 
+    ; Display only up to 6 lives
+	cp 6		    ;71c1	fe 06
+	jp c,l71c8h		;71c3	da c8 71
+	ld a, 6		    ;71c6	3e 06
 l71c8h:
 	ld (0e53ch),a		;71c8	32 3c e5 	2 < . 
 	xor a			;71cb	af 	. 
@@ -9634,7 +9643,7 @@ l7babh:
 	jp l7c44h		;7c04	c3 44 7c 	. D | 
 	ld hl,00030h		;7c07	21 30 00 	! 0 . 
 	call 04380h		;7c0a	cd 80 43 	. . C 
-	ld hl,0e01dh		;7c0d	21 1d e0 	! . . 
+	ld hl,LIVES		;7c0d	21 1d e0 	! . . 
 	dec (hl)			;7c10	35 	5 
 	ld a,(hl)			;7c11	7e 	~ 
 	cp 0ffh		;7c12	fe ff 	. . 
@@ -19426,7 +19435,7 @@ lb292h:
 	call sub_b2a7h		;b292	cd a7 b2 	. . . 
 	ld a,001h		;b295	3e 01 	> . 
 	ld (0e327h),a		;b297	32 27 e3 	2 ' . 
-	ld hl,0e01dh		;b29a	21 1d e0 	! . . 
+	ld hl,LIVES		;b29a	21 1d e0 	! . . 
 	inc (hl)			;b29d	34 	4 
 	call sub_71b9h		;b29e	cd b9 71 	. . q 
 	ld a,0c5h		;b2a1	3e c5 	> . 
