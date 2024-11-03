@@ -17,6 +17,11 @@ VAUS_X2: equ 0xe53e
 ; 3 balls = 2 EXTRA_BALLS.
 EXTRA_BALLS: equ 0xe325
 
+; First level is zero
+LEVEL: equ 0xe01b
+
+FINAL_LEVEL: equ 32
+
 	org	04000h
 
     ; MSX ROM header
@@ -1823,7 +1828,7 @@ l4ca2h:
 	ld de,l4cc2h		;4cb3	11 c2 4c 	. . L 
 	add hl,de			;4cb6	19 	. 
 	ld a,(hl)			;4cb7	7e 	~ 
-	ld (0e01bh),a		;4cb8	32 1b e0 	2 . . 
+	ld (LEVEL),a		;4cb8	32 1b e0 	2 . . 
 	xor a			;4cbb	af 	. 
 	ld (0e022h),a		;4cbc	32 22 e0 	2 " . 
 	jp l4d09h		;4cbf	c3 09 4d 	. . M 
@@ -1856,7 +1861,7 @@ l4ce9h:
 	or a			;4cf6	b7 	. 
 	jp z,l4d00h		;4cf7	ca 00 4d 	. . M 
 	ld hl,(0e005h)		;4cfa	2a 05 e0 	* . . 
-	ld (0e01bh),hl		;4cfd	22 1b e0 	" . . 
+	ld (LEVEL),hl		;4cfd	22 1b e0 	" . . 
 l4d00h:
 	ld hl,00000h		;4d00	21 00 00 	! . . 
 	ld (0e003h),hl		;4d03	22 03 e0 	" . . 
@@ -1969,8 +1974,8 @@ l4df7h:
 	ld iy,00380h		;4e04	fd 21 80 03 	. ! . . 
 l4e08h:
 	ld hl,l5735h		;4e08	21 35 57 	! 5 W 
-	ld a,(0e01bh)		;4e0b	3a 1b e0 	: . . 
-	cp 020h		;4e0e	fe 20 	.   
+	ld a,(LEVEL)		;4e0b	3a 1b e0 	: . . 
+	cp FINAL_LEVEL		;4e0e	fe 20 	.   
 	jp z,l4e22h		;4e10	ca 22 4e 	. " N 
 	and 003h		;4e13	e6 03 	. . 
 	ld e,a			;4e15	5f 	_ 
@@ -1995,14 +2000,14 @@ l4e22h:
 	call sub_5bbdh		;4e34	cd bd 5b 	. . [ 
 	call sub_7204h		;4e37	cd 04 72 	. . r 
 	call sub_71b9h		;4e3a	cd b9 71 	. . q 
-	ld a,(0e01bh)		;4e3d	3a 1b e0 	: . . 
-	cp 020h		;4e40	fe 20 	.   
+	ld a,(LEVEL)		;4e3d	3a 1b e0 	: . . 
+	cp FINAL_LEVEL		;4e40	fe 20
 	jp z,l4e71h		;4e42	ca 71 4e 	. q N 
 	ld hl,l5defh		;4e45	21 ef 5d 	! . ] 
 	ld a,(0e022h)		;4e48	3a 22 e0 	: " . 
 	cp 002h		;4e4b	fe 02 	. . 
 	jp z,l4e65h		;4e4d	ca 65 4e 	. e N 
-	ld a,(0e01bh)		;4e50	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;4e50	3a 1b e0 	: . . 
 	ld e,a			;4e53	5f 	_ 
 	sla e		;4e54	cb 23 	. # 
 	ld d,000h		;4e56	16 00 	. . 
@@ -2031,8 +2036,8 @@ l4e74h:
 	ld a,(0e00bh)		;4e84	3a 0b e0 	: . . 
 	or a			;4e87	b7 	. 
 	jp z,l4eb4h		;4e88	ca b4 4e 	. . N 
-	ld a,(0e01bh)		;4e8b	3a 1b e0 	: . . 
-	cp 020h		;4e8e	fe 20 	.   
+	ld a,(LEVEL)		;4e8b	3a 1b e0
+	cp FINAL_LEVEL		;4e8e	fe 20
 	jp z,l4ea5h		;4e90	ca a5 4e 	. . N 
 	ld a,0c4h		;4e93	3e c4 	> . 
 	ld (0e5c0h),a		;4e95	32 c0 e5 	2 . . 
@@ -2304,7 +2309,7 @@ l5149h:
 	ld l,h			;5163	6c 	l 
 	rrca			;5164	0f 	. 
 sub_5165h:
-	ld a,(0e01bh)		;5165	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5165	3a 1b e0 	: . . 
 	and 003h		;5168	e6 03 	. . 
 	ld l,a			;516a	6f 	o 
 	ld h,000h		;516b	26 00 	& . 
@@ -4406,9 +4411,9 @@ sub_5bbdh:
 	ld iy,02380h		;5bbf	fd 21 80 23 	. ! . # 
 l5bc3h:
 	ld c,081h		;5bc3	0e 81 	. . 
-	ld a,(0e01bh)		;5bc5	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5bc5	3a 1b e0
 l5bc8h:
-	cp 020h		;5bc8	fe 20 	.   
+	cp FINAL_LEVEL		;5bc8	fe 20
 	jp z,l5bd7h		;5bca	ca d7 5b 	. . [ 
 	and 003h		;5bcd	e6 03 	. . 
 	ld e,a			;5bcf	5f 	_ 
@@ -4462,7 +4467,7 @@ sub_5c15h:
 	cp 002h		;5c1b	fe 02 	. . 
 	jp z,l5c45h		;5c1d	ca 45 5c 	. E \ 
 	ld hl,l5d00h		;5c20	21 00 5d 	! . ] 
-	ld a,(0e01bh)		;5c23	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5c23	3a 1b e0 	: . . 
 	ld e,a			;5c26	5f 	_ 
 	ld d,000h		;5c27	16 00 	. . 
 	add hl,de			;5c29	19 	. 
@@ -4470,7 +4475,7 @@ sub_5c15h:
 	ld (0e038h),a		;5c2b	32 38 e0 	2 8 . 
 	ld hl,0e039h		;5c2e	21 39 e0 	! 9 . 
 	ld de,0e03ah		;5c31	11 3a e0 	. : . 
-	ld a,(0e01bh)		;5c34	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5c34	3a 1b e0 	: . . 
 	srl a		;5c37	cb 3f 	. ? 
 	srl a		;5c39	cb 3f 	. ? 
 	srl a		;5c3b	cb 3f 	. ? 
@@ -4482,7 +4487,7 @@ sub_5c15h:
 l5c45h:
 	ld ix,0e36eh		;5c45	dd 21 6e e3 	. ! n . 
 	ld de,l5e2fh		;5c49	11 2f 5e 	. / ^ 
-	ld a,(0e01bh)		;5c4c	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5c4c	3a 1b e0 	: . . 
 	ld l,a			;5c4f	6f 	o 
 	ld h,000h		;5c50	26 00 	& . 
 	add hl,hl			;5c52	29 	) 
@@ -4494,7 +4499,7 @@ sub_5c54h:
 	push de			;5c57	d5 	. 
 	pop iy		;5c58	fd e1 	. . 
 	ld de,l5defh		;5c5a	11 ef 5d 	. . ] 
-	ld a,(0e01bh)		;5c5d	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5c5d	3a 1b e0 	: . . 
 	ld l,a			;5c60	6f 	o 
 	ld h,000h		;5c61	26 00 	& . 
 	add hl,hl			;5c63	29 	) 
@@ -4529,7 +4534,7 @@ l5c8dh:
 	push ix		;5c91	dd e5 	. . 
 	push de			;5c93	d5 	. 
 	ld de,l5defh		;5c94	11 ef 5d 	. . ] 
-	ld a,(0e01bh)		;5c97	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;5c97	3a 1b e0 	: . . 
 	ld l,a			;5c9a	6f 	o 
 	ld h,000h		;5c9b	26 00 	& . 
 	add hl,hl			;5c9d	29 	) 
@@ -8359,8 +8364,8 @@ sub_7241h:
 	ldir		;726b	ed b0 	. . 
 	ret			;726d	c9 	. 
 l726eh:
-	ld a,(0e01bh)		;726e	3a 1b e0 	: . . 
-	cp 020h		;7271	fe 20 	.   
+	ld a,(LEVEL)		;726e	3a 1b e0
+	cp FINAL_LEVEL		;7271	fe 20
 	jp z,l7286h		;7273	ca 86 72 	. . r 
 	call 07605h		;7276	cd 05 76 	. . v 
 	call sub_7888h		;7279	cd 88 78 	. . x 
@@ -8448,7 +8453,7 @@ sub_730ch:
 	ret nz			;7318	c0 	. 
 l7319h:
 	ld (ix+000h),000h		;7319	dd 36 00 00 	. 6 . . 
-	ld a,(0e01bh)		;731d	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;731d	3a 1b e0 	: . . 
 	ld e,a			;7320	5f 	_ 
 	ld d,000h		;7321	16 00 	. . 
 	ld hl,l7353h		;7323	21 53 73 	! S s 
@@ -8511,7 +8516,7 @@ l7373h:
 	nop			;7373	00 	. 
 	ld bc,00302h		;7374	01 02 03 	. . . 
 sub_7377h:
-	ld a,(0e01bh)		;7377	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;7377	3a 1b e0 	: . . 
 	ld e,a			;737a	5f 	_ 
 	ld d,000h		;737b	16 00 	. . 
 	ld hl,l7353h		;737d	21 53 73 	! S s 
@@ -8523,7 +8528,7 @@ l7386h:
 	or a			;7389	b7 	. 
 	jp nz,l73a2h		;738a	c2 a2 73 	. . s 
 	ld (iy+001h),001h		;738d	fd 36 01 01 	. 6 . . 
-	ld a,(0e01bh)		;7391	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;7391	3a 1b e0 	: . . 
 	and 003h		;7394	e6 03 	. . 
 	ld e,a			;7396	5f 	_ 
 	ld d,000h		;7397	16 00 	. . 
@@ -9006,7 +9011,7 @@ l7763h:
 	cp 004h		;7769	fe 04 	. . 
 	jp nz,l786dh		;776b	c2 6d 78 	. m x 
 	ld (ix+011h),000h		;776e	dd 36 11 00 	. 6 . . 
-	ld a,(0e01bh)		;7772	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;7772	3a 1b e0 	: . . 
 	and 003h		;7775	e6 03 	. . 
 	ld l,a			;7777	6f 	o 
 	ld h,000h		;7778	26 00 	& . 
@@ -9023,7 +9028,7 @@ l7763h:
 	ld a,(hl)			;7789	7e 	~ 
 	ld (iy+002h),a		;778a	fd 77 02 	. w . 
 	inc (ix+00ah)		;778d	dd 34 0a 	. 4 . 
-	ld a,(0e01bh)		;7790	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;7790	3a 1b e0 	: . . 
 	and 003h		;7793	e6 03 	. . 
 	ld l,a			;7795	6f 	o 
 	ld h,000h		;7796	26 00 	& . 
@@ -9597,10 +9602,10 @@ l7babh:
 	add a,001h		;7bb4	c6 01 	. . 
 	daa			;7bb6	27 	' 
 	ld (0e01ch),a		;7bb7	32 1c e0 	2 . . 
-	ld hl,0e01bh		;7bba	21 1b e0 	! . . 
+	ld hl,LEVEL		;7bba	21 1b e0 	! . . 
 	inc (hl)			;7bbd	34 	4 
-	ld a,(hl)			;7bbe	7e 	~ 
-	cp 021h		;7bbf	fe 21 	. ! 
+	ld a,(hl)			;7bbe	7e
+	cp FINAL_LEVEL+1	;7bbf	fe 21
 	jp nz,l7c7dh		;7bc1	c2 7d 7c 	. } | 
 	ld (hl),000h		;7bc4	36 00 	6 . 
 	inc hl			;7bc6	23 	# 
@@ -9633,9 +9638,9 @@ l7babh:
 	ld a,(hl)			;7c11	7e 	~ 
 	cp 0ffh		;7c12	fe ff 	. . 
 	jp nz,l7c7dh		;7c14	c2 7d 7c 	. } | 
-	ld hl,(0e01bh)		;7c17	2a 1b e0 	* . . 
-	ld a,l			;7c1a	7d 	} 
-	cp 020h		;7c1b	fe 20 	.   
+	ld hl,(LEVEL)		;7c17	2a 1b e0 	* . . 
+	ld a,l			    ;7c1a	7d
+	cp FINAL_LEVEL		;7c1b	fe 20
 	jp nz,l7c23h		;7c1d	c2 23 7c 	. # | 
 	ld hl,0321fh		;7c20	21 1f 32 	! . 2 
 l7c23h:
@@ -15523,7 +15528,7 @@ l9622h:
 	jr z,l9672h		;965a	28 16 	( . 
 	cp 065h		;965c	fe 65 	. e 
 	ret nz			;965e	c0 	. 
-	ld a,(0e01bh)		;965f	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;965f	3a 1b e0 	: . . 
 	and 0f8h		;9662	e6 f8 	. . 
 	srl a		;9664	cb 3f 	. ? 
 	srl a		;9666	cb 3f 	. ? 
@@ -15623,9 +15628,9 @@ sub_9710h:
 	ld (0e0fdh),a		;9722	32 fd e0 	2 . . 
 	ret			;9725	c9 	. 
 sub_9726h:
-	ld a,(0e01bh)		;9726	3a 1b e0 	: . . 
-	cp 020h		;9729	fe 20 	.   
-	ret z			;972b	c8 	. 
+	ld a,(LEVEL)		;9726	3a 1b e0
+	cp FINAL_LEVEL		;9729	fe 20
+	ret z			    ;972b	c8
 	xor a			;972c	af 	. 
 	ld (0e53ch),a		;972d	32 3c e5 	2 < . 
 	ld iy,0e4c7h		;9730	fd 21 c7 e4 	. ! . . 
@@ -15714,8 +15719,8 @@ l97e7h:
 	pop ix		;97e7	dd e1 	. . 
 	ret			;97e9	c9 	. 
 sub_97eah:
-	ld a,(0e01bh)		;97ea	3a 1b e0 	: . . 
-	cp 020h		;97ed	fe 20 	.   
+	ld a,(LEVEL)		;97ea	3a 1b e0
+	cp FINAL_LEVEL		;97ed	fe 20
 	ret z			;97ef	c8 	. 
 	ld b,008h		;97f0	06 08 	. . 
 	ld de,00008h		;97f2	11 08 00 	. . . 
@@ -15825,7 +15830,7 @@ l9898h:
 	ld (iy+00eh),078h		;98ba	fd 36 0e 78 	. 6 . x 
 	ld (iy+006h),003h		;98be	fd 36 06 03 	. 6 . . 
 	ld (iy+002h),0ffh		;98c2	fd 36 02 ff 	. 6 . . 
-	ld a,(0e01bh)		;98c6	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;98c6	3a 1b e0 	: . . 
 	ld l,a			;98c9	6f 	o 
 	ld h,000h		;98ca	26 00 	& . 
 	ld de,l98d7h		;98cc	11 d7 98 	. . . 
@@ -16026,8 +16031,8 @@ l9a36h:
 	push bc			;9a4c	c5 	. 
 	push ix		;9a4d	dd e5 	. . 
 	push iy		;9a4f	fd e5 	. . 
-	ld a,(0e01bh)		;9a51	3a 1b e0 	: . . 
-	cp 020h		;9a54	fe 20 	.   
+	ld a,(LEVEL)		;9a51	3a 1b e0
+	cp FINAL_LEVEL		;9a54	fe 20
 	jr nz,l9a5dh		;9a56	20 05 	  . 
 	call sub_967bh		;9a58	cd 7b 96 	. { . 
 	jr l9a60h		;9a5b	18 03 	. . 
@@ -16301,8 +16306,8 @@ l9c27h:
 	inc bc			;9c2b	03 	. 
 	ld (bc),a			;9c2c	02 	. 
 sub_9c2dh:
-	ld a,(0e01bh)		;9c2d	3a 1b e0 	: . . 
-	cp 020h		;9c30	fe 20 	.   
+	ld a,(LEVEL)		;9c2d	3a 1b e0
+	cp FINAL_LEVEL		;9c30	fe 20
 	ret nc			;9c32	d0 	. 
 	bit 7,(iy+002h)		;9c33	fd cb 02 7e 	. . . ~ 
 	jp z,l9dcfh		;9c37	ca cf 9d 	. . . 
@@ -17949,7 +17954,7 @@ laa01h:
 	ret			;aa04	c9 	. 
 sub_aa05h:
 	call sub_9af0h		;aa05	cd f0 9a 	. . . 
-	ld a,(0e01bh)		;aa08	3a 1b e0 	: . . 
+	ld a,(LEVEL)		;aa08	3a 1b e0 	: . . 
 	sla a		;aa0b	cb 27 	. ' 
 	ld e,a			;aa0d	5f 	_ 
 	ld d,000h		;aa0e	16 00 	. . 
@@ -19249,8 +19254,8 @@ lb12fh:
 	scf			;b135	37 	7 
 	ret			;b136	c9 	. 
 sub_b137h:
-	ld a,(0e01bh)		;b137	3a 1b e0 	: . . 
-	cp 020h		;b13a	fe 20 	.   
+	ld a,(LEVEL)		;b137	3a 1b e0
+	cp FINAL_LEVEL		;b13a	fe 20
 	ret z			;b13c	c8 	. 
 	ld ix,0e317h		;b13d	dd 21 17 e3 	. ! . . 
 	ld iy,0e0c9h		;b141	fd 21 c9 e0 	. ! . . 
@@ -19265,8 +19270,8 @@ sub_b137h:
 	ld (iy+000h),0c0h		;b157	fd 36 00 c0 	. 6 . . 
 	ret			;b15b	c9 	. 
 sub_b15ch:
-	ld a,(0e01bh)		;b15c	3a 1b e0 	: . . 
-	cp 020h		;b15f	fe 20 	.   
+	ld a,(LEVEL)		;b15c	3a 1b e0
+	cp FINAL_LEVEL		;b15f	fe 20
 	ret z			;b161	c8 	. 
 	ld a,(0e54bh)		;b162	3a 4b e5 	: K . 
 	cp 006h		;b165	fe 06 	. . 
