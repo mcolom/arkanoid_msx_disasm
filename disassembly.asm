@@ -23,6 +23,7 @@ LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
 
 LIVES: equ 0xe01d
 BRICKS_LEFT: equ 0xe038
+CAPSULES_LEFT: equ 0xe023
 
 FINAL_LEVEL: equ 32
 
@@ -19213,17 +19214,18 @@ sub_b0ddh:
 	ld a,(0e326h)		;b0dd	3a 26 e3 	: & . 
 	or a			;b0e0	b7 	. 
 	ret nz			;b0e1	c0 	. 
-	ld hl,0e023h		;b0e2	21 23 e0 	! # . 
+	ld hl,CAPSULES_LEFT		;b0e2	21 23 e0 	! # . 
 	ld a,(hl)			;b0e5	7e 	~ 
 	or a			;b0e6	b7 	. 
 	jr nz,lb0f7h		;b0e7	20 0e 	  . 
 	ld a,r		;b0e9	ed 5f 	. _ 
 	add a,c			;b0eb	81 	. 
 	add a,b			;b0ec	80 	. 
-	and 01fh		;b0ed	e6 1f 	. . 
-	ld (0e024h),a		;b0ef	32 24 e0 	2 $ . 
-	ld a,021h		;b0f2	3e 21 	> ! 
-	ld (0e023h),a		;b0f4	32 23 e0 	2 # . 
+	and 01fh		;b0ed	e6 1f
+	ld (0e024h),a	;b0ef	32 24 e0
+
+	ld a, 33		;b0f2	3e 21
+	ld (CAPSULES_LEFT),a		;b0f4	32 23 e0 	2 # . 
 lb0f7h:
 	dec (hl)			;b0f7	35 	5 
 	ld hl,0e024h		;b0f8	21 24 e0 	! $ . 
