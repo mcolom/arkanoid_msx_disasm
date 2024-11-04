@@ -145,24 +145,35 @@ ROM_START:
 	xor a			    ;4092	af
 	call FILVRM		    ;4093	cd 56 00
     
-	ld hl,l9024h		;4096	21 24 90 	! $ . 
-	ld de,00000h		;4099	11 00 00 	. . . 
-	call sub_4220h		;409c	cd 20 42 	.   B 
-	ld hl,l9024h		;409f	21 24 90 	! $ . 
-	ld de,00800h		;40a2	11 00 08 	. . . 
-	call sub_4220h		;40a5	cd 20 42 	.   B 
-	ld hl,l9024h		;40a8	21 24 90 	! $ . 
-	ld de,01000h		;40ab	11 00 10 	. . . 
-	call sub_4220h		;40ae	cd 20 42 	.   B 
+    ; Fill pattern table (1/3)
+	ld hl,l9024h		    ;4096	21 24 90
+	ld de, 0 * 8*32*24/3	;4099	11 00 00
+	call LDIRVM_32x24_THIRD		    ;409c	cd 20 42
+
+    ; Fill pattern table (2/3)
+	ld hl,l9024h		    ;409f	21 24 90
+	ld de, 1 * 8*32*24/3	;40a2	11 00 08
+	call LDIRVM_32x24_THIRD		    ;40a5	cd 20 42
+
+    ; Fill pattern table (3/3)
+	ld hl,l9024h		    ;40a8	21 24 90
+	ld de, 2 * 8*32*24/3	;40ab	11 00 10
+	call LDIRVM_32x24_THIRD		    ;40ae	cd 20 42
+
+    ; Fill color table
 	call sub_41ffh		;40b1	cd ff 41 	. . A 
+
 	ld hl,l8684h		;40b4	21 84 86 	! . . 
 	ld de,03800h		;40b7	11 00 38 	. . 8 
 	ld bc,00800h		;40ba	01 00 08 	. . . 
 	call LDIRVM		;40bd	cd 5c 00 	. \ . 
+
 	call sub_43ffh		;40c0	cd ff 43 	. . C 
+
 	ld a,0f8h		;40c3	3e f8 	> . 
 	ld (0e5c0h),a		;40c5	32 c0 e5 	2 . . 
 	call sub_b4e8h		;40c8	cd e8 b4 	. . . 
+
 	ld a,0c3h		;40cb	3e c3 	> . 
 	ld (0fd9ah),a		;40cd	32 9a fd 	2 . . 
 	ld hl,l424ah		;40d0	21 4a 42 	! J B 
@@ -334,10 +345,12 @@ l4205h:
 PAUSE_STR:
     db "PAUSE"
 
-sub_4220h:
-	ld bc,00800h		;4220	01 00 08 	. . . 
-	call LDIRVM		;4223	cd 5c 00 	. \ . 
-	ret			;4226	c9 	. 
+; Perform a LDIRVM of one third of 32x24 chars
+LDIRVM_32x24_THIRD:
+	ld bc, 32*24*8/3	;4220	01 00 08
+	call LDIRVM		    ;4223	cd 5c 00
+	ret			        ;4226	c9
+
 sub_4227h:
 	ld hl,01800h		;4227	21 00 18 	! . . 
 	ld bc,00300h		;422a	01 00 03 	. . . 
@@ -1746,21 +1759,29 @@ sub_4b8ah:
 	ld (0f3ebh),a		;4bac	32 eb f3 	2 . . 
 	call CHGCLR		;4baf	cd 62 00 	. b . 
 	call sub_4227h		;4bb2	cd 27 42 	. ' B 
-	ld hl,l9024h		;4bb5	21 24 90 	! $ . 
-	ld de,00000h		;4bb8	11 00 00 	. . . 
-	call sub_4220h		;4bbb	cd 20 42 	.   B 
-	ld hl,l9024h		;4bbe	21 24 90 	! $ . 
-	ld de,00800h		;4bc1	11 00 08 	. . . 
-	call sub_4220h		;4bc4	cd 20 42 	.   B 
-	ld hl,l9024h		;4bc7	21 24 90 	! $ . 
-	ld de,01000h		;4bca	11 00 10 	. . . 
-	call sub_4220h		;4bcd	cd 20 42 	.   B 
+
+    ; Fill pattern table (1/3)
+	ld hl,l9024h		        ;4bb5	21 24 90
+	ld de, 0 * 8*32*24/3		;4bb8	11 00 00
+	call LDIRVM_32x24_THIRD		;4bbb	cd 20 42
+
+	; Fill pattern table (2/3)
+    ld hl,l9024h		        ;4bbe	21 24 90
+	ld de, 1 * 8*32*24/3		;4bc1	11 00 08
+	call LDIRVM_32x24_THIRD		;4bc4	cd 20 42
+
+	; Fill pattern table (3/3)
+    ld hl,l9024h		        ;4bc7	21 24 90
+	ld de, 2 * 8*32*24/3		;4bca	11 00 10
+	call LDIRVM_32x24_THIRD		;4bcd	cd 20 42
+
 	call sub_41ffh		;4bd0	cd ff 41 	. . A 
 
 	ld hl,01800h		;4bd3	21 00 18 	! . . 
 	ld a,000h		;4bd6	3e 00 	> . 
 	ld bc,00300h		;4bd8	01 00 03 	. . . 
 	call FILVRM		;4bdb	cd 56 00 	. V . 
+
 	call DRAW_UP_SCORES		;4bde	cd e0 4f 	. . O 
 
 	ld hl,l543eh		;4be1	21 3e 54 	! > T 
@@ -1953,50 +1974,68 @@ l4d30h:
 l4d46h:
 	ld a,001h		;4d46	3e 01 	> . 
 	ld (0e00ah),a		;4d48	32 0a e0 	2 . . 
-	ld hl,l7d84h		;4d4b	21 84 7d 	! . } 
-	ld de,00000h		;4d4e	11 00 00 	. . . 
-	call sub_4220h		;4d51	cd 20 42 	.   B 
-	ld hl,l7d84h		;4d54	21 84 7d 	! . } 
-	ld de,00800h		;4d57	11 00 08 	. . . 
-	call sub_4220h		;4d5a	cd 20 42 	.   B 
-	ld hl,l7d84h		;4d5d	21 84 7d 	! . } 
-	ld de,01000h		;4d60	11 00 10 	. . . 
-	call sub_4220h		;4d63	cd 20 42 	.   B 
+
+    ; Fill pattern table (1/3)
+	ld hl,l7d84h		    ;4d4b	21 84 7d
+	ld de, 0 * 8*32*24/3	;4d4e	11 00 00
+	call LDIRVM_32x24_THIRD	;4d51	cd 20 42
+
+	; Fill pattern table (21/3)
+    ld hl,l7d84h		    ;4d54	21 84 7d
+	ld de, 1 * 8*32*24/3	;4d57	11 00 08
+	call LDIRVM_32x24_THIRD	;4d5a	cd 20 42
+
+	; Fill pattern table (3/3)
+    ld hl,l7d84h		        ;4d5d	21 84 7d
+	ld de, 2 * 8*32*24/3		;4d60	11 00 10
+	call LDIRVM_32x24_THIRD		;4d63	cd 20 42
+
 	ld de,l8584h		;4d66	11 84 85 	. . . 
 	ld hl,02000h		;4d69	21 00 20 	! .   
 	call sub_4389h		;4d6c	cd 89 43 	. . C 
+
 	ld de,l8584h		;4d6f	11 84 85 	. . . 
 	ld hl,02800h		;4d72	21 00 28 	! . ( 
 	call sub_4389h		;4d75	cd 89 43 	. . C 
+
 	ld de,l8584h		;4d78	11 84 85 	. . . 
 	ld hl,03000h		;4d7b	21 00 30 	! . 0 
 	call sub_4389h		;4d7e	cd 89 43 	. . C 
+
 	ld hl,01800h		;4d81	21 00 18 	! . . 
 	ld a,000h		;4d84	3e 00 	> . 
 	ld bc,00300h		;4d86	01 00 03 	. . . 
 	call FILVRM		;4d89	cd 56 00 	. V . 
+
 	ld a,001h		;4d8c	3e 01 	> . 
 	ld (0e544h),a		;4d8e	32 44 e5 	2 D . 
 	call DRAW_UP_SCORE_NUMBERS		;4d91	cd b9 53 	. . S 
+
 	ld hl,l551fh		;4d94	21 1f 55 	! . U 
 	ld de,01839h		;4d97	11 39 18 	. 9 . 
 	ld bc,00004h		;4d9a	01 04 00 	. . . 
 	call LDIRVM		;4d9d	cd 5c 00 	. \ . 
+
 	ld hl,l5523h		;4da0	21 23 55 	! # U 
 	ld de,0185bh		;4da3	11 5b 18 	. [ . 
 	ld bc,00005h		;4da6	01 05 00 	. . . 
 	call LDIRVM		;4da9	cd 5c 00 	. \ . 
+
 	ld hl,05528h		;4dac	21 28 55 	! ( U 
 	ld de,018dbh		;4daf	11 db 18 	. . . 
 	ld bc,00005h		;4db2	01 05 00 	. . . 
 	call LDIRVM		;4db5	cd 5c 00 	. \ . 
+
 	call sub_5230h		;4db8	cd 30 52 	. 0 R 
+
 	ld hl,0187fh		;4dbb	21 7f 18 	!  . 
 	ld a,030h		;4dbe	3e 30 	> 0 
 	call WRTVRM		;4dc0	cd 4d 00 	. M . 
+
 	ld hl,018ffh		;4dc3	21 ff 18 	! . . 
 	ld a,030h		;4dc6	3e 30 	> 0 
 	call WRTVRM		;4dc8	cd 4d 00 	. M . 
+
 	ld a,000h		;4dcb	3e 00 	> . 
 	ld (0e56fh),a		;4dcd	32 6f e5 	2 o . 
 	ld b,017h		;4dd0	06 17 	. . 
