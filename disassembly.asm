@@ -15,6 +15,8 @@ VAUS_X2: equ 0xe53e
 ; Counts how many ticks the title screen is displayed
 TITLE_TICKS: equ 0xe53f
 
+TICKS_240: equ 0xe515
+
 ; Extra balls, apart from the current.
 ; For example, after getting the cyan brick, there are
 ; 3 balls = 2 EXTRA_BALLS.
@@ -42,6 +44,7 @@ ALIEN_STATUS: equ 0xe4c7
 
 ;ALIEN_ST_2: equ 0xe4db
 
+TABLE_UNKNOWN_1: equ 0xe101
 
 	org	04000h
 
@@ -8442,7 +8445,7 @@ l726eh:
 	ld a,(LEVEL)		;726e	3a 1b e0
 	cp FINAL_LEVEL		;7271	fe 20
 	jp z,l7286h		;7273	ca 86 72 	. . r 
-	call 07605h		;7276	cd 05 76 	. . v 
+	call sub_7605h		;7276	cd 05 76 	. . v 
 	call sub_7888h		;7279	cd 88 78 	. . x 
 	call sub_7942h		;727c	cd 42 79 	. B y 
 	call sub_730ch		;727f	cd 0c 73 	. . s 
@@ -8520,12 +8523,14 @@ l72f4h:
 	add hl,bc			;7309	09 	. 
 	ld a,(bc)			;730a	0a 	. 
 	dec bc			;730b	0b 	. 
+
 sub_730ch:
-	ld ix,0e515h		;730c	dd 21 15 e5 	. ! . . 
-	inc (ix+000h)		;7310	dd 34 00 	. 4 . 
-	ld a,(ix+000h)		;7313	dd 7e 00 	. ~ . 
-	cp 0f0h		;7316	fe f0 	. . 
-	ret nz			;7318	c0 	. 
+    ; Increment number of ticks and return if it's not 240
+	ld ix,TICKS_240		;730c	dd 21 15 e5
+	inc (ix+000h)		;7310	dd 34 00
+	ld a,(ix+000h)		;7313	dd 7e 00
+	cp 0f0h		        ;7316	fe f0
+	ret nz			    ;7318	c0
 l7319h:
 	ld (ix+000h),000h		;7319	dd 36 00 00 	. 6 . . 
 	ld a,(LEVEL)		;731d	3a 1b e0 	: . . 
@@ -8556,6 +8561,7 @@ l734bh:
 	add iy,de		;734e	fd 19 	. . 
 	djnz l732ch		;7350	10 da 	. . 
 	ret			;7352	c9 	. 
+
 l7353h:
 	ld bc,00302h		;7353	01 02 03 	. . . 
 	inc bc			;7356	03 	. 
@@ -8924,11 +8930,12 @@ l75edh:
 	jp nz,0c4c3h		;75fd	c2 c3 c4 	. . . 
 	push bc			;7600	c5 	. 
 	jp z,0cccbh		;7601	ca cb cc 	. . . 
-	call 021ddh		;7604	cd dd 21 	. . ! 
-	rst 0			;7607	c7 	. 
-	call po,021fdh		;7608	e4 fd 21 	. . ! 
-	ld bc,006e1h		;760b	01 e1 06 	. . . 
-	inc bc			;760e	03 	. 
+    db 0xcd          ;7604
+
+sub_7605h:
+    ld ix, ALIEN_STATUS
+    ld iy, TABLE_UNKNOWN_1
+    ld b, 3
 l760fh:
 	push bc			;760f	c5 	. 
 	ld a,(ix+002h)		;7610	dd 7e 02 	. ~ . 
@@ -9211,6 +9218,7 @@ l786dh:
 	dec b			;7878	05 	. 
 	jp nz,l760fh		;7879	c2 0f 76 	. . v 
 	ret			;787c	c9 	. 
+
 l787dh:
 	inc (ix+00ch)		;787d	dd 34 0c 	. 4 . 
 	ld a,(ix+00ch)		;7880	dd 7e 0c 	. ~ . 
@@ -9249,7 +9257,7 @@ l78bah:
 l78d3h:
 	ret			;78d3	c9 	. 
 sub_78d4h:
-	ld iy,0e101h		;78d4	fd 21 01 e1 	. ! . . 
+	ld iy,TABLE_UNKNOWN_1		;78d4	fd 21 01 e1 	. ! . . 
 	ld hl,0e4c8h		;78d8	21 c8 e4 	! . . 
 	ld b,003h		;78db	06 03 	. . 
 l78ddh:
@@ -9312,7 +9320,7 @@ l7935h:
 	ret			;7941	c9 	. 
 sub_7942h:
 	ld ix,0e0cdh		;7942	dd 21 cd e0 	. ! . . 
-	ld iy,0e101h		;7946	fd 21 01 e1 	. ! . . 
+	ld iy,TABLE_UNKNOWN_1		;7946	fd 21 01 e1 	. ! . . 
 	ld hl,0e4c8h		;794a	21 c8 e4 	! . . 
 	ld b,003h		;794d	06 03 	. . 
 l794fh:
@@ -9393,7 +9401,7 @@ l79dfh:
 l79fch:
 	ret			;79fc	c9 	. 
 sub_79fdh:
-	ld iy,0e101h		;79fd	fd 21 01 e1 	. ! . . 
+	ld iy,TABLE_UNKNOWN_1		;79fd	fd 21 01 e1 	. ! . . 
 	ld hl,0e4c8h		;7a01	21 c8 e4 	! . . 
 	ld b,003h		;7a04	06 03 	. . 
 l7a06h:
@@ -9695,7 +9703,7 @@ l7babh:
 	call sub_b4e8h		;7bd4	cd e8 b4 	. . . 
 	ei			;7bd7	fb 	. 
 	ld iy,ENDING_STR		;7bd8	fd 21 88 7c 	. ! . | 
-	ld ix,l7d72h		;7bdc	dd 21 72 7d 	. ! r } 
+	ld ix,0x7d72		;7bdc	dd 21 72 7d 	. ! r } 
 	call sub_4f8ah		;7be0	cd 8a 4f 	. . O 
 
     ; Wait 30 ticks
@@ -9804,10 +9812,10 @@ l7c7dh:
 ENDING_STR:
     db "DIMENSION-CONTROLLING FORT\"DOH\" HAS NOW BEEN        DEMOLISHED, AND TIME      STARTED FLOWING REVERSELY.\"VAUS\" MANAGED TO ESCAPE  FROM THE DISTORTED SPACE. BUT THE REAL VOYAGE OF    \"ARKANOID\" IN THE GALAXY  HAS ONLY STARTED......    "
 
-l7d72h:
+0x7d72:
 	ld b,e			;7d72	43 	C 
-	jr 0x7cf8		;7d73	18 83 	. . 
-	jr 0x7d3a		;7d75	18 c3 	. . 
+    db 0x18, 0x83
+    db 0x18, 0xc3
 	jr l7d7ch		;7d77	18 03 	. . 
 	add hl,de			;7d79	19 	. 
 	ld h,e			;7d7a	63 	c 
@@ -15726,7 +15734,7 @@ sub_9726h:
 	xor a			;972c	af 	. 
 	ld (0e53ch),a		;972d	32 3c e5 	2 < . 
 	ld iy,ALIEN_STATUS		;9730	fd 21 c7 e4 	. ! . . 
-	ld ix,0e101h		;9734	dd 21 01 e1 	. ! . . 
+	ld ix,TABLE_UNKNOWN_1		;9734	dd 21 01 e1 	. ! . . 
 l9738h:
 	ld a,(iy+001h)		;9738	fd 7e 01 	. ~ . 
 	or a			;973b	b7 	. 
@@ -19969,6 +19977,7 @@ lb4d1h:
 lb4e1h:
 	ld (ix+000h),000h		;b4e1	dd 36 00 00 	. 6 . . 
 	ld (0e5c0h),a		;b4e5	32 c0 e5 	2 . . 
+
 sub_b4e8h:
 	push hl			;b4e8	e5 	. 
 	push de			;b4e9	d5 	. 
@@ -20006,6 +20015,7 @@ lb518h:
 	pop de			;b51a	d1 	. 
 	pop hl			;b51b	e1 	. 
 	ret			;b51c	c9 	. 
+
 sub_b51dh:
 	ld b,0b4h		;b51d	06 b4 	. . 
 	ld c,a			;b51f	4f 	O 
@@ -20060,6 +20070,7 @@ lb54dh:
 	inc hl			;b555	23 	# 
 	ld (hl),001h		;b556	36 01 	6 . 
 	ret			;b558	c9 	. 
+
 lb559h:
 	ld bc,lb518h		;b559	01 18 b5 	. . . 
 	push bc			;b55c	c5 	. 
