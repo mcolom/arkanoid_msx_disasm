@@ -302,7 +302,7 @@ l41b1h:
 	call sub_7241h		;41c6	cd 41 72 	. A r 
 	ld a,001h		;41c9	3e 01 	> . 
 	ld (0e544h),a		;41cb	32 44 e5 	2 D . 
-	call DRAW_UP_SCORE_NUMBERS		;41ce	cd b9 53 	. . S 
+	call DRAW_SCORE_NUMBERS		;41ce	cd b9 53 	. . S 
 	jp l41dah		;41d1	c3 da 41 	. . A 
 	call sub_7b94h		;41d4	cd 94 7b 	. . { 
 	jp l41dah		;41d7	c3 da 41 	. . A 
@@ -2007,34 +2007,42 @@ l4d46h:
 	ld bc,00300h		;4d86	01 00 03 	. . . 
 	call FILVRM		;4d89	cd 56 00 	. V . 
 
-	ld a,001h		;4d8c	3e 01 	> . 
-	ld (0e544h),a		;4d8e	32 44 e5 	2 D . 
-	call DRAW_UP_SCORE_NUMBERS		;4d91	cd b9 53 	. . S 
+    ; Draw score numbers on the right
+	ld a,001h		            ;4d8c	3e 01
+	ld (0e544h),a		        ;4d8e	32 44 e5
+	call DRAW_SCORE_NUMBERS		;4d91	cd b9 53
 
-	ld hl,l551fh		;4d94	21 1f 55 	! . U 
-	ld de,01839h		;4d97	11 39 18 	. 9 . 
-	ld bc,00004h		;4d9a	01 04 00 	. . . 
-	call LDIRVM		;4d9d	cd 5c 00 	. \ . 
+    ; Write "HIGH"
+	ld hl,HIGH_LETTERS		    ;4d94	21 1f 55
+	ld de,01839h		        ;4d97	11 39 18
+	ld bc,00004h		        ;4d9a	01 04 00
+	call LDIRVM		            ;4d9d	cd 5c 00
 
-	ld hl,l5523h		;4da0	21 23 55 	! # U 
-	ld de,0185bh		;4da3	11 5b 18 	. [ . 
-	ld bc,00005h		;4da6	01 05 00 	. . . 
-	call LDIRVM		;4da9	cd 5c 00 	. \ . 
+    ; Write "SCORE"
+	ld hl,SCORE_LETTERS		    ;4da0	21 23 55
+	ld de,0185bh		        ;4da3	11 5b 18
+	ld bc,00005h		        ;4da6	01 05 00
+	call LDIRVM		            ;4da9	cd 5c 00
 
-	ld hl,05528h		;4dac	21 28 55 	! ( U 
-	ld de,018dbh		;4daf	11 db 18 	. . . 
-	ld bc,00005h		;4db2	01 05 00 	. . . 
-	call LDIRVM		;4db5	cd 5c 00 	. \ . 
+    ; Write "SCORE"
+    ; It uses a duplicated string: it could have used the same SCORE_LETTERS!
+	ld hl, SCORE_LETTERS_DUP		;4dac	21 28 55
+	ld de,018dbh		            ;4daf	11 db 18
+	ld bc,00005h		            ;4db2	01 05 00
+	call LDIRVM		                ;4db5	cd 5c 00
 
-	call sub_5230h		;4db8	cd 30 52 	. 0 R 
+    ; Draw the game's frame
+	call DRAW_FRAME		            ;4db8	cd 30 52
 
-	ld hl,0187fh		;4dbb	21 7f 18 	!  . 
-	ld a,030h		;4dbe	3e 30 	> 0 
-	call WRTVRM		;4dc0	cd 4d 00 	. M . 
+    ; Draw a trailing "0" in the HIGH SCORE
+	ld hl,0187fh    ;4dbb	21 7f 18
+	ld a, "0"		;4dbe	3e 30
+	call WRTVRM		;4dc0	cd 4d 00
 
-	ld hl,018ffh		;4dc3	21 ff 18 	! . . 
-	ld a,030h		;4dc6	3e 30 	> 0 
-	call WRTVRM		;4dc8	cd 4d 00 	. M . 
+	; Draw a trailing "0" in the SCORE
+    ld hl,018ffh	;4dc3	21 ff 18
+	ld a,030h		;4dc6	3e 30
+	call WRTVRM		;4dc8	cd 4d 00
 
 	ld a,000h		;4dcb	3e 00 	> . 
 	ld (0e56fh),a		;4dcd	32 6f e5 	2 o . 
@@ -2077,7 +2085,7 @@ l4e08h:
 	ld e,a			;4e15	5f 	_ 
 	ld d,000h		;4e16	16 00 	. . 
 	sla e		;4e18	cb 23 	. # 
-	ld hl,l552ch+1		;4e1a	21 2d 55 	! - U 
+	ld hl,0x552d		;4e1a	21 2d 55 	! - U 
 	add hl,de			;4e1d	19 	. 
 	ld e,(hl)			;4e1e	5e 	^ 
 	inc hl			;4e1f	23 	# 
@@ -2331,7 +2339,7 @@ DRAW_UP_SCORES:
     
     ; Write the score number.
     ; For example, "160    50000"
-	call DRAW_UP_SCORE_NUMBERS		;5001	cd b9 53
+	call DRAW_SCORE_NUMBERS		;5001	cd b9 53
 	ret			;5004	c9 	. 
 
 STORY_STR:
@@ -2576,7 +2584,9 @@ l5222h:
 	jp pe,0ecebh		;522a	ea eb ec 	. . . 
 	defb 0edh;next byte illegal after ed		;522d	ed 	. 
 	xor 0efh		;522e	ee ef 	. . 
-sub_5230h:
+
+; Draw the game's frame
+DRAW_FRAME:
 	ld hl,l5271h		;5230	21 71 52 	! q R 
 	ld bc,00018h		;5233	01 18 00 	. . . 
 	ld de,01801h		;5236	11 01 18 	. . . 
@@ -2605,6 +2615,7 @@ l5265h:
 	ld a,(ix+000h)		;526b	dd 7e 00 	. ~ . 
 	djnz l5265h		;526e	10 f5 	. . 
 	ret			;5270	c9 	. 
+
 l5271h:
 	ld (bc),a			;5271	02 	. 
 	inc c			;5272	0c 	. 
@@ -2809,7 +2820,7 @@ sub_538ah:
 	ret			;53b8	c9 	. 
 
 ; Draws the number of the score in top of the screen
-DRAW_UP_SCORE_NUMBERS:
+DRAW_SCORE_NUMBERS:
 	ld hl,0e58eh		;53b9	21 8e e5 	! . . 
 	ld de,0e015h		;53bc	11 15 e0 	. . . 
 	call sub_5420h		;53bf	cd 20 54 	.   T 
@@ -3028,21 +3039,18 @@ l5517h:
 	ld (hl),h			;551c	74 	t 
 	halt			;551d	76 	v 
 	ld a,b			;551e	78 	x 
-l551fh:
-	dec hl			;551f	2b 	+ 
-	cpl			;5520	2f 	/ 
-	ccf			;5521	3f 	? 
-	dec hl			;5522	2b 	+ 
-l5523h:
-	ld a,(03c3bh)		;5523	3a 3b 3c 	: ; < 
-	dec a			;5526	3d 	= 
-	ld a,03ah		;5527	3e 3a 	> : 
-	dec sp			;5529	3b 	; 
-l552ah:
-	inc a			;552a	3c 	< 
-	dec a			;552b	3d 	= 
-l552ch:
-	ld a,035h		;552c	3e 35 	> 5 
+
+HIGH_LETTERS:
+    db 0x2b, 0x2f, 0x3f, 0x2b
+
+SCORE_LETTERS:
+    db 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
+
+SCORE_LETTERS_DUP:
+    db 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
+    
+    
+    db 0x35
 	ld d,l			;552e	55 	U 
 	or l			;552f	b5 	. 
 	ld d,l			;5530	55 	U 
