@@ -12,6 +12,9 @@ BALL_X: equ 0xe0f6
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
 
+; Counts how many ticks the title screen is displayed
+TITLE_TICKS: equ 0xe53f
+
 ; Extra balls, apart from the current.
 ; For example, after getting the cyan brick, there are
 ; 3 balls = 2 EXTRA_BALLS.
@@ -1792,8 +1795,9 @@ sub_4b8ah:
 	ld bc,0000bh		;4c3c	01 0b 00
 	call LDIRVM		    ;4c3f	cd 5c 00
 
+    ; Reset the title ticks
 	ld a,000h		;4c42	3e 00 	> . 
-	ld (0e53fh),a		;4c44	32 3f e5 	2 ? . 
+	ld (TITLE_TICKS),a		;4c44	32 3f e5 	2 ? . 
 	ret			;4c47	c9 	. 
 l4c48h:
 	ld a,(0e00ch)		;4c48	3a 0c e0 	: . . 
@@ -1808,21 +1812,29 @@ l4c5ah:
 	bit 4,a		;4c5d	cb 67 	. g 
 	jp nz,l4c73h		;4c5f	c2 73 4c 	. s L 
 l4c62h:
-	ld hl,(0e53fh)		;4c62	2a 3f e5 	* ? . 
-	inc hl			;4c65	23 	# 
-	ld (0e53fh),hl		;4c66	22 3f e5 	" ? . 
-	xor a			;4c69	af 	. 
-	ld de,001e0h		;4c6a	11 e0 01 	. . . 
-	sbc hl,de		;4c6d	ed 52 	. R 
-	jp z,l4c94h		;4c6f	ca 94 4c 	. . L 
-	ret			;4c72	c9 	. 
+    ; Increment the title's ticks
+	ld hl,(TITLE_TICKS)		;4c62	2a 3f e5
+	inc hl			        ;4c65	23
+	ld (TITLE_TICKS),hl		;4c66	22 3f e5
+	xor a			        ;4c69	af
+	ld de, 480		        ;4c6a	11 e0 01
+	sbc hl,de		        ;4c6d	ed 52
+    
+    ; If we have 480 ticks, show the intro's text
+    ; Otherwise, return
+	jp z,l4c94h		        ;4c6f	ca 94 4c
+	ret			            ;4c72	c9
+
 l4c73h:
 	ld a,002h		;4c73	3e 02 	> . 
 	ld (0e53ch),a		;4c75	32 3c e5 	2 < . 
-	ld hl,GAME_START_STR		;4c78	21 cc 54 	! . T 
-	ld de,019a8h		;4c7b	11 a8 19 	. . . 
-	ld bc,00011h		;4c7e	01 11 00 	. . . 
-	call LDIRVM		;4c81	cd 5c 00 	. \ . 
+
+    ; Print "GAME START"
+	ld hl,GAME_START_STR	;4c78	21 cc 54
+	ld de,019a8h		    ;4c7b	11 a8 19
+	ld bc,00011h		    ;4c7e	01 11 00
+	call LDIRVM		        ;4c81	cd 5c 00
+
 	ld a,0c3h		;4c84	3e c3 	> . 
 	ld (0e5c0h),a		;4c86	32 c0 e5 	2 . . 
 	call sub_b4e8h		;4c89	cd e8 b4 	. . . 
@@ -1830,6 +1842,7 @@ l4c73h:
 	ld hl,00100h		;4c8d	21 00 01 	! . . 
 	call 04380h		;4c90	cd 80 43 	. . C 
 	ret			;4c93	c9 	. 
+
 l4c94h:
 	ld a,005h		;4c94	3e 05 	> . 
 	ld (0e53ch),a		;4c96	32 3c e5 	2 < . 
@@ -1837,6 +1850,7 @@ l4c94h:
 	ld (0e00dh),a		;4c9b	32 0d e0 	2 . . 
 	call sub_4227h		;4c9e	cd 27 42 	. ' B 
 	ret			;4ca1	c9 	. 
+
 l4ca2h:
 	ld a,000h		;4ca2	3e 00 	> . 
 	ld (0e00bh),a		;4ca4	32 0b e0 	2 . . 
@@ -15858,6 +15872,9 @@ l9898h:
 	sbc a,b			;989b	98 	. 
 	ld b,c			;989c	41 	A 
 	sbc a,c			;989d	99 	. 
+    
+    
+    ; [ToDo] This is interesting, since it initializes the structure
 	ld (ix+000h),0a9h		;989e	dd 36 00 a9 	. 6 . . 
 	ld (ix+004h),0c0h		;98a2	dd 36 04 c0 	. 6 . . 
 	ld (ix+008h),0c0h		;98a6	dd 36 08 c0 	. 6 . . 
@@ -16178,12 +16195,13 @@ l9a98h:
 	inc bc			;9ae9	03 	. 
 	ld bc,00002h		;9aea	01 02 00 	. . . 
 	ld bc,00101h		;9aed	01 01 01 	. . . 
+
 sub_9af0h:
 	push af			;9af0	f5 	. 
 	inc (iy+00dh)		;9af1	fd 34 0d 	. 4 . 
 	ld l,(iy+007h)		;9af4	fd 6e 07 	. n . 
 	ld h,000h		;9af7	26 00 	& . 
-	ld de,l9b1ah		;9af9	11 1a 9b 	. . . 
+	ld de,BALL_SPEED_TABLE		;9af9	11 1a 9b 	. . . 
 	add hl,de			;9afc	19 	. 
 	ld a,(hl)			;9afd	7e 	~ 
 	cp (iy+00dh)		;9afe	fd be 0d 	. . . 
@@ -16198,14 +16216,12 @@ sub_9af0h:
 l9b18h:
 	pop af			;9b18	f1 	. 
 	ret			;9b19	c9 	. 
-l9b1ah:
-	ld bc,00101h		;9b1a	01 01 01 	. . . 
-	ld bc,00101h		;9b1d	01 01 01 	. . . 
-	ld bc,00101h		;9b20	01 01 01 	. . . 
-	ld bc,00402h		;9b23	01 02 04 	. . . 
-	ex af,af'			;9b26	08 	. 
-	djnz $+26		;9b27	10 18 	. . 
-	rra			;9b29	1f 	. 
+
+; This table determines for how long the ball stays at its current
+; speed before incrementing it.
+BALL_SPEED_TABLE:
+    db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 4, 8, 16, 24, 31
+
 sub_9b2ah:
 	push iy		;9b2a	fd e5 	. . 
 	push iy		;9b2c	fd e5 	. . 
