@@ -527,15 +527,20 @@ l437bh:
 	nop			;437c	00 	. 
 	dec de			;437d	1b 	. 
 	nop			;437e	00 	. 
-	jr c,l4376h		;437f	38 f5 	8 . 
-l4381h:
-	halt			;4381	76 	v 
-	dec hl			;4382	2b 	+ 
-	ld a,l			;4383	7d 	} 
-	or h			;4384	b4 	. 
-	jr nz,l4381h		;4385	20 fa 	  . 
-	pop af			;4387	f1 	. 
-	ret			;4388	c9 	. 
+    db 0x38
+
+; Wait HL ints
+DELAY_HL_TICKS:
+    push af         ;4380   f5
+l4381h:    
+	halt			;4381	76
+	dec hl			;4382	2b
+	ld a,l			;4383	7d
+	or h			;4384	b4
+	jr nz,l4381h	;4385	20 fa
+	pop af			;4387	f1
+	ret			    ;4388	c9
+
 sub_4389h:
 	ld a,h			;4389	7c 	| 
 	add a,008h		;438a	c6 08 	. . 
@@ -1724,6 +1729,9 @@ sub_4b8ah:
 	ld a,(0e00dh)		;4b91	3a 0d e0 	: . . 
 	or a			;4b94	b7 	. 
 	jp nz,l4eddh		;4b95	c2 dd 4e 	. . N 
+    
+    
+    ; [ToDo] This is a switch according to 0e53ch
 	ld a,(0e53ch)		;4b98	3a 3c e5 	: < . 
 	cp 001h		;4b9b	fe 01 	. . 
 	jp z,l4c48h		;4b9d	ca 48 4c 	. H L 
@@ -1838,10 +1846,12 @@ l4c73h:
 	ld a,0c3h		;4c84	3e c3 	> . 
 	ld (0e5c0h),a		;4c86	32 c0 e5 	2 . . 
 	call sub_b4e8h		;4c89	cd e8 b4 	. . . 
-	ei			;4c8c	fb 	. 
-	ld hl,00100h		;4c8d	21 00 01 	! . . 
-	call 04380h		;4c90	cd 80 43 	. . C 
-	ret			;4c93	c9 	. 
+
+    ; Wait 256 ticks
+	ei			            ;4c8c	fb
+	ld hl, 256  		    ;4c8d	21 00 01
+	call DELAY_HL_TICKS		;4c90	cd 80 43
+	ret			            ;4c93	c9
 
 l4c94h:
 	ld a,005h		;4c94	3e 05 	> . 
@@ -1934,8 +1944,9 @@ l4d30h:
     ; Write "ROUND 1"
 	call DRAW_ROUND_MESSAGE		;4d3d	cd 01 51 	. . Q 
 
-	ld hl,00030h		;4d40	21 30 00 	! 0 . 
-	call 04380h		;4d43	cd 80 43 	. . C 
+    ; Wait 48 ticks
+	ld hl, 48		        ;4d40	21 30 00
+	call DELAY_HL_TICKS		;4d43	cd 80 43
 l4d46h:
 	ld a,001h		;4d46	3e 01 	> . 
 	ld (0e00ah),a		;4d48	32 0a e0 	2 . . 
@@ -2085,17 +2096,21 @@ l4e74h:
 	ld a,0c4h		;4e93	3e c4 	> . 
 	ld (0e5c0h),a		;4e95	32 c0 e5 	2 . . 
 	call sub_b4e8h		;4e98	cd e8 b4 	. . . 
-	ei			;4e9b	fb 	. 
-	ld hl,00090h		;4e9c	21 90 00 	! . . 
-	call 04380h		;4e9f	cd 80 43 	. . C 
-	jp l4eb4h		;4ea2	c3 b4 4e 	. . N 
+
+    ; Wait 144 ticks
+	ei			            ;4e9b	fb
+	ld hl, 144		        ;4e9c	21 90 00
+	call DELAY_HL_TICKS		;4e9f	cd 80 43
+	jp l4eb4h		        ;4ea2	c3 b4 4e
 l4ea5h:
 	ld a,0c8h		;4ea5	3e c8 	> . 
 	ld (0e5c0h),a		;4ea7	32 c0 e5 	2 . . 
 	call sub_b4e8h		;4eaa	cd e8 b4 	. . . 
-	ei			;4ead	fb 	. 
-	ld hl,00100h		;4eae	21 00 01 	! . . 
-	call 04380h		;4eb1	cd 80 43 	. . C 
+
+    ; Wait 256 ticks
+	ei			            ;4ead	fb
+	ld hl,00100h		    ;4eae	21 00 01
+	call DELAY_HL_TICKS		;4eb1	cd 80 43
 l4eb4h:
 	ld a,001h		;4eb4	3e 01 	> . 
 	ld (0e24eh),a		;4eb6	32 4e e2 	2 N . 
@@ -2109,10 +2124,12 @@ l4eb4h:
 	ld a,000h		;4ecd	3e 00 	> . 
 	ld (0e5c0h),a		;4ecf	32 c0 e5 	2 . . 
 	call sub_b4e8h		;4ed2	cd e8 b4 	. . . 
-	ei			;4ed5	fb 	. 
-	ld hl,00001h		;4ed6	21 01 00 	! . . 
-	call 04380h		;4ed9	cd 80 43 	. . C 
-	ret			;4edc	c9 	. 
+
+    ; Wait 1 tick
+	ei			            ;4ed5	fb
+	ld hl, 1    		    ;4ed6	21 01 00
+	call DELAY_HL_TICKS		;4ed9	cd 80 43
+	ret			            ;4edc	c9
 l4eddh:
 	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
 	ld ix,l50efh		;4ee1	dd 21 ef 50 	. ! . P 
@@ -2222,9 +2239,12 @@ l4fa8h:
 	jp z,l4fbbh		;4fad	ca bb 4f 	. . O 
 	push hl			;4fb0	e5 	. 
 	call WRTVRM		;4fb1	cd 4d 00 	. M . 
-	ld hl,00003h		;4fb4	21 03 00 	! . . 
-	call 04380h		;4fb7	cd 80 43 	. . C 
-	pop hl			;4fba	e1 	. 
+
+    ; Wait 3 ticks
+	ld hl,00003h		    ;4fb4	21 03 00
+	call DELAY_HL_TICKS		;4fb7	cd 80 43
+
+	pop hl			        ;4fba	e1
 l4fbbh:
 	inc hl			;4fbb	23 	# 
 	inc iy		;4fbc	fd 23 	. # 
@@ -2239,8 +2259,11 @@ l4fbbh:
 	ld a,(hl)			;4fd0	7e 	~ 
 	cp 009h		;4fd1	fe 09 	. . 
 	jp nz,l4f91h		;4fd3	c2 91 4f 	. . O 
-	ld hl,005c0h		;4fd6	21 c0 05 	! . . 
-	call 04380h		;4fd9	cd 80 43 	. . C 
+
+    ; Wait 1472 ticks
+	ld hl, 1472		        ;4fd6	21 c0 05
+	call DELAY_HL_TICKS		;4fd9	cd 80 43
+
 	call sub_4227h		;4fdc	cd 27 42 	. ' B 
 	ret			;4fdf	c9 	. 
 
@@ -9662,8 +9685,11 @@ l7babh:
 	ld (hl),000h		;7bc4	36 00 	6 . 
 	inc hl			;7bc6	23 	# 
 	ld (hl),000h		;7bc7	36 00 	6 . 
-	ld hl,0003ch		;7bc9	21 3c 00 	! < . 
-	call 04380h		;7bcc	cd 80 43 	. . C 
+
+    ; Wait 60 ticks
+	ld hl, 60		        ;7bc9	21 3c 00
+	call DELAY_HL_TICKS		;7bcc	cd 80 43
+
 	ld a,0c7h		;7bcf	3e c7 	> . 
 	ld (0e5c0h),a		;7bd1	32 c0 e5 	2 . . 
 	call sub_b4e8h		;7bd4	cd e8 b4 	. . . 
@@ -9671,20 +9697,29 @@ l7babh:
 	ld iy,ENDING_STR		;7bd8	fd 21 88 7c 	. ! . | 
 	ld ix,l7d72h		;7bdc	dd 21 72 7d 	. ! r } 
 	call sub_4f8ah		;7be0	cd 8a 4f 	. . O 
-	ld hl,0001eh		;7be3	21 1e 00 	! . . 
-	call 04380h		;7be6	cd 80 43 	. . C 
+
+    ; Wait 30 ticks
+	ld hl,0001eh		    ;7be3	21 1e 00
+	call DELAY_HL_TICKS		;7be6	cd 80 43
+
 	call sub_4227h		;7be9	cd 27 42 	. ' B 
 	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
 	ld hl,l7c6dh		;7bef	21 6d 7c 	! m | 
 	ld de,01b00h		;7bf2	11 00 1b 	. . . 
 	ld bc,00010h		;7bf5	01 10 00 	. . . 
 	call LDIRVM		;7bf8	cd 5c 00 	. \ . 
-	ld hl,000f0h		;7bfb	21 f0 00 	! . . 
-	call 04380h		;7bfe	cd 80 43 	. . C 
+
+    ; Wait 240 ticks
+	ld hl,000f0h		    ;7bfb	21 f0 00
+	call DELAY_HL_TICKS		;7bfe	cd 80 43
+
 	call sub_4227h		;7c01	cd 27 42 	. ' B 
 	jp l7c44h		;7c04	c3 44 7c 	. D | 
-	ld hl,00030h		;7c07	21 30 00 	! 0 . 
-	call 04380h		;7c0a	cd 80 43 	. . C 
+
+    ; Wait 48 ticks
+	ld hl,00030h		    ;7c07	21 30 00
+	call DELAY_HL_TICKS		;7c0a	cd 80 43
+
 	ld hl,LIVES		;7c0d	21 1d e0 	! . . 
 	dec (hl)			;7c10	35 	5 
 	ld a,(hl)			;7c11	7e 	~ 
@@ -9705,8 +9740,11 @@ l7c23h:
 	ld de,01b00h		;7c32	11 00 1b 	. . . 
 	ld bc,00010h		;7c35	01 10 00 	. . . 
 	call LDIRVM		;7c38	cd 5c 00 	. \ . 
-	ld hl,000f0h		;7c3b	21 f0 00 	! . . 
-	call 04380h		;7c3e	cd 80 43 	. . C 
+
+    ; Wait 240 ticks
+	ld hl,000f0h		    ;7c3b	21 f0 00
+	call DELAY_HL_TICKS		;7c3e	cd 80 43
+
 	call sub_4227h		;7c41	cd 27 42 	. ' B 
 l7c44h:
 	ld hl,0e027h		;7c44	21 27 e0 	! ' . 
@@ -9757,9 +9795,11 @@ l7c6dh:
 l7c7dh:
 	xor a			;7c7d	af 	. 
 	ld (0e00ah),a		;7c7e	32 0a e0 	2 . . 
-	ld hl,0003ch		;7c81	21 3c 00 	! < . 
-	call 04380h		;7c84	cd 80 43 	. . C 
-	ret			;7c87	c9 	. 
+
+    ; Wait 60 ticks
+	ld hl, 60   		    ;7c81	21 3c 00
+	call DELAY_HL_TICKS		;7c84	cd 80 43
+	ret			            ;7c87	c9
 
 ENDING_STR:
     db "DIMENSION-CONTROLLING FORT\"DOH\" HAS NOW BEEN        DEMOLISHED, AND TIME      STARTED FLOWING REVERSELY.\"VAUS\" MANAGED TO ESCAPE  FROM THE DISTORTED SPACE. BUT THE REAL VOYAGE OF    \"ARKANOID\" IN THE GALAXY  HAS ONLY STARTED......    "
