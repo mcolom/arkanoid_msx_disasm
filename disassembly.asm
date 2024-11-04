@@ -296,7 +296,10 @@ l41b1h:
 	ld b,h			;41b8	44 	D 
 	nop			;41b9	00 	. 
 	call sub_4b8ah		;41ba	cd 8a 4b 	. . K 
+    
 	jp l41dah		;41bd	c3 da 41 	. . A 
+    
+    ; Dead code?
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
 	call sub_95f4h		;41c3	cd f4 95 	. . . 
 	call sub_7241h		;41c6	cd 41 72 	. A r 
