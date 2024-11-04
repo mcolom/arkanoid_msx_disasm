@@ -2101,9 +2101,13 @@ l4e22h:
 	ld de,00800h		;4e2d	11 00 08 	. . . 
 	add iy,de		;4e30	fd 19 	. . 
 	djnz l4e08h		;4e32	10 d4 	. . 
-	call sub_5bbdh		;4e34	cd bd 5b 	. . [ 
-	call sub_7204h		;4e37	cd 04 72 	. . r 
-	call sub_71b9h		;4e3a	cd b9 71 	. . q 
+    
+    ; Draw the background
+	call DRAW_BACKGROUND		;4e34	cd bd 5b
+	
+    
+    call WRITE_ROUND_MSG		;4e37	cd 04 72 	. . r 
+	call DRAW_LIVES		;4e3a	cd b9 71 	. . q 
 	ld a,(LEVEL)		;4e3d	3a 1b e0 	: . . 
 	cp FINAL_LEVEL		;4e40	fe 20
 	jp z,l4e71h		;4e42	ca 71 4e 	. q N 
@@ -2741,7 +2745,7 @@ sub_5319h:
 l5336h:
 	ld hl,LIVES		    ;5336	21 1d e0
 	inc (hl)			;5339	34 	4
-	call sub_71b9h		;533a	cd b9 71 	. . q 
+	call DRAW_LIVES		;533a	cd b9 71 	. . q 
 	ld a,0c5h		;533d	3e c5 	> . 
 	call sub_5befh		;533f	cd ef 5b 	. . [ 
 	ld hl,0e021h		;5342	21 21 e0 	! ! . 
@@ -4530,7 +4534,9 @@ l5b90h:
 	nop			;5bba	00 	. 
 	nop			;5bbb	00 	. 
 	nop			;5bbc	00 	. 
-sub_5bbdh:
+
+; Draw the background
+DRAW_BACKGROUND:
 	ld b,003h		;5bbd	06 03 	. . 
 	ld iy,02380h		;5bbf	fd 21 80 23 	. ! . # 
 l5bc3h:
@@ -8382,7 +8388,9 @@ l71a1h:
 	adc a,h			;71b6	8c 	. 
 	ld (bc),a			;71b7	02 	. 
 	dec b			;71b8	05 	. 
-sub_71b9h:
+
+; Draw the lives
+DRAW_LIVES:
 	ld a,(LIVES)		;71b9	3a 1d e0 	: . . 
 	or a			;71bc	b7 	. 
 	ret z			;71bd	c8 	. 
@@ -8417,6 +8425,7 @@ l71e7h:
 	dec (hl)			;71f1	35 	5 
 	jp nz,l71d3h		;71f2	c2 d3 71 	. . q 
 	ret			;71f5	c9 	. 
+
 l71f6h:
 	ld l,c			;71f6	69 	i 
 	ld l,d			;71f7	6a 	j 
@@ -8433,7 +8442,9 @@ l71f8h:
 	add hl,de			;7201	19 	. 
 	sbc a,(hl)			;7202	9e 	. 
 	add hl,de			;7203	19 	. 
-sub_7204h:
+
+; Write "ROUND x"
+WRITE_ROUND_MSG:
 	ld hl,l723ch		;7204	21 3c 72 	! < r 
 	ld de,01adah		;7207	11 da 1a 	. . . 
 	ld bc,00005h		;720a	01 05 00 	. . . 
@@ -8461,6 +8472,7 @@ l7229h:
 	ld hl,01afeh		;7235	21 fe 1a 	! . . 
 	call WRTVRM		;7238	cd 4d 00 	. M . 
 	ret			;723b	c9 	. 
+
 l723ch:
 	ld d,d			;723c	52 	R 
 	ld c,a			;723d	4f 	O 
@@ -19580,7 +19592,7 @@ lb292h:
 	ld (0e327h),a		;b297	32 27 e3 	2 ' . 
 	ld hl,LIVES		;b29a	21 1d e0 	! . . 
 	inc (hl)			;b29d	34 	4 
-	call sub_71b9h		;b29e	cd b9 71 	. . q 
+	call DRAW_LIVES		;b29e	cd b9 71 	. . q 
 	ld a,0c5h		;b2a1	3e c5 	> . 
 	call sub_5befh		;b2a3	cd ef 5b 	. . [ 
 	ret			;b2a6	c9 	. 
