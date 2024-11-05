@@ -22,6 +22,8 @@ TICKS_240: equ 0xe515
 ; 3 balls = 2 EXTRA_BALLS.
 EXTRA_BALLS: equ 0xe325
 
+SPEEDUP_ALL_BALLS_COUNTER: equ 0xe529
+
 ; First level is zero
 LEVEL: equ 0xe01b
 LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
@@ -46,7 +48,9 @@ ALIEN_STATUS: equ 0xe4c7
 
 
 BALL_TABLE: equ 0xe24e
+BALL_TABLE_LEN: equ 20
 ;
+BALL_TABLE_IDX_ACTIVE: equ 0
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_SPEED_POS: equ 7
 
@@ -8260,7 +8264,7 @@ l707ch:
 	ld (iy+003h),005h		;7097	fd 36 03 05 	. 6 . . 
 	ld a,006h		;709b	3e 06 	> . 
 	call sub_5befh		;709d	cd ef 5b 	. . [ 
-	call sub_716eh		;70a0	cd 6e 71 	. n q 
+	call UPDATE_SPEED_ALL_BALLS		;70a0	cd 6e 71 	. n q 
 	jp l70afh		;70a3	c3 af 70 	. . p 
 l70a6h:
 	ld de,00004h		;70a6	11 04 00 	. . . 
@@ -8351,36 +8355,52 @@ l715dh:
 	xor a			;7169	af 	. 
 	ld (0e519h),a		;716a	32 19 e5 	2 . . 
 	ret			;716d	c9 	. 
-sub_716eh:
-	ret			;716e	c9 	. 
+
+; Speed up all active balls if the counter has reached its maximum
+UPDATE_SPEED_ALL_BALLS:
+	; It seems they decided not to implement this.
+    ret			;716e	c9
+
 	push ix		;716f	dd e5 	. . 
 	push bc			;7171	c5 	. 
-	ld hl,0e529h		;7172	21 29 e5 	! ) . 
+
+    ; Increase the counter
+	ld hl,SPEEDUP_ALL_BALLS_COUNTER		;7172	21 29 e5 	! ) . 
 	inc (hl)			;7175	34 	4 
 	ld a,(hl)			;7176	7e 	~ 
 	cp 008h		;7177	fe 08 	. . 
+    ; If less than 8, get out
 	jp c,l71a1h		;7179	da a1 71 	. . q 
+    ; Reset counter
 	ld (hl),000h		;717c	36 00 	6 . 
+
+    ; Now a loop to increase the speed of all balls
 	ld ix,BALL_TABLE		;717e	dd 21 4e e2 	. ! N . 
-	ld de,00014h		;7182	11 14 00 	. . . 
-	ld b,003h		;7185	06 03 	. . 
+	ld de, BALL_TABLE_LEN	;7182	11 14 00
+	ld b,003h		        ;7185	06 03 Three balls
 l7187h:
-	ld a,(ix+000h)		;7187	dd 7e 00 	. ~ . 
-	or a			;718a	b7 	. 
-	jr z,l719dh		;718b	28 10 	( . 
-	ld a,(ix+007h)		;718d	dd 7e 07 	. ~ . 
-	inc a			;7190	3c 	< 
-	ld (ix+007h),a		;7191	dd 77 07 	. w . 
-	cp 010h		;7194	fe 10 	. . 
-	jp nz,l719dh		;7196	c2 9d 71 	. . q 
-	ld (ix+007h),00fh		;7199	dd 36 07 0f 	. 6 . . 
+	ld a,(ix + BALL_TABLE_IDX_ACTIVE)		;7187	dd 7e 00
+	or a			                        ;718a	b7
+    ; If the ball is not active, go on
+	jr z,l719dh		                        ;718b	28 10
+    
+    ; Increase the speed of the ball
+	ld a,(ix + BALL_TABLE_IDX_SPEED_POS)		;718d	dd 7e 07
+	inc a			                            ;7190	3c
+	ld (ix+BALL_TABLE_IDX_SPEED_POS),a		    ;7191	dd 77 07
+	cp 16		                                ;7194	fe 10
+	jp nz,l719dh		                        ;7196	c2 9d 71
+    ; If the speed is over 15, set it to 15
+	ld (ix+007h), 15		                    ;7199	dd 36 07 0f
 l719dh:
-	add ix,de		;719d	dd 19 	. . 
-	djnz l7187h		;719f	10 e6 	. . 
+    ; Next ball
+	add ix,de		;719d	dd 19
+	djnz l7187h		;719f	10 e6
 l71a1h:
-	pop bc			;71a1	c1 	. 
-	pop ix		;71a2	dd e1 	. . 
-	ret			;71a4	c9 	. 
+	pop bc		;71a1	c1
+	pop ix		;71a2	dd e1
+	ret			;71a4	c9
+
 	jr $+26		;71a5	18 18 	. . 
 	jr l71c1h		;71a7	18 18 	. . 
 	jr l71e7h		;71a9	18 3c 	. < 
@@ -19596,7 +19616,7 @@ lb25fh:
 	ld a,001h		;b267	3e 01 	> . 
 	ld (0e322h),a		;b269	32 22 e3 	2 " . 
 	xor a			;b26c	af 	. 
-	ld (0e529h),a		;b26d	32 29 e5 	2 ) . 
+	ld (SPEEDUP_ALL_BALLS_COUNTER),a		;b26d	32 29 e5 	2 ) . 
 	ret			;b270	c9 	. 
 	ld a,(0e324h)		;b271	3a 24 e3 	: $ . 
 	or a			;b274	b7 	. 
