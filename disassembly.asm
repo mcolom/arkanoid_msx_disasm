@@ -44,6 +44,12 @@ ALIEN_STATUS: equ 0xe4c7
 
 ;ALIEN_ST_2: equ 0xe4db
 
+
+BALL_TABLE: equ 0xe24e
+;
+BALL_TABLE_IDX_SPEED_COUNTER: equ 13
+BALL_TABLE_IDX_SPEED_POS: equ 7
+
 TABLE_UNKNOWN_1: equ 0xe101
 
 	org	04000h
@@ -2107,8 +2113,7 @@ l4e22h:
     
     ; Draw the background
 	call DRAW_BACKGROUND		;4e34	cd bd 5b
-	
-    
+
     call WRITE_ROUND_MSG		;4e37	cd 04 72 	. . r 
 	call DRAW_LIVES		;4e3a	cd b9 71 	. . q 
 	ld a,(LEVEL)		;4e3d	3a 1b e0 	: . . 
@@ -2170,7 +2175,7 @@ l4ea5h:
 	call DELAY_HL_TICKS		;4eb1	cd 80 43
 l4eb4h:
 	ld a,001h		;4eb4	3e 01 	> . 
-	ld (0e24eh),a		;4eb6	32 4e e2 	2 N . 
+	ld (BALL_TABLE),a		;4eb6	32 4e e2 	2 N . 
 	ld a,068h		;4eb9	3e 68 	> h 
 	ld (0e0f6h),a		;4ebb	32 f6 e0 	2 . . 
 	ld hl,00000h		;4ebe	21 00 00 	! . . 
@@ -8356,7 +8361,7 @@ sub_716eh:
 	cp 008h		;7177	fe 08 	. . 
 	jp c,l71a1h		;7179	da a1 71 	. . q 
 	ld (hl),000h		;717c	36 00 	6 . 
-	ld ix,0e24eh		;717e	dd 21 4e e2 	. ! N . 
+	ld ix,BALL_TABLE		;717e	dd 21 4e e2 	. ! N . 
 	ld de,00014h		;7182	11 14 00 	. . . 
 	ld b,003h		;7185	06 03 	. . 
 l7187h:
@@ -9429,12 +9434,12 @@ l7999h:
 	ret			;79a4	c9 	. 
 sub_79a5h:
 	ld ix,BALL_Y		;79a5	dd 21 f5 e0 	. ! . . 
-	ld a,(0e24eh)		;79a9	3a 4e e2 	: N . 
+	ld a,(BALL_TABLE)		;79a9	3a 4e e2 	: N . 
 	or a			;79ac	b7 	. 
 	jp z,l79c2h		;79ad	ca c2 79 	. . y 
 	call sub_79fdh		;79b0	cd fd 79 	. . y 
 	jp c,l79c2h		;79b3	da c2 79 	. . y 
-	ld iy,0e24eh		;79b6	fd 21 4e e2 	. ! N . 
+	ld iy,BALL_TABLE		;79b6	fd 21 4e e2 	. ! N . 
 	call sub_9b8ah		;79ba	cd 8a 9b 	. . . 
 	ld a,0c2h		;79bd	3e c2 	> . 
 	call sub_5befh		;79bf	cd ef 5b 	. . [ 
@@ -15781,7 +15786,7 @@ l970ah:
 	ret			;970f	c9 	. 
 sub_9710h:
 	xor a			;9710	af 	. 
-	ld (0e24eh),a		;9711	32 4e e2 	2 N . 
+	ld (BALL_TABLE),a		;9711	32 4e e2 	2 N . 
 	ld (0e262h),a		;9714	32 62 e2 	2 b . 
 	ld (0e276h),a		;9717	32 76 e2 	2 v . 
 	ld a,0c0h		;971a	3e c0 	> . 
@@ -15958,7 +15963,7 @@ sub_9872h:
 	xor a			;9872	af 	. 
 	ld (0e2ach),a		;9873	32 ac e2 	2 . . 
 	ld ix,BALL_Y		;9876	dd 21 f5 e0 	. ! . . 
-	ld iy,0e24eh		;987a	fd 21 4e e2 	. ! N . 
+	ld iy,BALL_TABLE		;987a	fd 21 4e e2 	. ! N . 
 l987eh:
 	push ix		;987e	dd e5 	. . 
 	push iy		;9880	fd e5 	. . 
@@ -15985,6 +15990,7 @@ l9898h:
     
     
     ; [ToDo] This is interesting, since it initializes the structure
+    ; iy = BALL_TABLE
 	ld (ix+000h),0a9h		;989e	dd 36 00 a9 	. 6 . . 
 	ld (ix+004h),0c0h		;98a2	dd 36 04 c0 	. 6 . . 
 	ld (ix+008h),0c0h		;98a6	dd 36 08 c0 	. 6 . . 
@@ -16078,7 +16084,7 @@ l9935h:
 	jp nz,l996bh		;9952	c2 6b 99 	. k . 
 	cp 0bah		;9955	fe ba 	. . 
 	jp c,l996bh		;9957	da 6b 99 	. k . 
-	call sub_9af0h		;995a	cd f0 9a 	. . . 
+	call UPDATE_BALL_SPEED		;995a	cd f0 9a 	. . . 
 	call sub_9b80h		;995d	cd 80 9b 	. . . 
 	ld a,0b9h		;9960	3e b9 	> . 
 	ld (ix+001h),a		;9962	dd 77 01 	. w . 
@@ -16089,7 +16095,7 @@ l996bh:
 	jp z,l9985h		;996f	ca 85 99 	. . . 
 	cp 012h		;9972	fe 12 	. . 
 	jp nc,l9985h		;9974	d2 85 99 	. . . 
-	call sub_9af0h		;9977	cd f0 9a 	. . . 
+	call UPDATE_BALL_SPEED		;9977	cd f0 9a 	. . . 
 	call sub_9b80h		;997a	cd 80 9b 	. . . 
 	ld a,012h		;997d	3e 12 	> . 
 	ld (ix+001h),a		;997f	dd 77 01 	. w . 
@@ -16100,7 +16106,7 @@ l9985h:
 	jp z,l99a2h		;998c	ca a2 99 	. . . 
 	cp 009h		;998f	fe 09 	. . 
 	jp nc,l99a2h		;9991	d2 a2 99 	. . . 
-	call sub_9af0h		;9994	cd f0 9a 	. . . 
+	call UPDATE_BALL_SPEED		;9994	cd f0 9a 	. . . 
 	call sub_9b5bh		;9997	cd 5b 9b 	. [ . 
 	ld a,009h		;999a	3e 09 	> . 
 	ld (ix+000h),a		;999c	dd 77 00 	. w . 
@@ -16306,26 +16312,44 @@ l9a98h:
 	ld bc,00002h		;9aea	01 02 00 	. . . 
 	ld bc,00101h		;9aed	01 01 01 	. . . 
 
-sub_9af0h:
-	push af			;9af0	f5 	. 
-	inc (iy+00dh)		;9af1	fd 34 0d 	. 4 . 
-	ld l,(iy+007h)		;9af4	fd 6e 07 	. n . 
-	ld h,000h		;9af7	26 00 	& . 
-	ld de,BALL_SPEED_TABLE		;9af9	11 1a 9b 	. . . 
-	add hl,de			;9afc	19 	. 
-	ld a,(hl)			;9afd	7e 	~ 
-	cp (iy+00dh)		;9afe	fd be 0d 	. . . 
-	jp nc,l9b18h		;9b01	d2 18 9b 	. . . 
-	ld (iy+00dh),000h		;9b04	fd 36 0d 00 	. 6 . . 
-	ld a,(iy+007h)		;9b08	fd 7e 07 	. ~ . 
-	inc a			;9b0b	3c 	< 
-	ld (iy+007h),a		;9b0c	fd 77 07 	. w . 
-	cp 010h		;9b0f	fe 10 	. . 
-	jp nz,l9b18h		;9b11	c2 18 9b 	. . . 
-	ld (iy+007h),00fh		;9b14	fd 36 07 0f 	. 6 . . 
+; Update the speed of the ball according to counter and the values in BALL_TABLE
+UPDATE_BALL_SPEED:
+    ; iy = BALL_TABLE
+	push af			    ;9af0	f5
+    ; Increase ball speed counter
+	inc (iy + BALL_TABLE_IDX_SPEED_COUNTER)		    ;9af1	fd 34 0d
+    
+	; HL = BALL_SPEED_TABLE + ball_speed_pos
+    ld l,(iy + BALL_TABLE_IDX_SPEED_POS)	;9af4	fd 6e 07
+	ld h, 0		                            ;9af7	26 00
+	ld de,BALL_SPEED_TABLE		            ;9af9	11 1a 9b
+	add hl,de			                    ;9afc	19
+    
+    ; A = BALL_SPEED_TABLE[ball_speed_pos]
+	ld a,(hl)			        ;9afd	7e
+    
+    ; Check if the counter has reached the current objective
+    ; If BALL_SPEED_TABLE[ball_speed_pos] <= BALL_SPEED_TABLE[BALL_TABLE_IDX_SPEED_COUNTER] then return
+	cp (iy + BALL_TABLE_IDX_SPEED_COUNTER)		;9afe	fd be 0d
+	jp nc,l9b18h		                        ;9b01	d2 18 9b
+
+    ; Yes, we have reached the objective
+
+    ; Reset ball speed counter
+	ld (iy + BALL_TABLE_IDX_SPEED_COUNTER), 0	;9b04	fd 36 0d 00
+    
+	; Set ball_speed_pos to the next objective
+    ld a,(iy + BALL_TABLE_IDX_SPEED_POS)		    ;9b08	fd 7e 07
+	inc a			                                ;9b0b	3c
+	ld (iy + BALL_TABLE_IDX_SPEED_POS),a		    ;9b0c	fd 77 07
+
+    ; If the index is out of bounds (16), set it to 15
+	cp 16		            ;9b0f	fe 10
+	jp nz,l9b18h		    ;9b11	c2 18 9b
+	ld (iy + BALL_TABLE_IDX_SPEED_POS), 15  		;9b14	fd 36 07 0f
 l9b18h:
-	pop af			;9b18	f1 	. 
-	ret			;9b19	c9 	. 
+	pop af			        ;9b18	f1
+	ret			            ;9b19	c9
 
 ; This table determines for how long the ball stays at its current
 ; speed before incrementing it.
@@ -18117,7 +18141,7 @@ laa01h:
 	ld (ix+001h),a		;aa01	dd 77 01 	. w . 
 	ret			;aa04	c9 	. 
 sub_aa05h:
-	call sub_9af0h		;aa05	cd f0 9a 	. . . 
+	call UPDATE_BALL_SPEED		;aa05	cd f0 9a 	. . . 
 	ld a,(LEVEL)		;aa08	3a 1b e0 	: . . 
 	sla a		;aa0b	cb 27 	. ' 
 	ld e,a			;aa0d	5f 	_ 
@@ -18301,7 +18325,7 @@ lab10h:
 	ret			;ab37	c9 	. 
 sub_ab38h:
 	push iy		;ab38	fd e5 	. . 
-	ld iy,0e24eh		;ab3a	fd 21 4e e2 	. ! N . 
+	ld iy,BALL_TABLE		;ab3a	fd 21 4e e2 	. ! N . 
 	ld b,003h		;ab3e	06 03 	. . 
 lab40h:
 	ld a,(iy+000h)		;ab40	fd 7e 00 	. ~ . 
@@ -19516,7 +19540,7 @@ lb1e6h:
 	call sub_b2a7h		;b1eb	cd a7 b2 	. . . 
 	ld b,003h		;b1ee	06 03 	. . 
 	ld de,00014h		;b1f0	11 14 00 	. . . 
-	ld iy,0e24eh		;b1f3	fd 21 4e e2 	. ! N . 
+	ld iy,BALL_TABLE		;b1f3	fd 21 4e e2 	. ! N . 
 lb1f7h:
 	ld a,(iy+000h)		;b1f7	fd 7e 00 	. ~ . 
 	or a			;b1fa	b7 	. 
@@ -19620,7 +19644,7 @@ sub_b2c1h:
 	push ix		;b2c1	dd e5 	. . 
 	pop iy		;b2c3	fd e1 	. . 
 	ld b,003h		;b2c5	06 03 	. . 
-	ld iy,0e24eh		;b2c7	fd 21 4e e2 	. ! N . 
+	ld iy,BALL_TABLE		;b2c7	fd 21 4e e2 	. ! N . 
 	ld ix,BALL_Y		;b2cb	dd 21 f5 e0 	. ! . . 
 lb2cfh:
 	ld a,(iy+000h)		;b2cf	fd 7e 00 	. ~ . 
@@ -19649,7 +19673,7 @@ lb2f5h:
 	ld a,(iy+00dh)		;b300	fd 7e 0d 	. ~ . 
 	ld (0e53ch),a		;b303	32 3c e5 	2 < . 
 	ld b,003h		;b306	06 03 	. . 
-	ld iy,0e24eh		;b308	fd 21 4e e2 	. ! N . 
+	ld iy,BALL_TABLE		;b308	fd 21 4e e2 	. ! N . 
 	ld de,00014h		;b30c	11 14 00 	. . . 
 lb30fh:
 	ld (iy+000h),001h		;b30f	fd 36 00 01 	. 6 . . 
