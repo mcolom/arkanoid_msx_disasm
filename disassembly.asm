@@ -39,16 +39,18 @@ FINAL_LEVEL: equ 32
 
 ; Alien table
 ; Each entry is 20 positions
-ALIEN_STATUS: equ 0xe4c7
+ALIEN_TABLE: equ 0xe4c7
+ALIEN_TABLE_LEN: equ 20
+ALIEN_TABLE_IDX_ACTIVE: equ 1
 ; [ToDo] Incomplete table
-; [ToDo] We must have entries for each alien, not only one
 
 ; <UNKNOWN>
-; <ACTION>: 0=absent, 1=moving normally
+; <Active>
 ; <ACTION>: 0=not exploding, 1=exploding
 
-;ALIEN_ST_2: equ 0xe4db
-
+; This table is probably related to alien sprites
+ALIEN_UNKNOWN_TABLE: equ 0xe570
+ALIEN_UNKNOWN_TABLE_IDX_DOOR: equ 1
 
 BALL_TABLE_LEN: equ 20
 BALL_TABLE1: equ 0xe24e + 0*BALL_TABLE_LEN
@@ -8542,7 +8544,7 @@ l726eh:
 	call sub_7605h		;7276	cd 05 76 	. . v 
 	call sub_7888h		;7279	cd 88 78 	. . x 
 	call sub_7942h		;727c	cd 42 79 	. B y 
-	call sub_730ch		;727f	cd 0c 73 	. . s 
+	call UPDATE_ALIEN_APPEAR_FROM_DOOR		;727f	cd 0c 73 	. . s 
 	call sub_72a0h		;7282	cd a0 72 	. . r 
 	ret			;7285	c9 	. 
 l7286h:
@@ -8557,45 +8559,70 @@ l7296h:
 	call sub_73aah		;7299	cd aa 73 	. . s 
 	call sub_73f0h		;729c	cd f0 73 	. . s 
 	ret			;729f	c9 	. 
+
+; SEGUIR POR AQUI
 sub_72a0h:
-	ld ix,0e570h		;72a0	dd 21 70 e5 	. ! p . 
+	ld ix,ALIEN_UNKNOWN_TABLE		;72a0	dd 21 70 e5
+    
+    ; Return if not active
 	ld a,(ix+000h)		;72a4	dd 7e 00 	. ~ . 
 	or a			;72a7	b7 	. 
 	ret z			;72a8	c8 	. 
-	inc (ix+003h)		;72a9	dd 34 03 	. 4 . 
-	ld a,(ix+003h)		;72ac	dd 7e 03 	. ~ . 
-	cp 012h		;72af	fe 12 	. . 
-	ret nz			;72b1	c0 	. 
-	ld (ix+003h),000h		;72b2	dd 36 03 00 	. 6 . . 
-	ld l,(ix+004h)		;72b6	dd 6e 04 	. n . 
-	ld h,000h		;72b9	26 00 	& . 
-	add hl,hl			;72bb	29 	) 
-	add hl,hl			;72bc	29 	) 
-	ld de,l72f4h		;72bd	11 f4 72 	. . r 
-	add hl,de			;72c0	19 	. 
+	
+    ; Increment counter and exit if it hasn't reached 18
+    inc (ix+003h)		;72a9	dd 34 03
+	ld a,(ix+003h)		;72ac	dd 7e 03
+	cp 18		        ;72af	fe 12
+	ret nz			    ;72b1	c0
+
+    ; Reset counter
+	ld (ix+003h),0		;72b2	dd 36 03 00
+    
+	; HL = 3 * (ix+004h)
+    ld l,(ix+004h)		;72b6	dd 6e 04
+	ld h,000h		    ;72b9	26 00
+	add hl,hl			;72bb	29
+	add hl,hl			;72bc	29
+    
+    ; HL = 3 * (ix+004h) - 36108
+	ld de,l72f4h		;72bd	11 f4 72 ; -36108
+	add hl,de			;72c0	19
+    
+    ; Choose DE = 0x1805 or 0x1811 VRAM address depending on (ix+001h)
 	ld de,01805h		;72c1	11 05 18 	. . . 
 	ld a,(ix+001h)		;72c4	dd 7e 01 	. ~ . 
 	or a			;72c7	b7 	. 
 	jp nz,l72ceh		;72c8	c2 ce 72 	. . r 
 	ld de,01811h		;72cb	11 11 18 	. . . 
 l72ceh:
-	ld bc,00004h		;72ce	01 04 00 	. . . 
-	call LDIRVM		;72d1	cd 5c 00 	. \ . 
+    ; Update in VRAM
+	ld bc,00004h		;72ce	01 04 00
+	call LDIRVM		    ;72d1	cd 5c 00
+
+    ; Increment X = (ix+004h).
+    ; If X = 0 THEN call sub_7377h and exit
+    ; if X != 6 THEN exit
+    ; And clear the ALIEN_UNKNOWN_TABLE
+    
 	inc (ix+004h)		;72d4	dd 34 04 	. 4 . 
 	ld a,(ix+004h)		;72d7	dd 7e 04 	. ~ . 
 	cp 003h		;72da	fe 03 	. . 
 	jp nz,l72e3h		;72dc	c2 e3 72 	. . r 
 	call sub_7377h		;72df	cd 77 73 	. w s 
 	ret			;72e2	c9 	. 
+
 l72e3h:
 	cp 006h		;72e3	fe 06 	. . 
 	ret nz			;72e5	c0 	. 
-	ld hl,0e570h		;72e6	21 70 e5 	! p . 
-	ld de,0e571h		;72e9	11 71 e5 	. q . 
-	ld bc,00006h		;72ec	01 06 00 	. . . 
-	ld (hl),000h		;72ef	36 00 	6 . 
-	ldir		;72f1	ed b0 	. . 
-	ret			;72f3	c9 	. 
+    
+    ; Clear ALIEN_UNKNOWN_TABLE
+	ld hl,ALIEN_UNKNOWN_TABLE		;72e6	21 70 e5
+	ld de,ALIEN_UNKNOWN_TABLE + 1	;72e9	11 71 e5
+	ld bc,00006h		            ;72ec	01 06 00
+	ld (hl),000h		            ;72ef	36 00
+	ldir		                    ;72f1	ed b0
+	ret			                    ;72f3	c9
+
 l72f4h:
 	ex af,af'			;72f4	08 	. 
 	add hl,bc			;72f5	09 	. 
@@ -8618,86 +8645,87 @@ l72f4h:
 	ld a,(bc)			;730a	0a 	. 
 	dec bc			;730b	0b 	. 
 
-sub_730ch:
+; Check ticks and update alien's appearing from the left or
+; right, depending on Vaus' position.
+UPDATE_ALIEN_APPEAR_FROM_DOOR:
     ; Increment number of ticks and return if it's not 240
 	ld ix,TICKS_240		;730c	dd 21 15 e5
-	inc (ix+000h)		;7310	dd 34 00
-	ld a,(ix+000h)		;7313	dd 7e 00
-	cp 0f0h		        ;7316	fe f0
-	ret nz			    ;7318	c0
+	inc (ix+0)		;7310	dd 34 00
+	ld a,(ix+0)		;7313	dd 7e 00
+	cp 240		    ;7316	fe f0
+	ret nz			;7318	c0
 l7319h:
-	ld (ix+000h),000h		;7319	dd 36 00 00 	. 6 . . 
-	ld a,(LEVEL)		;731d	3a 1b e0 	: . . 
-	ld e,a			;7320	5f 	_ 
-	ld d,000h		;7321	16 00 	. . 
-	ld hl,l7353h		;7323	21 53 73 	! S s 
-	add hl,de			;7326	19 	. 
-	ld b,(hl)			;7327	46 	F 
-	ld iy,ALIEN_STATUS		;7328	fd 21 c7 e4 	. ! . . 
+    ; Reset ticks
+	ld (ix),0		;7319	dd 36 00 00
+    
+    ; DE = level
+	ld a,(LEVEL)		;731d	3a 1b e0
+	ld e,a			    ;7320	5f
+	ld d,000h		    ;7321	16 00
+    
+    ; HL = TABLE_ALIENS_PER_LEVEL + level
+	ld hl,TABLE_ALIENS_PER_LEVEL		;7323	21 53 73
+	add hl,de			                ;7326	19
+    
+    ; B = TABLE_ALIENS_PER_LEVEL[level] = number of aliens in this level
+	ld b,(hl)			        ;7327	46
+
+	ld iy,ALIEN_TABLE		    ;7328	fd 21 c7 e4
+    ; Loop 
 l732ch:
-	ld a,(iy+001h)		;732c	fd 7e 01 	. ~ . 
-	or a			;732f	b7 	. 
-	jp nz,l734bh		;7330	c2 4b 73 	. K s 
-	ld a,001h		;7333	3e 01 	> . 
-	ld (0e570h),a		;7335	32 70 e5 	2 p . 
-	ld c,000h		;7338	0e 00 	. . 
-	ld a,(VAUS_X)		;733a	3a ce e0 	: . . 
-	add a,010h		;733d	c6 10 	. . 
-	cp 051h		;733f	fe 51 	. Q 
-	jp c,l7346h		;7341	da 46 73 	. F s 
-	ld c,001h		;7344	0e 01 	. . 
+    ; Skip if the alien is not active
+	ld a,(iy + ALIEN_TABLE_IDX_ACTIVE)		;732c	fd 7e 01
+	or a			                        ;732f	b7
+	jp nz,l734bh		                    ;7330	c2 4b 73
+
+	ld a,001h		    ;7333	3e 01
+	ld (ALIEN_UNKNOWN_TABLE),a		;7335	32 70 e5
+
+    ; Alien will appear on the right
+	ld c, 0		        ;7338	0e 00
+
+    ; A = VAUS_X + 16
+	ld a,(VAUS_X)		;733a	3a ce e0        0x70
+	add a, 16		    ;733d	c6 10           0x80
+    
+    ; C = 0 (right) if VAUS_X + 16 < 81 else 1 (left)
+    ; C = VAUS_X + 16 >= 81
+	cp 81		        ;733f	fe 51           C=0
+	jp c,l7346h		    ;7341	da 46 73
+    
+    ; Alien on the left
+	ld c, 1 		    ;7344	0e 01
 l7346h:
-	ld a,c			;7346	79 	y 
-	ld (0e571h),a		;7347	32 71 e5 	2 q . 
-	ret			;734a	c9 	. 
+    ; Set alien's door
+	ld a,c			    ;7346	79
+	ld (ALIEN_UNKNOWN_TABLE + ALIEN_UNKNOWN_TABLE_IDX_DOOR),a	;7347	32 71 e5
+	ret			        ;734a	c9
+
 l734bh:
-	ld de,00014h		;734b	11 14 00 	. . . 
-	add iy,de		;734e	fd 19 	. . 
-	djnz l732ch		;7350	10 da 	. . 
+    ; Next alien entry
+	ld de, ALIEN_TABLE_LEN		;734b	11 14 00
+	add iy,de		            ;734e	fd 19
+	djnz l732ch		            ;7350	10 da
 	ret			;7352	c9 	. 
 
-l7353h:
-	ld bc,00302h		;7353	01 02 03 	. . . 
-	inc bc			;7356	03 	. 
-	inc bc			;7357	03 	. 
-	inc bc			;7358	03 	. 
-	inc bc			;7359	03 	. 
-	inc bc			;735a	03 	. 
-	inc bc			;735b	03 	. 
-	inc bc			;735c	03 	. 
-	inc bc			;735d	03 	. 
-	inc bc			;735e	03 	. 
-	inc bc			;735f	03 	. 
-	inc bc			;7360	03 	. 
-	inc bc			;7361	03 	. 
-	inc bc			;7362	03 	. 
-	inc bc			;7363	03 	. 
-	inc bc			;7364	03 	. 
-	inc bc			;7365	03 	. 
-	inc bc			;7366	03 	. 
-	inc bc			;7367	03 	. 
-	inc bc			;7368	03 	. 
-	inc bc			;7369	03 	. 
-	inc bc			;736a	03 	. 
-	inc bc			;736b	03 	. 
-	inc bc			;736c	03 	. 
-	inc bc			;736d	03 	. 
-	inc bc			;736e	03 	. 
-	inc bc			;736f	03 	. 
-	inc bc			;7370	03 	. 
-	inc bc			;7371	03 	. 
-	inc bc			;7372	03 	. 
-l7373h:
-	nop			;7373	00 	. 
-	ld bc,00302h		;7374	01 02 03 	. . . 
+; Number of aliens per level
+TABLE_ALIENS_PER_LEVEL:
+    db 1, 2, 3
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
+    db 3, 3, 3, 3, 3, 3, 3, 3, 3
+
+TABLE_0123:
+    db 0, 1, 2, 3
+
 sub_7377h:
 	ld a,(LEVEL)		;7377	3a 1b e0 	: . . 
 	ld e,a			;737a	5f 	_ 
 	ld d,000h		;737b	16 00 	. . 
-	ld hl,l7353h		;737d	21 53 73 	! S s 
+	ld hl,TABLE_ALIENS_PER_LEVEL		;737d	21 53 73 	! S s 
 	add hl,de			;7380	19 	. 
 	ld b,(hl)			;7381	46 	F 
-	ld iy,ALIEN_STATUS		;7382	fd 21 c7 e4 	. ! . . 
+	ld iy,ALIEN_TABLE		;7382	fd 21 c7 e4 	. ! . . 
 l7386h:
 	ld a,(iy+001h)		;7386	fd 7e 01 	. ~ . 
 	or a			;7389	b7 	. 
@@ -8707,7 +8735,7 @@ l7386h:
 	and 003h		;7394	e6 03 	. . 
 	ld e,a			;7396	5f 	_ 
 	ld d,000h		;7397	16 00 	. . 
-	ld hl,l7373h		;7399	21 73 73 	! s s 
+	ld hl,TABLE_0123		;7399	21 73 73 	! s s 
 	add hl,de			;739c	19 	. 
 	ld a,(hl)			;739d	7e 	~ 
 	ld (iy+000h),a		;739e	fd 77 00 	. w . 
@@ -9027,7 +9055,7 @@ l75edh:
     db 0xcd          ;7604
 
 sub_7605h:
-    ld ix, ALIEN_STATUS
+    ld ix, ALIEN_TABLE
     ld iy, TABLE_UNKNOWN_1
     ld b, 3
 l760fh:
@@ -9048,7 +9076,7 @@ l760fh:
 	jp nz,l7695h		;7633	c2 95 76 	. . v 
 	ld (ix+007h),001h		;7636	dd 36 07 01 	. 6 . . 
 	ld de,l7b64h		;763a	11 64 7b 	. d { 
-	ld a,(0e571h)		;763d	3a 71 e5 	: q . 
+	ld a,(ALIEN_UNKNOWN_TABLE + ALIEN_UNKNOWN_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
 	or a			;7640	b7 	. 
 	jp z,l7647h		;7641	ca 47 76 	. G v 
 	ld de,l7b7ch		;7644	11 7c 7b 	. | { 
@@ -9350,10 +9378,11 @@ l78bah:
 	ld (ix+000h),0c0h		;78cf	dd 36 00 c0 	. 6 . . 
 l78d3h:
 	ret			;78d3	c9 	. 
+
 sub_78d4h:
-	ld iy,TABLE_UNKNOWN_1		;78d4	fd 21 01 e1 	. ! . . 
-	ld hl,0e4c8h		;78d8	21 c8 e4 	! . . 
-	ld b,003h		;78db	06 03 	. . 
+	ld iy,TABLE_UNKNOWN_1		;78d4	fd 21 01 e1
+	ld hl,ALIEN_TABLE + 1		;78d8	21 c8 e4
+	ld b,003h		            ;78db	06 03
 l78ddh:
 	ld a,(hl)			;78dd	7e 	~ 
 	or a			;78de	b7 	. 
@@ -9412,10 +9441,11 @@ l7935h:
 	djnz l78ddh		;793e	10 9d 	. . 
 	scf			;7940	37 	7 
 	ret			;7941	c9 	. 
+
 sub_7942h:
-	ld ix,0e0cdh		;7942	dd 21 cd e0 	. ! . . 
-	ld iy,TABLE_UNKNOWN_1		;7946	fd 21 01 e1 	. ! . . 
-	ld hl,0e4c8h		;794a	21 c8 e4 	! . . 
+	ld ix,0e0cdh		        ;7942	dd 21 cd e0
+	ld iy,TABLE_UNKNOWN_1		;7946	fd 21 01 e1
+	ld hl,ALIEN_TABLE + 1		;794a	21 c8 e4
 	ld b,003h		;794d	06 03 	. . 
 l794fh:
 	ld a,(0e54bh)		;794f	3a 4b e5 	: K . 
@@ -9465,8 +9495,8 @@ sub_79a5h:
     
     ; Skip the following part if the ball is not active
 	ld a,(BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE)	;79a9	3a 4e e2
-	or a			;79ac	b7 	. 
-	jp z,l79c2h		;79ad	ca c2 79 	. . y 
+	or a			                            ;79ac	b7
+	jp z,l79c2h		                            ;79ad	ca c2 79
 
 	call sub_79fdh		;79b0	cd fd 79 	. . y 
 	jp c,l79c2h		;79b3	da c2 79 	. . y 
@@ -9500,8 +9530,8 @@ l79fch:
 	ret			;79fc	c9 	. 
 
 sub_79fdh:
-	ld iy,TABLE_UNKNOWN_1		;79fd	fd 21 01 e1 	. ! . . 
-	ld hl,0e4c8h		;7a01	21 c8 e4 	! . . 
+	ld iy,TABLE_UNKNOWN_1		;79fd	fd 21 01 e1
+	ld hl,ALIEN_TABLE + 1		;7a01	21 c8 e4
 	ld b,003h		;7a04	06 03 	. . 
 l7a06h:
 	ld a,(hl)			;7a06	7e 	~ 
@@ -15839,7 +15869,7 @@ sub_9726h:
 	ret z			    ;972b	c8
 	xor a			;972c	af 	. 
 	ld (0e53ch),a		;972d	32 3c e5 	2 < . 
-	ld iy,ALIEN_STATUS		;9730	fd 21 c7 e4 	. ! . . 
+	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4 	. ! . . 
 	ld ix,TABLE_UNKNOWN_1		;9734	dd 21 01 e1 	. ! . . 
 l9738h:
 	ld a,(iy+001h)		;9738	fd 7e 01 	. ~ . 
