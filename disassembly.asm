@@ -6,7 +6,10 @@
 
 include 'headers/bios.asm'
 
-BALL_Y: equ 0xe0f5
+BALL1_Y: equ 0xe0f5
+BALL2_Y: equ 0xe0f9
+BALL3_Y: equ 0xe0fd
+
 BALL_X: equ 0xe0f6
 
 VAUS_X:  equ 0xe0ce
@@ -7403,7 +7406,7 @@ l6972h:
 	call sub_5befh		;699d	cd ef 5b 	. . [ 
 	ld a,00ch		;69a0	3e 0c 	> . 
 	call sub_52a0h		;69a2	cd a0 52 	. . R 
-	call sub_9710h		;69a5	cd 10 97 	. . . 
+	call DEACTIVE_ALL_BALLS		;69a5	cd 10 97 	. . . 
 	jp l69bch		;69a8	c3 bc 69 	. . i 
 l69abh:
 	ld a,(VAUS_X2)		;69ab	3a 3e e5 	: > . 
@@ -7452,7 +7455,7 @@ l69eah:
 	call sub_5befh		;6a09	cd ef 5b 	. . [ 
 	ld a,00ch		;6a0c	3e 0c 	> . 
 	call sub_52a0h		;6a0e	cd a0 52 	. . R 
-	call sub_9710h		;6a11	cd 10 97 	. . . 
+	call DEACTIVE_ALL_BALLS		;6a11	cd 10 97 	. . . 
 	jp l69bch		;6a14	c3 bc 69 	. . i 
 l6a17h:
 	ld a,(ix+006h)		;6a17	dd 7e 06 	. ~ . 
@@ -9458,7 +9461,7 @@ l7999h:
 	ret			;79a4	c9 	.
 
 sub_79a5h:
-	ld ix,BALL_Y		                        ;79a5	dd 21 f5 e0
+	ld ix,BALL1_Y		                        ;79a5	dd 21 f5 e0
     
     ; Skip the following part if the ball is not active
 	ld a,(BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE)	;79a9	3a 4e e2
@@ -9472,7 +9475,7 @@ sub_79a5h:
 	ld a,0c2h		;79bd	3e c2 	> . 
 	call sub_5befh		;79bf	cd ef 5b 	. . [ 
 l79c2h:
-	ld ix,0e0f9h		;79c2	dd 21 f9 e0 	. ! . . 
+	ld ix,BALL2_Y		;79c2	dd 21 f9 e0 	. ! . . 
 	ld a,(BALL_TABLE2)		;79c6	3a 62 e2 	: b . 
 	or a			;79c9	b7 	. 
 	jp z,l79dfh		;79ca	ca df 79 	. . y 
@@ -9483,7 +9486,7 @@ l79c2h:
 	ld a,0c2h		;79da	3e c2 	> . 
 	call sub_5befh		;79dc	cd ef 5b 	. . [ 
 l79dfh:
-	ld ix,0e0fdh		;79df	dd 21 fd e0 	. ! . . 
+	ld ix,BALL3_Y		;79df	dd 21 fd e0 	. ! . . 
 	ld a,(BALL_TABLE3)		;79e3	3a 76 e2 	: v . 
 	or a			;79e6	b7 	. 
 	jp z,l79fch		;79e7	ca fc 79 	. . y 
@@ -9585,7 +9588,7 @@ l7a7bh:
 	ld (iy+000h),0c0h		;7aa8	fd 36 00 c0 	. 6 . . 
 	ld a,007h		;7aac	3e 07 	> . 
 	call sub_5befh		;7aae	cd ef 5b 	. . [ 
-	call sub_9710h		;7ab1	cd 10 97 	. . . 
+	call DEACTIVE_ALL_BALLS		;7ab1	cd 10 97 	. . . 
 l7ab4h:
 	ld de,00004h		;7ab4	11 04 00 	. . . 
 	add iy,de		;7ab7	fd 19 	. . 
@@ -15806,7 +15809,7 @@ l96e4h:
 	jr nz,l970ah		;96fa	20 0e 	  . 
 	ld a,001h		;96fc	3e 01 	> . 
 	ld (0e50dh),a		;96fe	32 0d e5 	2 . . 
-	call sub_9710h		;9701	cd 10 97 	. . . 
+	call DEACTIVE_ALL_BALLS		;9701	cd 10 97 	. . . 
 	ld a,009h		;9704	3e 09 	> . 
 	call sub_5befh		;9706	cd ef 5b 	. . [ 
 	ret			;9709	c9 	. 
@@ -15815,18 +15818,20 @@ l970ah:
 	ld (0e505h),a		;970c	32 05 e5 	2 . . 
 	ret			;970f	c9 	. 
 
-sub_9710h:
+; Deactivate all the balls and set the sprites invisible
+DEACTIVE_ALL_BALLS:
     ; Set all three balls inactive
 	xor a			        ;9710	af
 	ld (BALL_TABLE1),a		;9711	32 4e e2
 	ld (BALL_TABLE2),a		;9714	32 62 e2
 	ld (BALL_TABLE3),a		;9717	32 76 e2
 
-	ld a,0c0h		;971a	3e c0 	> . 
-	ld (BALL_Y),a		;971c	32 f5 e0 	2 . . 
-	ld (0e0f9h),a		;971f	32 f9 e0 	2 . . 
-	ld (0e0fdh),a		;9722	32 fd e0 	2 . . 
-	ret			;9725	c9 	. 
+    ; Set the three sprites invisible (position 192)
+	ld a, 192		    ;971a	3e c0
+	ld (BALL1_Y),a		;971c	32 f5 e0
+	ld (BALL2_Y),a		;971f	32 f9 e0
+	ld (BALL3_Y),a		;9722	32 fd e0
+	ret			        ;9725	c9
 
 sub_9726h:
 	ld a,(LEVEL)		;9726	3a 1b e0
@@ -15996,7 +16001,7 @@ l986ah:
 sub_9872h:
 	xor a			;9872	af 	. 
 	ld (0e2ach),a		;9873	32 ac e2 	2 . . 
-	ld ix,BALL_Y		;9876	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL1_Y		;9876	dd 21 f5 e0 	. ! . . 
 	ld iy,BALL_TABLE1		;987a	fd 21 4e e2 	. ! N . 
 l987eh:
 	push ix		;987e	dd e5 	. . 
@@ -19679,7 +19684,7 @@ sub_b2c1h:
 	pop iy		;b2c3	fd e1 	. . 
 	ld b,003h		;b2c5	06 03 	. . 
 	ld iy,BALL_TABLE1		;b2c7	fd 21 4e e2 	. ! N . 
-	ld ix,BALL_Y		;b2cb	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL1_Y		;b2cb	dd 21 f5 e0 	. ! . . 
 lb2cfh:
 	ld a,(iy+000h)		;b2cf	fd 7e 00 	. ~ . 
 	or a			;b2d2	b7 	. 
@@ -19723,7 +19728,7 @@ lb30fh:
 	ld l,(ix+000h)		;b329	dd 6e 00 	. n . 
 	ld h,(ix+001h)		;b32c	dd 66 01 	. f . 
 	ld b,003h		;b32f	06 03 	. . 
-	ld ix,BALL_Y		;b331	dd 21 f5 e0 	. ! . . 
+	ld ix,BALL1_Y		;b331	dd 21 f5 e0 	. ! . . 
 	ld de,00004h		;b335	11 04 00 	. . . 
 lb338h:
 	ld (ix+000h),l		;b338	dd 75 00 	. u . 
