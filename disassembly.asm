@@ -50,7 +50,11 @@ ALIEN_TABLE_IDX_ACTIVE: equ 1
 
 ; This table is probably related to alien sprites
 ALIEN_UNKNOWN_TABLE: equ 0xe570
+ALIEN_UNKNOWN_TABLE_LEN: equ 6
+;
+ALIEN_UNKNOWN_TABLE_IDX_ACTIVE: equ 0
 ALIEN_UNKNOWN_TABLE_IDX_DOOR: equ 1
+ALIEN_UNKNOWN_TABLE_IDX_COUNTER: equ 3
 
 BALL_TABLE_LEN: equ 20
 BALL_TABLE1: equ 0xe24e + 0*BALL_TABLE_LEN
@@ -7286,18 +7290,29 @@ l6891h:
 	add hl,de			;689e	19 	. 
 	push hl			;689f	e5 	. 
 	pop ix		;68a0	dd e1 	. . 
-	ld b,004h		;68a2	06 04 	. . 
-	ld hl,01a98h		;68a4	21 98 1a 	! . . 
+    
+    
+    ; Animation of Vaus entering the portal.
+    ; The portal opens as Vaus enters.
+	ld b, 4 		                                  ;68a2	06 04 Four steps
+    ld hl, 0x1800 + 24 + 20*32; Locate VRAM [24, 20]  ;68a4	21 98 1a
 l68a7h:
-	push hl			;68a7	e5 	. 
-	ld a,(ix+000h)		;68a8	dd 7e 00 	. ~ . 
-	call WRTVRM		;68ab	cd 4d 00 	. M . 
-	pop hl			;68ae	e1 	. 
-	ld de,00020h		;68af	11 20 00 	.   . 
-	add hl,de			;68b2	19 	. 
-	inc ix		;68b3	dd 23 	. # 
-	djnz l68a7h		;68b5	10 f0 	. . 
-	ret			;68b7	c9 	. 
+	push hl			    ;68a7	e5
+    ; Load and VRAM write portal pattern
+	ld a,(ix+000h)		;68a8	dd 7e 00
+	call WRTVRM		    ;68ab	cd 4d 00
+	pop hl			    ;68ae	e1
+
+    ; HL += 32, next line
+	ld de, 32		    ;68af	11 20 00
+	add hl,de			;68b2	19
+    
+    ; Next pattern in the animation
+    ; Patterns 30, 31, 32, and 33 are the animation of the door opening
+	inc ix		        ;68b3	dd 23
+	djnz l68a7h		    ;68b5	10 f0
+	ret			        ;68b7	c9
+
 l68b8h:
 	ld d,017h		;68b8	16 17 	. . 
 	jr l68d5h		;68ba	18 19 	. . 
@@ -8562,21 +8577,21 @@ l7296h:
 
 ; SEGUIR POR AQUI
 sub_72a0h:
-	ld ix,ALIEN_UNKNOWN_TABLE		;72a0	dd 21 70 e5
-    
+	ld ix,ALIEN_UNKNOWN_TABLE		                ;72a0	dd 21 70 e5
+
     ; Return if not active
-	ld a,(ix+000h)		;72a4	dd 7e 00 	. ~ . 
-	or a			;72a7	b7 	. 
-	ret z			;72a8	c8 	. 
+	ld a,(ix + ALIEN_UNKNOWN_TABLE_IDX_ACTIVE)		;72a4	dd 7e 00
+	or a			                                ;72a7	b7
+	ret z			                                ;72a8	c8
 	
     ; Increment counter and exit if it hasn't reached 18
-    inc (ix+003h)		;72a9	dd 34 03
-	ld a,(ix+003h)		;72ac	dd 7e 03
-	cp 18		        ;72af	fe 12
-	ret nz			    ;72b1	c0
+    inc (ix+ALIEN_UNKNOWN_TABLE_IDX_COUNTER)		;72a9	dd 34 03
+	ld a,(ix+ALIEN_UNKNOWN_TABLE_IDX_COUNTER)		;72ac	dd 7e 03
+	cp 18		                                    ;72af	fe 12
+	ret nz			                                ;72b1	c0
 
     ; Reset counter
-	ld (ix+003h),0		;72b2	dd 36 03 00
+	ld (ix+ALIEN_UNKNOWN_TABLE_IDX_COUNTER),0		;72b2	dd 36 03 00
     
 	; HL = 3 * (ix+004h)
     ld l,(ix+004h)		;72b6	dd 6e 04
@@ -8585,12 +8600,12 @@ sub_72a0h:
 	add hl,hl			;72bc	29
     
     ; HL = 3 * (ix+004h) - 36108
-	ld de,l72f4h		;72bd	11 f4 72 ; -36108
+	ld de,0x72f4		;72bd	11 f4 72 ; -36108
 	add hl,de			;72c0	19
     
-    ; Choose DE = 0x1805 or 0x1811 VRAM address depending on (ix+001h)
+    ; Choose DE = 0x1805 or 0x1811 VRAM address depending on which door
 	ld de,01805h		;72c1	11 05 18 	. . . 
-	ld a,(ix+001h)		;72c4	dd 7e 01 	. ~ . 
+	ld a,(ix+ALIEN_UNKNOWN_TABLE_IDX_DOOR)		;72c4	dd 7e 01 	. ~ . 
 	or a			;72c7	b7 	. 
 	jp nz,l72ceh		;72c8	c2 ce 72 	. . r 
 	ld de,01811h		;72cb	11 11 18 	. . . 
@@ -8601,8 +8616,8 @@ l72ceh:
 
     ; Increment X = (ix+004h).
     ; If X = 0 THEN call sub_7377h and exit
-    ; if X != 6 THEN exit
-    ; And clear the ALIEN_UNKNOWN_TABLE
+    ; If X != 6 THEN exit
+    ; Clear the ALIEN_UNKNOWN_TABLE
     
 	inc (ix+004h)		;72d4	dd 34 04 	. 4 . 
 	ld a,(ix+004h)		;72d7	dd 7e 04 	. ~ . 
@@ -8618,8 +8633,8 @@ l72e3h:
     ; Clear ALIEN_UNKNOWN_TABLE
 	ld hl,ALIEN_UNKNOWN_TABLE		;72e6	21 70 e5
 	ld de,ALIEN_UNKNOWN_TABLE + 1	;72e9	11 71 e5
-	ld bc,00006h		            ;72ec	01 06 00
-	ld (hl),000h		            ;72ef	36 00
+	ld bc,ALIEN_UNKNOWN_TABLE_LEN   ;72ec	01 06 00
+	ld (hl), 0  		            ;72ef	36 00
 	ldir		                    ;72f1	ed b0
 	ret			                    ;72f3	c9
 
