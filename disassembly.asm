@@ -2910,21 +2910,33 @@ l5407h:
 	ld bc,00006h		;5419	01 06 00 	. . . 
 	call LDIRVM		;541c	cd 5c 00 	. \ . 
 	ret			;541f	c9 	. 
+
+; Seguir
 sub_5420h:
-	ld b,003h		;5420	06 03 	. . 
-	inc de			;5422	13 	. 
-	inc de			;5423	13 	. 
+    ; Three iterations
+	ld b,3		    ;5420	06 03
+    
+    ; DE += 2
+	inc de			;5422	13
+	inc de			;5423	13
 l5424h:
-	ld a,(de)			;5424	1a 	. 
-	ld (hl),a			;5425	77 	w 
-	ld a,033h		;5426	3e 33 	> 3 
-	rrd		;5428	ed 67 	. g 
+    ; (hl) <-- (de)
+	ld a,(de)			;5424	1a
+	ld (hl),a			;5425	77
+    
+	ld a,033h		    ;5426	3e 33   00.11.00.11
+
+    ; Performs a 4-bit rightward rotation of the 12-bit number whose 4 most significant bits are the 4 least significant bits of A, and its 8 least significant bits are in (HL).
+	rrd		            ;5428	ed 67
+    
 	inc hl			;542a	23 	# 
 	ld (hl),a			;542b	77 	w 
 	inc hl			;542c	23 	# 
 	dec de			;542d	1b 	. 
-	djnz l5424h		;542e	10 f4 	. . 
+	
+    djnz l5424h		;542e	10 f4 	. . 
 	ret			;5430	c9 	. 
+
 sub_5431h:
 	ld b,005h		;5431	06 05 	. . 
 l5433h:
@@ -2936,6 +2948,7 @@ l5433h:
 	inc hl			;543a	23 	# 
 	djnz l5433h		;543b	10 f6 	. . 
 	ret			;543d	c9 	. 
+
 l543eh:
 	nop			;543e	00 	. 
 	nop			;543f	00 	. 
