@@ -15,6 +15,11 @@ BALL_X: equ 0xe0f6
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
 
+; Used to compute the score in BCD
+SCORE_BCD_1: equ 0xe5a0
+SCORE_BCD_2: equ SCORE_BCD_1 + 1
+SCORE_BCD_3: equ SCORE_BCD_2 + 1
+
 ; Counts how many ticks the title screen is displayed
 TITLE_TICKS: equ 0xe53f
 
@@ -48,7 +53,7 @@ ALIEN_TABLE_IDX_ACTIVE: equ 1
 ; <Active>
 ; <ACTION>: 0=not exploding, 1=exploding
 
-; This table is probably related to alien sprites
+;This table controls the doors
 DOOR_TABLE: equ 0xe570
 DOOR_TABLE_LEN: equ 6
 ;
@@ -2691,6 +2696,7 @@ l5289h:
 	inc bc			;529d	03 	. 
 	inc b			;529e	04 	. 
 	dec b			;529f	05 	. 
+
 sub_52a0h:
 	push hl			;52a0	e5 	. 
 	push bc			;52a1	c5 	. 
@@ -2722,24 +2728,24 @@ l52ceh:
 	jp l52d7h		;52d4	c3 d7 52 	. . R 
 l52d7h:
 	ld iy,0e007h		;52d7	fd 21 07 e0 	. ! . . 
-	ld a,(0e5a2h)		;52db	3a a2 e5 	: . . 
+	ld a,(SCORE_BCD_3)		;52db	3a a2 e5 	: . . 
 	cp (iy+002h)		;52de	fd be 02 	. . . 
 	jp z,l52eah		;52e1	ca ea 52 	. . R 
 	jp c,l530dh		;52e4	da 0d 53 	. . S 
 	jp l5302h		;52e7	c3 02 53 	. . S 
 l52eah:
-	ld a,(0e5a1h)		;52ea	3a a1 e5 	: . . 
+	ld a,(SCORE_BCD_2)		;52ea	3a a1 e5 	: . . 
 	cp (iy+001h)		;52ed	fd be 01 	. . . 
 	jp z,l52f9h		;52f0	ca f9 52 	. . R 
 	jp c,l530dh		;52f3	da 0d 53 	. . S 
 	jp l5302h		;52f6	c3 02 53 	. . S 
 l52f9h:
-	ld a,(0e5a0h)		;52f9	3a a0 e5 	: . . 
+	ld a,(SCORE_BCD_1)		;52f9	3a a0 e5 	: . . 
 	cp (iy+000h)		;52fc	fd be 00 	. . . 
 	jp c,l530dh		;52ff	da 0d 53 	. . S 
 l5302h:
 	ld de,0e007h		;5302	11 07 e0 	. . . 
-	ld hl,0e5a0h		;5305	21 a0 e5 	! . . 
+	ld hl,SCORE_BCD_1		;5305	21 a0 e5 	! . . 
 	ld bc,00003h		;5308	01 03 00 	. . . 
 	ldir		;530b	ed b0 	. . 
 l530dh:
@@ -2826,30 +2832,45 @@ l5374h:
 	nop			;5384	00 	. 
 	ld bc,00000h		;5385	01 00 00 	. . . 
 	djnz sub_538ah		;5388	10 00 	. . 
+
+; SEGUIR
 sub_538ah:
-	ld de,0e5a0h		;538a	11 a0 e5 	. . . 
-	ld bc,00003h		;538d	01 03 00 	. . . 
-	ldir		;5390	ed b0 	. . 
-	ld a,(0e5a0h)		;5392	3a a0 e5 	: . . 
-	add a,(ix+000h)		;5395	dd 86 00 	. . . 
-	daa			;5398	27 	' 
-	ld (0e5a0h),a		;5399	32 a0 e5 	2 . . 
-	ld a,(0e5a1h)		;539c	3a a1 e5 	: . . 
-	adc a,(ix+001h)		;539f	dd 8e 01 	. . . 
-	daa			;53a2	27 	' 
-	ld (0e5a1h),a		;53a3	32 a1 e5 	2 . . 
-	ld a,(0e5a2h)		;53a6	3a a2 e5 	: . . 
-	adc a,(ix+002h)		;53a9	dd 8e 02 	. . . 
-	daa			;53ac	27 	' 
-	ld (0e5a2h),a		;53ad	32 a2 e5 	2 . . 
-	ex de,hl			;53b0	eb 	. 
-	dec hl			;53b1	2b 	+ 
-	dec de			;53b2	1b 	. 
-	ld bc,00003h		;53b3	01 03 00 	. . . 
-	lddr		;53b6	ed b8 	. . 
-	ret			;53b8	c9 	. 
+	ld de,SCORE_BCD_1		;538a	11 a0 e5
+	ld bc, 3		        ;538d	01 03 00
+	ldir		            ;5390	ed b0
+
+    ; Decode SCORE_BCD_1 in BCD
+	ld a,(SCORE_BCD_1)		;5392	3a a0 e5
+	add a,(ix+000h)		    ;5395	dd 86 00
+	daa			            ;5398	27
+	ld (SCORE_BCD_1),a		;5399	32 a0 e5
+
+	; Decode SCORE_BCD_2 in BCD
+    ld a,(SCORE_BCD_2)		;539c	3a a1 e5
+	adc a,(ix+001h)		    ;539f	dd 8e 01
+	daa			            ;53a2	27
+	ld (SCORE_BCD_2),a		;53a3	32 a1 e5
+
+	; Decode SCORE_BCD_3 in BCD
+    ld a,(SCORE_BCD_3)		;53a6	3a a2 e5
+	adc a,(ix+002h)		    ;53a9	dd 8e 02
+	daa			            ;53ac	27
+	ld (SCORE_BCD_3),a		;53ad	32 a2 e5
+
+	ex de,hl			;53b0	eb
+    ; HL = SCORE_BCD_1
+    ; DE = 0xe015 or 0xe018
+    
+	dec hl			    ;53b1	2b 	+ 
+	dec de			    ;53b2	1b 	. 
+
+    ; Repeat 3 times (DE--) <-- (HL--) 
+	ld bc, 3		    ;53b3	01 03 00 	. . . 
+	lddr		        ;53b6	ed b8 	. . 
+	ret			        ;53b8	c9 	. 
 
 ; Draws the number of the score in top of the screen
+; SEGUIR
 DRAW_SCORE_NUMBERS:
 	ld hl,0e58eh		;53b9	21 8e e5 	! . . 
 	ld de,0e015h		;53bc	11 15 e0 	. . . 
@@ -8674,12 +8695,12 @@ UPDATE_ALIEN_APPEAR_FROM_DOOR:
 	ret nz			;7318	c0
 l7319h:
     ; Reset ticks
-	ld (ix),0		;7319	dd 36 00 00
+	ld (ix), 0		    ;7319	dd 36 00 00
     
     ; DE = level
 	ld a,(LEVEL)		;731d	3a 1b e0
 	ld e,a			    ;7320	5f
-	ld d,000h		    ;7321	16 00
+	ld d, 0 		    ;7321	16 00
     
     ; HL = TABLE_ALIENS_PER_LEVEL + level
 	ld hl,TABLE_ALIENS_PER_LEVEL		;7323	21 53 73
@@ -8696,8 +8717,9 @@ l732ch:
 	or a			                        ;732f	b7
 	jp nz,l734bh		                    ;7330	c2 4b 73
 
-	ld a,001h		    ;7333	3e 01
-	ld (DOOR_TABLE),a		;7335	32 70 e5
+    ; Set doors active
+	ld a,001h		                        ;7333	3e 01
+	ld (DOOR_TABLE),a		                ;7335	32 70 e5
 
     ; Alien will appear on the right
 	ld c, 0		        ;7338	0e 00
@@ -8711,7 +8733,7 @@ l732ch:
 	cp 81		        ;733f	fe 51           C=0
 	jp c,l7346h		    ;7341	da 46 73
     
-    ; Alien on the left
+    ; Alien will appear on the left
 	ld c, 1 		    ;7344	0e 01
 l7346h:
     ; Set alien's door
