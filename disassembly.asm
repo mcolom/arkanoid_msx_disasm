@@ -49,12 +49,13 @@ ALIEN_TABLE_IDX_ACTIVE: equ 1
 ; <ACTION>: 0=not exploding, 1=exploding
 
 ; This table is probably related to alien sprites
-ALIEN_UNKNOWN_TABLE: equ 0xe570
-ALIEN_UNKNOWN_TABLE_LEN: equ 6
+DOOR_TABLE: equ 0xe570
+DOOR_TABLE_LEN: equ 6
 ;
-ALIEN_UNKNOWN_TABLE_IDX_ACTIVE: equ 0
-ALIEN_UNKNOWN_TABLE_IDX_DOOR: equ 1
-ALIEN_UNKNOWN_TABLE_IDX_COUNTER: equ 3
+DOOR_TABLE_IDX_ACTIVE: equ 0
+DOOR_TABLE_IDX_DOOR: equ 1
+DOOR_TABLE_IDX_COUNTER: equ 3
+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER: equ 4
 
 BALL_TABLE_LEN: equ 20
 BALL_TABLE1: equ 0xe24e + 0*BALL_TABLE_LEN
@@ -8560,7 +8561,7 @@ l726eh:
 	call sub_7888h		;7279	cd 88 78 	. . x 
 	call sub_7942h		;727c	cd 42 79 	. B y 
 	call UPDATE_ALIEN_APPEAR_FROM_DOOR		;727f	cd 0c 73 	. . s 
-	call sub_72a0h		;7282	cd a0 72 	. . r 
+	call UPDATE_DOORS		;7282	cd a0 72 	. . r 
 	ret			;7285	c9 	. 
 l7286h:
 	ld a,(0e50dh)		;7286	3a 0d e5 	: . . 
@@ -8575,90 +8576,92 @@ l7296h:
 	call sub_73f0h		;729c	cd f0 73 	. . s 
 	ret			;729f	c9 	. 
 
-; SEGUIR POR AQUI
-sub_72a0h:
-	ld ix,ALIEN_UNKNOWN_TABLE		                ;72a0	dd 21 70 e5
+; Draw the doors according to their state, if active
+UPDATE_DOORS:
+	ld ix,DOOR_TABLE		                ;72a0	dd 21 70 e5
 
     ; Return if not active
-	ld a,(ix + ALIEN_UNKNOWN_TABLE_IDX_ACTIVE)		;72a4	dd 7e 00
+	ld a,(ix + DOOR_TABLE_IDX_ACTIVE)		;72a4	dd 7e 00
 	or a			                                ;72a7	b7
 	ret z			                                ;72a8	c8
 	
     ; Increment counter and exit if it hasn't reached 18
-    inc (ix+ALIEN_UNKNOWN_TABLE_IDX_COUNTER)		;72a9	dd 34 03
-	ld a,(ix+ALIEN_UNKNOWN_TABLE_IDX_COUNTER)		;72ac	dd 7e 03
-	cp 18		                                    ;72af	fe 12
-	ret nz			                                ;72b1	c0
+    inc (ix+DOOR_TABLE_IDX_COUNTER)		    ;72a9	dd 34 03
+	ld a,(ix+DOOR_TABLE_IDX_COUNTER)		;72ac	dd 7e 03
+	cp 18		                            ;72af	fe 12
+	ret nz			                        ;72b1	c0
 
     ; Reset counter
-	ld (ix+ALIEN_UNKNOWN_TABLE_IDX_COUNTER),0		;72b2	dd 36 03 00
+	ld (ix+DOOR_TABLE_IDX_COUNTER), 0		;72b2	dd 36 03 00
     
-	; HL = 3 * (ix+004h)
-    ld l,(ix+004h)		;72b6	dd 6e 04
-	ld h,000h		    ;72b9	26 00
-	add hl,hl			;72bb	29
-	add hl,hl			;72bc	29
+	; HL = 4 * (ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)
+    ; Each door is 4 chars
+    ld l,(ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)		        ;72b6	dd 6e 04
+	ld h, 0 		                                        ;72b9	26 00
+	add hl,hl			                                    ;72bb	29
+	add hl,hl			                                    ;72bc	29
     
-    ; HL = 3 * (ix+004h) - 36108
-	ld de,0x72f4		;72bd	11 f4 72 ; -36108
-	add hl,de			;72c0	19
+    ; HL = 4 * (ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER) + DOOR_CHARS
+    ; HL = DOOR_CHARS[3 * DOOR_TABLE[DOOR_TABLE_IDX_DOOR_OPEN_COUNTER]]
+	ld de, DOOR_CHARS		                                ;72bd	11 f4 72
+	add hl,de			                                    ;72c0	19
     
-    ; Choose DE = 0x1805 or 0x1811 VRAM address depending on which door
-	ld de,01805h		;72c1	11 05 18 	. . . 
-	ld a,(ix+ALIEN_UNKNOWN_TABLE_IDX_DOOR)		;72c4	dd 7e 01 	. ~ . 
-	or a			;72c7	b7 	. 
-	jp nz,l72ceh		;72c8	c2 ce 72 	. . r 
-	ld de,01811h		;72cb	11 11 18 	. . . 
+    ; Choose the VRAM position of the door on the left or on the right
+	ld de, 0x1800 + 5 + 0*32		    ;72c1	11 05 18 Locate [5, 0]
+	ld a,(ix+DOOR_TABLE_IDX_DOOR)		;72c4	dd 7e 01
+	or a			                    ;72c7	b7
+	jp nz,l72ceh		                ;72c8	c2 ce 72
+	ld de, 0x1800 + 17 + 0*32           ;72cb	11 11 18 Locate [17, 0]
 l72ceh:
-    ; Update in VRAM
-	ld bc,00004h		;72ce	01 04 00
+    ; Update door in VRAM
+	ld bc, 4		    ;72ce	01 04 00 The door is 4 tiles
 	call LDIRVM		    ;72d1	cd 5c 00
 
     ; Increment X = (ix+004h).
     ; If X = 0 THEN call sub_7377h and exit
     ; If X != 6 THEN exit
-    ; Clear the ALIEN_UNKNOWN_TABLE
+    ; Clear the DOOR_TABLE
     
-	inc (ix+004h)		;72d4	dd 34 04 	. 4 . 
-	ld a,(ix+004h)		;72d7	dd 7e 04 	. ~ . 
-	cp 003h		;72da	fe 03 	. . 
+	inc (ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)		;72d4	dd 34 04
+	ld a,(ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)		;72d7	dd 7e 04
+	cp 3		                                    ;72da	fe 03
 	jp nz,l72e3h		;72dc	c2 e3 72 	. . r 
 	call sub_7377h		;72df	cd 77 73 	. w s 
 	ret			;72e2	c9 	. 
 
 l72e3h:
-	cp 006h		;72e3	fe 06 	. . 
-	ret nz			;72e5	c0 	. 
+    ; The door is open for 6 cycles.
+    ; If we haven't reached 6, then exit. Other wise, clear the whole table.
+	cp 6		    ;72e3	fe 06
+	ret nz			;72e5	c0
     
-    ; Clear ALIEN_UNKNOWN_TABLE
-	ld hl,ALIEN_UNKNOWN_TABLE		;72e6	21 70 e5
-	ld de,ALIEN_UNKNOWN_TABLE + 1	;72e9	11 71 e5
-	ld bc,ALIEN_UNKNOWN_TABLE_LEN   ;72ec	01 06 00
+    ; Clear DOOR_TABLE
+	ld hl,DOOR_TABLE		;72e6	21 70 e5
+	ld de,DOOR_TABLE + 1	;72e9	11 71 e5
+	ld bc,DOOR_TABLE_LEN   ;72ec	01 06 00
 	ld (hl), 0  		            ;72ef	36 00
 	ldir		                    ;72f1	ed b0
 	ret			                    ;72f3	c9
 
-l72f4h:
-	ex af,af'			;72f4	08 	. 
-	add hl,bc			;72f5	09 	. 
-	ld a,(bc)			;72f6	0a 	. 
-	dec bc			;72f7	0b 	. 
-	ld c,00fh		;72f8	0e 0f 	. . 
-	djnz $+19		;72fa	10 11 	. . 
-	ld (de),a			;72fc	12 	. 
-	inc de			;72fd	13 	. 
-	inc d			;72fe	14 	. 
-	dec d			;72ff	15 	. 
-	ld (de),a			;7300	12 	. 
-	inc de			;7301	13 	. 
-	inc d			;7302	14 	. 
-	dec d			;7303	15 	. 
-	ld c,00fh		;7304	0e 0f 	. . 
-	djnz l7319h		;7306	10 11 	. . 
-	ex af,af'			;7308	08 	. 
-	add hl,bc			;7309	09 	. 
-	ld a,(bc)			;730a	0a 	. 
-	dec bc			;730b	0b 	. 
+; Chars corresponding to the states door closed, opening, open, opening, closed.
+DOOR_CHARS:
+    ; Door closed
+    db 8, 9, 10, 11
+
+    ; Door opening
+    db 14, 15, 16, 17
+
+    ; Door open
+    db 18, 19, 20, 21
+
+    ; Door open
+    db 18, 19, 20, 21
+
+	; Door opening
+    db 14, 15, 16, 17
+
+    ; Door closed
+    db 8, 9, 10, 11
 
 ; Check ticks and update alien's appearing from the left or
 ; right, depending on Vaus' position.
@@ -8694,7 +8697,7 @@ l732ch:
 	jp nz,l734bh		                    ;7330	c2 4b 73
 
 	ld a,001h		    ;7333	3e 01
-	ld (ALIEN_UNKNOWN_TABLE),a		;7335	32 70 e5
+	ld (DOOR_TABLE),a		;7335	32 70 e5
 
     ; Alien will appear on the right
 	ld c, 0		        ;7338	0e 00
@@ -8713,7 +8716,7 @@ l732ch:
 l7346h:
     ; Set alien's door
 	ld a,c			    ;7346	79
-	ld (ALIEN_UNKNOWN_TABLE + ALIEN_UNKNOWN_TABLE_IDX_DOOR),a	;7347	32 71 e5
+	ld (DOOR_TABLE + DOOR_TABLE_IDX_DOOR),a	;7347	32 71 e5
 	ret			        ;734a	c9
 
 l734bh:
@@ -9091,7 +9094,7 @@ l760fh:
 	jp nz,l7695h		;7633	c2 95 76 	. . v 
 	ld (ix+007h),001h		;7636	dd 36 07 01 	. 6 . . 
 	ld de,l7b64h		;763a	11 64 7b 	. d { 
-	ld a,(ALIEN_UNKNOWN_TABLE + ALIEN_UNKNOWN_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
+	ld a,(DOOR_TABLE + DOOR_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
 	or a			;7640	b7 	. 
 	jp z,l7647h		;7641	ca 47 76 	. G v 
 	ld de,l7b7ch		;7644	11 7c 7b 	. | { 
