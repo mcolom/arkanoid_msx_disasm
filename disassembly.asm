@@ -15,6 +15,9 @@ BALL_X: equ 0xe0f6
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
 
+BRICK_ROW: equ 0xe2aa
+BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
+
 ; Used to compute the score in BCD
 SCORE_BCD_1: equ 0xe5a0
 SCORE_BCD_2: equ SCORE_BCD_1 + 1
@@ -297,7 +300,7 @@ l418eh:
 	ld hl,01b00h		;418e	21 00 1b 	! . . 
 	call SETWRT		;4191	cd 53 00 	. S . 
 	ld hl,0e18dh		;4194	21 8d e1 	! . . 
-	ld a,(00007h)		;4197	3a 07 00 	: . . 
+	ld a,(VDP_WRITE)		;4197	3a 07 00 	: . . 
 	ld c,a			;419a	4f 	O 
 	ld b,080h		;419b	06 80 	. . 
 l419dh:
@@ -8359,7 +8362,7 @@ l70bfh:
 	srl a		;70e7	cb 3f 	. ? 
 	srl a		;70e9	cb 3f 	. ? 
 	srl a		;70eb	cb 3f 	. ? 
-	ld (0e2aah),a		;70ed	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;70ed	32 aa e2 	2 . . 
 	ld a,(ix+001h)		;70f0	dd 7e 01 	. ~ . 
 	cp 010h		;70f3	fe 10 	. . 
 	jp c,l7118h		;70f5	da 18 71 	. . q 
@@ -8370,7 +8373,7 @@ l70bfh:
 	srl a		;7101	cb 3f 	. ? 
 	srl a		;7103	cb 3f 	. ? 
 	srl a		;7105	cb 3f 	. ? 
-	ld (0e2abh),a		;7107	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;7107	32 ab e2 	2 . . 
 	call sub_ada8h		;710a	cd a8 ad 	. . . 
 	jp nc,l7118h		;710d	d2 18 71 	. . q 
 	ld a,001h		;7110	3e 01 	> . 
@@ -8388,7 +8391,7 @@ l7118h:
 	srl a		;712b	cb 3f 	. ? 
 	srl a		;712d	cb 3f 	. ? 
 	srl a		;712f	cb 3f 	. ? 
-	ld (0e2abh),a		;7131	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;7131	32 ab e2 	2 . . 
 	call sub_ada8h		;7134	cd a8 ad 	. . . 
 	jp nc,l7142h		;7137	d2 42 71 	. B q 
 	ld a,001h		;713a	3e 01 	> . 
@@ -15760,7 +15763,7 @@ sub_95f4h:
 	call sub_9726h		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
 	ld hl,0e36eh		;9604	21 6e e3 	! n . 
-	ld a,(0e2aah)		;9607	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;9607	3a aa e2 	: . . 
 	or a			;960a	b7 	. 
 	jr z,l9622h		;960b	28 15 	( . 
 	ld l,a			;960d	6f 	o 
@@ -15779,7 +15782,7 @@ sub_95f4h:
 	ld de,0e36eh		;961e	11 6e e3 	. n . 
 	add hl,de			;9621	19 	. 
 l9622h:
-	ld a,(0e2abh)		;9622	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;9622	3a ab e2 	: . . 
 	ld e,a			;9625	5f 	_ 
 	sla e		;9626	cb 23 	. # 
 	ld d,000h		;9628	16 00 	. . 
@@ -15946,7 +15949,7 @@ l9756h:
 	srl a		;975e	cb 3f 	. ? 
 	cp 00ch		;9760	fe 0c 	. . 
 	jr nc,l979bh		;9762	30 37 	0 7 
-	ld (0e2aah),a		;9764	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9764	32 aa e2 	2 . . 
 	ld a,(ix+001h)		;9767	dd 7e 01 	. ~ . 
 	sub 010h		;976a	d6 10 	. . 
 	srl a		;976c	cb 3f 	. ? 
@@ -15955,7 +15958,7 @@ l9756h:
 	srl a		;9772	cb 3f 	. ? 
 	cp 00bh		;9774	fe 0b 	. . 
 	jr nc,l979bh		;9776	30 23 	0 # 
-	ld (0e2abh),a		;9778	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9778	32 ab e2 	2 . . 
 	ld a,(ix+000h)		;977b	dd 7e 00 	. ~ . 
 	cp 064h		;977e	fe 64 	. d 
 	jr c,l9786h		;9780	38 04 	8 . 
@@ -16042,12 +16045,12 @@ l981ah:
 	cp 004h		;9833	fe 04 	. . 
 	jr nz,l9859h		;9835	20 22 	  " 
 	ld a,(ix+006h)		;9837	dd 7e 06 	. ~ . 
-	ld (0e2aah),a		;983a	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;983a	32 aa e2 	2 . . 
 	ld a,(ix+007h)		;983d	dd 7e 07 	. ~ . 
-	ld (0e2abh),a		;9840	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9840	32 ab e2 	2 . . 
 	call sub_ada8h		;9843	cd a8 ad 	. . . 
 	jr c,l984bh		;9846	38 03 	8 . 
-	call sub_ab8fh		;9848	cd 8f ab 	. . . 
+	call ERASE_BRICK		;9848	cd 8f ab 	. . . 
 l984bh:
 	push ix		;984b	dd e5 	. . 
 	push ix		;984d	dd e5 	. . 
@@ -16707,9 +16710,9 @@ l9ceah:
 	jp la299h		;9cfa	c3 99 a2 	. . . 
 l9cfdh:
 	ld a,(0e58ch)		;9cfd	3a 8c e5 	: . . 
-	ld (0e2aah),a		;9d00	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9d00	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;9d03	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9d06	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9d06	32 ab e2 	2 . . 
 	call sub_ada8h		;9d09	cd a8 ad 	. . . 
 	jp nc,la299h		;9d0c	d2 99 a2 	. . . 
 	call sub_9b5bh		;9d0f	cd 5b 9b 	. [ . 
@@ -16717,9 +16720,9 @@ l9cfdh:
 	jp la299h		;9d15	c3 99 a2 	. . . 
 l9d18h:
 	ld a,(0e58ch)		;9d18	3a 8c e5 	: . . 
-	ld (0e2aah),a		;9d1b	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9d1b	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;9d1e	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9d21	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9d21	32 ab e2 	2 . . 
 	call sub_ada8h		;9d24	cd a8 ad 	. . . 
 	jp nc,la299h		;9d27	d2 99 a2 	. . . 
 	call la901h		;9d2a	cd 01 a9 	. . . 
@@ -16728,9 +16731,9 @@ l9d18h:
 	jp la299h		;9d33	c3 99 a2 	. . . 
 l9d36h:
 	ld a,(0e58ah)		;9d36	3a 8a e5 	: . . 
-	ld (0e2aah),a		;9d39	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9d39	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;9d3c	3a 8d e5 	: . . 
-	ld (0e2abh),a		;9d3f	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9d3f	32 ab e2 	2 . . 
 	call sub_ada8h		;9d42	cd a8 ad 	. . . 
 	jp nc,la299h		;9d45	d2 99 a2 	. . . 
 	call sub_a810h		;9d48	cd 10 a8 	. . . 
@@ -16739,9 +16742,9 @@ l9d36h:
 	jp la299h		;9d51	c3 99 a2 	. . . 
 l9d54h:
 	ld a,(0e58ah)		;9d54	3a 8a e5 	: . . 
-	ld (0e2aah),a		;9d57	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9d57	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;9d5a	3a 8d e5 	: . . 
-	ld (0e2abh),a		;9d5d	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9d5d	32 ab e2 	2 . . 
 	call sub_a670h		;9d60	cd 70 a6 	. p . 
 	jp nc,l9d99h		;9d63	d2 99 9d 	. . . 
 	call sub_ada8h		;9d66	cd a8 ad 	. . . 
@@ -16755,7 +16758,7 @@ l9d54h:
 	jp la299h		;9d7e	c3 99 a2 	. . . 
 l9d81h:
 	ld a,(0e58bh)		;9d81	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9d84	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9d84	32 ab e2 	2 . . 
 	call sub_ada8h		;9d87	cd a8 ad 	. . . 
 	jp nc,la299h		;9d8a	d2 99 a2 	. . . 
 	call la901h		;9d8d	cd 01 a9 	. . . 
@@ -16764,9 +16767,9 @@ l9d81h:
 	jp la299h		;9d96	c3 99 a2 	. . . 
 l9d99h:
 	ld a,(0e58ch)		;9d99	3a 8c e5 	: . . 
-	ld (0e2aah),a		;9d9c	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9d9c	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;9d9f	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9da2	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9da2	32 ab e2 	2 . . 
 	call sub_ada8h		;9da5	cd a8 ad 	. . . 
 	jp nc,l9db7h		;9da8	d2 b7 9d 	. . . 
 	call la901h		;9dab	cd 01 a9 	. . . 
@@ -16775,7 +16778,7 @@ l9d99h:
 	jp la299h		;9db4	c3 99 a2 	. . . 
 l9db7h:
 	ld a,(0e58ah)		;9db7	3a 8a e5 	: . . 
-	ld (0e2aah),a		;9dba	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9dba	32 aa e2 	2 . . 
 	call sub_ada8h		;9dbd	cd a8 ad 	. . . 
 	jp nc,la299h		;9dc0	d2 99 a2 	. . . 
 	call sub_a810h		;9dc3	cd 10 a8 	. . . 
@@ -16871,9 +16874,9 @@ l9e86h:
 	jp la299h		;9e96	c3 99 a2 	. . . 
 l9e99h:
 	ld a,(0e58ch)		;9e99	3a 8c e5 	: . . 
-	ld (0e2aah),a		;9e9c	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9e9c	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;9e9f	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9ea2	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9ea2	32 ab e2 	2 . . 
 	call sub_ada8h		;9ea5	cd a8 ad 	. . . 
 	jp nc,la299h		;9ea8	d2 99 a2 	. . . 
 	call sub_9b5bh		;9eab	cd 5b 9b 	. [ . 
@@ -16881,9 +16884,9 @@ l9e99h:
 	jp la299h		;9eb1	c3 99 a2 	. . . 
 l9eb4h:
 	ld a,(0e58ch)		;9eb4	3a 8c e5 	: . . 
-	ld (0e2aah),a		;9eb7	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9eb7	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;9eba	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9ebd	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9ebd	32 ab e2 	2 . . 
 	call sub_ada8h		;9ec0	cd a8 ad 	. . . 
 	jp nc,la299h		;9ec3	d2 99 a2 	. . . 
 	call la901h		;9ec6	cd 01 a9 	. . . 
@@ -16892,9 +16895,9 @@ l9eb4h:
 	jp la299h		;9ecf	c3 99 a2 	. . . 
 l9ed2h:
 	ld a,(0e58ah)		;9ed2	3a 8a e5 	: . . 
-	ld (0e2aah),a		;9ed5	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9ed5	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;9ed8	3a 8d e5 	: . . 
-	ld (0e2abh),a		;9edb	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9edb	32 ab e2 	2 . . 
 	call sub_ada8h		;9ede	cd a8 ad 	. . . 
 	jp nc,la299h		;9ee1	d2 99 a2 	. . . 
 	call sub_a810h		;9ee4	cd 10 a8 	. . . 
@@ -16903,9 +16906,9 @@ l9ed2h:
 	jp la299h		;9eed	c3 99 a2 	. . . 
 l9ef0h:
 	ld a,(0e58ah)		;9ef0	3a 8a e5 	: . . 
-	ld (0e2aah),a		;9ef3	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9ef3	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;9ef6	3a 8d e5 	: . . 
-	ld (0e2abh),a		;9ef9	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9ef9	32 ab e2 	2 . . 
 	call sub_a670h		;9efc	cd 70 a6 	. p . 
 	jp nc,l9f35h		;9eff	d2 35 9f 	. 5 . 
 	call sub_ada8h		;9f02	cd a8 ad 	. . . 
@@ -16919,7 +16922,7 @@ l9ef0h:
 	jp la299h		;9f1a	c3 99 a2 	. . . 
 l9f1dh:
 	ld a,(0e58bh)		;9f1d	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9f20	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9f20	32 ab e2 	2 . . 
 	call sub_ada8h		;9f23	cd a8 ad 	. . . 
 	jp nc,la299h		;9f26	d2 99 a2 	. . . 
 	call la901h		;9f29	cd 01 a9 	. . . 
@@ -16928,9 +16931,9 @@ l9f1dh:
 	jp la299h		;9f32	c3 99 a2 	. . . 
 l9f35h:
 	ld a,(0e58ch)		;9f35	3a 8c e5 	: . . 
-	ld (0e2aah),a		;9f38	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9f38	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;9f3b	3a 8b e5 	: . . 
-	ld (0e2abh),a		;9f3e	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;9f3e	32 ab e2 	2 . . 
 	call sub_ada8h		;9f41	cd a8 ad 	. . . 
 	jp nc,l9f53h		;9f44	d2 53 9f 	. S . 
 	call la901h		;9f47	cd 01 a9 	. . . 
@@ -16939,7 +16942,7 @@ l9f35h:
 	jp la299h		;9f50	c3 99 a2 	. . . 
 l9f53h:
 	ld a,(0e58ah)		;9f53	3a 8a e5 	: . . 
-	ld (0e2aah),a		;9f56	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;9f56	32 aa e2 	2 . . 
 	call sub_ada8h		;9f59	cd a8 ad 	. . . 
 	jp nc,la299h		;9f5c	d2 99 a2 	. . . 
 	call sub_a810h		;9f5f	cd 10 a8 	. . . 
@@ -17033,9 +17036,9 @@ la01dh:
 	jp la299h		;a02d	c3 99 a2 	. . . 
 la030h:
 	ld a,(0e58ch)		;a030	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a033	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a033	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a036	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a039	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a039	32 ab e2 	2 . . 
 	call sub_ada8h		;a03c	cd a8 ad 	. . . 
 	jp nc,la299h		;a03f	d2 99 a2 	. . . 
 	call sub_9b5bh		;a042	cd 5b 9b 	. [ . 
@@ -17043,9 +17046,9 @@ la030h:
 	jp la299h		;a048	c3 99 a2 	. . . 
 la04bh:
 	ld a,(0e58ch)		;a04b	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a04e	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a04e	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a051	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a054	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a054	32 ab e2 	2 . . 
 	call sub_ada8h		;a057	cd a8 ad 	. . . 
 	jp nc,la299h		;a05a	d2 99 a2 	. . . 
 	call la901h		;a05d	cd 01 a9 	. . . 
@@ -17054,9 +17057,9 @@ la04bh:
 	jp la299h		;a066	c3 99 a2 	. . . 
 la069h:
 	ld a,(0e58ah)		;a069	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a06c	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a06c	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;a06f	3a 8d e5 	: . . 
-	ld (0e2abh),a		;a072	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a072	32 ab e2 	2 . . 
 	call sub_ada8h		;a075	cd a8 ad 	. . . 
 	jp nc,la299h		;a078	d2 99 a2 	. . . 
 	call sub_a810h		;a07b	cd 10 a8 	. . . 
@@ -17065,10 +17068,10 @@ la069h:
 	jp la299h		;a084	c3 99 a2 	. . . 
 la087h:
 	ld a,(0e58ah)		;a087	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a08a	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a08a	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;a08d	3a 8d e5 	: . . 
 la090h:
-	ld (0e2abh),a		;a090	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a090	32 ab e2 	2 . . 
 	call sub_a670h		;a093	cd 70 a6 	. p . 
 	jp nc,la0cch		;a096	d2 cc a0 	. . . 
 	call sub_ada8h		;a099	cd a8 ad 	. . . 
@@ -17082,7 +17085,7 @@ la090h:
 	jp la299h		;a0b1	c3 99 a2 	. . . 
 la0b4h:
 	ld a,(0e58bh)		;a0b4	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a0b7	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a0b7	32 ab e2 	2 . . 
 	call sub_ada8h		;a0ba	cd a8 ad 	. . . 
 	jp nc,la299h		;a0bd	d2 99 a2 	. . . 
 la0c0h:
@@ -17092,9 +17095,9 @@ la0c0h:
 	jp la299h		;a0c9	c3 99 a2 	. . . 
 la0cch:
 	ld a,(0e58ch)		;a0cc	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a0cf	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a0cf	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a0d2	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a0d5	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a0d5	32 ab e2 	2 . . 
 	call sub_ada8h		;a0d8	cd a8 ad 	. . . 
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
 	call la901h		;a0de	cd 01 a9 	. . . 
@@ -17103,7 +17106,7 @@ la0cch:
 	jp la299h		;a0e7	c3 99 a2 	. . . 
 la0eah:
 	ld a,(0e58ah)		;a0ea	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a0ed	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a0ed	32 aa e2 	2 . . 
 	call sub_ada8h		;a0f0	cd a8 ad 	. . . 
 	jp nc,la299h		;a0f3	d2 99 a2 	. . . 
 	call sub_a810h		;a0f6	cd 10 a8 	. . . 
@@ -17197,9 +17200,9 @@ la1b4h:
 	jp la299h		;a1c4	c3 99 a2 	. . . 
 la1c7h:
 	ld a,(0e58ch)		;a1c7	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a1ca	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a1ca	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a1cd	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a1d0	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a1d0	32 ab e2 	2 . . 
 	call sub_ada8h		;a1d3	cd a8 ad 	. . . 
 	jp nc,la299h		;a1d6	d2 99 a2 	. . . 
 	call sub_9b5bh		;a1d9	cd 5b 9b 	. [ . 
@@ -17207,9 +17210,9 @@ la1c7h:
 	jp la299h		;a1df	c3 99 a2 	. . . 
 la1e2h:
 	ld a,(0e58ch)		;a1e2	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a1e5	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a1e5	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a1e8	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a1eb	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a1eb	32 ab e2 	2 . . 
 	call sub_ada8h		;a1ee	cd a8 ad 	. . . 
 	jp nc,la299h		;a1f1	d2 99 a2 	. . . 
 	call la901h		;a1f4	cd 01 a9 	. . . 
@@ -17218,9 +17221,9 @@ la1e2h:
 	jp la299h		;a1fd	c3 99 a2 	. . . 
 la200h:
 	ld a,(0e58ah)		;a200	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a203	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a203	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;a206	3a 8d e5 	: . . 
-	ld (0e2abh),a		;a209	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a209	32 ab e2 	2 . . 
 	call sub_ada8h		;a20c	cd a8 ad 	. . . 
 	jp nc,la299h		;a20f	d2 99 a2 	. . . 
 	call sub_a810h		;a212	cd 10 a8 	. . . 
@@ -17229,9 +17232,9 @@ la200h:
 	jp la299h		;a21b	c3 99 a2 	. . . 
 la21eh:
 	ld a,(0e58ah)		;a21e	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a221	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a221	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;a224	3a 8d e5 	: . . 
-	ld (0e2abh),a		;a227	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a227	32 ab e2 	2 . . 
 	call sub_a670h		;a22a	cd 70 a6 	. p . 
 	jp nc,la263h		;a22d	d2 63 a2 	. c . 
 	call sub_ada8h		;a230	cd a8 ad 	. . . 
@@ -17245,7 +17248,7 @@ la21eh:
 	jp la299h		;a248	c3 99 a2 	. . . 
 la24bh:
 	ld a,(0e58bh)		;a24b	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a24e	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a24e	32 ab e2 	2 . . 
 	call sub_ada8h		;a251	cd a8 ad 	. . . 
 	jp nc,la299h		;a254	d2 99 a2 	. . . 
 	call la901h		;a257	cd 01 a9 	. . . 
@@ -17254,9 +17257,9 @@ la24bh:
 	jp la299h		;a260	c3 99 a2 	. . . 
 la263h:
 	ld a,(0e58ch)		;a263	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a266	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a266	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a269	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a26c	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a26c	32 ab e2 	2 . . 
 	call sub_ada8h		;a26f	cd a8 ad 	. . . 
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
 	call la901h		;a275	cd 01 a9 	. . . 
@@ -17265,7 +17268,7 @@ la263h:
 	jp la299h		;a27e	c3 99 a2 	. . . 
 la281h:
 	ld a,(0e58ah)		;a281	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a284	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a284	32 aa e2 	2 . . 
 	call sub_ada8h		;a287	cd a8 ad 	. . . 
 	jp nc,la299h		;a28a	d2 99 a2 	. . . 
 	call sub_a810h		;a28d	cd 10 a8 	. . . 
@@ -17308,17 +17311,17 @@ la2d7h:
 	jp la326h		;a2dc	c3 26 a3 	. & . 
 la2dfh:
 	ld a,(0e58ch)		;a2df	3a 8c e5 	: . . 
-	ld (0e2aah),a		;a2e2	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a2e2	32 aa e2 	2 . . 
 	call sub_a3d1h		;a2e5	cd d1 a3 	. . . 
 	call sub_9b80h		;a2e8	cd 80 9b 	. . . 
 	jp la326h		;a2eb	c3 26 a3 	. & . 
 la2eeh:
 	ld a,(0e58ah)		;a2ee	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a2f1	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a2f1	32 aa e2 	2 . . 
 	call sub_a591h		;a2f4	cd 91 a5 	. . . 
 	jp nc,la2dfh		;a2f7	d2 df a2 	. . . 
 	ld a,(0e58dh)		;a2fa	3a 8d e5 	: . . 
-	ld (0e2abh),a		;a2fd	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a2fd	32 ab e2 	2 . . 
 	call sub_ada8h		;a300	cd a8 ad 	. . . 
 	jp nc,la31bh		;a303	d2 1b a3 	. . . 
 	ld a,(0e53ch)		;a306	3a 3c e5 	: < . 
@@ -17341,13 +17344,13 @@ la326h:
 sub_a328h:
 	ld a,(0e58bh)		;a328	3a 8b e5 	: . . 
 	ld b,a			;a32b	47 	G 
-	ld a,(0e2abh)		;a32c	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a32c	3a ab e2 	: . . 
 	cp b			;a32f	b8 	. 
 	jp nz,la354h		;a330	c2 54 a3 	. T . 
 	ld a,(0e58ah)		;a333	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a336	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a336	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a339	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a33c	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a33c	32 ab e2 	2 . . 
 	call sub_ada8h		;a33f	cd a8 ad 	. . . 
 	jp nc,la351h		;a342	d2 51 a3 	. Q . 
 	call sub_a810h		;a345	cd 10 a8 	. . . 
@@ -17358,19 +17361,19 @@ la351h:
 	jp la3d0h		;a351	c3 d0 a3 	. . . 
 la354h:
 	ld a,(0e58ah)		;a354	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a357	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a357	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;a35a	3a 8d e5 	: . . 
 	bit 7,(iy+003h)		;a35d	fd cb 03 7e 	. . . ~ 
 	jp z,la367h		;a361	ca 67 a3 	. g . 
 	ld a,(0e58bh)		;a364	3a 8b e5 	: . . 
 la367h:
-	ld (0e2abh),a		;a367	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a367	32 ab e2 	2 . . 
 	call sub_a670h		;a36a	cd 70 a6 	. p . 
 	jp nc,la3afh		;a36d	d2 af a3 	. . . 
 	ld a,(0e58ah)		;a370	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a373	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a373	32 aa e2 	2 . . 
 	ld a,(0e58dh)		;a376	3a 8d e5 	: . . 
-	ld (0e2abh),a		;a379	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a379	32 ab e2 	2 . . 
 	call sub_ada8h		;a37c	cd a8 ad 	. . . 
 	jp nc,la38eh		;a37f	d2 8e a3 	. . . 
 	call sub_a810h		;a382	cd 10 a8 	. . . 
@@ -17379,9 +17382,9 @@ la367h:
 	jp la3d0h		;a38b	c3 d0 a3 	. . . 
 la38eh:
 	ld a,(0e58ah)		;a38e	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a391	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a391	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a394	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a397	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a397	32 ab e2 	2 . . 
 	call sub_ada8h		;a39a	cd a8 ad 	. . . 
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
 	call la901h		;a3a0	cd 01 a9 	. . . 
@@ -17392,9 +17395,9 @@ la3ach:
 	jp la3d0h		;a3ac	c3 d0 a3 	. . . 
 la3afh:
 	ld a,(0e58ah)		;a3af	3a 8a e5 	: . . 
-	ld (0e2aah),a		;a3b2	32 aa e2 	2 . . 
+	ld (BRICK_ROW),a		;a3b2	32 aa e2 	2 . . 
 	ld a,(0e58bh)		;a3b5	3a 8b e5 	: . . 
-	ld (0e2abh),a		;a3b8	32 ab e2 	2 . . 
+	ld (BRICK_COL),a		;a3b8	32 ab e2 	2 . . 
 	call sub_ada8h		;a3bb	cd a8 ad 	. . . 
 	jp nc,la3cdh		;a3be	d2 cd a3 	. . . 
 	call sub_a810h		;a3c1	cd 10 a8 	. . . 
@@ -17411,7 +17414,7 @@ sub_a3d1h:
 	ld de,0e542h		;a3d6	11 42 e5 	. B . 
 	ld bc,00002h		;a3d9	01 02 00 	. . . 
 	ldir		;a3dc	ed b0 	. . 
-	ld a,(0e2abh)		;a3de	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a3de	3a ab e2 	: . . 
 	sla a		;a3e1	cb 27 	. ' 
 	sla a		;a3e3	cb 27 	. ' 
 	sla a		;a3e5	cb 27 	. ' 
@@ -17494,7 +17497,7 @@ la46eh:
 	ld b,a			;a476	47 	G 
 	bit 7,(iy+002h)		;a477	fd cb 02 7e 	. . . ~ 
 	jp nz,la49ch		;a47b	c2 9c a4 	. . . 
-	ld a,(0e2aah)		;a47e	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a47e	3a aa e2 	: . . 
 	sla a		;a481	cb 27 	. ' 
 	sla a		;a483	cb 27 	. ' 
 	sla a		;a485	cb 27 	. ' 
@@ -17511,7 +17514,7 @@ la492h:
 	ld b,a			;a498	47 	G 
 	jp la4bbh		;a499	c3 bb a4 	. . . 
 la49ch:
-	ld a,(0e2aah)		;a49c	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a49c	3a aa e2 	: . . 
 	sla a		;a49f	cb 27 	. ' 
 	sla a		;a4a1	cb 27 	. ' 
 	sla a		;a4a3	cb 27 	. ' 
@@ -17543,7 +17546,7 @@ la4cch:
 	ld de,0e542h		;a4d4	11 42 e5 	. B . 
 	ld bc,00002h		;a4d7	01 02 00 	. . . 
 	ldir		;a4da	ed b0 	. . 
-	ld a,(0e2aah)		;a4dc	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a4dc	3a aa e2 	: . . 
 	sla a		;a4df	cb 27 	. ' 
 	sla a		;a4e1	cb 27 	. ' 
 	sla a		;a4e3	cb 27 	. ' 
@@ -17650,7 +17653,7 @@ sub_a591h:
 	ld de,0e542h		;a596	11 42 e5 	. B . 
 	ld bc,00002h		;a599	01 02 00 	. . . 
 	ldir		;a59c	ed b0 	. . 
-	ld a,(0e2aah)		;a59e	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a59e	3a aa e2 	: . . 
 	sla a		;a5a1	cb 27 	. ' 
 	sla a		;a5a3	cb 27 	. ' 
 	sla a		;a5a5	cb 27 	. ' 
@@ -17768,7 +17771,7 @@ sub_a670h:
 	ld de,0e542h		;a675	11 42 e5 	. B . 
 	ld bc,00002h		;a678	01 02 00 	. . . 
 	ldir		;a67b	ed b0 	. . 
-	ld a,(0e2aah)		;a67d	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a67d	3a aa e2 	: . . 
 	sla a		;a680	cb 27 	. ' 
 	sla a		;a682	cb 27 	. ' 
 	sla a		;a684	cb 27 	. ' 
@@ -17854,7 +17857,7 @@ la70eh:
 	jp nz,la797h		;a71b	c2 97 a7 	. . . 
 	bit 7,(iy+003h)		;a71e	fd cb 03 7e 	. . . ~ 
 	jp nz,la75eh		;a722	c2 5e a7 	. ^ . 
-	ld a,(0e2abh)		;a725	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a725	3a ab e2 	: . . 
 	sla a		;a728	cb 27 	. ' 
 	sla a		;a72a	cb 27 	. ' 
 	sla a		;a72c	cb 27 	. ' 
@@ -17889,7 +17892,7 @@ la751h:
 	pop af			;a75c	f1 	. 
 	ret			;a75d	c9 	. 
 la75eh:
-	ld a,(0e2abh)		;a75e	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a75e	3a ab e2 	: . . 
 	sla a		;a761	cb 27 	. ' 
 	sla a		;a763	cb 27 	. ' 
 	sla a		;a765	cb 27 	. ' 
@@ -17926,7 +17929,7 @@ la78ah:
 la797h:
 	bit 7,(iy+003h)		;a797	fd cb 03 7e 	. . . ~ 
 	jp nz,la7d7h		;a79b	c2 d7 a7 	. . . 
-	ld a,(0e2abh)		;a79e	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a79e	3a ab e2 	: . . 
 	sla a		;a7a1	cb 27 	. ' 
 	sla a		;a7a3	cb 27 	. ' 
 	sla a		;a7a5	cb 27 	. ' 
@@ -17961,7 +17964,7 @@ la7cah:
 	pop af			;a7d5	f1 	. 
 	ret			;a7d6	c9 	. 
 la7d7h:
-	ld a,(0e2abh)		;a7d7	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a7d7	3a ab e2 	: . . 
 	sla a		;a7da	cb 27 	. ' 
 	sla a		;a7dc	cb 27 	. ' 
 	sla a		;a7de	cb 27 	. ' 
@@ -18001,7 +18004,7 @@ sub_a810h:
 	ld de,0e542h		;a815	11 42 e5 	. B . 
 	ld bc,00002h		;a818	01 02 00 	. . . 
 	ldir		;a81b	ed b0 	. . 
-	ld a,(0e2aah)		;a81d	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a81d	3a aa e2 	: . . 
 	sla a		;a820	cb 27 	. ' 
 	sla a		;a822	cb 27 	. ' 
 	sla a		;a824	cb 27 	. ' 
@@ -18094,7 +18097,7 @@ la8beh:
 	ld a,(0e587h)		;a8c2	3a 87 e5 	: . . 
 	add a,b			;a8c5	80 	. 
 	ld b,a			;a8c6	47 	G 
-	ld a,(0e2abh)		;a8c7	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a8c7	3a ab e2 	: . . 
 	sla a		;a8ca	cb 27 	. ' 
 	sla a		;a8cc	cb 27 	. ' 
 	sla a		;a8ce	cb 27 	. ' 
@@ -18129,7 +18132,7 @@ la901h:
 	ld de,0e542h		;a906	11 42 e5 	. B . 
 	ld bc,00002h		;a909	01 02 00 	. . . 
 	ldir		;a90c	ed b0 	. . 
-	ld a,(0e2abh)		;a90e	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;a90e	3a ab e2 	: . . 
 	sla a		;a911	cb 27 	. ' 
 	sla a		;a913	cb 27 	. ' 
 	sla a		;a915	cb 27 	. ' 
@@ -18213,7 +18216,7 @@ la99eh:
 	ld b,a			;a9a6	47 	G 
 	bit 7,(iy+002h)		;a9a7	fd cb 02 7e 	. . . ~ 
 	jp nz,la9cch		;a9ab	c2 cc a9 	. . . 
-	ld a,(0e2aah)		;a9ae	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a9ae	3a aa e2 	: . . 
 	sla a		;a9b1	cb 27 	. ' 
 	sla a		;a9b3	cb 27 	. ' 
 	sla a		;a9b5	cb 27 	. ' 
@@ -18230,7 +18233,7 @@ la9c1h:
 	ld b,a			;a9c8	47 	G 
 	jp la9f1h		;a9c9	c3 f1 a9 	. . . 
 la9cch:
-	ld a,(0e2aah)		;a9cc	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;a9cc	3a aa e2 	: . . 
 	sla a		;a9cf	cb 27 	. ' 
 	sla a		;a9d1	cb 27 	. ' 
 	sla a		;a9d3	cb 27 	. ' 
@@ -18275,7 +18278,7 @@ sub_aa05h:
 	ld d,(hl)			;aa16	56 	V 
 	ex de,hl			;aa17	eb 	. 
 	ld (0e2bch),hl		;aa18	22 bc e2 	" . . 
-	ld a,(0e2aah)		;aa1b	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;aa1b	3a aa e2 	: . . 
 	cp 00ch		;aa1e	fe 0c 	. . 
 	jp c,laa25h		;aa20	da 25 aa 	. % . 
 	ld a,00bh		;aa23	3e 0b 	> . 
@@ -18292,7 +18295,7 @@ laa28h:
 	add hl,hl			;aa2e	29 	) 
 	add hl,bc			;aa2f	09 	. 
 	add hl,de			;aa30	19 	. 
-	ld a,(0e2abh)		;aa31	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;aa31	3a ab e2 	: . . 
 	cp 00bh		;aa34	fe 0b 	. . 
 	jp c,laa3bh		;aa36	da 3b aa 	. ; . 
 	ld a,00ah		;aa39	3e 0a 	> . 
@@ -18388,7 +18391,7 @@ laabch:
 	ld (0e2bah),a		;aac8	32 ba e2 	2 . . 
 	ld a,001h		;aacb	3e 01 	> . 
 	ld (0e2bbh),a		;aacd	32 bb e2 	2 . . 
-	ld a,(0e2aah)		;aad0	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;aad0	3a aa e2 	: . . 
 	ld l,a			;aad3	6f 	o 
 	ld h,000h		;aad4	26 00 	& . 
 	push hl			;aad6	e5 	. 
@@ -18400,7 +18403,7 @@ laabch:
 	add hl,hl			;aadc	29 	) 
 	add hl,bc			;aadd	09 	. 
 	add hl,de			;aade	19 	. 
-	ld a,(0e2abh)		;aadf	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;aadf	3a ab e2 	: . . 
 	ld e,a			;aae2	5f 	_ 
 	ld d,000h		;aae3	16 00 	. . 
 	add hl,de			;aae5	19 	. 
@@ -18421,7 +18424,7 @@ laaefh:
 	call sub_5befh		;ab02	cd ef 5b 	. . [ 
 	ret			;ab05	c9 	. 
 lab06h:
-	ld a,(0e2aah)		;ab06	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;ab06	3a aa e2 	: . . 
 	inc a			;ab09	3c 	< 
 	ld hl,00000h		;ab0a	21 00 00 	! . . 
 	ld de,00020h		;ab0d	11 20 00 	.   . 
@@ -18431,14 +18434,14 @@ lab10h:
 	jp nz,lab10h		;ab12	c2 10 ab 	. . . 
 	ld de,01842h		;ab15	11 42 18 	. B . 
 	add hl,de			;ab18	19 	. 
-	ld a,(0e2abh)		;ab19	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;ab19	3a ab e2 	: . . 
 	ld e,a			;ab1c	5f 	_ 
 	sla e		;ab1d	cb 23 	. # 
 	ld d,000h		;ab1f	16 00 	. . 
 	add hl,de			;ab21	19 	. 
-	ld a,(0e2aah)		;ab22	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;ab22	3a aa e2 	: . . 
 	ld (0e53ch),a		;ab25	32 3c e5 	2 < . 
-	ld a,(0e2abh)		;ab28	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;ab28	3a ab e2 	: . . 
 	ld (0e53dh),a		;ab2b	32 3d e5 	2 = . 
 	call sub_97afh		;ab2e	cd af 97 	. . . 
 	ld a,003h		;ab31	3e 03 	> . 
@@ -18489,54 +18492,96 @@ lab6ah:
 	ld a,(BRICKS_LEFT)		;ab7d	3a 38 e0
 	dec a			        ;ab80	3d
 	ld (BRICKS_LEFT),a		;ab81	32 38 e0
-	jr nz,sub_ab8fh		    ;ab84	20 09
+	jr nz,ERASE_BRICK		    ;ab84	20 09
 
 	xor a			;ab86	af 	. 
 	ld (0e022h),a		;ab87	32 22 e0 	2 " . 
 	ld a,002h		;ab8a	3e 02 	> . 
 	ld (0e00ah),a		;ab8c	32 0a e0 	2 . . 
-sub_ab8fh:
-	ld a,(0e2aah)		;ab8f	3a aa e2 	: . . 
-	inc a			;ab92	3c 	< 
-	ld hl,00000h		;ab93	21 00 00 	! . . 
-	ld de,00020h		;ab96	11 20 00 	.   . 
+    
+; Erase a brick and overwritte its chars with the
+; proper background patterns.
+ERASE_BRICK:
+    ; A = BRICK_ROW + 1
+	ld a,(BRICK_ROW)		;ab8f	3a aa e2
+	inc a			        ;ab92	3c
+	ld hl, 0    		    ;ab93	21 00 00
+	ld de, 32   		    ;ab96	11 20 00
+    ; Compute HL = 32 * (BRICK_ROW + 1)
 lab99h:
-	add hl,de			;ab99	19 	. 
-	dec a			;ab9a	3d 	= 
-	jr nz,lab99h		;ab9b	20 fc 	  . 
-	ld de,01842h		;ab9d	11 42 18 	. B . 
-	add hl,de			;aba0	19 	. 
-	ld a,(0e2abh)		;aba1	3a ab e2 	: . . 
-	ld e,a			;aba4	5f 	_ 
-	sla e		;aba5	cb 23 	. # 
-	ld d,000h		;aba7	16 00 	. . 
-	add hl,de			;aba9	19 	. 
-	call SETWRT		;abaa	cd 53 00 	. S . 
-	ld a,(0e2aah)		;abad	3a aa e2 	: . . 
-	and 003h		;abb0	e6 03 	. . 
-	ld l,a			;abb2	6f 	o 
-	ld h,000h		;abb3	26 00 	& . 
-	add hl,hl			;abb5	29 	) 
-	ld de,lad90h		;abb6	11 90 ad 	. . . 
-	add hl,de			;abb9	19 	. 
-	ld e,(hl)			;abba	5e 	^ 
-	inc hl			;abbb	23 	# 
-	ld d,(hl)			;abbc	56 	V 
-	ld a,(0e2abh)		;abbd	3a ab e2 	: . . 
-	and 001h		;abc0	e6 01 	. . 
-	ld l,a			;abc2	6f 	o 
-	sla l		;abc3	cb 25 	. % 
-	ld h,000h		;abc5	26 00 	& . 
-	add hl,de			;abc7	19 	. 
-	ld a,(00007h)		;abc8	3a 07 00 	: . . 
-	ld c,a			;abcb	4f 	O 
-	ld b,002h		;abcc	06 02 	. . 
+	add hl,de			    ;ab99	19
+	dec a			        ;ab9a	3d
+	jr nz,lab99h		    ;ab9b	20 fc
+
+    ; Locate HL to the beginning of the corresponding row
+	; HL located at VRAM [2,2] + 32 * (BRICK_ROW + 1) ==> [2, 3 + BRICK_ROW]
+    ld de,0x1800 + 2 + 2*32		;ab9d	11 42 18    VRAM [2, 2]
+	add hl,de			        ;aba0	19
+
+	; E = 2 * BRICK_COL
+    ; This is because each brick is 2 chars long
+    ld a,(BRICK_COL)		    ;aba1	3a ab e2
+	ld e,a			            ;aba4	5f
+	sla e		                ;aba5	cb 23
+    
+    ; Locate at address [2 + 2*BRICK_COL, 3 + BRICK_ROW]
+	ld d, 0		                ;aba7	16 00
+	add hl,de			        ;aba9	19
+	call SETWRT		            ;abaa	cd 53 00
+
+    ; Now compute compute on which position of the
+    ; 2x2 background patter we are, to get then the two characters of
+    ; the background which will replace the erased brick.
+    
+    ; HL = BRICK_ROW & 3
+	ld a,(BRICK_ROW)		    ;abad	3a aa e2
+	and 003h		            ;abb0	e6 03
+	ld l,a			            ;abb2	6f
+	ld h,000h		            ;abb3	26 00
+    
+    ; HL = 2 * (BRICK_ROW & 3)
+	add hl,hl			        ;abb5	29
+
+    ; HL = TABLE_BACKGROUND_ERASE + 2 * (BRICK_ROW & 3)
+    ld de,TABLE_BACKGROUND_ERASE		;abb6	11 90 ad
+	add hl,de			                ;abb9	19
+
+    ; E = TABLE_BACKGROUND_ERASE[2 * (BRICK_ROW & 3)]
+	ld e,(hl)			                ;abba	5e
+
+	; D = TABLE_BACKGROUND_ERASE[2 * (BRICK_ROW & 3) + 1]
+    inc hl			                    ;abbb	23
+	ld d,(hl)			                ;abbc	56
+    ; Ex:   DE = 0xada4
+
+    ; A = BRICK_COL & 1
+	ld a,(BRICK_COL)		            ;abbd	3a ab e2
+	and 1           		            ;abc0	e6 01
+
+    ; L = 2 * (BRICK_COL & 1)
+	ld l,a			                    ;abc2	6f
+	sla l		                        ;abc3	cb 25
+    
+	; HL += DE
+    ; HL = HL + DE
+    ; HL = 2 * (BRICK_COL & 1) + (word)TABLE_BACKGROUND_ERASE[2 * (BRICK_ROW & 3)]
+    ld h, 0		            ;abc5	26 00
+	add hl,de			    ;abc7	19
+    
+    ; C = VDP_WRITE port
+	ld a,(VDP_WRITE)		;abc8	3a 07 00
+	ld c,a			        ;abcb	4f
+
+    ; Write 2 chars of background to the VRAM, to delete the
+    ; brick with the background.
+	ld b, 2 		        ;abcc	06 02
 labceh:
-	outi		;abce	ed a3 	. . 
-	jr nz,labceh		;abd0	20 fc 	  . 
-	ret			;abd2	c9 	. 
+	outi		            ;abce	ed a3
+	jr nz,labceh		    ;abd0	20 fc
+	ret			            ;abd2	c9
+
 sub_abd3h:
-	ld a,(0e2aah)		;abd3	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;abd3	3a aa e2 	: . . 
 	ld l,a			;abd6	6f 	o 
 	ld h,000h		;abd7	26 00 	& . 
 	add hl,hl			;abd9	29 	) 
@@ -18546,7 +18591,7 @@ sub_abd3h:
 	add hl,hl			;abdd	29 	) 
 	ld de,lac10h		;abde	11 10 ac 	. . . 
 	add hl,de			;abe1	19 	. 
-	ld a,(0e2abh)		;abe2	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;abe2	3a ab e2 	: . . 
 	sla a		;abe5	cb 27 	. ' 
 	ld e,a			;abe7	5f 	_ 
 	ld d,000h		;abe8	16 00 	. . 
@@ -18556,7 +18601,7 @@ sub_abd3h:
 	ld d,(hl)			;abed	56 	V 
 	push de			;abee	d5 	. 
 	pop iy		;abef	fd e1 	. . 
-	ld a,(0e2aah)		;abf1	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;abf1	3a aa e2 	: . . 
 	ld l,a			;abf4	6f 	o 
 	ld h,000h		;abf5	26 00 	& . 
 	add hl,hl			;abf7	29 	) 
@@ -18566,7 +18611,7 @@ sub_abd3h:
 	add hl,hl			;abfb	29 	) 
 	ld de,lae01h		;abfc	11 01 ae 	. . . 
 	add hl,de			;abff	19 	. 
-	ld a,(0e2abh)		;ac00	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;ac00	3a ab e2 	: . . 
 	sla a		;ac03	cb 27 	. ' 
 	ld e,a			;ac05	5f 	_ 
 lac06h:
@@ -18920,37 +18965,30 @@ lacd6h:
 	nop			;ad8d	00 	. 
 	nop			;ad8e	00 	. 
 	nop			;ad8f	00 	. 
-lad90h:
-	sbc a,b			;ad90	98 	. 
-	xor l			;ad91	ad 	. 
-	sbc a,h			;ad92	9c 	. 
-	xor l			;ad93	ad 	. 
-	and b			;ad94	a0 	. 
-	xor l			;ad95	ad 	. 
-	and h			;ad96	a4 	. 
-	xor l			;ad97	ad 	. 
+
+; The background pattern is 4x4-periodic.
+; This table has pointers to the background characters to replace a
+; brick with the background.
+TABLE_BACKGROUND_ERASE:
+    dw lad98h
+    dw lad9ch
+    dw lada0h
+    dw lada4h
+
 lad98h:
-	ld a,d			;ad98	7a 	z 
-	ld a,e			;ad99	7b 	{ 
-	ld a,b			;ad9a	78 	x 
-	ld a,c			;ad9b	79 	y 
-	ld a,(hl)			;ad9c	7e 	~ 
-	ld a,a			;ad9d	7f 	 
-	ld a,h			;ad9e	7c 	| 
-	ld a,l			;ad9f	7d 	} 
-	ld (hl),d			;ada0	72 	r 
-	ld (hl),e			;ada1	73 	s 
-	ld (hl),b			;ada2	70 	p 
-	ld (hl),c			;ada3	71 	q 
-	halt			;ada4	76 	v 
-	ld (hl),a			;ada5	77 	w 
-	ld (hl),h			;ada6	74 	t 
-	ld (hl),l			;ada7	75 	u 
+    db 0x7a, 0x7b, 0x78, 0x79
+lad9ch:
+    db 0x7e, 0x7f, 0x7c, 0x7d
+lada0h:
+    db 0x72, 0x73, 0x70, 0x71
+lada4h:
+    db 0x76, 0x77, 0x74, 0x75
+
 sub_ada8h:
 	push iy		;ada8	fd e5 	. . 
 	ld a,000h		;adaa	3e 00 	> . 
 	ld (0e2b9h),a		;adac	32 b9 e2 	2 . . 
-	ld a,(0e2aah)		;adaf	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;adaf	3a aa e2 	: . . 
 	cp 00ch		;adb2	fe 0c 	. . 
 	jp c,ladb9h		;adb4	da b9 ad 	. . . 
 	ld a,00bh		;adb7	3e 0b 	> . 
@@ -18964,7 +19002,7 @@ ladb9h:
 	add hl,hl			;adc0	29 	) 
 	ld de,lac10h		;adc1	11 10 ac 	. . . 
 	add hl,de			;adc4	19 	. 
-	ld a,(0e2abh)		;adc5	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;adc5	3a ab e2 	: . . 
 	sla a		;adc8	cb 27 	. ' 
 	ld e,a			;adca	5f 	_ 
 	ld d,000h		;adcb	16 00 	. . 
@@ -18974,7 +19012,7 @@ ladb9h:
 	ld d,(hl)			;add0	56 	V 
 	push de			;add1	d5 	. 
 	pop iy		;add2	fd e1 	. . 
-	ld a,(0e2aah)		;add4	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;add4	3a aa e2 	: . . 
 	cp 00ch		;add7	fe 0c 	. . 
 	jp c,laddeh		;add9	da de ad 	. . . 
 	ld a,00bh		;addc	3e 0b 	> . 
@@ -18988,7 +19026,7 @@ laddeh:
 	add hl,hl			;ade5	29 	) 
 	ld de,lae01h		;ade6	11 01 ae 	. . . 
 	add hl,de			;ade9	19 	. 
-	ld a,(0e2abh)		;adea	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;adea	3a ab e2 	: . . 
 	cp 00bh		;aded	fe 0b 	. . 
 	jp c,ladf4h		;adef	da f4 ad 	. . . 
 	ld a,00ah		;adf2	3e 0a 	> . 
@@ -19441,13 +19479,13 @@ lb06dh:
 lb070h:
 	call sub_b0adh		;b070	cd ad b0 	. . . 
 lb073h:
-	ld a,(0e2aah)		;b073	3a aa e2 	: . . 
+	ld a,(BRICK_ROW)		;b073	3a aa e2 	: . . 
 	sla a		;b076	cb 27 	. ' 
 	sla a		;b078	cb 27 	. ' 
 	sla a		;b07a	cb 27 	. ' 
 	add a,018h		;b07c	c6 18 	. . 
 	ld l,a			;b07e	6f 	o 
-	ld a,(0e2abh)		;b07f	3a ab e2 	: . . 
+	ld a,(BRICK_COL)		;b07f	3a ab e2 	: . . 
 	sla a		;b082	cb 27 	. ' 
 	sla a		;b084	cb 27 	. ' 
 	sla a		;b086	cb 27 	. ' 

@@ -1,5 +1,8 @@
 ; Adapted from https://github.com/samsaga2/js80/blob/master/msx/bios.asm
 
+VDP_READ:  equ 0x0006
+VDP_WRITE: equ 0x0007
+
         ;; --- main bios calls ---
 CHKRAM: equ 0x0000
 CGTABL: equ 0x0004 ; MSX Character Set address in Main-ROM (word)
