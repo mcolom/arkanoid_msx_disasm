@@ -26,6 +26,9 @@ VAUS_X2: equ 0xe53e
 BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
+
+SCORE_BCD: equ 0xe015
+HIGH_SCORE_BCD: equ 0xe007
 ; Buffer of 3 position to compute the score in BCD
 SCORE_BCD_BUFFER: equ 0xe5a0
 
@@ -1962,7 +1965,7 @@ l4cc6h:
 	ld a, 1		            ;4cc6	3e 01
 	ld (GAME_STATE),a		;4cc8	32 0b e0
 
-	ld hl,0e015h		;4ccb	21 15 e0 	! . . 
+	ld hl,SCORE_BCD		;4ccb	21 15 e0 	! . . 
 	ld de,0e016h		;4cce	11 16 e0 	. . . 
 	ld bc,0059fh		;4cd1	01 9f 05 	. . . 
 	dec bc			;4cd4	0b 	. 
@@ -2755,7 +2758,7 @@ sub_52a0h:
     cp 3		            ;52c0	fe 03
 	jp z,l52ceh		        ;52c2	ca ce 52
 	
-    ld hl,0e015h		;52c5	21 15 e0 	! . . 
+    ld hl,SCORE_BCD		;52c5	21 15 e0 	! . . 
 	call BCD_ENCODE_SCORE		;52c8	cd 8a 53 	. . S 
 	jp l52d7h		;52cb	c3 d7 52 	. . R 
 l52ceh:
@@ -2763,7 +2766,7 @@ l52ceh:
 	call BCD_ENCODE_SCORE		;52d1	cd 8a 53 	. . S 
 	jp l52d7h		;52d4	c3 d7 52 	. . R 
 l52d7h:
-	ld iy,0e007h		;52d7	fd 21 07 e0 	. ! . . 
+	ld iy,HIGH_SCORE_BCD		;52d7	fd 21 07 e0 	. ! . . 
 	ld a,(SCORE_BCD_BUFFER + 2)		;52db	3a a2 e5 	: . . 
 	cp (iy+002h)		;52de	fd be 02 	. . . 
 	jp z,l52eah		;52e1	ca ea 52 	. . R 
@@ -2780,7 +2783,7 @@ l52f9h:
 	cp (iy+000h)		;52fc	fd be 00 	. . . 
 	jp c,l530dh		;52ff	da 0d 53 	. . S 
 l5302h:
-	ld de,0e007h		;5302	11 07 e0 	. . . 
+	ld de,HIGH_SCORE_BCD		;5302	11 07 e0 	. . . 
 	ld hl,SCORE_BCD_BUFFER		;5305	21 a0 e5 	! . . 
 	ld bc,00003h		;5308	01 03 00 	. . . 
 	ldir		;530b	ed b0 	. . 
@@ -2911,27 +2914,35 @@ BCD_ENCODE_SCORE:
 ; SEGUIR
 DRAW_SCORE_NUMBERS:
 	ld hl,0e58eh		;53b9	21 8e e5 	! . . 
-	ld de,0e015h		;53bc	11 15 e0 	. . . 
+	ld de,SCORE_BCD		;53bc	11 15 e0 	. . . 
 	call sub_5420h		;53bf	cd 20 54 	.   T 
+    ;
 	ld hl,0e58eh		;53c2	21 8e e5 	! . . 
 	call REMOVE_HEADING_ZEROS		;53c5	cd 31 54 	. 1 T 
+
 	ld hl,0e594h		;53c8	21 94 e5 	! . . 
 	ld de,0e018h		;53cb	11 18 e0 	. . . 
 	call sub_5420h		;53ce	cd 20 54 	.   T 
+    ;
 	ld hl,0e594h		;53d1	21 94 e5 	! . . 
 	call REMOVE_HEADING_ZEROS		;53d4	cd 31 54 	. 1 T 
+
 	ld hl,0e59ah		;53d7	21 9a e5 	! . . 
-	ld de,0e007h		;53da	11 07 e0 	. . . 
+	ld de,HIGH_SCORE_BCD		;53da	11 07 e0 	. . . 
 	call sub_5420h		;53dd	cd 20 54 	.   T 
+    ;
 	ld hl,0e59ah		;53e0	21 9a e5 	! . . 
 	call REMOVE_HEADING_ZEROS		;53e3	cd 31 54 	. 1 T 
+    
 	ld a,(0e544h)		;53e6	3a 44 e5 	: D . 
 	cp 001h		;53e9	fe 01 	. . 
 	jp z,l5407h		;53eb	ca 07 54 	. . T 
+
 	ld hl,0e58eh		;53ee	21 8e e5 	! . . 
 	ld de,01821h		;53f1	11 21 18 	. ! . 
 	ld bc,00006h		;53f4	01 06 00 	. . . 
 	call LDIRVM		;53f7	cd 5c 00 	. \ . 
+
 	ld hl,0e59ah		;53fa	21 9a e5 	! . . 
 	ld de,0182ch		;53fd	11 2c 18 	. , . 
 	ld bc,00006h		;5400	01 06 00 	. . . 
