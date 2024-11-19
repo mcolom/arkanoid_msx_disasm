@@ -1,5 +1,6 @@
 gi_*
 *.rom
+*.CAS
 __pycache__
 a.bin
 compiled
