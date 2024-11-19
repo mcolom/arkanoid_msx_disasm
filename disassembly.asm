@@ -6,6 +6,7 @@
 
 include 'headers/bios.asm'
 
+SPRITES_ATTRIB_TABLE: equ 0x1b00
 
 ; Game state
 ; 0: in title screen
@@ -181,10 +182,10 @@ ROM_START:
 	call FILVRM		    ;4089	cd 56 00
     
     ; Clear VRAM sprite attribute table
-	ld hl,01b00h		;408c	21 00 1b
-	ld bc,00080h		;408f	01 80 00
-	xor a			    ;4092	af
-	call FILVRM		    ;4093	cd 56 00
+	ld hl,SPRITES_ATTRIB_TABLE		;408c	21 00 1b
+	ld bc,00080h		            ;408f	01 80 00
+	xor a			                ;4092	af
+	call FILVRM		                ;4093	cd 56 00
     
     ; Fill pattern table (1/3)
 	ld hl,l9024h		    ;4096	21 24 90
@@ -311,7 +312,7 @@ l4158h:
 	ld bc,00004h		;4189	01 04 00 	. . . 
 	ldir		;418c	ed b0 	. . 
 l418eh:
-	ld hl,01b00h		;418e	21 00 1b 	! . . 
+	ld hl,SPRITES_ATTRIB_TABLE		;418e	21 00 1b 	! . . 
 	call SETWRT		;4191	cd 53 00 	. S . 
 	ld hl,0e18dh		;4194	21 8d e1 	! . . 
 	ld a,(VDP_WRITE)		;4197	3a 07 00 	: . . 
@@ -403,7 +404,7 @@ sub_4227h:
 	ld bc,00300h		;422a	01 00 03 	. . . 
 	xor a			;422d	af 	. 
 	call FILVRM		;422e	cd 56 00 	. V . 
-	ld hl,01b00h		;4231	21 00 1b 	! . . 
+	ld hl,SPRITES_ATTRIB_TABLE		;4231	21 00 1b 	! . . 
 	ld bc,00080h		;4234	01 80 00 	. . . 
 	ld a,0c0h		;4237	3e c0 	> . 
 	call FILVRM		;4239	cd 56 00 	. V . 
@@ -413,6 +414,7 @@ sub_4227h:
 	ld (hl),0c0h		;4245	36 c0 	6 . 
 	ldir		;4247	ed b0 	. . 
 	ret			;4249	c9 	. 
+
 l424ah:
 	call RDVDP		;424a	cd 3e 01 	. > . 
 	call sub_b594h		;424d	cd 94 b5 	. . . 
@@ -2199,7 +2201,7 @@ l4e74h:
 	xor a			;4e74	af 	. 
 	ld (0e022h),a		;4e75	32 22 e0 	2 " . 
 	ld hl,l5149h		;4e78	21 49 51 	! I Q 
-	ld de,01b00h		;4e7b	11 00 1b 	. . . 
+	ld de,SPRITES_ATTRIB_TABLE		;4e7b	11 00 1b 	. . . 
 	ld bc,0001ch		;4e7e	01 1c 00 	. . . 
 	call LDIRVM		;4e81	cd 5c 00 	. \ . 
     
@@ -9940,10 +9942,12 @@ l7babh:
 	ld a,0c7h		;7bcf	3e c7 	> . 
 	ld (0e5c0h),a		;7bd1	32 c0 e5 	2 . . 
 	call sub_b4e8h		;7bd4	cd e8 b4 	. . . 
-	ei			;7bd7	fb 	. 
-	ld iy,ENDING_STR		;7bd8	fd 21 88 7c 	. ! . | 
-	ld ix,0x7d72		;7bdc	dd 21 72 7d 	. ! r } 
-	call ENDING_TEXT_ANIMATION		;7be0	cd 8a 4f 	. . O 
+
+	ei			                    ;7bd7	fb
+
+	ld iy,ENDING_STR		        ;7bd8	fd 21 88 7c
+	ld ix,0x7d72		            ;7bdc	dd 21 72 7d
+	call ENDING_TEXT_ANIMATION		;7be0	cd 8a 4f
 
     ; Wait 30 ticks
 	ld hl, 30		        ;7be3	21 1e 00
@@ -9954,10 +9958,13 @@ l7babh:
     ; Doh if defeated here
 	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
 
-	ld hl,l7c6dh		;7bef	21 6d 7c 	! m | 
-	ld de,01b00h		;7bf2	11 00 1b 	. . . 
-	ld bc,00010h		;7bf5	01 10 00 	. . . 
-	call LDIRVM		;7bf8	cd 5c 00 	. \ . 
+    ; Draw GAME OVER with sprites.
+    ; That's a very nice way to show the text over the
+    ; patterns with trasparency.
+	ld hl,GAME_OVER_SPRITE_TABLE		;7bef	21 6d 7c 	! m | 
+	ld de,SPRITES_ATTRIB_TABLE		;7bf2	11 00 1b 	. . . 
+	ld bc, 16		    ;7bf5	01 10 00 	. . . 
+	call LDIRVM		    ;7bf8	cd 5c 00 	. \ . 
 
     ; Wait 240 ticks
 	ld hl,000f0h		    ;7bfb	21 f0 00
@@ -9987,7 +9994,7 @@ l7c23h:
 	call sub_b4e8h		;7c2b	cd e8 b4 	. . . 
 	ei			;7c2e	fb 	. 
 	ld hl,l7c5dh		;7c2f	21 5d 7c 	! ] | 
-	ld de,01b00h		;7c32	11 00 1b 	. . . 
+	ld de,SPRITES_ATTRIB_TABLE		;7c32	11 00 1b 	. . . 
 	ld bc,00010h		;7c35	01 10 00 	. . . 
 	call LDIRVM		;7c38	cd 5c 00 	. \ . 
 
@@ -10030,24 +10037,15 @@ l7c5dh:
 	ld a,h			;7c6a	7c 	| 
 	ld a,h			;7c6b	7c 	| 
 	rrca			;7c6c	0f 	. 
-
-l7c6dh:
-	ld c,h			;7c6d	4c 	L 
-	ld e,h			;7c6e	5c 	\ 
-	ld (hl),b			;7c6f	70 	p 
-	rrca			;7c70	0f 	. 
-	ld c,h			;7c71	4c 	L 
-	ld l,h			;7c72	6c 	l 
-	ld (hl),h			;7c73	74 	t 
-	rrca			;7c74	0f 	. 
-	ld c,h			;7c75	4c 	L 
-	add a,h			;7c76	84 	. 
-	ld a,b			;7c77	78 	x 
-	rrca			;7c78	0f 	. 
-	ld c,h			;7c79	4c 	L 
-	sub h			;7c7a	94 	. 
-	ld a,h			;7c7b	7c 	| 
-	rrca			;7c7c	0f 	. 
+    
+GAME_OVER_SPRITE_TABLE:
+    ; V H P (EC, 0, 0, 0, C)
+    db 0x4c, 0x5c, 0x70, 0x0f; "GA"
+    db 0x4c, 0x6c, 0x74, 0x0f; "ME"
+    ;
+	db 0x4c, 0x84, 0x78, 0x0f; "OV"
+    db 0x4c, 0x94, 0x7c, 0x0f; "ER"
+    
 l7c7dh:
 	xor a			;7c7d	af 	. 
 	ld (0e00ah),a		;7c7e	32 0a e0 	2 . . 
