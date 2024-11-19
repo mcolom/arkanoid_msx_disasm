@@ -6,6 +6,14 @@
 
 include 'headers/bios.asm'
 
+
+; Game state
+; 0: in title screen
+; 1: normal play
+; 2: normal play, with score updates
+; 3: normal play, but without score updates
+GAME_STATE: equ 0xe00b
+
 BALL1_Y: equ 0xe0f5
 BALL2_Y: equ 0xe0f9
 BALL3_Y: equ 0xe0fd
@@ -19,7 +27,7 @@ BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
 ; Buffer of 3 position to compute the score in BCD
-SCORE_BCD: equ 0xe5a0
+SCORE_BCD_BUFFER: equ 0xe5a0
 
 ; Counts how many ticks the title screen is displayed
 TITLE_TICKS: equ 0xe53f
@@ -212,9 +220,12 @@ l40d7h:
 	ld a,(0e0bfh)		;40d8	3a bf e0 	: . . 
 	bit 6,a		;40db	cb 77 	. w 
 	jr z,l4103h		;40dd	28 24 	( $ 
-	ld a,(0e00bh)		;40df	3a 0b e0 	: . . 
+
+    ; Jump if state is title screen
+	ld a,(GAME_STATE)		;40df	3a 0b e0 	: . . 
 	or a			;40e2	b7 	. 
 	jp z,l4103h		;40e3	ca 03 41 	. . A 
+
 	ld a,005h		;40e6	3e 05 	> . 
 	ld (0e5c0h),a		;40e8	32 c0 e5 	2 . . 
 	call sub_b4e8h		;40eb	cd e8 b4 	. . . 
@@ -447,9 +458,12 @@ l427ch:
 	xor e			;4291	ab 	. 
 	ld (0e0bfh),a		;4292	32 bf e0 	2 . . 
 	ld b,a			;4295	47 	G 
-	ld a,(0e00bh)		;4296	3a 0b e0 	: . . 
+
+    ; Keep going if we're in the title screen
+	ld a,(GAME_STATE)		;4296	3a 0b e0 	: . . 
 	or a			;4299	b7 	. 
 	jp nz,l42fch		;429a	c2 fc 42 	. . B 
+
 	bit 0,b		;429d	cb 40 	. @ 
 	jp z,l42bbh		;429f	ca bb 42 	. . B 
 	bit 1,b		;42a2	cb 48 	. H 
@@ -545,9 +559,12 @@ l4322h:
 	xor e			;434b	ab 	. 
 	ld (0e0c5h),a		;434c	32 c5 e0 	2 . . 
 	ld b,a			;434f	47 	G 
-	ld a,(0e00bh)		;4350	3a 0b e0 	: . . 
-	or a			;4353	b7 	. 
-	ret nz			;4354	c0 	. 
+
+    ; Exit if we're not in the title screen
+	ld a,(GAME_STATE)		;4350	3a 0b e0
+	or a			        ;4353	b7
+	ret nz			        ;4354	c0
+
 	bit 1,b		;4355	cb 48 	. H 
 	ret z			;4357	c8 	. 
 	ld a,(0e00ah)		;4358	3a 0a e0 	: . . 
@@ -1770,9 +1787,11 @@ l4b11h:
 	ld b,d			;4b88	42 	B 
 	rst 38h			;4b89	ff 	. 
 sub_4b8ah:
-	ld a,(0e00bh)		;4b8a	3a 0b e0 	: . . 
-	or a			;4b8d	b7 	. 
-	jp nz,l4d09h		;4b8e	c2 09 4d 	. . M 
+    ; Go on if we're at the title screen
+	ld a,(GAME_STATE)		;4b8a	3a 0b e0
+	or a			        ;4b8d	b7
+	jp nz,l4d09h		    ;4b8e	c2 09 4d
+
 	ld a,(0e00dh)		;4b91	3a 0d e0 	: . . 
 	or a			;4b94	b7 	. 
 	jp nz,l4eddh		;4b95	c2 dd 4e 	. . N 
@@ -1917,8 +1936,10 @@ l4c94h:
 	ret			;4ca1	c9 	. 
 
 l4ca2h:
-	ld a,000h		;4ca2	3e 00 	> . 
-	ld (0e00bh),a		;4ca4	32 0b e0 	2 . . 
+    ; Set we're at the title screen
+	ld a, 0		            ;4ca2	3e 00   No "xor a" optimization here :)
+	ld (GAME_STATE),a		;4ca4	32 0b e0
+
 	ld a,(0e000h)		;4ca7	3a 00 e0 	: . . 
 	inc a			;4caa	3c 	< 
 	and 003h		;4cab	e6 03 	. . 
@@ -1937,8 +1958,10 @@ l4cc2h:
 	inc bc			;4cc3	03 	. 
 	ld b,001h		;4cc4	06 01 	. . 
 l4cc6h:
-	ld a,001h		;4cc6	3e 01 	> . 
-	ld (0e00bh),a		;4cc8	32 0b e0 	2 . . 
+    ; Set we're in normal play
+	ld a, 1		            ;4cc6	3e 01
+	ld (GAME_STATE),a		;4cc8	32 0b e0
+
 	ld hl,0e015h		;4ccb	21 15 e0 	! . . 
 	ld de,0e016h		;4cce	11 16 e0 	. . . 
 	ld bc,0059fh		;4cd1	01 9f 05 	. . . 
@@ -1992,10 +2015,13 @@ l4d22h:
 	ldir		;4d2e	ed b0 	. . 
 l4d30h:
 	call sub_4227h		;4d30	cd 27 42 	. ' B 
-	ld a,(0e00bh)		;4d33	3a 0b e0 	: . . 
-	or a			;4d36	b7 	. 
-	jp z,l4d46h		;4d37	ca 46 4d 	. F M 
-	call DRAW_UP_SCORES		;4d3a	cd e0 4f 	. . O 
+    
+    ; Skip drawing scores and waiting if we're at the title screen
+	ld a,(GAME_STATE)		;4d33	3a 0b e0
+	or a			        ;4d36	b7
+	jp z,l4d46h		        ;4d37	ca 46 4d
+	
+    call DRAW_UP_SCORES		;4d3a	cd e0 4f 	. . O 
     ; Write "ROUND 1"
 	call DRAW_ROUND_MESSAGE		;4d3d	cd 01 51 	. . Q 
 
@@ -2171,10 +2197,13 @@ l4e74h:
 	ld de,01b00h		;4e7b	11 00 1b 	. . . 
 	ld bc,0001ch		;4e7e	01 1c 00 	. . . 
 	call LDIRVM		;4e81	cd 5c 00 	. \ . 
-	ld a,(0e00bh)		;4e84	3a 0b e0 	: . . 
-	or a			;4e87	b7 	. 
-	jp z,l4eb4h		;4e88	ca b4 4e 	. . N 
-	ld a,(LEVEL)		;4e8b	3a 1b e0
+    
+    ; Skip the following if we're at the title screen
+	ld a,(GAME_STATE)		;4e84	3a 0b e0
+	or a			        ;4e87	b7
+	jp z,l4eb4h		        ;4e88	ca b4 4e
+	
+    ld a,(LEVEL)		;4e8b	3a 1b e0
 	cp FINAL_LEVEL		;4e8e	fe 20
 	jp z,l4ea5h		;4e90	ca a5 4e 	. . N 
 	ld a,0c4h		;4e93	3e c4 	> . 
@@ -2715,12 +2744,18 @@ sub_52a0h:
 	add hl,de			;52b4	19 	. 
 	push hl			;52b5	e5 	. 
 	pop ix		;52b6	dd e1 	. . 
-	ld a,(0e00bh)		;52b8	3a 0b e0 	: . . 
-	cp 000h		;52bb	fe 00 	. . 
-	jp z,l5310h		;52bd	ca 10 53 	. . S 
-	cp 003h		;52c0	fe 03 	. . 
-	jp z,l52ceh		;52c2	ca ce 52 	. . R 
-	ld hl,0e015h		;52c5	21 15 e0 	! . . 
+    
+	; Jump if we're at the title screen
+    ld a,(GAME_STATE)		;52b8	3a 0b e0
+	cp 0		            ;52bb	fe 00
+	jp z,l5310h		        ;52bd	ca 10 53
+	
+    ; Jump if we're at state "normal play, but without score updates"
+    ; [ToDo]: what is this state? The final Boss Doh?
+    cp 3		            ;52c0	fe 03
+	jp z,l52ceh		        ;52c2	ca ce 52
+	
+    ld hl,0e015h		;52c5	21 15 e0 	! . . 
 	call BCD_ENCODE_SCORE		;52c8	cd 8a 53 	. . S 
 	jp l52d7h		;52cb	c3 d7 52 	. . R 
 l52ceh:
@@ -2729,24 +2764,24 @@ l52ceh:
 	jp l52d7h		;52d4	c3 d7 52 	. . R 
 l52d7h:
 	ld iy,0e007h		;52d7	fd 21 07 e0 	. ! . . 
-	ld a,(SCORE_BCD + 2)		;52db	3a a2 e5 	: . . 
+	ld a,(SCORE_BCD_BUFFER + 2)		;52db	3a a2 e5 	: . . 
 	cp (iy+002h)		;52de	fd be 02 	. . . 
 	jp z,l52eah		;52e1	ca ea 52 	. . R 
 	jp c,l530dh		;52e4	da 0d 53 	. . S 
 	jp l5302h		;52e7	c3 02 53 	. . S 
 l52eah:
-	ld a,(SCORE_BCD + 1)		;52ea	3a a1 e5 	: . . 
+	ld a,(SCORE_BCD_BUFFER + 1)		;52ea	3a a1 e5 	: . . 
 	cp (iy+001h)		;52ed	fd be 01 	. . . 
 	jp z,l52f9h		;52f0	ca f9 52 	. . R 
 	jp c,l530dh		;52f3	da 0d 53 	. . S 
 	jp l5302h		;52f6	c3 02 53 	. . S 
 l52f9h:
-	ld a,(SCORE_BCD)		;52f9	3a a0 e5 	: . . 
+	ld a,(SCORE_BCD_BUFFER)		;52f9	3a a0 e5 	: . . 
 	cp (iy+000h)		;52fc	fd be 00 	. . . 
 	jp c,l530dh		;52ff	da 0d 53 	. . S 
 l5302h:
 	ld de,0e007h		;5302	11 07 e0 	. . . 
-	ld hl,SCORE_BCD		;5305	21 a0 e5 	! . . 
+	ld hl,SCORE_BCD_BUFFER		;5305	21 a0 e5 	! . . 
 	ld bc,00003h		;5308	01 03 00 	. . . 
 	ldir		;530b	ed b0 	. . 
 l530dh:
@@ -2837,40 +2872,40 @@ l5374h:
 ; BDC-encode a score from HL
 BCD_ENCODE_SCORE:
     ; Copy binary score to BCD buffer
-	ld de,SCORE_BCD		;538a	11 a0 e5
+	ld de,SCORE_BCD_BUFFER		    ;538a	11 a0 e5
 	ld bc, 3		        ;538d	01 03 00
 	ldir		            ;5390	ed b0
 
-    ; Decode SCORE_BCD in BCD
-	ld a,(SCORE_BCD)		;5392	3a a0 e5
+    ; Decode SCORE_BCD_BUFFER in BCD
+	ld a,(SCORE_BCD_BUFFER)		;5392	3a a0 e5
 	add a,(ix+0)		    ;5395	dd 86 00
 	daa			            ;5398	27
-	ld (SCORE_BCD),a		;5399	32 a0 e5
+	ld (SCORE_BCD_BUFFER),a		;5399	32 a0 e5
 
-	; Decode SCORE_BCD + 1 in BCD
-    ld a,(SCORE_BCD + 1)		;539c	3a a1 e5
+	; Decode SCORE_BCD_BUFFER + 1 in BCD
+    ld a,(SCORE_BCD_BUFFER + 1)	;539c	3a a1 e5
 	adc a,(ix+1)		    ;539f	dd 8e 01
 	daa			            ;53a2	27
-	ld (SCORE_BCD + 1),a		;53a3	32 a1 e5
+	ld (SCORE_BCD_BUFFER + 1),a	;53a3	32 a1 e5
 
-	; Decode SCORE_BCD + 2 in BCD
-    ld a,(SCORE_BCD + 2)		;53a6	3a a2 e5
+	; Decode SCORE_BCD_BUFFER + 2 in BCD
+    ld a,(SCORE_BCD_BUFFER + 2)	;53a6	3a a2 e5
 	adc a,(ix+2)		    ;53a9	dd 8e 02
 	daa			            ;53ac	27
-	ld (SCORE_BCD + 2),a		;53ad	32 a2 e5
+	ld (SCORE_BCD_BUFFER + 2),a	;53ad	32 a2 e5
 
-	ex de,hl			;53b0	eb
-    ; HL = SCORE_BCD
-    ; DE = 0xe015 or 0xe018
+	ex de,hl			    ;53b0	eb
+    ; HL = SCORE_BCD_BUFFER
+    ; DE = SCORE_BCD or 0xe018
     
-	dec hl			    ;53b1	2b 	+ 
-	dec de			    ;53b2	1b 	. 
+	dec hl			        ;53b1	2b
+	dec de			        ;53b2	1b
 
     ; Copy BCD-encoded score
     ; Repeat 3 times (DE--) <-- (HL--) 
-	ld bc, 3		    ;53b3	01 03 00
-	lddr		        ;53b6	ed b8
-	ret			        ;53b8	c9
+	ld bc, 3		        ;53b3	01 03 00
+	lddr		            ;53b6	ed b8
+	ret			            ;53b8	c9
 
 ; Draws the number of the score in top of the screen
 ; SEGUIR
@@ -7404,9 +7439,11 @@ l68dch:
 	ld (ix+000h),001h		;690a	dd 36 00 01 	. 6 . . 
 	ret nz			;690e	c0 	. 
 l690fh:
-	ld a,(0e00bh)		;690f	3a 0b e0 	: . . 
+    ; Keep going if we're at the title screen
+	ld a,(GAME_STATE)		;690f	3a 0b e0 	: . . 
 	or a			;6912	b7 	. 
 	jp nz,l6924h		;6913	c2 24 69 	. $ i 
+    
 	ld a,(0e0f6h)		;6916	3a f6 e0 	: . . 
 	sub 010h		;6919	d6 10 	. . 
 	ld (iy+001h),a		;691b	fd 77 01 	. w . 
@@ -8305,10 +8342,13 @@ sub_7040h:
 	cp 007h		;704c	fe 07 	. . 
 	ret z			;704e	c8 	. 
 	ld b,001h		;704f	06 01 	. . 
-	ld a,(0e00bh)		;7051	3a 0b e0 	: . . 
-	or a			;7054	b7 	. 
-	jp z,l7074h		;7055	ca 74 70 	. t p 
-	ld a,(0e00ch)		;7058	3a 0c e0 	: . . 
+    
+    ; Skip the following if we're at the title screen
+	ld a,(GAME_STATE)		;7051	3a 0b e0
+	or a			        ;7054	b7
+	jp z,l7074h		        ;7055	ca 74 70
+	
+    ld a,(0e00ch)		;7058	3a 0c e0 	: . . 
 	or a			;705b	b7 	. 
 	jp z,l706ah		;705c	ca 6a 70 	. j p 
 	ld a,(0e0c5h)		;705f	3a c5 e0 	: . . 
@@ -8580,10 +8620,13 @@ l723ch:
 	ld d,l			;723e	55 	U 
 	ld c,(hl)			;723f	4e 	N 
 	ld b,h			;7240	44 	D 
+
 sub_7241h:
-	ld a,(0e00bh)		;7241	3a 0b e0 	: . . 
-	or a			;7244	b7 	. 
-	jp nz,l726eh		;7245	c2 6e 72 	. n r 
+    ; Skip the following and jump if we're not at the title screen
+	ld a,(GAME_STATE)		;7241	3a 0b e0
+	or a			        ;7244	b7
+	jp nz,l726eh		    ;7245	c2 6e 72
+    
 	ld hl,(0e5adh)		;7248	2a ad e5 	* . . 
 	inc hl			;724b	23 	# 
 	ld (0e5adh),hl		;724c	22 ad e5 	" . . 
@@ -8601,6 +8644,7 @@ sub_7241h:
 	ld (hl),000h		;7269	36 00 	6 . 
 	ldir		;726b	ed b0 	. . 
 	ret			;726d	c9 	. 
+
 l726eh:
 	ld a,(LEVEL)		;726e	3a 1b e0
 	cp FINAL_LEVEL		;7271	fe 20
@@ -9856,10 +9900,13 @@ l7b7ch:
 	ex af,af'			;7b90	08 	. 
 	jr z,l7b53h		;7b91	28 c0 	( . 
 	ex af,af'			;7b93	08 	. 
+
 sub_7b94h:
-	ld a,(0e00bh)		;7b94	3a 0b e0 	: . . 
-	or a			;7b97	b7 	. 
-	jp z,l7c44h		;7b98	ca 44 7c 	. D | 
+    ; Skip the following if we're at the title screen
+	ld a,(GAME_STATE)		;7b94	3a 0b e0
+	or a			        ;7b97	b7
+	jp z,l7c44h		        ;7b98	ca 44 7c
+
 	ld a,(0e022h)		;7b9b	3a 22 e0 	: " . 
 	ld l,a			;7b9e	6f 	o 
 	ld h,000h		;7b9f	26 00 	& . 
@@ -9958,11 +10005,15 @@ l7c44h:
 	dec bc			;7c4d	0b 	. 
 	ld (hl),000h		;7c4e	36 00 	6 . 
 	ldir		;7c50	ed b0 	. . 
-	xor a			;7c52	af 	. 
-	ld (0e00ah),a		;7c53	32 0a e0 	2 . . 
-	ld (0e00bh),a		;7c56	32 0b e0 	2 . . 
-	ld (0e5b3h),a		;7c59	32 b3 e5 	2 . . 
-	ret			;7c5c	c9 	. 
+
+    ; Reset states
+	xor a			        ;7c52	af
+	ld (0e00ah),a		    ;7c53	32 0a e0
+    ; Set we're in the title screen
+	ld (GAME_STATE),a		;7c56	32 0b e0
+	ld (0e5b3h),a		    ;7c59	32 b3 e5
+	ret			            ;7c5c	c9
+
 l7c5dh:
 	adc a,b			;7c5d	88 	. 
 	ld b,h			;7c5e	44 	D 
@@ -16178,10 +16229,13 @@ l98d7h:
 	dec c			;98f4	0d 	. 
 	dec c			;98f5	0d 	. 
 	dec c			;98f6	0d 	. 
-	dec c			;98f7	0d 	. 
-	ld a,(0e00bh)		;98f8	3a 0b e0 	: . . 
-	or a			;98fb	b7 	. 
-	jp z,l9935h		;98fc	ca 35 99 	. 5 . 
+	dec c			;98f7	0d 	.
+
+    ; Skip the following if we're at the title screen
+	ld a,(GAME_STATE)		;98f8	3a 0b e0
+	or a			        ;98fb	b7
+	jp z,l9935h		        ;98fc	ca 35 99
+
 	ld a,(0e00ch)		;98ff	3a 0c e0 	: . . 
 	or a			;9902	b7 	. 
 	jp z,l9910h		;9903	ca 10 99 	. . . 
