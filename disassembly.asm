@@ -2879,17 +2879,17 @@ DRAW_SCORE_NUMBERS:
 	ld de,0e015h		;53bc	11 15 e0 	. . . 
 	call sub_5420h		;53bf	cd 20 54 	.   T 
 	ld hl,0e58eh		;53c2	21 8e e5 	! . . 
-	call sub_5431h		;53c5	cd 31 54 	. 1 T 
+	call REMOVE_HEADING_ZEROS		;53c5	cd 31 54 	. 1 T 
 	ld hl,0e594h		;53c8	21 94 e5 	! . . 
 	ld de,0e018h		;53cb	11 18 e0 	. . . 
 	call sub_5420h		;53ce	cd 20 54 	.   T 
 	ld hl,0e594h		;53d1	21 94 e5 	! . . 
-	call sub_5431h		;53d4	cd 31 54 	. 1 T 
+	call REMOVE_HEADING_ZEROS		;53d4	cd 31 54 	. 1 T 
 	ld hl,0e59ah		;53d7	21 9a e5 	! . . 
 	ld de,0e007h		;53da	11 07 e0 	. . . 
 	call sub_5420h		;53dd	cd 20 54 	.   T 
 	ld hl,0e59ah		;53e0	21 9a e5 	! . . 
-	call sub_5431h		;53e3	cd 31 54 	. 1 T 
+	call REMOVE_HEADING_ZEROS		;53e3	cd 31 54 	. 1 T 
 	ld a,(0e544h)		;53e6	3a 44 e5 	: D . 
 	cp 001h		;53e9	fe 01 	. . 
 	jp z,l5407h		;53eb	ca 07 54 	. . T 
@@ -2940,17 +2940,28 @@ l5424h:
     djnz l5424h		;542e	10 f4 	. . 
 	ret			;5430	c9 	. 
 
-sub_5431h:
-	ld b,005h		;5431	06 05 	. . 
+; Substitute heading zeros from the BCD string pointed by HL
+REMOVE_HEADING_ZEROS:
+    ; 
+	ld b, 5		        ;5431	06 05
+
 l5433h:
-	ld a,(hl)			;5433	7e 	~ 
-	cp 030h		;5434	fe 30 	. 0 
-	ret nz			;5436	c0 	. 
-	ld a,020h		;5437	3e 20 	>   
-	ld (hl),a			;5439	77 	w 
-	inc hl			;543a	23 	# 
-	djnz l5433h		;543b	10 f6 	. . 
-	ret			;543d	c9 	. 
+    ; Get the character pointed by HL
+	ld a,(hl)			;5433	7e
+    
+    ; Exit if it's not a zero
+	cp '0'		        ;5434	fe 30
+	ret nz			    ;5436	c0
+    
+    ; Yes, it's a heading zero
+    ; Replace it with a blank space
+	ld a, ' '		    ;5437	3e 20
+    
+    ; Next character
+	ld (hl),a			;5439	77
+	inc hl			    ;543a	23
+	djnz l5433h		    ;543b	10 f6
+	ret			        ;543d	c9
 
 l543eh:
 	nop			;543e	00 	. 
