@@ -33,6 +33,10 @@ HIGH_SCORE_BCD: equ 0xe007
 ; Buffer of 3 position to compute the score in BCD
 SCORE_BCD_BUFFER: equ 0xe5a0
 
+; Where to write the scores
+; 0: up, 1: on the right
+SCORE_POSITION: equ 0xe544
+
 ; Counts how many ticks the title screen is displayed
 TITLE_TICKS: equ 0xe53f
 
@@ -348,8 +352,11 @@ l41b1h:
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
 	call sub_95f4h		;41c3	cd f4 95 	. . . 
 	call sub_7241h		;41c6	cd 41 72 	. A r 
-	ld a,001h		;41c9	3e 01 	> . 
-	ld (0e544h),a		;41cb	32 44 e5 	2 D . 
+	
+    ; Scores of the right
+    ld a, 1 		            ;41c9	3e 01
+	ld (SCORE_POSITION),a		;41cb	32 44 e5
+
 	call DRAW_SCORE_NUMBERS		;41ce	cd b9 53 	. . S 
 	jp l41dah		;41d1	c3 da 41 	. . A 
 	call sub_7b94h		;41d4	cd 94 7b 	. . { 
@@ -2074,8 +2081,8 @@ l4d46h:
 	call FILVRM		;4d89	cd 56 00 	. V . 
 
     ; Draw score numbers on the right
-	ld a,001h		            ;4d8c	3e 01
-	ld (0e544h),a		        ;4d8e	32 44 e5
+	ld a, 1 		            ;4d8c	3e 01
+	ld (SCORE_POSITION),a       ;4d8e	32 44 e5
 	call DRAW_SCORE_NUMBERS		;4d91	cd b9 53
 
     ; Write "HIGH"
@@ -2410,13 +2417,14 @@ DRAW_UP_SCORES:
 	ld a, '0'		                ;4ff7	3e 30
 	call WRTVRM		                ;4ff9	cd 4d 00
     
-	ld a,000h		;4ffc	3e 00 	> . 
-	ld (0e544h),a		;4ffe	32 44 e5 	2 D . 
-    
+    ; Draw score up
+	ld a, 0		                    ;4ffc	3e 00
+	ld (SCORE_POSITION),a		    ;4ffe	32 44 e5
+
     ; Write the score number.
     ; For example, "160    50000"
-	call DRAW_SCORE_NUMBERS		;5001	cd b9 53
-	ret			;5004	c9 	. 
+	call DRAW_SCORE_NUMBERS		    ;5001	cd b9 53
+	ret			                    ;5004	c9
 
 STORY_STR:
     db "THE ERA AND TIME OF       THIS STORY IS UNKNOWN.    AFTER THE MOTHERSHIP      \"ARKANOID\" WAS DESTROYED, A SPACECRAFT \"VAUS\"       SCRAMBLED AWAY FROM IT.   BUT ONLY TO BE            TRAPPED IN SPACE WARPED   BY SOMEONE......          "
@@ -2933,31 +2941,35 @@ DRAW_SCORE_NUMBERS:
 	ld hl,0e59ah		;53e0	21 9a e5 	! . . 
 	call REMOVE_HEADING_ZEROS		;53e3	cd 31 54 	. 1 T 
     
-	ld a,(0e544h)		;53e6	3a 44 e5 	: D . 
-	cp 001h		;53e9	fe 01 	. . 
-	jp z,l5407h		;53eb	ca 07 54 	. . T 
+    ; Check in which position draw the scores
+	ld a,(SCORE_POSITION)	    ;53e6	3a 44 e5
+	cp 1		                ;53e9	fe 01 Score on the right?
+	jp z,l5407h		            ;53eb	ca 07 54
+    
+    ; Draw scores up
+	ld hl,0e58eh		        ;53ee	21 8e e5
+	ld de,0x1800 + 1 + 1*32		;53f1	11 21 18 	Locate at [1, 1]
+	ld bc, 6		            ;53f4	01 06 00    6 chars
+	call LDIRVM		            ;53f7	cd 5c 00
 
-	ld hl,0e58eh		;53ee	21 8e e5 	! . . 
-	ld de,01821h		;53f1	11 21 18 	. ! . 
-	ld bc,00006h		;53f4	01 06 00 	. . . 
-	call LDIRVM		;53f7	cd 5c 00 	. \ . 
-
-	ld hl,0e59ah		;53fa	21 9a e5 	! . . 
-	ld de,0182ch		;53fd	11 2c 18 	. , . 
-	ld bc,00006h		;5400	01 06 00 	. . . 
-	call LDIRVM		;5403	cd 5c 00 	. \ . 
-	ret			;5406	c9 	. 
+	ld hl,0e59ah		        ;53fa	21 9a e5
+	ld de,0x1800 + 12 + 1*32	;53fd	11 2c 18 	Locate at [12, 1]
+	ld bc, 6    		        ;5400	01 06 00    6 chars
+	call LDIRVM		            ;5403	cd 5c 00
+	ret			                ;5406	c9
 
 l5407h:
-	ld hl,0e58eh		;5407	21 8e e5 	! . . 
-	ld de,018f9h		;540a	11 f9 18 	. . . 
-	ld bc,00006h		;540d	01 06 00 	. . . 
-	call LDIRVM		;5410	cd 5c 00 	. \ . 
-	ld hl,0e59ah		;5413	21 9a e5 	! . . 
-	ld de,01879h		;5416	11 79 18 	. y . 
-	ld bc,00006h		;5419	01 06 00 	. . . 
-	call LDIRVM		;541c	cd 5c 00 	. \ . 
-	ret			;541f	c9 	. 
+    ; Draw scores on the right
+	ld hl,0e58eh		        ;5407	21 8e e5
+	ld de,0x1800 + 25 + 7*32    ;540a	11 f9 18    Locate at [25, 7]
+	ld bc, 6		            ;540d	01 06 00    6 chars
+	call LDIRVM		            ;5410	cd 5c 00
+    
+	ld hl,0e59ah		        ;5413	21 9a e5
+	ld de,0x1800 + 25 + 3*32	;5416	11 79 18    Locate at [25, 3]
+	ld bc,00006h		        ;5419	01 06 00
+	call LDIRVM		            ;541c	cd 5c 00
+	ret			                ;541f	c9
 
 ; Seguir
 sub_5420h:
