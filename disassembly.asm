@@ -183,7 +183,7 @@ ROM_START:
     
     ; Clear VRAM sprite attribute table
 	ld hl,SPRITES_ATTRIB_TABLE		;408c	21 00 1b
-	ld bc,00080h		            ;408f	01 80 00
+	ld bc, 128		                ;408f	01 80 00
 	xor a			                ;4092	af
 	call FILVRM		                ;4093	cd 56 00
     
@@ -404,10 +404,12 @@ sub_4227h:
 	ld bc,00300h		;422a	01 00 03 	. . . 
 	xor a			;422d	af 	. 
 	call FILVRM		;422e	cd 56 00 	. V . 
+
 	ld hl,SPRITES_ATTRIB_TABLE		;4231	21 00 1b 	! . . 
-	ld bc,00080h		;4234	01 80 00 	. . . 
+	ld bc, 128		;4234	01 80 00 	. . . 
 	ld a,0c0h		;4237	3e c0 	> . 
 	call FILVRM		;4239	cd 56 00 	. V . 
+
 	ld hl,0e0c9h		;423c	21 c9 e0 	! . . 
 	ld de,0e0cah		;423f	11 ca e0 	. . . 
 	ld bc,00080h		;4242	01 80 00 	. . . 
@@ -2200,10 +2202,12 @@ l4e71h:
 l4e74h:
 	xor a			;4e74	af 	. 
 	ld (0e022h),a		;4e75	32 22 e0 	2 " . 
-	ld hl,l5149h		;4e78	21 49 51 	! I Q 
-	ld de,SPRITES_ATTRIB_TABLE		;4e7b	11 00 1b 	. . . 
-	ld bc,0001ch		;4e7e	01 1c 00 	. . . 
-	call LDIRVM		;4e81	cd 5c 00 	. \ . 
+
+    ; Vaus and the READY string as sprites
+	ld hl,VAUS_AND_READY_SPRITE_TABLE		;4e78	21 49 51
+	ld de,SPRITES_ATTRIB_TABLE		        ;4e7b	11 00 1b
+	ld bc, 7 * 4		                    ;4e7e	01 1c 00 	7 sprites
+	call LDIRVM		                        ;4e81	cd 5c 00
     
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;4e84	3a 0b e0
@@ -2483,32 +2487,23 @@ l5144h:
 	ld d,l			;5146	55 	U 
 	ld c,(hl)			;5147	4e 	N 
 	ld b,h			;5148	44 	D 
-l5149h:
-	xor (hl)			;5149	ae 	. 
-	ld d,b			;514a	50 	P 
-	ex af,af'			;514b	08 	. 
-	ex af,af'			;514c	08 	. 
-	xor (hl)			;514d	ae 	. 
-	ld h,b			;514e	60 	` 
-	inc b			;514f	04 	. 
-	ld c,0aeh		;5150	0e ae 	. . 
-	ld (hl),b			;5152	70 	p 
-	inc c			;5153	0c 	. 
-	ex af,af'			;5154	08 	. 
-	xor (hl)			;5155	ae 	. 
-	add a,b			;5156	80 	. 
-	ld bc,l8000h		;5157	01 00 80 	. . . 
-	ld d,h			;515a	54 	T 
-	ld h,h			;515b	64 	d 
-	rrca			;515c	0f 	. 
-	add a,b			;515d	80 	. 
-	ld h,h			;515e	64 	d 
-	ld l,b			;515f	68 	h 
-	rrca			;5160	0f 	. 
-	add a,b			;5161	80 	. 
-	ld (hl),h			;5162	74 	t 
-	ld l,h			;5163	6c 	l 
-	rrca			;5164	0f 	. 
+
+
+; Table with the Vaus sprite and sprites to write "READY"
+VAUS_AND_READY_SPRITE_TABLE:
+    ; V H P (EC, 0, 0, 0, C)
+
+    ; Vaus
+    db 0xae, 0x50, 0x08, 0x08
+    db 0xae, 0x60, 0x04, 0x0e
+    db 0xae, 0x70, 0x0c, 0x08
+    db 0xae, 0x80, 0x01, 0x00
+
+    ; READY
+    db 0x80, 0x54, 0x64, 0x0f; "RE"
+    db 0x80, 0x64, 0x68, 0x0f; "AD"
+    db 0x80, 0x74, 0x6c, 0x0f; "Y "
+    
 sub_5165h:
 	ld a,(LEVEL)		;5165	3a 1b e0 	: . . 
 	and 003h		;5168	e6 03 	. . 
@@ -9961,13 +9956,13 @@ l7babh:
     ; Draw GAME OVER with sprites.
     ; That's a very nice way to show the text over the
     ; patterns with trasparency.
-	ld hl,GAME_OVER_SPRITE_TABLE		;7bef	21 6d 7c 	! m | 
-	ld de,SPRITES_ATTRIB_TABLE		;7bf2	11 00 1b 	. . . 
-	ld bc, 16		    ;7bf5	01 10 00 	. . . 
-	call LDIRVM		    ;7bf8	cd 5c 00 	. \ . 
+	ld hl,GAME_OVER_SPRITE_TABLE		;7bef	21 6d 7c
+	ld de,SPRITES_ATTRIB_TABLE		    ;7bf2	11 00 1b
+	ld bc, 4*4		                    ;7bf5	01 10 00    4 sprites
+	call LDIRVM		                    ;7bf8	cd 5c 00
 
     ; Wait 240 ticks
-	ld hl,000f0h		    ;7bfb	21 f0 00
+	ld hl, 240  		    ;7bfb	21 f0 00
 	call DELAY_HL_TICKS		;7bfe	cd 80 43
 
 	call sub_4227h		;7c01	cd 27 42 	. ' B 
@@ -9993,10 +9988,11 @@ l7c23h:
 	ld (0e5c0h),a		;7c28	32 c0 e5 	2 . . 
 	call sub_b4e8h		;7c2b	cd e8 b4 	. . . 
 	ei			;7c2e	fb 	. 
-	ld hl,l7c5dh		;7c2f	21 5d 7c 	! ] | 
-	ld de,SPRITES_ATTRIB_TABLE		;7c32	11 00 1b 	. . . 
-	ld bc,00010h		;7c35	01 10 00 	. . . 
-	call LDIRVM		;7c38	cd 5c 00 	. \ . 
+
+	ld hl,l7c5dh		            ;7c2f	21 5d 7c
+	ld de,SPRITES_ATTRIB_TABLE		;7c32	11 00 1b
+	ld bc, 4*4		                ;7c35	01 10 00 4 sprites
+	call LDIRVM		                ;7c38	cd 5c 00
 
     ; Wait 240 ticks
 	ld hl,000f0h		    ;7c3b	21 f0 00
@@ -10037,7 +10033,8 @@ l7c5dh:
 	ld a,h			;7c6a	7c 	| 
 	ld a,h			;7c6b	7c 	| 
 	rrca			;7c6c	0f 	. 
-    
+
+; Table to write "GAME OVER" with sprites
 GAME_OVER_SPRITE_TABLE:
     ; V H P (EC, 0, 0, 0, C)
     db 0x4c, 0x5c, 0x70, 0x0f; "GA"
