@@ -1837,7 +1837,7 @@ sub_4b8ah:
 	ld bc,00300h		;4bd8	01 00 03 	. . . 
 	call FILVRM		;4bdb	cd 56 00 	. V . 
 
-	call DRAW_UP_SCORES		;4bde	cd e0 4f 	. . O 
+    call DRAW_UP_SCORES		;4bde	cd e0 4f 	. . O 
 
 	ld hl,l543eh		;4be1	21 3e 54 	! > T 
 	ld de,018c0h		;4be4	11 c0 18 	. . . 
@@ -2337,7 +2337,7 @@ l4f7ah:
 	ld (0e011h),hl		;4f83	22 11 e0 	" . . 
 	ld (0e013h),hl		;4f86	22 13 e0 	" . . 
 	ret			;4f89	c9 	. 
-sub_4f8ah:
+ENDING_TEXT_ANIMATION:
 	call sub_4227h		;4f8a	cd 27 42 	. ' B 
 	xor a			;4f8d	af 	. 
 	ld (0e53ch),a		;4f8e	32 3c e5 	2 < . 
@@ -2389,20 +2389,20 @@ l4fbbh:
 
 DRAW_UP_SCORES:
     ; Draw "SCORE    HIGH SCORE" at the top of the screen
-	ld hl,l549eh		;4fe0	21 9e 54 	! . T 
-	ld de,01800h		;4fe3	11 00 18 	. . . 
-	ld bc,00015h		;4fe6	01 15 00 	. . . 
-	call LDIRVM		;4fe9	cd 5c 00 	. \ . 
+	ld hl,SCORE_HI_SCORE_STR		;4fe0	21 9e 54
+	ld de,01800h		;4fe3	11 00 18 Locate at [0, 0]
+	ld bc, 21   		;4fe6	01 15 00
+	call LDIRVM		    ;4fe9	cd 5c 00
 
 	; Write "0" below "SCORE"
-    ld hl,01827h		;4fec	21 27 18 	! ' . 
-	ld a,030h		;4fef	3e 30 	> 0 
-	call WRTVRM		;4ff1	cd 4d 00 	. M . 
+    ld hl, 0x1800 + 7 + 1*32		;4fec	21 27 18  Locate at [7, 1]
+	ld a, '0'		                ;4fef	3e 30
+	call WRTVRM		                ;4ff1	cd 4d 00
     
     ; Write "0" below "HIGH SCORE"
-	ld hl,01832h		;4ff4	21 32 18 	! 2 . 
-	ld a,030h		;4ff7	3e 30 	> 0 
-	call WRTVRM		;4ff9	cd 4d 00 	. M . 
+	ld hl, 0x1800 + 18 + 1*32		;4ff4	21 32 18  Locate at [18, 1]
+	ld a, '0'		                ;4ff7	3e 30
+	call WRTVRM		                ;4ff9	cd 4d 00
     
 	ld a,000h		;4ffc	3e 00 	> . 
 	ld (0e544h),a		;4ffe	32 44 e5 	2 D . 
@@ -3083,7 +3083,7 @@ l5460h:
 	rrca			;548a	0f 	. 
 	ld (de),a			;548b	12 	. 
 	dec d			;548c	15 	. 
-	jr l54aah		;548d	18 1b 	. . 
+	jr 0x54aa		;548d	18 1b 	. . 
 	ld e,021h		;548f	1e 21 	. ! 
 	dec h			;5491	25 	% 
 	jr z,0x54ef		;5492	28 5b 	( [ 
@@ -3100,35 +3100,18 @@ l5460h:
 
 
 
-l549eh:
-	jr nz,0x54c0		;549e	20 20 	    
-	jr nz,$+60		;54a0	20 3a 	  : 
-	dec sp			;54a2	3b 	; 
-	inc a			;54a3	3c 	< 
-	dec a			;54a4	3d 	= 
-	ld a,020h		;54a5	3e 20 	>   
-	jr nz,l54c9h		;54a7	20 20 	    
-	dec hl			;54a9	2b 	+ 
-l54aah:
-	cpl			;54aa	2f 	/ 
-	ccf			;54ab	3f 	? 
-	dec hl			;54ac	2b 	+ 
-	jr nz,0x54e9		;54ad	20 3a 	  : 
-	dec sp			;54af	3b 	; 
-	inc a			;54b0	3c 	< 
-	dec a			;54b1	3d 	= 
-    db 0x3e
+SCORE_HI_SCORE_STR:
+    db "   ", 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
+    ;          S     C     O     R     E
+    db "   "
+    db 0x2b, 0x2f, 0x3f, 0x2b, " ", 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
+    ;   H     I     G     H          S     C     O     R     E
     
 PUSH_START_BUTTON_STR:  ;54b3
     db "PUSH START BUTTON"
 
-	ld sp,0x5020		;54c4	31 20 50 	1   P 
-	ld c,h			;54c7	4c 	L 
-	ld b,c			;54c8	41 	A 
-l54c9h:
-	ld e,c			;54c9	59 	Y 
-	ld b,l			;54ca	45 	E 
-	ld d,d			;54cb	52 	R 
+    ; Unused?
+    db "1 PLAYER"     ;54c4
 
 GAME_START_STR:
     db "   GAME START     "
@@ -3166,12 +3149,11 @@ l5517h:
 	halt			;551d	76 	v 
 	ld a,b			;551e	78 	x 
 
+; Red characters for "HIGH" and "SCORE"
 HIGH_LETTERS:
     db 0x2b, 0x2f, 0x3f, 0x2b
-
 SCORE_LETTERS:
     db 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
-
 SCORE_LETTERS_DUP:
     db 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
     
@@ -9961,14 +9943,17 @@ l7babh:
 	ei			;7bd7	fb 	. 
 	ld iy,ENDING_STR		;7bd8	fd 21 88 7c 	. ! . | 
 	ld ix,0x7d72		;7bdc	dd 21 72 7d 	. ! r } 
-	call sub_4f8ah		;7be0	cd 8a 4f 	. . O 
+	call ENDING_TEXT_ANIMATION		;7be0	cd 8a 4f 	. . O 
 
     ; Wait 30 ticks
-	ld hl,0001eh		    ;7be3	21 1e 00
+	ld hl, 30		        ;7be3	21 1e 00
 	call DELAY_HL_TICKS		;7be6	cd 80 43
 
 	call sub_4227h		;7be9	cd 27 42 	. ' B 
+    
+    ; Doh if defeated here
 	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
+
 	ld hl,l7c6dh		;7bef	21 6d 7c 	! m | 
 	ld de,01b00h		;7bf2	11 00 1b 	. . . 
 	ld bc,00010h		;7bf5	01 10 00 	. . . 
@@ -10045,6 +10030,7 @@ l7c5dh:
 	ld a,h			;7c6a	7c 	| 
 	ld a,h			;7c6b	7c 	| 
 	rrca			;7c6c	0f 	. 
+
 l7c6dh:
 	ld c,h			;7c6d	4c 	L 
 	ld e,h			;7c6e	5c 	\ 
