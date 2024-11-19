@@ -37,6 +37,8 @@ TITLE_TICKS: equ 0xe53f
 
 TICKS_240: equ 0xe515
 
+DOH_HITS: equ 0xe5b3
+
 ; Extra balls, apart from the current.
 ; For example, after getting the cyan brick, there are
 ; 3 balls = 2 EXTRA_BALLS.
@@ -10022,7 +10024,8 @@ l7c44h:
 	ld (0e00ah),a		    ;7c53	32 0a e0
     ; Set we're in the title screen
 	ld (GAME_STATE),a		;7c56	32 0b e0
-	ld (0e5b3h),a		    ;7c59	32 b3 e5
+    ; Reset Doh hits
+	ld (DOH_HITS),a		    ;7c59	32 b3 e5
 	ret			            ;7c5c	c9
 
 l7c5dh:
@@ -15961,11 +15964,16 @@ l96e4h:
 	call sub_5befh		;96e6	cd ef 5b 	. . [ 
 	ld a,001h		;96e9	3e 01 	> . 
 	ld (0e2b9h),a		;96eb	32 b9 e2 	2 . . 
-	ld ix,0e5b3h		;96ee	dd 21 b3 e5 	. ! . . 
-	inc (ix+000h)		;96f2	dd 34 00 	. 4 . 
-	ld a,(ix+000h)		;96f5	dd 7e 00 	. ~ . 
-	cp 010h		;96f8	fe 10 	. . 
-	jr nz,l970ah		;96fa	20 0e 	  . 
+
+    ; Increment Doh hits
+    ; Doh is defeated if hit 16 times
+	ld ix,DOH_HITS		;96ee	dd 21 b3 e5
+	inc (ix+000h)		;96f2	dd 34 00
+	ld a,(ix+000h)		;96f5	dd 7e 00
+	cp 16		        ;96f8	fe 10
+	jr nz,l970ah		;96fa	20 0e
+
+    ; Doh has been defeated!
 	ld a,001h		;96fc	3e 01 	> . 
 	ld (0e50dh),a		;96fe	32 0d e5 	2 . . 
 	call DEACTIVE_ALL_BALLS		;9701	cd 10 97 	. . . 
