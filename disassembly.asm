@@ -18,10 +18,8 @@ VAUS_X2: equ 0xe53e
 BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
-; Used to compute the score in BCD
-SCORE_BCD_1: equ 0xe5a0
-SCORE_BCD_2: equ SCORE_BCD_1 + 1
-SCORE_BCD_3: equ SCORE_BCD_2 + 1
+; Buffer of 3 position to compute the score in BCD
+SCORE_BCD: equ 0xe5a0
 
 ; Counts how many ticks the title screen is displayed
 TITLE_TICKS: equ 0xe53f
@@ -2723,32 +2721,32 @@ sub_52a0h:
 	cp 003h		;52c0	fe 03 	. . 
 	jp z,l52ceh		;52c2	ca ce 52 	. . R 
 	ld hl,0e015h		;52c5	21 15 e0 	! . . 
-	call sub_538ah		;52c8	cd 8a 53 	. . S 
+	call BCD_ENCODE_SCORE		;52c8	cd 8a 53 	. . S 
 	jp l52d7h		;52cb	c3 d7 52 	. . R 
 l52ceh:
 	ld hl,0e018h		;52ce	21 18 e0 	! . . 
-	call sub_538ah		;52d1	cd 8a 53 	. . S 
+	call BCD_ENCODE_SCORE		;52d1	cd 8a 53 	. . S 
 	jp l52d7h		;52d4	c3 d7 52 	. . R 
 l52d7h:
 	ld iy,0e007h		;52d7	fd 21 07 e0 	. ! . . 
-	ld a,(SCORE_BCD_3)		;52db	3a a2 e5 	: . . 
+	ld a,(SCORE_BCD + 2)		;52db	3a a2 e5 	: . . 
 	cp (iy+002h)		;52de	fd be 02 	. . . 
 	jp z,l52eah		;52e1	ca ea 52 	. . R 
 	jp c,l530dh		;52e4	da 0d 53 	. . S 
 	jp l5302h		;52e7	c3 02 53 	. . S 
 l52eah:
-	ld a,(SCORE_BCD_2)		;52ea	3a a1 e5 	: . . 
+	ld a,(SCORE_BCD + 1)		;52ea	3a a1 e5 	: . . 
 	cp (iy+001h)		;52ed	fd be 01 	. . . 
 	jp z,l52f9h		;52f0	ca f9 52 	. . R 
 	jp c,l530dh		;52f3	da 0d 53 	. . S 
 	jp l5302h		;52f6	c3 02 53 	. . S 
 l52f9h:
-	ld a,(SCORE_BCD_1)		;52f9	3a a0 e5 	: . . 
+	ld a,(SCORE_BCD)		;52f9	3a a0 e5 	: . . 
 	cp (iy+000h)		;52fc	fd be 00 	. . . 
 	jp c,l530dh		;52ff	da 0d 53 	. . S 
 l5302h:
 	ld de,0e007h		;5302	11 07 e0 	. . . 
-	ld hl,SCORE_BCD_1		;5305	21 a0 e5 	! . . 
+	ld hl,SCORE_BCD		;5305	21 a0 e5 	! . . 
 	ld bc,00003h		;5308	01 03 00 	. . . 
 	ldir		;530b	ed b0 	. . 
 l530dh:
@@ -2834,43 +2832,45 @@ l5374h:
 	nop			;5383	00 	. 
 	nop			;5384	00 	. 
 	ld bc,00000h		;5385	01 00 00 	. . . 
-	djnz sub_538ah		;5388	10 00 	. . 
+    db 0x10, 0
 
-; SEGUIR
-sub_538ah:
-	ld de,SCORE_BCD_1		;538a	11 a0 e5
+; BDC-encode a score from HL
+BCD_ENCODE_SCORE:
+    ; Copy binary score to BCD buffer
+	ld de,SCORE_BCD		;538a	11 a0 e5
 	ld bc, 3		        ;538d	01 03 00
 	ldir		            ;5390	ed b0
 
-    ; Decode SCORE_BCD_1 in BCD
-	ld a,(SCORE_BCD_1)		;5392	3a a0 e5
-	add a,(ix+000h)		    ;5395	dd 86 00
+    ; Decode SCORE_BCD in BCD
+	ld a,(SCORE_BCD)		;5392	3a a0 e5
+	add a,(ix+0)		    ;5395	dd 86 00
 	daa			            ;5398	27
-	ld (SCORE_BCD_1),a		;5399	32 a0 e5
+	ld (SCORE_BCD),a		;5399	32 a0 e5
 
-	; Decode SCORE_BCD_2 in BCD
-    ld a,(SCORE_BCD_2)		;539c	3a a1 e5
-	adc a,(ix+001h)		    ;539f	dd 8e 01
+	; Decode SCORE_BCD + 1 in BCD
+    ld a,(SCORE_BCD + 1)		;539c	3a a1 e5
+	adc a,(ix+1)		    ;539f	dd 8e 01
 	daa			            ;53a2	27
-	ld (SCORE_BCD_2),a		;53a3	32 a1 e5
+	ld (SCORE_BCD + 1),a		;53a3	32 a1 e5
 
-	; Decode SCORE_BCD_3 in BCD
-    ld a,(SCORE_BCD_3)		;53a6	3a a2 e5
-	adc a,(ix+002h)		    ;53a9	dd 8e 02
+	; Decode SCORE_BCD + 2 in BCD
+    ld a,(SCORE_BCD + 2)		;53a6	3a a2 e5
+	adc a,(ix+2)		    ;53a9	dd 8e 02
 	daa			            ;53ac	27
-	ld (SCORE_BCD_3),a		;53ad	32 a2 e5
+	ld (SCORE_BCD + 2),a		;53ad	32 a2 e5
 
 	ex de,hl			;53b0	eb
-    ; HL = SCORE_BCD_1
+    ; HL = SCORE_BCD
     ; DE = 0xe015 or 0xe018
     
 	dec hl			    ;53b1	2b 	+ 
 	dec de			    ;53b2	1b 	. 
 
+    ; Copy BCD-encoded score
     ; Repeat 3 times (DE--) <-- (HL--) 
-	ld bc, 3		    ;53b3	01 03 00 	. . . 
-	lddr		        ;53b6	ed b8 	. . 
-	ret			        ;53b8	c9 	. 
+	ld bc, 3		    ;53b3	01 03 00
+	lddr		        ;53b6	ed b8
+	ret			        ;53b8	c9
 
 ; Draws the number of the score in top of the screen
 ; SEGUIR
