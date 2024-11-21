@@ -3620,7 +3620,7 @@ l5710h:
 	ld e,h			;5710	5c 	\ 
 	ld d,h			;5711	54 	T 
 l5712h:
-	call nc,sub_5c54h		;5712	d4 54 5c 	. T \ 
+    db 0xd4, 0x54, 0x5c 	;5712	d4 54 5c
 	inc b			;5715	04 	. 
 	inc b			;5716	04 	. 
 	inc b			;5717	04 	. 
@@ -4730,63 +4730,103 @@ l5c11h:
 	pop de			;5c12	d1 	. 
 	pop hl			;5c13	e1 	. 
 	ret			;5c14	c9 	. 
+
+; SEGUIR
 sub_5c15h:
 	call sub_5d9dh		;5c15	cd 9d 5d 	. . ] 
 	ld a,(0e022h)		;5c18	3a 22 e0 	: " . 
 	cp 002h		;5c1b	fe 02 	. . 
 	jp z,l5c45h		;5c1d	ca 45 5c 	. E \ 
+
 	ld hl,l5d00h		;5c20	21 00 5d 	! . ] 
-	ld a,(LEVEL)		;5c23	3a 1b e0 	: . . 
-	ld e,a			;5c26	5f 	_ 
-	ld d,000h		;5c27	16 00 	. . 
-	add hl,de			;5c29	19 	. 
-	ld a,(hl)			;5c2a	7e 	~ 
-	ld (BRICKS_LEFT),a		;5c2b	32 38 e0 	2 8 . 
+    
+    ; A = LEVEL
+	ld a,(LEVEL)		;5c23	3a 1b e0
+    ; DE = LEVEL
+	ld e,a			    ;5c26	5f
+	ld d, 0 		    ;5c27	16 00
+    ; HL += LEVEL
+	add hl,de			;5c29	19
+
+    ; Read the number of bricks in this level
+	ld a,(hl)			;5c2a	7e
+	ld (BRICKS_LEFT),a	;5c2b	32 38 e0
+
+
 	ld hl,0e039h		;5c2e	21 39 e0 	! 9 . 
 	ld de,0e03ah		;5c31	11 3a e0 	. : . 
+    
+    ; A = LEVEL/8 + 2
 	ld a,(LEVEL)		;5c34	3a 1b e0 	: . . 
 	srl a		;5c37	cb 3f 	. ? 
 	srl a		;5c39	cb 3f 	. ? 
 	srl a		;5c3b	cb 3f 	. ? 
 	inc a			;5c3d	3c 	< 
 	inc a			;5c3e	3c 	< 
+    
 	ld (hl),a			;5c3f	77 	w 
-	ld bc,00083h		;5c40	01 83 00 	. . . 
+
+	ld bc, 131		;5c40	01 83 00 	. . . 
 	ldir		;5c43	ed b0 	. . 
+
 l5c45h:
 	ld ix,0e36eh		;5c45	dd 21 6e e3 	. ! n . 
+
 	ld de,l5e2fh		;5c49	11 2f 5e 	. / ^ 
-	ld a,(LEVEL)		;5c4c	3a 1b e0 	: . . 
-	ld l,a			;5c4f	6f 	o 
-	ld h,000h		;5c50	26 00 	& . 
-	add hl,hl			;5c52	29 	) 
+
+    ; HL = LEVEL
+	ld a,(LEVEL)		;5c4c	3a 1b e0
+	ld l,a			    ;5c4f	6f
+	ld h, 0 		    ;5c50	26 00
+
+    ; HL = 2*LEVEL
+	add hl,hl			;5c52	29
+    
+    ; HL = 2*LEVEL + l5e2fh
 	add hl,de			;5c53	19 	. 
-sub_5c54h:
+
+    ; Point to the start of the level (the bricks)
+    ; DE = l5e2fh[2*LEVEL]
 	ld e,(hl)			;5c54	5e 	^ 
 	inc hl			;5c55	23 	# 
 	ld d,(hl)			;5c56	56 	V 
+
+    ; DE = start of the level
 	push de			;5c57	d5 	. 
 	pop iy		;5c58	fd e1 	. . 
+
 	ld de,l5defh		;5c5a	11 ef 5d 	. . ] 
+    
+    ; HL = LEVEL
 	ld a,(LEVEL)		;5c5d	3a 1b e0 	: . . 
 	ld l,a			;5c60	6f 	o 
 	ld h,000h		;5c61	26 00 	& . 
+    
+    ; HL = 2*LEVEL
 	add hl,hl			;5c63	29 	) 
+    
+    ; HL = 2*LEVEL + l5defh
 	add hl,de			;5c64	19 	. 
+    
+    ; DE = l5defh[2*LEVEL]
 	ld e,(hl)			;5c65	5e 	^ 
 	inc hl			;5c66	23 	# 
 	ld d,(hl)			;5c67	56 	V 
-	ex de,hl			;5c68	eb 	. 
+	
+    ; HL = l5defh[2*LEVEL]
+    ex de,hl			;5c68	eb 	. 
+
 	ld a,(0e022h)		;5c69	3a 22 e0 	: " . 
-	cp 002h		;5c6c	fe 02 	. . 
+	cp 2		;5c6c	fe 02 	. . 
 	jp nz,l5c74h		;5c6e	c2 74 5c 	. t \ 
 	ld hl,0e027h		;5c71	21 27 e0 	! ' . 
 l5c74h:
-	ld b,011h		;5c74	06 11 	. . 
+	ld b, 17		;5c74	06 11 	. . 
 	xor a			;5c76	af 	. 
 	ld (0e489h),a		;5c77	32 89 e4 	2 . . 
 	xor a			;5c7a	af 	. 
 	ld (0e48ah),a		;5c7b	32 8a e4 	2 . . 
+
 l5c7eh:
 	ld c,008h		;5c7e	0e 08 	. . 
 	ld a,(hl)			;5c80	7e 	~ 
@@ -4802,6 +4842,8 @@ l5c8dh:
 	inc ix		;5c8f	dd 23 	. # 
 	push ix		;5c91	dd e5 	. . 
 	push de			;5c93	d5 	. 
+
+    ; DE = l5defh[2*LEVEL]
 	ld de,l5defh		;5c94	11 ef 5d 	. . ] 
 	ld a,(LEVEL)		;5c97	3a 1b e0 	: . . 
 	ld l,a			;5c9a	6f 	o 
@@ -4811,6 +4853,8 @@ l5c8dh:
 	ld e,(hl)			;5c9f	5e 	^ 
 	inc hl			;5ca0	23 	# 
 	ld d,(hl)			;5ca1	56 	V 
+
+
 	push de			;5ca2	d5 	. 
 	pop ix		;5ca3	dd e1 	. . 
 	ld a,(0e48ah)		;5ca5	3a 8a e4 	: . . 
@@ -4859,6 +4903,7 @@ l5cc6h:
 	ld de,00000h		;5ce8	11 00 00 	. . . 
 	ld (0e486h),de		;5ceb	ed 53 86 e4 	. S . . 
 	ret			;5cef	c9 	. 
+
 l5cf0h:
 	jr nz,$+95		;5cf0	20 5d 	  ] 
 	daa			;5cf2	27 	' 
@@ -4914,6 +4959,7 @@ l5d00h:
 	jp l5cbdh		;5d4e	c3 bd 5c 	. . \ 
 	bit 0,(ix+000h)		;5d51	dd cb 00 46 	. . . F 
 	jp l5cbdh		;5d55	c3 bd 5c 	. . \ 
+
 sub_5d58h:
 	push af			;5d58	f5 	. 
 	push bc			;5d59	c5 	. 
@@ -4937,6 +4983,7 @@ sub_5d58h:
 	pop bc			;5d76	c1 	. 
 	pop af			;5d77	f1 	. 
 	ret			;5d78	c9 	. 
+
 sub_5d79h:
 	ld hl,0e36eh		;5d79	21 6e e3 	! n . 
 	ld de,01862h		;5d7c	11 62 18 	. b . 
@@ -4958,6 +5005,7 @@ l5d82h:
 	defb 0ddh,02dh	;dec ixl		;5d98	dd 2d 	. - 
 	jr nz,l5d82h		;5d9a	20 e6 	  . 
 	ret			;5d9c	c9 	. 
+
 sub_5d9dh:
 	xor a			;5d9d	af 	. 
 	ld (0e53ch),a		;5d9e	32 3c e5 	2 < . 
@@ -4993,6 +5041,7 @@ l5da9h:
 	cp 00ch		;5dd5	fe 0c 	. . 
 	jp nz,l5da5h		;5dd7	c2 a5 5d 	. . ] 
 	ret			;5dda	c9 	. 
+
 l5ddbh:
 	inc hl			;5ddb	23 	# 
 	inc h			;5ddc	24 	$ 
@@ -5131,6 +5180,8 @@ l5e2fh:
 	and l			;5e6b	a5 	. 
 	ld h,l			;5e6c	65 	e 
 	defb 0ddh,065h	;ld ixh,ixl		;5e6d	dd 65 	. e 
+
+    ;include 'bricks_levels.asm'
 	ex af,af'			;5e6f	08 	. 
 	ex af,af'			;5e70	08 	. 
 	ex af,af'			;5e71	08 	. 
