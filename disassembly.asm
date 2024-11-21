@@ -28,10 +28,19 @@ BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
 
+; BCD-encoded scores and heading
 SCORE_BCD: equ 0xe015
 HIGH_SCORE_BCD: equ 0xe007
-; Buffer of 3 position to compute the score in BCD
+
 SCORE_BCD_BUFFER: equ 0xe5a0
+ZEROS_BCD_BUFFER: equ 0xe018
+
+; Decoded scores and zeros
+DECODED_ASCII_SCORE: equ 0xe58e
+DECODED_ASCII_HIGH_SCORE: equ 0xe59a
+DECODED_ZEROS: equ 0xe594
+
+
 
 ; Where to write the scores
 ; 0: up, 1: on the right
@@ -2769,7 +2778,7 @@ sub_52a0h:
 	call BCD_ENCODE_SCORE		;52c8	cd 8a 53 	. . S 
 	jp l52d7h		;52cb	c3 d7 52 	. . R 
 l52ceh:
-	ld hl,0e018h		;52ce	21 18 e0 	! . . 
+	ld hl,ZEROS_BCD_BUFFER		;52ce	21 18 e0 	! . . 
 	call BCD_ENCODE_SCORE		;52d1	cd 8a 53 	. . S 
 	jp l52d7h		;52d4	c3 d7 52 	. . R 
 l52d7h:
@@ -2917,66 +2926,72 @@ BCD_ENCODE_SCORE:
 	lddr		            ;53b6	ed b8
 	ret			            ;53b8	c9
 
-; Draws the number of the score in top of the screen
-; SEGUIR
+; Draws the score and the high score
 DRAW_SCORE_NUMBERS:
-	ld hl,0e58eh		;53b9	21 8e e5 	! . . 
-	ld de,SCORE_BCD		;53bc	11 15 e0 	. . . 
-	call sub_5420h		;53bf	cd 20 54 	.   T 
+	ld hl,DECODED_ASCII_SCORE		;53b9	21 8e e5
+	ld de,SCORE_BCD		            ;53bc	11 15 e0
+	call DECODE_BCD_TO_ASCII		;53bf	cd 20 54
     ;
-	ld hl,0e58eh		;53c2	21 8e e5 	! . . 
-	call REMOVE_HEADING_ZEROS		;53c5	cd 31 54 	. 1 T 
+	ld hl,DECODED_ASCII_SCORE		;53c2	21 8e e5
+	call REMOVE_HEADING_ZEROS		;53c5	cd 31 54
 
-	ld hl,0e594h		;53c8	21 94 e5 	! . . 
-	ld de,0e018h		;53cb	11 18 e0 	. . . 
-	call sub_5420h		;53ce	cd 20 54 	.   T 
+    ; Move to the end and remove heading zeros
+	ld hl,DECODED_ZEROS 	        ;53c8	21 94 e5
+	ld de,ZEROS_BCD_BUFFER		    ;53cb	11 18 e0
+	call DECODE_BCD_TO_ASCII		;53ce	cd 20 54
     ;
-	ld hl,0e594h		;53d1	21 94 e5 	! . . 
-	call REMOVE_HEADING_ZEROS		;53d4	cd 31 54 	. 1 T 
+	ld hl,DECODED_ZEROS		        ;53d1	21 94 e5
+	call REMOVE_HEADING_ZEROS		;53d4	cd 31 54
 
-	ld hl,0e59ah		;53d7	21 9a e5 	! . . 
-	ld de,HIGH_SCORE_BCD		;53da	11 07 e0 	. . . 
-	call sub_5420h		;53dd	cd 20 54 	.   T 
+	ld hl,DECODED_ASCII_HIGH_SCORE	;53d7	21 9a e5
+	ld de,HIGH_SCORE_BCD		    ;53da	11 07 e0
+	call DECODE_BCD_TO_ASCII		;53dd	cd 20 54
     ;
-	ld hl,0e59ah		;53e0	21 9a e5 	! . . 
-	call REMOVE_HEADING_ZEROS		;53e3	cd 31 54 	. 1 T 
-    
+	ld hl,DECODED_ASCII_HIGH_SCORE	;53e0	21 9a e5
+	call REMOVE_HEADING_ZEROS		;53e3	cd 31 54
+
     ; Check in which position draw the scores
 	ld a,(SCORE_POSITION)	    ;53e6	3a 44 e5
 	cp 1		                ;53e9	fe 01 Score on the right?
 	jp z,l5407h		            ;53eb	ca 07 54
     
     ; Draw scores up
-	ld hl,0e58eh		        ;53ee	21 8e e5
-	ld de,0x1800 + 1 + 1*32		;53f1	11 21 18 	Locate at [1, 1]
-	ld bc, 6		            ;53f4	01 06 00    6 chars
-	call LDIRVM		            ;53f7	cd 5c 00
+	ld hl,DECODED_ASCII_SCORE       ;53ee	21 8e e5
+	ld de,0x1800 + 1 + 1*32		    ;53f1	11 21 18 	Locate at [1, 1]
+	ld bc, 6		                ;53f4	01 06 00    6 chars
+	call LDIRVM		                ;53f7	cd 5c 00
 
-	ld hl,0e59ah		        ;53fa	21 9a e5
-	ld de,0x1800 + 12 + 1*32	;53fd	11 2c 18 	Locate at [12, 1]
-	ld bc, 6    		        ;5400	01 06 00    6 chars
-	call LDIRVM		            ;5403	cd 5c 00
-	ret			                ;5406	c9
+	ld hl,DECODED_ASCII_HIGH_SCORE	;53fa	21 9a e5
+	ld de,0x1800 + 12 + 1*32	    ;53fd	11 2c 18 	Locate at [12, 1]
+	ld bc, 6    		            ;5400	01 06 00    6 chars
+	call LDIRVM		                ;5403	cd 5c 00
+	ret			                    ;5406	c9
 
 l5407h:
     ; Draw scores on the right
-	ld hl,0e58eh		        ;5407	21 8e e5
+	ld hl,DECODED_ASCII_SCORE		        ;5407	21 8e e5
 	ld de,0x1800 + 25 + 7*32    ;540a	11 f9 18    Locate at [25, 7]
 	ld bc, 6		            ;540d	01 06 00    6 chars
 	call LDIRVM		            ;5410	cd 5c 00
     
-	ld hl,0e59ah		        ;5413	21 9a e5
+	ld hl,DECODED_ASCII_HIGH_SCORE		        ;5413	21 9a e5
 	ld de,0x1800 + 25 + 3*32	;5416	11 79 18    Locate at [25, 3]
 	ld bc,00006h		        ;5419	01 06 00
 	call LDIRVM		            ;541c	cd 5c 00
 	ret			                ;541f	c9
 
-; Seguir
-sub_5420h:
-    ; Three iterations
-	ld b,3		    ;5420	06 03
+; Decode a BCD-encoded score into separate ASCII characters.
+; This is used to print the scores.
+DECODE_BCD_TO_ASCII:
+    ; DE = SCORE_BCD
+    ; HL = buffer
+
+    ; Three BCD digits
+	ld b,3		                ;5420	06 03
     
-    ; DE += 2
+    ; Point to the most significant BCD in SCORE_BCD.
+    ; For example, if the score is 22280, in memory it's
+    ; stored backwards as  28 22 00. We'll point to 00.
 	inc de			;5422	13
 	inc de			;5423	13
 l5424h:
@@ -2984,18 +2999,29 @@ l5424h:
 	ld a,(de)			;5424	1a
 	ld (hl),a			;5425	77
     
-	ld a,033h		    ;5426	3e 33   00.11.00.11
+	ld a,033h		    ;5426	3e 33   0011.0011
 
-    ; Performs a 4-bit rightward rotation of the 12-bit number whose 4 most significant bits are the 4 least significant bits of A, and its 8 least significant bits are in (HL).
+    ; Performs a 4-bit rightward rotation of the 12-bit number whose 4 most
+    ; significant bits are the 4 least significant bits of A, and its 8 least
+    ; significant bits are in (HL).
+    ; ............
+    ; 0011|SSSSSSSS
+    ; SSSS|0011SSSS
+    ;
+    ; The number 0011SSSS represents the ASCII digit of one half of the
+    ; BCD-encoded number. 0011000 is 0x30 = '0'.
 	rrd		            ;5428	ed 67
     
-	inc hl			;542a	23 	# 
-	ld (hl),a			;542b	77 	w 
-	inc hl			;542c	23 	# 
-	dec de			;542d	1b 	. 
+    ; Store digit
+    inc hl			    ;542a	23
+	ld (hl),a			;542b	77
+    
+	; Next BCD-digit
+    inc hl			    ;542c	23
+	dec de			    ;542d	1b
 	
-    djnz l5424h		;542e	10 f4 	. . 
-	ret			;5430	c9 	. 
+    djnz l5424h		    ;542e	10 f4
+	ret			        ;5430	c9
 
 ; Substitute heading zeros from the BCD string pointed by HL
 REMOVE_HEADING_ZEROS:
