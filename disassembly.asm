@@ -15,11 +15,19 @@ SPRITES_ATTRIB_TABLE: equ 0x1b00
 ; 3: normal play, but without score updates
 GAME_STATE: equ 0xe00b
 
-BALL1_Y: equ 0xe0f5
-BALL2_Y: equ 0xe0f9
-BALL3_Y: equ 0xe0fd
+; Ball sprite parameters: (Y, X) position, sprite pattern number, and color
+BALL1_SPR_PARAMS: equ 0xe0f5
+BALL_SPR_PARAMS_LEN: equ 4
+BALL2_SPR_PARAMS: equ BALL1_SPR_PARAMS + BALL_SPR_PARAMS_LEN
+BALL3_SPR_PARAMS: equ BALL2_SPR_PARAMS + BALL_SPR_PARAMS_LEN
+;
+BALL_SPR_PARAMS_IDX_Y: equ 0
+BALL_SPR_PARAMS_IDX_X: equ 1
+BALL_SPR_PARAMS_IDX_PATTERN_NUM: equ 2
+BALL_SPR_PARAMS_IDX_COLOR: equ 3
 
-BALL_X: equ 0xe0f6
+
+
 
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
@@ -9684,7 +9692,7 @@ l7999h:
 	ret			;79a4	c9 	.
 
 sub_79a5h:
-	ld ix,BALL1_Y		                        ;79a5	dd 21 f5 e0
+	ld ix,BALL1_SPR_PARAMS		                        ;79a5	dd 21 f5 e0
     
     ; Skip the following part if the ball is not active
 	ld a,(BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE)	;79a9	3a 4e e2
@@ -9698,7 +9706,7 @@ sub_79a5h:
 	ld a,0c2h		;79bd	3e c2 	> . 
 	call sub_5befh		;79bf	cd ef 5b 	. . [ 
 l79c2h:
-	ld ix,BALL2_Y		;79c2	dd 21 f9 e0 	. ! . . 
+	ld ix,BALL2_SPR_PARAMS		;79c2	dd 21 f9 e0 	. ! . . 
 	ld a,(BALL_TABLE2)		;79c6	3a 62 e2 	: b . 
 	or a			;79c9	b7 	. 
 	jp z,l79dfh		;79ca	ca df 79 	. . y 
@@ -9709,7 +9717,7 @@ l79c2h:
 	ld a,0c2h		;79da	3e c2 	> . 
 	call sub_5befh		;79dc	cd ef 5b 	. . [ 
 l79dfh:
-	ld ix,BALL3_Y		;79df	dd 21 fd e0 	. ! . . 
+	ld ix,BALL3_SPR_PARAMS		;79df	dd 21 fd e0 	. ! . . 
 	ld a,(BALL_TABLE3)		;79e3	3a 76 e2 	: v . 
 	or a			;79e6	b7 	. 
 	jp z,l79fch		;79e7	ca fc 79 	. . y 
@@ -16064,11 +16072,11 @@ DEACTIVE_ALL_BALLS:
 	ld (BALL_TABLE2),a		;9714	32 62 e2
 	ld (BALL_TABLE3),a		;9717	32 76 e2
 
-    ; Set the three sprites invisible (position 192)
+    ; Set the three sprites invisible (Y position 192)
 	ld a, 192		    ;971a	3e c0
-	ld (BALL1_Y),a		;971c	32 f5 e0
-	ld (BALL2_Y),a		;971f	32 f9 e0
-	ld (BALL3_Y),a		;9722	32 fd e0
+	ld (BALL1_SPR_PARAMS),a		;971c	32 f5 e0
+	ld (BALL2_SPR_PARAMS),a		;971f	32 f9 e0
+	ld (BALL3_SPR_PARAMS),a		;9722	32 fd e0
 	ret			        ;9725	c9
 
 sub_9726h:
@@ -16235,28 +16243,42 @@ l986ah:
 	ld l,e			;986e	6b 	k 
 	ld l,b			;986f	68 	h 
 	ld h,a			;9870	67 	g 
-	ld l,b			;9871	68 	h 
+	ld l,b			;9871	68 	h
+
 sub_9872h:
 	xor a			;9872	af 	. 
 	ld (0e2ach),a		;9873	32 ac e2 	2 . . 
-	ld ix,BALL1_Y		;9876	dd 21 f5 e0 	. ! . . 
+
+	ld ix,BALL1_SPR_PARAMS		;9876	dd 21 f5 e0 	. ! . . 
 	ld iy,BALL_TABLE1		;987a	fd 21 4e e2 	. ! N . 
 l987eh:
-	push ix		;987e	dd e5 	. . 
-	push iy		;9880	fd e5 	. . 
-	ld a,(iy+000h)		;9882	fd 7e 00 	. ~ . 
-	or a			;9885	b7 	. 
-	jp z,l99b8h		;9886	ca b8 99 	. . . 
-	ld l,(iy+001h)		;9889	fd 6e 01 	. n . 
-	ld h,000h		;988c	26 00 	& . 
-	add hl,hl			;988e	29 	) 
-	ld de,l9898h		;988f	11 98 98 	. . . 
-	add hl,de			;9892	19 	. 
-	ld e,(hl)			;9893	5e 	^ 
-	inc hl			;9894	23 	# 
-	ld d,(hl)			;9895	56 	V 
-	ex de,hl			;9896	eb 	. 
-	jp (hl)			;9897	e9 	. 
+	push ix		        ;987e	dd e5
+	push iy		        ;9880	fd e5
+
+    ; Skip if the ball is not active
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;9882	fd 7e 00
+	or a			                    ;9885	b7
+	jp z,l99b8h		                    ;9886	ca b8 99
+
+    ; HL = 2*BALL_X
+	ld l,(iy+BALL_SPR_PARAMS_IDX_X)		;9889	fd 6e 01
+	ld h,000h		                    ;988c	26 00
+	add hl,hl			                ;988e	29
+
+	; HL = l9898h + 2*BALL_X
+    ld de,l9898h		                ;988f	11 98 98
+	add hl,de			                ;9892	19
+    
+    ;  DE = l9898h[2*BALL_X]
+	ld e,(hl)			;9893	5e
+	inc hl			    ;9894	23
+	ld d,(hl)			;9895	56
+    
+    ; HL = l9898h[2*BALL_X]
+	ex de,hl			;9896	eb
+    
+    ; Jump to l9898h[2*BALL_X]
+	jp (hl)			    ;9897	e9
 l9898h:
 	sbc a,(hl)			;9898	9e 	. 
 	sbc a,b			;9899	98 	. 
@@ -16264,7 +16286,6 @@ l9898h:
 	sbc a,b			;989b	98 	. 
 	ld b,c			;989c	41 	A 
 	sbc a,c			;989d	99 	. 
-    
     
     ; [ToDo] This is interesting, since it initializes the structure
     ; iy = BALL_TABLE1
@@ -19963,22 +19984,33 @@ lb2bdh:
 	ld (0e54bh),a		;b2bd	32 4b e5 	2 K . 
 lb2c0h:
 	ret			;b2c0	c9 	. 
+
+; SEGUIR
 sub_b2c1h:
 	push ix		;b2c1	dd e5 	. . 
 	pop iy		;b2c3	fd e1 	. . 
-	ld b,003h		;b2c5	06 03 	. . 
-	ld iy,BALL_TABLE1		;b2c7	fd 21 4e e2 	. ! N . 
-	ld ix,BALL1_Y		;b2cb	dd 21 f5 e0 	. ! . . 
+
+	ld b, 3 		        ;b2c5	06 03       3 balls to check
+	ld iy,BALL_TABLE1		;b2c7	fd 21 4e e2
+	ld ix,BALL1_SPR_PARAMS		    ;b2cb	dd 21 f5 e0
 lb2cfh:
-	ld a,(iy+000h)		;b2cf	fd 7e 00 	. ~ . 
-	or a			;b2d2	b7 	. 
-	jp nz,lb2e5h		;b2d3	c2 e5 b2 	. . . 
-	ld de,00014h		;b2d6	11 14 00 	. . . 
-	add iy,de		;b2d9	fd 19 	. . 
-	ld de,00004h		;b2db	11 04 00 	. . . 
-	add ix,de		;b2de	dd 19 	. . 
-	djnz lb2cfh		;b2e0	10 ed 	. . 
-	jp lb34dh		;b2e2	c3 4d b3 	. M . 
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;b2cf	fd 7e 00
+	or a			                    ;b2d2	b7
+	jp nz,lb2e5h		                ;b2d3	c2 e5 b2 Process if ball active
+    
+    ; Point to the next ball's table
+	ld de,BALL_TABLE_LEN		        ;b2d6	11 14 00
+	add iy,de		                    ;b2d9	fd 19
+    
+	; BALL1_SPR_PARAMS, BALL2_SPR_PARAMS, and BALL3_SPR_PARAMS are space by 4 bytes
+    ; Increment also the pointer to BALL(i)_Y
+    ld de, 4		                    ;b2db	11 04 00
+        
+	add ix,de		;b2de	dd 19
+	djnz lb2cfh		;b2e0	10 ed
+    ; All balls checked, get out
+	jp lb34dh		                    ;b2e2	c3 4d b3
+
 lb2e5h:
 	ld hl,lb352h		;b2e5	21 52 b3 	! R . 
 	ld a,(iy+006h)		;b2e8	fd 7e 06 	. ~ . 
@@ -19992,40 +20024,55 @@ lb2f5h:
 	sla e		;b2f8	cb 23 	. # 
 	ld d,000h		;b2fa	16 00 	. . 
 	add hl,de			;b2fc	19 	. 
-	ld c,(iy+007h)		;b2fd	fd 4e 07 	. N . 
-	ld a,(iy+00dh)		;b300	fd 7e 0d 	. ~ . 
+	ld c,(iy+BALL_TABLE_IDX_SPEED_POS)		;b2fd	fd 4e 07
+
+	ld a,(iy+BALL_TABLE_IDX_SPEED_COUNTER)	;b300	fd 7e 0d
 	ld (0e53ch),a		;b303	32 3c e5 	2 < . 
-	ld b,003h		;b306	06 03 	. . 
-	ld iy,BALL_TABLE1		;b308	fd 21 4e e2 	. ! N . 
-	ld de,00014h		;b30c	11 14 00 	. . . 
+
+	ld b, 3		            ;b306	06 03   Therea are 3 balls to loop over
+	ld iy,BALL_TABLE1		;b308	fd 21 4e e2
+	ld de,BALL_TABLE_LEN	;b30c	11 14 00
 lb30fh:
-	ld (iy+000h),001h		;b30f	fd 36 00 01 	. 6 . . 
+	ld (iy+BALL_TABLE_IDX_ACTIVE), 1	;b30f	fd 36 00 01
 	ld (iy+001h),002h		;b313	fd 36 01 02 	. 6 . . 
+
 	ld a,(hl)			;b317	7e 	~ 
 	ld (iy+006h),a		;b318	fd 77 06 	. w . 
+
 	ld a,(0e53ch)		;b31b	3a 3c e5 	: < . 
-	ld (iy+00dh),a		;b31e	fd 77 0d 	. w . 
-	ld (iy+007h),c		;b321	fd 71 07 	. q . 
+	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a		;b31e	fd 77 0d
+
+	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		    ;b321	fd 71 07
+    
+    ; Next ball
 	inc hl			;b324	23 	# 
 	add iy,de		;b325	fd 19 	. . 
 	djnz lb30fh		;b327	10 e6 	. . 
-	ld l,(ix+000h)		;b329	dd 6e 00 	. n . 
-	ld h,(ix+001h)		;b32c	dd 66 01 	. f . 
-	ld b,003h		;b32f	06 03 	. . 
-	ld ix,BALL1_Y		;b331	dd 21 f5 e0 	. ! . . 
-	ld de,00004h		;b335	11 04 00 	. . . 
+
+    ; Position to be assigned to the ball
+	ld l,(ix+000h)		;b329	dd 6e 00    Y
+	ld h,(ix+001h)		;b32c	dd 66 01    X
+
+	ld b, 3		                ;b32f	06 03       3 balls
+	ld ix, BALL1_SPR_PARAMS		;b331	dd 21 f5 e0
+	ld de, BALL_SPR_PARAMS_LEN  ;b335	11 04 00
 lb338h:
-	ld (ix+000h),l		;b338	dd 75 00 	. u . 
-	ld (ix+001h),h		;b33b	dd 74 01 	. t . 
-	ld (ix+002h),080h		;b33e	dd 36 02 80 	. 6 . . 
-	ld (ix+003h),00fh		;b342	dd 36 03 0f 	. 6 . . 
-	ld de,00004h		;b346	11 04 00 	. . . 
-	add ix,de		;b349	dd 19 	. . 
-	djnz lb338h		;b34b	10 eb 	. . 
+    ; Set ball's sprite parameters
+	ld (ix+BALL_SPR_PARAMS_IDX_Y),l		            ;b338	dd 75 00        Y
+	ld (ix+BALL_SPR_PARAMS_IDX_X),h		            ;b33b	dd 74 01        X
+	ld (ix+BALL_SPR_PARAMS_IDX_PATTERN_NUM), 128	;b33e	dd 36 02 80     Pattern of the ball
+	ld (ix+BALL_SPR_PARAMS_IDX_COLOR),  15	        ;b342	dd 36 03 0f     White color
+
+    ; Next ball
+	ld de, 4		    ;b346	11 04 00    Useless, it was already initialized @b335
+	add ix,de		    ;b349	dd 19
+	djnz lb338h		    ;b34b	10 eb
 lb34dh:
-	pop iy		;b34d	fd e1 	. . 
-	pop ix		;b34f	dd e1 	. . 
-	ret			;b351	c9 	. 
+    ; Return
+	pop iy		;b34d	fd e1
+	pop ix		;b34f	dd e1
+	ret			;b351	c9
+
 lb352h:
 	nop			;b352	00 	. 
 	nop			;b353	00 	. 
