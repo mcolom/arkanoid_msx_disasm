@@ -15,8 +15,13 @@ SPRITES_ATTRIB_TABLE: equ 0x1b00
 ; 3: normal play, but without score updates
 GAME_STATE: equ 0xe00b
 
-CHEAT_ACTIVATED: equ 0xe001
-CHEAT_KEY_COUNTER: equ 0xe002
+; The two cheats :)
+CHEAT1_ACTIVATED: equ 0xe001
+CHEAT1_KEY_COUNTER: equ 0xe002
+;
+CHEAT2_ACTIVATED: equ 0xe003
+CHEAT2_KEY_COUNTER: equ 0xe004
+CHEAT2_LEVEL: equ 0xe005
 
 ; Ball sprite parameters: (Y, X) position, sprite pattern number, and color
 BALL1_SPR_PARAMS: equ 0xe0f5
@@ -165,7 +170,7 @@ ROM_START:
     
 	; Clear memory from 0xe000 to 0xe5b3
     ld hl,0e000h		;4038	21 00
-	ld de,CHEAT_ACTIVATED		;403b	11 01
+	ld de,CHEAT1_ACTIVATED		;403b	11 01
 	ld bc,005b3h		;403e	01 b3
 	ld (hl),0		    ;4041	36 00
 	ldir		        ;4043	ed b0
@@ -518,7 +523,7 @@ l427ch:
 	jp z,l42bbh		;42a9	ca bb 42 	. . B 
     
     ; Increment the number of key presses, for the cheat
-	ld hl,CHEAT_KEY_COUNTER		;42ac	21 02 e0
+	ld hl,CHEAT1_KEY_COUNTER		;42ac	21 02 e0
 	inc (hl)			        ;42af	34 	4 
     
 	ld a,(hl)			        ;42b0	7e
@@ -528,27 +533,33 @@ l427ch:
     ; We have already 4 key presses for the cheat!
 	ld (hl), 0		            ;42b6	36 00   Reset keys counter
 
-    ; Point to CHEAT_ACTIVATED and activate the cheat :)
+    ; Point to CHEAT1_ACTIVATED and activate the cheat :)
 	dec hl			        ;42b8	2b
 	ld (hl),1   		    ;42b9	36 01
 
-; SEGUIR
-; ToDo: another cheat???
+; The second cheat: hold LEFT and RIGHT and press GRAPH 4 times to continue from the last level
 l42bbh:
-	bit 2,b		;42bb	cb 50 	. P 
-	jp z,l42d9h		;42bd	ca d9 42 	. . B 
-	bit 3,b		;42c0	cb 58 	. X 
-	jp z,l42d9h		;42c2	ca d9 42 	. . B 
-	bit 5,b		;42c5	cb 68 	. h 
-	jp z,l42d9h		;42c7	ca d9 42 	. . B 
-	ld hl,0e004h		;42ca	21 04 e0 	! . . 
-	inc (hl)			;42cd	34 	4 
-	ld a,(hl)			;42ce	7e 	~ 
-	cp 004h		;42cf	fe 04 	. . 
-	jp c,l42d9h		;42d1	da d9 42 	. . B 
-	ld (hl),000h		;42d4	36 00 	6 . 
-	dec hl			;42d6	2b 	+ 
-	ld (hl),001h		;42d7	36 01 	6 . 
+    ; Check if LEFT key is pressed...
+	bit 2,b		    ;42bb	cb 50
+	jp z,l42d9h		;42bd	ca d9 42
+    ; Check if RIGHT key is pressed...
+	bit 3,b		    ;42c0	cb 58
+	jp z,l42d9h		;42c2	ca d9 42
+    ; Check if GRAPH key is pressed...
+	bit 5,b		    ;42c5	cb 68
+	jp z,l42d9h		;42c7	ca d9 42
+    
+    ; Increment and check the key-press counter for cheat #2
+	ld hl,CHEAT2_KEY_COUNTER		;42ca	21 04 e0
+	inc (hl)			            ;42cd	34 	4 
+	ld a,(hl)			            ;42ce	7e
+	cp 4		                    ;42cf	fe 04
+	jp c,l42d9h		                ;42d1	da d9 42
+
+    ; Reset counter and activate cheat #2
+	ld (hl),0		;42d4	36 00
+	dec hl			;42d6	2b
+	ld (hl),1	    ;42d7	36 01
 l42d9h:
 	bit 4,b		;42d9	cb 60 	. ` 
 	jp z,l42fch		;42db	ca fc 42 	. . B 
@@ -566,6 +577,7 @@ l42f6h:
 	ld a,000h		;42f6	3e 00 	> . 
 	ld (0e00ch),a		;42f8	32 0c e0 	2 . . 
 	ret			;42fb	c9 	. 
+
 l42fch:
 	ld a,00eh		;42fc	3e 0e 	> . 
 	out (0a0h),a		;42fe	d3 a0 	. . 
@@ -637,6 +649,7 @@ l4370h:
 	ld a,001h		;4370	3e 01 	> . 
 	ld (0e00ch),a		;4372	32 0c e0 	2 . . 
 	ret			;4375	c9 	. 
+
 l4376h:
 	nop			;4376	00 	. 
 	jr l4379h		;4377	18 00 	. . 
@@ -2030,7 +2043,7 @@ l4cc6h:
 
     ; Check if the cheat has been activated
     ; If so, give the 240 lives. Otherwise, don't!
-	ld a,(CHEAT_ACTIVATED)		;4ce0	3a 01 e0
+	ld a,(CHEAT1_ACTIVATED)		;4ce0	3a 01 e0
 	or a			            ;4ce3	b7
 	jp z,l4ce9h		            ;4ce4	ca e9 4c
     
@@ -2043,31 +2056,35 @@ l4ce9h:
 	ld a,c			    ;4ce9	79
 	ld (LIVES),a		;4cea	32 1d e0
 
-    ; Deactivate cheating
+    ; Deactivate cheat #1
 	ld hl, 0		            ;4ced	21 00 00
-	ld (CHEAT_ACTIVATED),hl		;4cf0	22 01 e0
+	ld (CHEAT1_ACTIVATED),hl	;4cf0	22 01 e0
     
-	ld a,(0e003h)		;4cf3	3a 03 e0
-	or a			;4cf6	b7 	. 
-	jp z,l4d00h		;4cf7	ca 00 4d 	. . M 
-
-	ld hl,(0e005h)		;4cfa	2a 05 e0 	* . . 
-	ld (LEVEL),hl		;4cfd	22 1b e0 	" . . 
+    ; Check cheat #2
+	ld a,(CHEAT2_ACTIVATED)		;4cf3	3a 03 e0
+	or a			            ;4cf6	b7
+	jp z,l4d00h		            ;4cf7	ca 00 4d
+    
+    ; If cheat #2 is active, start at the last played level
+	ld hl,(CHEAT2_LEVEL)		;4cfa	2a 05 e0
+	ld (LEVEL),hl		;4cfd	22 1b e0
 l4d00h:
-	ld hl,00000h		;4d00	21 00 00 	! . . 
-	ld (0e003h),hl		;4d03	22 03 e0 	" . . 
-
-	jp l4d09h		;4d06	c3 09 4d 	. . M 
+    ; Deactivate cheat #2
+	ld hl, 0		            ;4d00	21 00 00
+	ld (CHEAT2_ACTIVATED),hl	;4d03	22 03 e0
+	jp l4d09h		            ;4d06	c3 09 4d    Quite a redundant instruction!
 l4d09h:
 	ld a,(0e022h)		;4d09	3a 22 e0 	: " . 
 	cp 002h		;4d0c	fe 02 	. . 
 	jp z,l4d22h		;4d0e	ca 22 4d 	. " M 
+
 	ld hl,0e027h		;4d11	21 27 e0 	! ' . 
 	ld de,0e028h		;4d14	11 28 e0 	. ( . 
 	ld bc,0058dh		;4d17	01 8d 05 	. . . 
 	dec bc			;4d1a	0b 	. 
 	ld (hl),000h		;4d1b	36 00 	6 . 
 	ldir		;4d1d	ed b0 	. . 
+
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
 	ld hl,0e0bfh		;4d22	21 bf e0 	! . . 
@@ -10117,9 +10134,11 @@ l7babh:
 	ld a,l			    ;7c1a	7d
 	cp FINAL_LEVEL		;7c1b	fe 20
 	jp nz,l7c23h		;7c1d	c2 23 7c 	. # | 
-	ld hl,0321fh		;7c20	21 1f 32 	! . 2 
+	ld hl,0321fh		;7c20	21 1f 32 	A weird code for Doh's level!
 l7c23h:
-	ld (0e005h),hl		;7c23	22 05 e0 	" . . 
+    ; Save current level, for cheat #2
+	ld (CHEAT2_LEVEL),hl		;7c23	22 05 e0
+    
 	ld a,0c6h		;7c26	3e c6 	> . 
 	ld (0e5c0h),a		;7c28	32 c0 e5 	2 . . 
 	call sub_b4e8h		;7c2b	cd e8 b4 	. . . 
