@@ -15,6 +15,9 @@ SPRITES_ATTRIB_TABLE: equ 0x1b00
 ; 3: normal play, but without score updates
 GAME_STATE: equ 0xe00b
 
+CHEAT_ACTIVATED: equ 0xe001
+CHEAT_KEY_COUNTER: equ 0xe002
+
 ; Ball sprite parameters: (Y, X) position, sprite pattern number, and color
 BALL1_SPR_PARAMS: equ 0xe0f5
 BALL_SPR_PARAMS_LEN: equ 4
@@ -27,7 +30,9 @@ BALL_SPR_PARAMS_IDX_PATTERN_NUM: equ 2
 BALL_SPR_PARAMS_IDX_COLOR: equ 3
 
 
-
+; The game reads the keyboard and writes a mask of bits of the
+; relevant keys here
+KEYBOARD_INPUT: equ 0xe0c0
 
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
@@ -160,7 +165,7 @@ ROM_START:
     
 	; Clear memory from 0xe000 to 0xe5b3
     ld hl,0e000h		;4038	21 00
-	ld de,0e001h		;403b	11 01
+	ld de,CHEAT_ACTIVATED		;403b	11 01
 	ld bc,005b3h		;403e	01 b3
 	ld (hl),0		    ;4041	36 00
 	ldir		        ;4043	ed b0
@@ -486,7 +491,7 @@ l427ch:
 	and 040h		;4285	e6 40 	. @ 
 	or e			;4287	b3 	. 
 	ld e,a			;4288	5f 	_ 
-	ld hl,0e0c0h		;4289	21 c0 e0 	! . . 
+	ld hl,KEYBOARD_INPUT		;4289	21 c0 e0 	! . . 
 	ld a,(hl)			;428c	7e 	~ 
 	ld (hl),e			;428d	73 	s 
 	and 0f0h		;428e	e6 f0 	. . 
@@ -500,20 +505,35 @@ l427ch:
 	or a			;4299	b7 	. 
 	jp nz,l42fch		;429a	c2 fc 42 	. . B 
 
-	bit 0,b		;429d	cb 40 	. @ 
+    ; Check cheat...
+
+    ; Check if UP key is pressed...
+	bit 0,b		    ;429d	cb 40
 	jp z,l42bbh		;429f	ca bb 42 	. . B 
+    ; Check if DOWN key is pressed...
 	bit 1,b		;42a2	cb 48 	. H 
 	jp z,l42bbh		;42a4	ca bb 42 	. . B 
+    ; Check if GRAPH key is pressed...
 	bit 5,b		;42a7	cb 68 	. h 
 	jp z,l42bbh		;42a9	ca bb 42 	. . B 
-	ld hl,0e002h		;42ac	21 02 e0 	! . . 
-	inc (hl)			;42af	34 	4 
-	ld a,(hl)			;42b0	7e 	~ 
-	cp 004h		;42b1	fe 04 	. . 
-	jp c,l42bbh		;42b3	da bb 42 	. . B 
-	ld (hl),000h		;42b6	36 00 	6 . 
-	dec hl			;42b8	2b 	+ 
-	ld (hl),001h		;42b9	36 01 	6 . 
+    
+    ; Increment the number of key presses, for the cheat
+	ld hl,CHEAT_KEY_COUNTER		;42ac	21 02 e0
+	inc (hl)			        ;42af	34 	4 
+    
+	ld a,(hl)			        ;42b0	7e
+	cp 4		                ;42b1	fe 04 Cheat: 4 key presses
+	jp c,l42bbh		            ;42b3	da bb 42
+    
+    ; We have already 4 key presses for the cheat!
+	ld (hl), 0		            ;42b6	36 00   Reset keys counter
+
+    ; Point to CHEAT_ACTIVATED and activate the cheat :)
+	dec hl			        ;42b8	2b
+	ld (hl),1   		    ;42b9	36 01
+
+; SEGUIR
+; ToDo: another cheat???
 l42bbh:
 	bit 2,b		;42bb	cb 50 	. P 
 	jp z,l42d9h		;42bd	ca d9 42 	. . B 
@@ -2007,9 +2027,12 @@ l4cc6h:
 	ld a,020h		;4cd9	3e 20 	>   
 	ld (0e01fh),a		;4cdb	32 1f e0 	2 . . 
 	ld c,002h		;4cde	0e 02 	. . 
-	ld a,(0e001h)		;4ce0	3a 01 e0 	: . . 
-	or a			;4ce3	b7 	. 
-	jp z,l4ce9h		;4ce4	ca e9 4c 	. . L 
+
+    ; Check if the cheat has been activated
+    ; If so, give the 240 lives. Otherwise, don't!
+	ld a,(CHEAT_ACTIVATED)		;4ce0	3a 01 e0
+	or a			            ;4ce3	b7
+	jp z,l4ce9h		            ;4ce4	ca e9 4c
     
     ; Cheat
     ; To get 240 lives, at the title screen, hold Up + Down, press the Graph key 4 times and then
@@ -2020,16 +2043,20 @@ l4ce9h:
 	ld a,c			    ;4ce9	79
 	ld (LIVES),a		;4cea	32 1d e0
 
-	ld hl,00000h		;4ced	21 00 00
-	ld (0e001h),hl		;4cf0	22 01 e0
+    ; Deactivate cheating
+	ld hl, 0		            ;4ced	21 00 00
+	ld (CHEAT_ACTIVATED),hl		;4cf0	22 01 e0
+    
 	ld a,(0e003h)		;4cf3	3a 03 e0
 	or a			;4cf6	b7 	. 
 	jp z,l4d00h		;4cf7	ca 00 4d 	. . M 
+
 	ld hl,(0e005h)		;4cfa	2a 05 e0 	* . . 
 	ld (LEVEL),hl		;4cfd	22 1b e0 	" . . 
 l4d00h:
 	ld hl,00000h		;4d00	21 00 00 	! . . 
 	ld (0e003h),hl		;4d03	22 03 e0 	" . . 
+
 	jp l4d09h		;4d06	c3 09 4d 	. . M 
 l4d09h:
 	ld a,(0e022h)		;4d09	3a 22 e0 	: " . 
@@ -2044,7 +2071,7 @@ l4d09h:
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
 	ld hl,0e0bfh		;4d22	21 bf e0 	! . . 
-	ld de,0e0c0h		;4d25	11 c0 e0 	. . . 
+	ld de,KEYBOARD_INPUT		;4d25	11 c0 e0 	. . . 
 	ld bc,004f5h		;4d28	01 f5 04 	. . . 
 	dec bc			;4d2b	0b 	. 
 	ld (hl),000h		;4d2c	36 00 	6 . 
