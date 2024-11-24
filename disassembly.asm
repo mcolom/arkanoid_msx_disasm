@@ -10133,7 +10133,7 @@ l7babh:
 	ld hl,(LEVEL)		;7c17	2a 1b e0 	* . . 
 	ld a,l			    ;7c1a	7d
 	cp FINAL_LEVEL		;7c1b	fe 20
-	jp nz,l7c23h		;7c1d	c2 23 7c 	. # | 
+	jp nz,l7c23h		;7c1d	c2 23 7c
 	ld hl,0321fh		;7c20	21 1f 32 	A weird code for Doh's level!
 l7c23h:
     ; Save current level, for cheat #2
