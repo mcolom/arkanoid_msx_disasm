@@ -65,6 +65,7 @@ DOH_HITS: equ 0xe5b3
 ; For example, after getting the cyan brick, there are
 ; 3 balls = 2 EXTRA_BALLS.
 EXTRA_BALLS: equ 0xe325
+PORTAL_OPEN: equ 0xe326 ; The portal to the next level is open (1) or closed (0)
 
 SPEEDUP_ALL_BALLS_COUNTER: equ 0xe529
 
@@ -75,8 +76,9 @@ LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
 LIVES: equ 0xe01d
 BRICKS_LEFT: equ 0xe038
 CAPSULES_LEFT: equ 0xe023
-
+CAPSULES_RANDOM_NUM: equ 0xe024
 FINAL_LEVEL: equ 32
+
 
 ; Alien table
 ; Each entry is 20 positions
@@ -7410,10 +7412,13 @@ sub_6835h:
 	call sub_7039h		;6838	cd 39 70 	. 9 p 
 	call sub_683fh		;683b	cd 3f 68 	. ? h 
 	ret			;683e	c9 	. 
+
 sub_683fh:
-	ld a,(0e326h)		;683f	3a 26 e3 	: & . 
-	or a			;6842	b7 	. 
-	ret z			;6843	c8 	. 
+    ; If the portal is closed, exit
+	ld a,(PORTAL_OPEN)		;683f	3a 26 e3
+	or a			        ;6842	b7
+	ret z			        ;6843	c8
+
 	ld a,(0e57ch)		;6844	3a 7c e5 	: | . 
 	cp 001h		;6847	fe 01 	. . 
 	jp z,l686fh		;6849	ca 6f 68 	. o h 
@@ -7591,9 +7596,12 @@ l6972h:
 	jr nc,l69abh		;6989	30 20 	0   
 	ld a,098h		;698b	3e 98 	> . 
 	ld (VAUS_X2),a		;698d	32 3e e5 	2 > . 
-	ld a,(0e326h)		;6990	3a 26 e3 	: & . 
-	or a			;6993	b7 	. 
-	jp z,l69abh		;6994	ca ab 69 	. . i 
+
+    ; Skip the following if the portal is closed
+	ld a,(PORTAL_OPEN)		;6990	3a 26 e3
+	or a			        ;6993	b7
+	jp z,l69abh		        ;6994	ca ab 69
+
 	ld (ix+000h),007h		;6997	dd 36 00 07 	. 6 . . 
 	ld a,0c1h		;699b	3e c1 	> . 
 	call sub_5befh		;699d	cd ef 5b 	. . [ 
@@ -7640,9 +7648,12 @@ l69eah:
 	jp nc,l69abh		;69f4	d2 ab 69 	. . i 
 	ld a,088h		;69f7	3e 88 	> . 
 	ld (VAUS_X2),a		;69f9	32 3e e5 	2 > . 
-	ld a,(0e326h)		;69fc	3a 26 e3 	: & . 
-	or a			;69ff	b7 	. 
-	jp z,l69abh		;6a00	ca ab 69 	. . i 
+    
+    ; Check if the portal is closed and jump if so
+	ld a,(PORTAL_OPEN)		;69fc	3a 26 e3
+	or a			        ;69ff	b7
+	jp z,l69abh		        ;6a00	ca ab 69
+
 	ld (ix+000h),007h		;6a03	dd 36 00 07 	. 6 . . 
 	ld a,0c1h		;6a07	3e c1 	> . 
 	call sub_5befh		;6a09	cd ef 5b 	. . [ 
@@ -19730,36 +19741,56 @@ lb0d5h:
 	ld bc,00302h		;b0d6	01 02 03 	. . . 
 	ld bc,00003h		;b0d9	01 03 00 	. . . 
 	ld (bc),a			;b0dc	02 	. 
-sub_b0ddh:
-	ld a,(0e326h)		;b0dd	3a 26 e3 	: & . 
-	or a			;b0e0	b7 	. 
-	ret nz			;b0e1	c0 	. 
-	ld hl,CAPSULES_LEFT		;b0e2	21 23 e0 	! # . 
-	ld a,(hl)			;b0e5	7e 	~ 
-	or a			;b0e6	b7 	. 
-	jr nz,lb0f7h		;b0e7	20 0e 	  . 
-	ld a,r		;b0e9	ed 5f 	. _ 
-	add a,c			;b0eb	81 	. 
-	add a,b			;b0ec	80 	. 
-	and 01fh		;b0ed	e6 1f
-	ld (0e024h),a	;b0ef	32 24 e0
 
-	ld a, 33		;b0f2	3e 21
-	ld (CAPSULES_LEFT),a		;b0f4	32 23 e0 	2 # . 
+sub_b0ddh:
+    ; Get out of the portal is open
+	ld a,(PORTAL_OPEN)		;b0dd	3a 26 e3
+	or a			        ;b0e0	b7
+	ret nz			        ;b0e1	c0
+
+    ; A = CAPSULES_LEFT
+	ld hl,CAPSULES_LEFT		;b0e2	21 23 e0
+	ld a,(hl)			    ;b0e5	7e
+
+    ; Skip the following if CAPSULES_LEFT was set for this level
+    ; Otherwise, choose a random number
+	or a			        ;b0e6	b7
+	jr nz,lb0f7h		    ;b0e7	20 0e
+
+    ; A = random number in [0, 31]
+	ld a,r		    ;b0e9	ed 5f
+	add a,c			;b0eb	81
+	add a,b			;b0ec	80
+	and 01fh		;b0ed	e6 1f
+
+	ld (CAPSULES_RANDOM_NUM),a	;b0ef	32 24 e0
+
+    ; Default value of 33 capsules available
+	ld a, 33		            ;b0f2	3e 21
+	ld (CAPSULES_LEFT),a		;b0f4	32 23 e0
 lb0f7h:
+    ; Decrease CAPSULES_LEFT
 	dec (hl)			;b0f7	35 	5 
-	ld hl,0e024h		;b0f8	21 24 e0 	! $ . 
-	ld a,(hl)			;b0fb	7e 	~ 
-	or a			;b0fc	b7 	. 
-	jr z,lb102h		;b0fd	28 03 	( . 
-	dec (hl)			;b0ff	35 	5 
-	xor a			;b100	af 	. 
-	ret			;b101	c9 	. 
+    
+    ; Jump if the random number happens to be zero
+	ld hl,CAPSULES_RANDOM_NUM		;b0f8	21 24 e0
+	ld a,(hl)			            ;b0fb	7e
+	or a			                ;b0fc	b7
+	jr z,lb102h		                ;b0fd	28 03
+	
+    ; Decrease CAPSULES_LEFT and
+    ; return 0
+    dec (hl)			            ;b0ff	35
+	xor a			                ;b100	af
+	ret			                    ;b101	c9
+
 lb102h:
 	ld (ix+001h),005h		;b102	dd 36 01 05 	. 6 . . 
-	ld (hl),0ffh		;b106	36 ff 	6 . 
-	scf			;b108	37 	7 
-	ret			;b109	c9 	. 
+	ld (hl),0ffh		    ;b106	36 ff 	6 . 
+	scf			            ;b108	37 	7 
+	ret			            ;b109	c9 	. 
+    
+
 sub_b10ah:
 	ld a,(0e327h)		;b10a	3a 27 e3 	: ' . 
 	or a			;b10d	b7 	. 
@@ -19949,7 +19980,7 @@ lb25fh:
 	ld (0e324h),a		;b27a	32 24 e3 	2 $ . 
 lb27dh:
 	ld a,001h		;b27d	3e 01 	> . 
-	ld (0e326h),a		;b27f	32 26 e3 	2 & . 
+	ld (PORTAL_OPEN),a		;b27f	32 26 e3 	2 & . 
 	call sub_b2a7h		;b282	cd a7 b2 	. . . 
 	ret			;b285	c9 	. 
 	ld a,(0e324h)		;b286	3a 24 e3 	: $ . 
