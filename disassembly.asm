@@ -98,6 +98,7 @@ BALL_TABLE3: equ 0xe24e + 2*BALL_TABLE_LEN
 BALL_TABLE_IDX_ACTIVE: equ 0
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_SPEED_POS: equ 7
+BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 
 TABLE_UNKNOWN_1: equ 0xe101
 
@@ -16274,7 +16275,10 @@ l9898h:
 	ld (ix+002h),080h		;98ae	dd 36 02 80 	. 6 . . 
 	ld (ix+003h),00fh		;98b2	dd 36 03 0f 	. 6 . . 
 	ld (iy+001h),001h		;98b6	fd 36 01 01 	. 6 . . 
-	ld (iy+00eh),078h		;98ba	fd 36 0e 78 	. 6 . x 
+	
+    ; Initialize glue timer
+    ld (iy+BALL_TABLE_IDX_GLUE_COUNTER),    120		    ;98ba	fd 36 0e 78
+    
 	ld (iy+006h),003h		;98be	fd 36 06 03 	. 6 . . 
 	ld (iy+002h),0ffh		;98c2	fd 36 02 ff 	. 6 . . 
 	ld a,(LEVEL)		;98c6	3a 1b e0 	: . . 
@@ -16337,8 +16341,10 @@ l9910h:
 	bit 4,a		;9913	cb 67 	. g 
 	jr nz,l9935h		;9915	20 1e 	  . 
 l9917h:
-	dec (iy+00eh)		;9917	fd 35 0e 	. 5 . 
-	jr z,l9935h		;991a	28 19 	( . 
+    ; Decrement the glue timer
+	dec (iy+BALL_TABLE_IDX_GLUE_COUNTER)	;9917	fd 35 0e
+	jr z,l9935h		                        ;991a	28 19
+
 	ld hl,0e324h		;991c	21 24 e3 	! $ . 
 	bit 1,(hl)		;991f	cb 4e 	. N 
 	jp nz,l9930h		;9921	c2 30 99 	. 0 . 
@@ -16738,7 +16744,10 @@ l9bcfh:
 	jp l9c05h		;9be8	c3 05 9c 	. . . 
 l9bebh:
 	push bc			;9beb	c5 	. 
-	ld (iy+00eh),0f0h		;9bec	fd 36 0e f0 	. 6 . . 
+    
+    ; Initialize BALL_TABLE_IDX_GLUE_COUNTER
+	ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 240		;9bec	fd 36 0e f0
+
 	ld (iy+001h),001h		;9bf0	fd 36 01 01 	. 6 . . 
 	ld a,(VAUS_X)		;9bf4	3a ce e0 	: . . 
 	ld c,a			;9bf7	4f 	O 
