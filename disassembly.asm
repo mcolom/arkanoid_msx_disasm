@@ -47,6 +47,9 @@ VAUS_X2: equ 0xe53e
 BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
+; Simply an index to iterate through the 3 balls
+BALL_LOOP_INDEX: equ 0xe2ac
+
 
 ; BCD-encoded scores and heading
 SCORE_BCD: equ 0xe015
@@ -133,7 +136,8 @@ BALL_TABLE_IDX_GLUE: equ 1
 ;
 ; 01, 02: ball going down
 ; FF, FE: ball going up
-;BALL_TABLE_: equ 2
+BALL_TABLE_VERT:  equ 2
+BALL_TABLE_HORIZ: equ 3
 
 ;BALL_TABLE_: equ 3
 ; 01, 02: ball going right
@@ -16015,7 +16019,7 @@ sub_95a2h:
 sub_95f4h:
 	call sub_b137h		;95f4	cd 37 b1 	. 7 . 
 	call sub_b15ch		;95f7	cd 5c b1 	. \ . 
-	call sub_9872h		;95fa	cd 72 98 	. r . 
+	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
 	call sub_97eah		;95fd	cd ea 97 	. . . 
 	call sub_9726h		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
@@ -16347,9 +16351,10 @@ l986ah:
 	ld h,a			;9870	67 	g 
 	ld l,b			;9871	68 	h
 
-sub_9872h:
+; Perform one step of the ball movement
+BALL_MOVEMENT_STEP:
 	xor a			;9872	af 	. 
-	ld (0e2ach),a		;9873	32 ac e2 	2 . . 
+	ld (BALL_LOOP_INDEX),a		;9873	32 ac e2 	2 . . 
 
 	ld ix,BALL1_SPR_PARAMS		;9876	dd 21 f5 e0 	. ! . . 
 	ld iy,BALL_TABLE1		;987a	fd 21 4e e2 	. ! N . 
@@ -16385,66 +16390,47 @@ ACTION_TABLE:
     dw ACTION_989E
     dw ACTION_98F8
     dw ACTION_9941
-    
-    ; [ToDo] This is interesting, since it initializes the structure
-    ; iy = BALL_TABLE1
+
+; Initialize ball for the level start
 ACTION_989E:
-	ld (ix+BALL_TABLE_IDX_ACTIVE),0a9h		;989e	dd 36 00 a9
-	ld (ix+004h),0c0h		;98a2	dd 36 04 c0 	. 6 . . 
-	ld (ix+008h),0c0h		;98a6	dd 36 08 c0 	. 6 . . 
-	ld (iy+010h),01ah		;98aa	fd 36 10 1a 	. 6 . . 
-	ld (ix+002h),080h		;98ae	dd 36 02 80 	. 6 . . 
-	ld (ix+003h),00fh		;98b2	dd 36 03 0f 	. 6 . . 
-	ld (iy+BALL_TABLE_IDX_GLUE),1	;98b6	fd 36 01 01     Ball is glued
+    ; iy = BALL_TABLE1
+    ; ix = BALL_SPR_PARAMS_IDX_Y
+	ld (ix+BALL_SPR_PARAMS_IDX_Y), 169		;                    989e	dd 36 00 a9
+    ; The other two balls are invisible at row 192
+	ld (ix+BALL_SPR_PARAMS_IDX_Y + 1*BALL_SPR_PARAMS_LEN), 192  ;98a2	dd 36 04 c0
+	ld (ix+BALL_SPR_PARAMS_IDX_Y + 2*BALL_SPR_PARAMS_LEN), 192  ;98a6	dd 36 08 c0
+
+	ld (iy+16),  26  ;98aa	fd 36 10 1a
+
+    ; Configure sprite of the ball
+	ld (ix+BALL_SPR_PARAMS_IDX_PATTERN_NUM), 0x80   ;98ae	dd 36 02 80
+	ld (ix+BALL_SPR_PARAMS_IDX_COLOR), 15	        ;98b2	dd 36 03 0f     White color
+
+	ld (iy+BALL_TABLE_IDX_GLUE),1	                ;98b6	fd 36 01 01     Ball is glued
 	
     ; Initialize glue timer
-    ld (iy+BALL_TABLE_IDX_GLUE_COUNTER),    120		    ;98ba	fd 36 0e 78
+    ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 120	    ;98ba	fd 36 0e 78
     
 	ld (iy+006h),003h		;98be	fd 36 06 03 	. 6 . . 
-	ld (iy+002h),0ffh		;98c2	fd 36 02 ff 	. 6 . . 
-	ld a,(LEVEL)		;98c6	3a 1b e0 	: . . 
-	ld l,a			;98c9	6f 	o 
-	ld h,000h		;98ca	26 00 	& . 
-	ld de,l98d7h		;98cc	11 d7 98 	. . . 
-	add hl,de			;98cf	19 	. 
-	ld a,(hl)			;98d0	7e 	~ 
-	ld (iy+BALL_TABLE_IDX_SPEED_POS),a		;98d1	fd 77 07 	. w . 
-	jp l99b8h		;98d4	c3 b8 99 	. . . 
-l98d7h:
-	inc c			;98d7	0c 	. 
-	inc c			;98d8	0c 	. 
-	inc c			;98d9	0c 	. 
-	inc c			;98da	0c 	. 
-	inc c			;98db	0c 	. 
-	inc c			;98dc	0c 	. 
-	inc c			;98dd	0c 	. 
-	inc c			;98de	0c 	. 
-	inc c			;98df	0c 	. 
-	inc c			;98e0	0c 	. 
-	inc c			;98e1	0c 	. 
-	inc c			;98e2	0c 	. 
-	inc c			;98e3	0c 	. 
-	inc c			;98e4	0c 	. 
-	inc c			;98e5	0c 	. 
-	inc c			;98e6	0c 	. 
-	dec c			;98e7	0d 	. 
-	dec c			;98e8	0d 	. 
-	dec c			;98e9	0d 	. 
-	dec c			;98ea	0d 	. 
-	dec c			;98eb	0d 	. 
-	dec c			;98ec	0d 	. 
-	dec c			;98ed	0d 	. 
-	dec c			;98ee	0d 	. 
-	dec c			;98ef	0d 	. 
-	dec c			;98f0	0d 	. 
-	dec c			;98f1	0d 	. 
-	dec c			;98f2	0d 	. 
-	dec c			;98f3	0d 	. 
-	dec c			;98f4	0d 	. 
-	dec c			;98f5	0d 	. 
-	dec c			;98f6	0d 	. 
-	dec c			;98f7	0d 	.
+	ld (iy+BALL_TABLE_VERT), 0xff		;98c2	fd 36 02 ff Ball moves UP
 
+    ; A = SPEED_TABLE_POSITIONS[LEVEL]
+	ld a,(LEVEL)		            ;98c6	3a 1b e0
+	ld l,a			                ;98c9	6f
+	ld h, 0		                    ;98ca	26 00
+	ld de,SPEED_TABLE_POSITIONS		;98cc	11 d7 98
+	add hl,de			            ;98cf	19
+	ld a,(hl)			            ;98d0	7e
+    
+    ; Set the position for the speed table
+    ; It's slightly faster for the second half of the levels!
+	ld (iy+BALL_TABLE_IDX_SPEED_POS),a		;98d1	fd 77 07
+	jp l99b8h		                        ;98d4	c3 b8 99
+SPEED_TABLE_POSITIONS:
+    db 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12
+    db 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
+
+; This one deals with the glue state
 ACTION_98F8:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;98f8	3a 0b e0
@@ -16484,68 +16470,113 @@ l9935h:
 	call sub_5befh		;993b	cd ef 5b 	. . [ 
 	jp l99b8h		;993e	c3 b8 99 	. . . 
 
+; And this one with bouncing when reaching the limits of the playfield
 ACTION_9941:
+    ; iy = BALL_TABLE1
+    ; ix = BALL_SPR_PARAMS_IDX_Y
+
 	call sub_99dfh		;9941	cd df 99 	. . . 
 
-	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;9944	fd 7e 00 	. ~ . 
-	or a			;9947	b7 	. 
-	jp z,l99b8h		;9948	ca b8 99 	. . . 
+    ; Go on if the ball is active
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;9944	fd 7e 00
+	or a			                    ;9947	b7
+	jp z,l99b8h		                    ;9948	ca b8 99
 
-	ld a,(ix+001h)		;994b	dd 7e 01 	. ~ . 
-	bit 7,(iy+003h)		;994e	fd cb 03 7e 	. . . ~ 
-	jp nz,l996bh		;9952	c2 6b 99 	. k . 
-	cp 0bah		;9955	fe ba 	. . 
-	jp c,l996bh		;9957	da 6b 99 	. k . 
-	call UPDATE_BALL_SPEED		;995a	cd f0 9a 	. . . 
-	call sub_9b80h		;995d	cd 80 9b 	. . . 
-	ld a,0b9h		;9960	3e b9 	> . 
-	ld (ix+001h),a		;9962	dd 77 01 	. w . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;994b	dd 7e 01
+    
+    ; Check if it's moving right
+	bit 7,(iy+BALL_TABLE_HORIZ)		;994e	fd cb 03 7e     Z if RIGHT
+	jp nz,l996bh		            ;9952	c2 6b 99 Moving left, skip
+    
+    ; It's moving right, compare with 186 (right border)
+	cp 186		                    ;9955	fe ba
+	jp c,l996bh		                ;9957	da 6b 99    It's less than 186, jump
+    
+    ; It's moving right with X > 186
+	call UPDATE_BALL_SPEED		;995a	cd f0 9a
+	call sub_9b80h		        ;995d	cd 80 9b
+    
+    ; Set the position to 185
+	ld a, 185		            ;9960	3e b9
+	ld (ix+BALL_SPR_PARAMS_IDX_X),a		;9962	dd 77 01
+
 	call sub_99d1h		;9965	cd d1 99 	. . . 
 	jp l9985h		;9968	c3 85 99 	. . . 
+
 l996bh:
-	bit 7,(iy+003h)		;996b	fd cb 03 7e 	. . . ~ 
-	jp z,l9985h		;996f	ca 85 99 	. . . 
-	cp 012h		;9972	fe 12 	. . 
-	jp nc,l9985h		;9974	d2 85 99 	. . . 
-	call UPDATE_BALL_SPEED		;9977	cd f0 9a 	. . . 
-	call sub_9b80h		;997a	cd 80 9b 	. . . 
-	ld a,012h		;997d	3e 12 	> . 
-	ld (ix+001h),a		;997f	dd 77 01 	. w . 
-	call sub_99d1h		;9982	cd d1 99 	. . . 
+    ; Check if the ball is moving right
+	bit 7,(iy+BALL_TABLE_HORIZ)		;996b	fd cb 03 7e     Z if RIGHT
+	jp z,l9985h		                ;996f	ca 85 99    Jump if it's moving RIGHT
+    
+    ; It's moving left
+    ; Compare with 18 (left border)
+	cp 18		        ;9972	fe 1
+	jp nc,l9985h		;9974	d2 85 99    It's more than 18, skip
+    
+    ; It's touched the left border
+	call UPDATE_BALL_SPEED		;9977	cd f0 9a
+	call sub_9b80h		        ;997a	cd 80 9b
+
+    ; Set the position to 18
+	ld a, 18		            ;997d	3e 12
+	ld (ix+BALL_SPR_PARAMS_IDX_X),a  ;997f	dd 77 01
+
+	call sub_99d1h		        ;9982	cd d1 99
 l9985h:
-	ld a,(ix+000h)		;9985	dd 7e 00 	. ~ . 
-	bit 7,(iy+002h)		;9988	fd cb 02 7e 	. . . ~ 
-	jp z,l99a2h		;998c	ca a2 99 	. . . 
-	cp 009h		;998f	fe 09 	. . 
-	jp nc,l99a2h		;9991	d2 a2 99 	. . . 
-	call UPDATE_BALL_SPEED		;9994	cd f0 9a 	. . . 
-	call sub_9b5bh		;9997	cd 5b 9b 	. [ . 
-	ld a,009h		;999a	3e 09 	> . 
-	ld (ix+000h),a		;999c	dd 77 00 	. w . 
-	call sub_99d1h		;999f	cd d1 99 	. . . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;9985	dd 7e 00
+
+	bit 7,(iy+BALL_TABLE_VERT)		    ;9988	fd cb 02 7e     Z if moving DOWN
+	jp z,l99a2h		                    ;998c	ca a2 99        Moving down, skip
+    
+    ; Moving up
+    cp 9		        ;998f	fe 09
+	jp nc,l99a2h		;9991	d2 a2 99    More than 9, skip
+    
+    ; Has touched the ceiling
+	call UPDATE_BALL_SPEED		;9994	cd f0 9a
+	call sub_9b5bh		        ;9997	cd 5b 9b
+    
+    ; Set position to 9
+	ld a,9		                ;999a	3e 09
+	ld (ix+BALL_SPR_PARAMS_IDX_Y),a		;999c	dd 77 00
+
+	call sub_99d1h		                ;999f	cd d1 99
 l99a2h:
 	push ix		;99a2	dd e5 	. . 
 	push iy		;99a4	fd e5 	. . 
 	call sub_9ba8h		;99a6	cd a8 9b 	. . . 
 	pop iy		;99a9	fd e1 	. . 
 	pop ix		;99ab	dd e1 	. . 
-	ld a,(ix+000h)		;99ad	dd 7e 00 	. ~ . 
-	cp 0b8h		;99b0	fe b8 	. . 
-	jp c,l99b8h		;99b2	da b8 99 	. . . 
+
+	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;99ad	dd 7e 00
+	cp 184		                        ;99b0	fe b8
+	jp c,l99b8h		                    ;99b2	da b8 99 Jump if Y < 184
+    
+    ; Y > 184: ball lost!
 	call sub_9b2ah		;99b5	cd 2a 9b 	. * . 
 l99b8h:
-	pop iy		;99b8	fd e1 	. . 
-	pop ix		;99ba	dd e1 	. . 
-	ld de,00004h		;99bc	11 04 00 	. . . 
-	add ix,de		;99bf	dd 19 	. . 
-	ld de,00014h		;99c1	11 14 00 	. . . 
-	add iy,de		;99c4	fd 19 	. . 
-	ld hl,0e2ach		;99c6	21 ac e2 	! . . 
-	inc (hl)			;99c9	34 	4 
-	ld a,(hl)			;99ca	7e 	~ 
-	cp 003h		;99cb	fe 03 	. . 
-	jp nz,l987eh		;99cd	c2 7e 98 	. ~ . 
-	ret			;99d0	c9 	. 
+	pop iy		                    ;99b8	fd e1
+	pop ix		                    ;99ba	dd e1
+
+    ; Next ball (spr)
+	ld de,BALL_SPR_PARAMS_LEN		;99bc	11 04 00
+	add ix,de		                ;99bf	dd 19
+
+    ; Next ball
+	ld de,BALL_TABLE_LEN		    ;99c1	11 14 00
+	add iy,de		                ;99c4	fd 19
+
+    ; Ball done
+	ld hl,BALL_LOOP_INDEX		    ;99c6	21 ac e2
+	inc (hl)			            ;99c9	34 	4 
+
+    ; All 3 balls done?
+	ld a,(hl)			            ;99ca	7e
+	cp 3		                    ;99cb	fe 03
+	jp nz,l987eh		            ;99cd	c2 7e 98 No, do next one
+    ; Yes, all done
+	ret			                    ;99d0	c9
+
 sub_99d1h:
 	ld hl,0e51ch		;99d1	21 1c e5 	! . . 
 	inc (hl)			;99d4	34 	4 
