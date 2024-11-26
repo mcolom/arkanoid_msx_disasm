@@ -514,16 +514,16 @@ l427ch:
 
     ; Check if UP key is pressed...
 	bit 0,b		    ;429d	cb 40
-	jp z,l42bbh		;429f	ca bb 42 	. . B 
+	jp z,l42bbh		;429f	ca bb 42
     ; Check if DOWN key is pressed...
-	bit 1,b		;42a2	cb 48 	. H 
-	jp z,l42bbh		;42a4	ca bb 42 	. . B 
+	bit 1,b		;42a2	cb 48
+	jp z,l42bbh		;42a4	ca bb 42
     ; Check if GRAPH key is pressed...
-	bit 5,b		;42a7	cb 68 	. h 
-	jp z,l42bbh		;42a9	ca bb 42 	. . B 
+	bit 5,b		;42a7	cb 68
+	jp z,l42bbh		;42a9	ca bb 42
     
     ; Increment the number of key presses, for the cheat
-	ld hl,CHEAT1_KEY_COUNTER		;42ac	21 02 e0
+	ld hl,CHEAT1_KEY_COUNTER	;42ac	21 02 e0
 	inc (hl)			        ;42af	34 	4 
     
 	ld a,(hl)			        ;42b0	7e
