@@ -125,6 +125,12 @@ BALL_TABLE2: equ 0xe24e + 1*BALL_TABLE_LEN
 BALL_TABLE3: equ 0xe24e + 2*BALL_TABLE_LEN
 ;
 BALL_TABLE_IDX_ACTIVE: equ 0
+;
+; 0: ball is glued and moved to Vaus
+; 1: ball is glued
+; 2: ball moves normally
+BALL_TABLE_IDX_GLUE: equ 1
+;
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_SPEED_POS: equ 7
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
@@ -8678,7 +8684,7 @@ l7187h:
 	cp 16		                                ;7194	fe 10
 	jp nz,l719dh		                        ;7196	c2 9d 71
     ; If the speed is over 15, set it to 15
-	ld (ix+007h), 15		                    ;7199	dd 36 07 0f
+	ld (ix+BALL_TABLE_IDX_SPEED_POS), 15        ;7199	dd 36 07 0f
 l719dh:
     ; Next ball
 	add ix,de		;719d	dd 19
@@ -9815,9 +9821,10 @@ l79fch:
 	ret			;79fc	c9 	. 
 
 sub_79fdh:
+    ; IX = BALL(i)_SPR_PARAMS
 	ld iy,TABLE_UNKNOWN_1		;79fd	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;7a01	21 c8 e4
-	ld b,003h		;7a04	06 03 	. . 
+	ld b, 3		                ;7a04	06 03
 l7a06h:
 	ld a,(hl)			;7a06	7e 	~ 
 	cp 001h		;7a07	fe 01 	. . 
@@ -9825,15 +9832,15 @@ l7a06h:
 	ld a,(iy+003h)		;7a0c	fd 7e 03 	. ~ . 
 	or a			;7a0f	b7 	. 
 	jp z,l7a5bh		;7a10	ca 5b 7a 	. [ z 
-	ld a,(ix+000h)		;7a13	dd 7e 00 	. ~ . 
-	sub 010h		;7a16	d6 10 	. . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;7a13	dd 7e 00
+	sub 16		                        ;7a16	d6 10
 	ld e,a			;7a18	5f 	_ 
 	ld a,(iy+000h)		;7a19	fd 7e 00 	. ~ . 
 	ld d,a			;7a1c	57 	W 
 	ld a,e			;7a1d	7b 	{ 
 	cp d			;7a1e	ba 	. 
 	jp nc,l7a5bh		;7a1f	d2 5b 7a 	. [ z 
-	ld a,(ix+000h)		;7a22	dd 7e 00 	. ~ . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;7a22	dd 7e 00
 	add a,004h		;7a25	c6 04 	. . 
 	ld e,a			;7a27	5f 	_ 
 	ld a,(iy+000h)		;7a28	fd 7e 00 	. ~ . 
@@ -9841,15 +9848,15 @@ l7a06h:
 	ld a,e			;7a2c	7b 	{ 
 	cp d			;7a2d	ba 	. 
 	jp c,l7a5bh		;7a2e	da 5b 7a 	. [ z 
-	ld a,(ix+001h)		;7a31	dd 7e 01 	. ~ . 
-	sub 010h		;7a34	d6 10 	. . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;7a31	dd 7e 01
+	sub 16		                        ;7a34	d6 10
 	ld e,a			;7a36	5f 	_ 
 	ld a,(iy+001h)		;7a37	fd 7e 01 	. ~ . 
 	ld d,a			;7a3a	57 	W 
 	ld a,e			;7a3b	7b 	{ 
 	cp d			;7a3c	ba 	. 
 	jp nc,l7a5bh		;7a3d	d2 5b 7a 	. [ z 
-	ld a,(ix+001h)		;7a40	dd 7e 01 	. ~ . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;7a40	dd 7e 01
 	add a,004h		;7a43	c6 04 	. . 
 	ld e,a			;7a45	5f 	_ 
 	ld a,(iy+001h)		;7a46	fd 7e 01 	. ~ . 
@@ -16348,40 +16355,38 @@ l987eh:
 
     ; HL = 2*BALL_X
 	ld l,(iy+BALL_SPR_PARAMS_IDX_X)		;9889	fd 6e 01
-	ld h,000h		                    ;988c	26 00
+	ld h, 0		                        ;988c	26 00
 	add hl,hl			                ;988e	29
 
-	; HL = l9898h + 2*BALL_X
-    ld de,l9898h		                ;988f	11 98 98
+	; HL = ACTION_TABLE + 2*BALL_X
+    ld de,ACTION_TABLE		                ;988f	11 98 98
 	add hl,de			                ;9892	19
     
-    ;  DE = l9898h[2*BALL_X]
+    ;  DE = ACTION_TABLE[2*BALL_X]
 	ld e,(hl)			;9893	5e
 	inc hl			    ;9894	23
 	ld d,(hl)			;9895	56
     
-    ; HL = l9898h[2*BALL_X]
+    ; HL = ACTION_TABLE[2*BALL_X]
 	ex de,hl			;9896	eb
     
-    ; Jump to l9898h[2*BALL_X]
+    ; Jump to ACTION_TABLE[2*BALL_X]
 	jp (hl)			    ;9897	e9
-l9898h:
-	sbc a,(hl)			;9898	9e 	. 
-	sbc a,b			;9899	98 	. 
-	ret m			;989a	f8 	. 
-	sbc a,b			;989b	98 	. 
-	ld b,c			;989c	41 	A 
-	sbc a,c			;989d	99 	. 
+ACTION_TABLE:
+    dw ACTION_989E
+    dw ACTION_98F8
+    dw ACTION_9941
     
     ; [ToDo] This is interesting, since it initializes the structure
     ; iy = BALL_TABLE1
-	ld (ix+000h),0a9h		;989e	dd 36 00 a9 	. 6 . . 
+ACTION_989E:
+	ld (ix+BALL_TABLE_IDX_ACTIVE),0a9h		;989e	dd 36 00 a9
 	ld (ix+004h),0c0h		;98a2	dd 36 04 c0 	. 6 . . 
 	ld (ix+008h),0c0h		;98a6	dd 36 08 c0 	. 6 . . 
 	ld (iy+010h),01ah		;98aa	fd 36 10 1a 	. 6 . . 
 	ld (ix+002h),080h		;98ae	dd 36 02 80 	. 6 . . 
 	ld (ix+003h),00fh		;98b2	dd 36 03 0f 	. 6 . . 
-	ld (iy+001h),001h		;98b6	fd 36 01 01 	. 6 . . 
+	ld (iy+BALL_TABLE_IDX_GLUE),1	;98b6	fd 36 01 01     Ball is glued
 	
     ; Initialize glue timer
     ld (iy+BALL_TABLE_IDX_GLUE_COUNTER),    120		    ;98ba	fd 36 0e 78
@@ -16394,7 +16399,7 @@ l9898h:
 	ld de,l98d7h		;98cc	11 d7 98 	. . . 
 	add hl,de			;98cf	19 	. 
 	ld a,(hl)			;98d0	7e 	~ 
-	ld (iy+007h),a		;98d1	fd 77 07 	. w . 
+	ld (iy+BALL_TABLE_IDX_SPEED_POS),a		;98d1	fd 77 07 	. w . 
 	jp l99b8h		;98d4	c3 b8 99 	. . . 
 l98d7h:
 	inc c			;98d7	0c 	. 
@@ -16431,6 +16436,7 @@ l98d7h:
 	dec c			;98f6	0d 	. 
 	dec c			;98f7	0d 	.
 
+ACTION_98F8:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;98f8	3a 0b e0
 	or a			        ;98fb	b7
@@ -16463,14 +16469,19 @@ l9930h:
 	ld a,000h		;9930	3e 00 	> . 
 	ld (0e324h),a		;9932	32 24 e3 	2 $ . 
 l9935h:
-	ld (iy+001h),002h		;9935	fd 36 01 02 	. 6 . . 
+	ld (iy+BALL_TABLE_IDX_GLUE), 2		;9935	fd 36 01 02     Ball moves normally
+
 	ld a,001h		;9939	3e 01 	> . 
 	call sub_5befh		;993b	cd ef 5b 	. . [ 
 	jp l99b8h		;993e	c3 b8 99 	. . . 
+
+ACTION_9941:
 	call sub_99dfh		;9941	cd df 99 	. . . 
-	ld a,(iy+000h)		;9944	fd 7e 00 	. ~ . 
+
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;9944	fd 7e 00 	. ~ . 
 	or a			;9947	b7 	. 
 	jp z,l99b8h		;9948	ca b8 99 	. . . 
+
 	ld a,(ix+001h)		;994b	dd 7e 01 	. ~ . 
 	bit 7,(iy+003h)		;994e	fd cb 03 7e 	. . . ~ 
 	jp nz,l996bh		;9952	c2 6b 99 	. k . 
@@ -16855,7 +16866,9 @@ l9bebh:
     ; Initialize BALL_TABLE_IDX_GLUE_COUNTER
 	ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 240		;9bec	fd 36 0e f0
 
-	ld (iy+001h),001h		;9bf0	fd 36 01 01 	. 6 . . 
+	; Ball is glued
+    ld (iy+BALL_TABLE_IDX_GLUE), 1		;9bf0	fd 36 01 01
+
 	ld a,(VAUS_X)		;9bf4	3a ce e0 	: . . 
 	ld c,a			;9bf7	4f 	O 
 	ld a,(ix+001h)		;9bf8	dd 7e 01 	. ~ . 
@@ -18723,9 +18736,11 @@ sub_ab38h:
 	ld iy,BALL_TABLE1		;ab3a	fd 21 4e e2 	. ! N . 
 	ld b,003h		;ab3e	06 03 	. . 
 lab40h:
-	ld a,(iy+000h)		;ab40	fd 7e 00 	. ~ . 
-	cp 001h		;ab43	fe 01 	. . 
-	jp nz,lab60h		;ab45	c2 60 ab 	. ` . 
+    ; Skip if ball is inactive
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;ab40	fd 7e 00
+	cp 1		                        ;ab43	fe 01
+	jp nz,lab60h		;ab45	c2 60 ab
+    
 	ld a,(iy+006h)		;ab48	fd 7e 06 	. ~ . 
 	bit 7,a		;ab4b	cb 7f 	.  
 	jp z,lab54h		;ab4d	ca 54 ab 	. T . 
@@ -19988,28 +20003,41 @@ lb1e6h:
 	ld a,001h		;b1e6	3e 01 	> . 
 	ld (0e320h),a		;b1e8	32 20 e3 	2   . 
 	call sub_b2a7h		;b1eb	cd a7 b2 	. . . 
-	ld b,003h		;b1ee	06 03 	. . 
-	ld de,00014h		;b1f0	11 14 00 	. . . 
-	ld iy,BALL_TABLE1		;b1f3	fd 21 4e e2 	. ! N . 
+    
+    ; Loop over 3 balls
+	ld b,3		                ;b1ee	06 03
+	ld de,BALL_TABLE_LEN		;b1f0	11 14 00
+	ld iy,BALL_TABLE1		    ;b1f3	fd 21 4e e2
 lb1f7h:
-	ld a,(iy+000h)		;b1f7	fd 7e 00 	. ~ . 
+    ; Process if the ball is active
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;b1f7	fd 7e 00
 	or a			;b1fa	b7 	. 
 	jp nz,lb203h		;b1fb	c2 03 b2 	. . . 
-	add iy,de		;b1fe	fd 19 	. . 
-	djnz lb1f7h		;b200	10 f5 	. . 
+    
+    ; Next ball
+	add iy,de		;b1fe	fd 19
+	djnz lb1f7h		;b200	10 f5
 	ret			;b202	c9 	. 
 lb203h:
-	ld (iy+00dh),000h		;b203	fd 36 0d 00 	. 6 . . 
-	ld a,(iy+007h)		;b207	fd 7e 07 	. ~ . 
-	sub 001h		;b20a	d6 01 	. . 
-	ld (iy+007h),a		;b20c	fd 77 07 	. w . 
-	ret nc			;b20f	d0 	. 
-	ld (iy+007h),000h		;b210	fd 36 07 00 	. 6 . . 
-	ret			;b214	c9 	. 
+	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER), 0		;b203	fd 36 0d 00
+    
+    ; Decrement ball speed
+	ld a,(iy+BALL_TABLE_IDX_SPEED_POS)		    ;b207	fd 7e 07
+	sub 1		                                ;b20a	d6 01
+	ld (iy+BALL_TABLE_IDX_SPEED_POS),a		    ;b20c	fd 77 07
+
+	ret nc			                            ;b20f	d0
+    ; Reset the speed pos if speed below zero
+	ld (iy+BALL_TABLE_IDX_SPEED_POS),000h		;b210	fd 36 07 00
+	ret			                                ;b214	c9
+
+    ; Dead code?
 	ld a,001h		;b215	3e 01 	> . 
 	ld (0e324h),a		;b217	32 24 e3 	2 $ . 
 	call sub_b2a7h		;b21a	cd a7 b2 	. . . 
 	ret			;b21d	c9 	. 
+
+    ; Dead code?
 	ld a,(0e324h)		;b21e	3a 24 e3 	: $ . 
 	or a			;b221	b7 	. 
 	jp z,lb22ah		;b222	ca 2a b2 	. * . 
@@ -20023,6 +20051,7 @@ lb22ah:
 	ld a,0c0h		;b235	3e c0 	> . 
 	call sub_5befh		;b237	cd ef 5b 	. . [ 
 	ret			;b23a	c9 	. 
+
 	ld a,(0e324h)		;b23b	3a 24 e3 	: $ . 
 	or a			;b23e	b7 	. 
 	jp z,lb247h		;b23f	ca 47 b2 	. G . 
@@ -20139,8 +20168,11 @@ lb2f5h:
 	ld iy,BALL_TABLE1		;b308	fd 21 4e e2
 	ld de,BALL_TABLE_LEN	;b30c	11 14 00
 lb30fh:
+    ; Ball is active
 	ld (iy+BALL_TABLE_IDX_ACTIVE), 1	;b30f	fd 36 00 01
-	ld (iy+001h),002h		;b313	fd 36 01 02 	. 6 . . 
+    
+    ; Ball is moving normally, not glued
+	ld (iy+BALL_TABLE_IDX_GLUE), 2		;b313	fd 36 01 02
 
 	ld a,(hl)			;b317	7e 	~ 
 	ld (iy+006h),a		;b318	fd 77 06 	. w . 
@@ -20155,9 +20187,9 @@ lb30fh:
 	add iy,de		;b325	fd 19 	. . 
 	djnz lb30fh		;b327	10 e6 	. . 
 
-    ; Position to be assigned to the ball
-	ld l,(ix+000h)		;b329	dd 6e 00    Y
-	ld h,(ix+001h)		;b32c	dd 66 01    X
+    ; Position of the ball's sprite
+	ld l,(ix+BALL_SPR_PARAMS_IDX_Y)		;b329	dd 6e 00
+	ld h,(ix+BALL_SPR_PARAMS_IDX_X)		;b32c	dd 66 01
 
 	ld b, 3		                ;b32f	06 03       3 balls
 	ld ix, BALL1_SPR_PARAMS		;b331	dd 21 f5 e0
