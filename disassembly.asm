@@ -15,6 +15,8 @@ SPRITES_ATTRIB_TABLE: equ 0x1b00
 ; 3: normal play, but without score updates
 GAME_STATE: equ 0xe00b
 
+DEMO_LEVEL: equ 0xe000
+
 ; The two cheats :)
 CHEAT1_ACTIVATED: equ 0xe001
 CHEAT1_KEY_COUNTER: equ 0xe002
@@ -169,7 +171,7 @@ ROM_START:
 	call ENASLT		;4035	cd 24 00
     
 	; Clear memory from 0xe000 to 0xe5b3
-    ld hl,0e000h		;4038	21 00
+    ld hl,DEMO_LEVEL		;4038	21 00
 	ld de,CHEAT1_ACTIVATED		;403b	11 01
 	ld bc,005b3h		;403e	01 b3
 	ld (hl),0		    ;4041	36 00
@@ -2009,23 +2011,31 @@ l4ca2h:
 	ld a, 0		            ;4ca2	3e 00   No "xor a" optimization here :)
 	ld (GAME_STATE),a		;4ca4	32 0b e0
 
-	ld a,(0e000h)		;4ca7	3a 00 e0 	: . . 
-	inc a			;4caa	3c 	< 
-	and 003h		;4cab	e6 03 	. . 
-	ld (0e000h),a		;4cad	32 00 e0 	2 . . 
-	ld l,a			;4cb0	6f 	o 
-	ld h,000h		;4cb1	26 00 	& . 
-	ld de,l4cc2h		;4cb3	11 c2 4c 	. . L 
-	add hl,de			;4cb6	19 	. 
-	ld a,(hl)			;4cb7	7e 	~ 
-	ld (LEVEL),a		;4cb8	32 1b e0 	2 . . 
-	xor a			;4cbb	af 	. 
-	ld (0e022h),a		;4cbc	32 22 e0 	2 " . 
-	jp l4d09h		;4cbf	c3 09 4d 	. . M 
-l4cc2h:
-	inc c			;4cc2	0c 	. 
-	inc bc			;4cc3	03 	. 
-	ld b,001h		;4cc4	06 01 	. . 
+    ; Choose next demo level
+    
+    ; A = [DEMO_LEVEL]++ AND 3
+	ld a,(DEMO_LEVEL)		;4ca7	3a 00 e0
+	inc a			        ;4caa	3c
+	and 3		            ;4cab	e6 03
+	ld (DEMO_LEVEL),a		;4cad	32 00 e0
+
+    ; HL = DEMO_LEVELS_TABLE + [DEMO_LEVEL]++ AND 3
+	ld l,a			            ;4cb0	6f
+	ld h, 0		                ;4cb1	26 00
+	ld de,DEMO_LEVELS_TABLE		;4cb3	11 c2 4c
+	add hl,de			        ;4cb6	19
+
+    ; LEVEL = DEMO_LEVELS_TABLE[[DEMO_LEVEL]++ AND 3]
+    ; According to the 4 values of the table, the level can be 12, 3, 6, or 1.
+	ld a,(hl)			;4cb7	7e
+	ld (LEVEL),a		;4cb8	32 1b e0
+
+	xor a			;4cbb	af
+	ld (0e022h),a	;4cbc	32 22 e0
+	jp l4d09h		;4cbf	c3 09 4d
+DEMO_LEVELS_TABLE:
+    db 12, 3, 6, 1
+
 l4cc6h:
     ; Set we're in normal play
 	ld a, 1		            ;4cc6	3e 01
