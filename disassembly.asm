@@ -87,6 +87,13 @@ LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
 
 LIVES: equ 0xe01d
 BRICKS_LEFT: equ 0xe038
+
+; This controls how the screen is repainted with bricks
+; 0: set the initial configuration, all the bricks of the level
+; 1: ???
+; 2: only paint the non-destroyed bricks
+BRICK_REPAINT_TYPE: equ 0xe022
+
 CAPSULES_LEFT: equ 0xe023
 CAPSULES_RANDOM_NUM: equ 0xe024
 FINAL_LEVEL: equ 32
@@ -2030,8 +2037,9 @@ l4ca2h:
 	ld a,(hl)			;4cb7	7e
 	ld (LEVEL),a		;4cb8	32 1b e0
 
-	xor a			;4cbb	af
-	ld (0e022h),a	;4cbc	32 22 e0
+    ; Bricks in the initial configuration
+	xor a			            ;4cbb	af
+	ld (BRICK_REPAINT_TYPE),a	;4cbc	32 22 e0
 	jp l4d09h		;4cbf	c3 09 4d
 DEMO_LEVELS_TABLE:
     db 12, 3, 6, 1
@@ -2084,10 +2092,12 @@ l4d00h:
 	ld (CHEAT2_ACTIVATED),hl	;4d03	22 03 e0
 	jp l4d09h		            ;4d06	c3 09 4d    Quite a redundant instruction!
 l4d09h:
-	ld a,(0e022h)		;4d09	3a 22 e0 	: " . 
-	cp 002h		;4d0c	fe 02 	. . 
-	jp z,l4d22h		;4d0e	ca 22 4d 	. " M 
+    ; Skip initialization to zero if there's no need to reset the brick config
+	ld a,(BRICK_REPAINT_TYPE)		;4d09	3a 22 e0
+	cp 2		                    ;4d0c	fe 02
+	jp z,l4d22h		                ;4d0e	ca 22 4d
 
+    ; ToDo: what is this structure?
 	ld hl,0e027h		;4d11	21 27 e0 	! ' . 
 	ld de,0e028h		;4d14	11 28 e0 	. ( . 
 	ld bc,0058dh		;4d17	01 8d 05 	. . . 
@@ -2097,6 +2107,7 @@ l4d09h:
 
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
+    ; ToDo: what is this structure?
 	ld hl,0e0bfh		;4d22	21 bf e0 	! . . 
 	ld de,KEYBOARD_INPUT		;4d25	11 c0 e0 	. . . 
 	ld bc,004f5h		;4d28	01 f5 04 	. . . 
@@ -2258,9 +2269,12 @@ l4e22h:
 	cp FINAL_LEVEL		;4e40	fe 20
 	jp z,l4e71h		;4e42	ca 71 4e 	. q N 
 	ld hl,l5defh		;4e45	21 ef 5d 	! . ] 
-	ld a,(0e022h)		;4e48	3a 22 e0 	: " . 
-	cp 002h		;4e4b	fe 02 	. . 
-	jp z,l4e65h		;4e4d	ca 65 4e 	. e N 
+
+    ; Skip the following if we're not doing a full brick repaint
+	ld a,(BRICK_REPAINT_TYPE)	;4e48	3a 22 e0
+	cp 2		                ;4e4b	fe 02
+	jp z,l4e65h		            ;4e4d	ca 65 4e
+    
 	ld a,(LEVEL)		;4e50	3a 1b e0 	: . . 
 	ld e,a			;4e53	5f 	_ 
 	sla e		;4e54	cb 23 	. # 
@@ -2281,8 +2295,9 @@ l4e65h:
 l4e71h:
 	call sub_5180h		;4e71	cd 80 51 	. . Q 
 l4e74h:
-	xor a			;4e74	af 	. 
-	ld (0e022h),a		;4e75	32 22 e0 	2 " . 
+    ; Full brick repaint
+	xor a			                ;4e74	af
+	ld (BRICK_REPAINT_TYPE),a		;4e75	32 22 e0
 
     ; Vaus and the READY string as sprites
 	ld hl,VAUS_AND_READY_SPRITE_TABLE		;4e78	21 49 51
@@ -4799,8 +4814,10 @@ l5c11h:
 ; SEGUIR
 sub_5c15h:
 	call sub_5d9dh		;5c15	cd 9d 5d 	. . ] 
-	ld a,(0e022h)		;5c18	3a 22 e0 	: " . 
-	cp 002h		;5c1b	fe 02 	. . 
+    
+    ; Skip the following if we're not doing a full brick repaint
+	ld a,(BRICK_REPAINT_TYPE)	;5c18	3a 22 e0
+	cp 2		                ;5c1b	fe 02
 	jp z,l5c45h		;5c1d	ca 45 5c 	. E \ 
 
 	ld hl,l5d00h		;5c20	21 00 5d 	! . ] 
@@ -4881,9 +4898,11 @@ l5c45h:
     ; HL = l5defh[2*LEVEL]
     ex de,hl			;5c68	eb 	. 
 
-	ld a,(0e022h)		;5c69	3a 22 e0 	: " . 
-	cp 2		;5c6c	fe 02 	. . 
-	jp nz,l5c74h		;5c6e	c2 74 5c 	. t \ 
+    ; Set HL=0xe027 if we're not doing a full brick repaint
+	ld a,(BRICK_REPAINT_TYPE)		;5c69	3a 22 e0
+	cp 2		                    ;5c6c	fe 02
+	jp nz,l5c74h		            ;5c6e	c2 74 5c
+
 	ld hl,0e027h		;5c71	21 27 e0 	! ' . 
 l5c74h:
 	ld b, 17		;5c74	06 11 	. . 
@@ -7837,7 +7856,7 @@ l6b1ch:
 	ld a,002h		;6b21	3e 02 	> . 
 	ld (0e00ah),a		;6b23	32 0a e0 	2 . . 
 	ld a,001h		;6b26	3e 01 	> . 
-	ld (0e022h),a		;6b28	32 22 e0 	2 " . 
+	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0 	2 " . 
 	ret			;6b2b	c9 	. 
 l6b2ch:
 	ld hl,l6b9ch		;6b2c	21 9c 6b 	! . k 
@@ -8348,7 +8367,7 @@ l6f12h:
 	ld (VAUS_X2),a		;6f21	32 3e e5 	2 > . 
 	ld (ix+006h),000h		;6f24	dd 36 06 00 	. 6 . . 
 	ld a,002h		;6f28	3e 02 	> . 
-	ld (0e022h),a		;6f2a	32 22 e0 	2 " . 
+	ld (BRICK_REPAINT_TYPE),a		;6f2a	32 22 e0 	2 " . 
 	ld (0e00ah),a		;6f2d	32 0a e0 	2 . . 
 	ret			;6f30	c9 	. 
 l6f31h:
@@ -10062,7 +10081,7 @@ sub_7b94h:
 	or a			        ;7b97	b7
 	jp z,l7c44h		        ;7b98	ca 44 7c
 
-	ld a,(0e022h)		;7b9b	3a 22 e0 	: " . 
+	ld a,(BRICK_REPAINT_TYPE)		;7b9b	3a 22 e0 	: " . 
 	ld l,a			;7b9e	6f 	o 
 	ld h,000h		;7b9f	26 00 	& . 
 	add hl,hl			;7ba1	29 	) 
@@ -18746,7 +18765,7 @@ lab6ah:
 	jr nz,ERASE_BRICK		    ;ab84	20 09
 
 	xor a			;ab86	af 	. 
-	ld (0e022h),a		;ab87	32 22 e0 	2 " . 
+	ld (BRICK_REPAINT_TYPE),a		;ab87	32 22 e0 	2 " . 
 	ld a,002h		;ab8a	3e 02 	> . 
 	ld (0e00ah),a		;ab8c	32 0a e0 	2 . . 
     
