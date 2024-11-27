@@ -136,12 +136,13 @@ BALL_TABLE_IDX_GLUE: equ 1
 ;
 ; 01, 02: ball going down
 ; FF, FE: ball going up
-BALL_TABLE_VERT:  equ 2
-BALL_TABLE_HORIZ: equ 3
+BALL_TABLE_IDX_VERT:  equ 2
 
 ;BALL_TABLE_: equ 3
 ; 01, 02: ball going right
 ; FF, FE: ball going left
+BALL_TABLE_IDX_HORIZ: equ 3
+
 
 ;
 BALL_TABLE_IDX_SPEED_POS: equ 7
@@ -16412,7 +16413,7 @@ ACTION_989E:
     ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 120	    ;98ba	fd 36 0e 78
     
 	ld (iy+006h),003h		;98be	fd 36 06 03 	. 6 . . 
-	ld (iy+BALL_TABLE_VERT), 0xff		;98c2	fd 36 02 ff Ball moves UP
+	ld (iy+BALL_TABLE_IDX_VERT), 0xff		;98c2	fd 36 02 ff Ball moves UP
 
     ; A = SPEED_TABLE_POSITIONS[LEVEL]
 	ld a,(LEVEL)		            ;98c6	3a 1b e0
@@ -16485,7 +16486,7 @@ ACTION_9941:
 	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;994b	dd 7e 01
     
     ; Check if it's moving right
-	bit 7,(iy+BALL_TABLE_HORIZ)		;994e	fd cb 03 7e     Z if RIGHT
+	bit 7,(iy+BALL_TABLE_IDX_HORIZ)		;994e	fd cb 03 7e     Z if RIGHT
 	jp nz,l996bh		            ;9952	c2 6b 99 Moving left, skip
     
     ; It's moving right, compare with 186 (right border)
@@ -16505,7 +16506,7 @@ ACTION_9941:
 
 l996bh:
     ; Check if the ball is moving right
-	bit 7,(iy+BALL_TABLE_HORIZ)		;996b	fd cb 03 7e     Z if RIGHT
+	bit 7,(iy+BALL_TABLE_IDX_HORIZ)		;996b	fd cb 03 7e     Z if RIGHT
 	jp z,l9985h		                ;996f	ca 85 99    Jump if it's moving RIGHT
     
     ; It's moving left
@@ -16525,7 +16526,7 @@ l996bh:
 l9985h:
 	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;9985	dd 7e 00
 
-	bit 7,(iy+BALL_TABLE_VERT)		    ;9988	fd cb 02 7e     Z if moving DOWN
+	bit 7,(iy+BALL_TABLE_IDX_VERT)		    ;9988	fd cb 02 7e     Z if moving DOWN
 	jp z,l99a2h		                    ;998c	ca a2 99        Moving down, skip
     
     ; Moving up
