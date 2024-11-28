@@ -143,6 +143,8 @@ BALL_TABLE_IDX_VERT:  equ 2
 ; FF, FE: ball going left
 BALL_TABLE_IDX_HORIZ: equ 3
 
+BALL_TABLE_IDX_SKEWNESS: equ 6
+
 
 ;
 BALL_TABLE_IDX_SPEED_POS: equ 7
@@ -16412,8 +16414,9 @@ ACTION_989E:
     ; Initialize glue timer
     ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 120	    ;98ba	fd 36 0e 78
     
-	ld (iy+006h),003h		;98be	fd 36 06 03 	. 6 . . 
-	ld (iy+BALL_TABLE_IDX_VERT), 0xff		;98c2	fd 36 02 ff Ball moves UP
+    ; Set direction
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),3              ;98be	fd 36 06 03
+	ld (iy+BALL_TABLE_IDX_VERT), 0xff		        ;98c2	fd 36 02 ff Ball moves UP
 
     ; A = SPEED_TABLE_POSITIONS[LEVEL]
 	ld a,(LEVEL)		            ;98c6	3a 1b e0
@@ -16826,35 +16829,37 @@ l9b4ah:
 	ld a,007h		;9b55	3e 07 	> . 
 	call sub_5befh		;9b57	cd ef 5b 	. . [ 
 	ret			;9b5a	c9 	. 
+
 sub_9b5bh:
 	push af			;9b5b	f5 	. 
-	ld a,(iy+002h)		;9b5c	fd 7e 02 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_VERT)		;9b5c	fd 7e 02 	. ~ . 
 	neg		;9b5f	ed 44 	. D 
-	ld (iy+002h),a		;9b61	fd 77 02 	. w . 
+	ld (iy+BALL_TABLE_IDX_VERT),a		;9b61	fd 77 02 	. w . 
 	pop af			;9b64	f1 	. 
 	push af			;9b65	f5 	. 
-	ld a,(iy+006h)		;9b66	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b66	fd 7e 06 	. ~ . 
 	bit 7,a		;9b69	cb 7f 	.  
 	jp z,l9b70h		;9b6b	ca 70 9b 	. p . 
 	neg		;9b6e	ed 44 	. D 
 l9b70h:
 	sub 009h		;9b70	d6 09 	. . 
-	bit 7,(iy+006h)		;9b72	fd cb 06 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b72	fd cb 06 7e 	. . . ~ 
 	jp z,l9b7bh		;9b76	ca 7b 9b 	. { . 
 	neg		;9b79	ed 44 	. D 
 l9b7bh:
-	ld (iy+006h),a		;9b7b	fd 77 06 	. w . 
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;9b7b	fd 77 06
 	pop af			;9b7e	f1 	. 
 	ret			;9b7f	c9 	. 
+
 sub_9b80h:
 	push af			;9b80	f5 	. 
-	ld a,(iy+003h)		;9b81	fd 7e 03 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_HORIZ)		;9b81	fd 7e 03
 	neg		;9b84	ed 44 	. D 
-	ld (iy+003h),a		;9b86	fd 77 03 	. w . 
+	ld (iy+BALL_TABLE_IDX_HORIZ),a		;9b86	fd 77 03
 	pop af			;9b89	f1 	. 
 sub_9b8ah:
 	push af			;9b8a	f5 	. 
-	ld a,(iy+006h)		;9b8b	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b8b	fd 7e 06
 	bit 7,a		;9b8e	cb 7f 	.  
 	jp z,l9b95h		;9b90	ca 95 9b 	. . . 
 	neg		;9b93	ed 44 	. D 
@@ -16862,17 +16867,18 @@ l9b95h:
 	ld c,a			;9b95	4f 	O 
 	ld a,009h		;9b96	3e 09 	> . 
 	sub c			;9b98	91 	. 
-	ld c,(iy+006h)		;9b99	fd 4e 06 	. N . 
+	ld c,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b99	fd 4e 06
 	bit 7,c		;9b9c	cb 79 	. y 
 	jp z,l9ba3h		;9b9e	ca a3 9b 	. . . 
 	neg		;9ba1	ed 44 	. D 
 l9ba3h:
-	ld (iy+006h),a		;9ba3	fd 77 06 	. w . 
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;9ba3	fd 77 06
 	pop af			;9ba6	f1 	. 
 	ret			;9ba7	c9 	. 
+
 sub_9ba8h:
-	ld a,(ix+000h)		;9ba8	dd 7e 00 	. ~ . 
-	bit 7,(iy+002h)		;9bab	fd cb 02 7e 	. . . ~ 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;9ba8	dd 7e 00 	. ~ . 
+	bit 7,(iy+BALL_TABLE_IDX_VERT)		;9bab	fd cb 02 7e 	. . . ~ 
 	ret nz			;9baf	c0 	. 
 	cp 0a7h		;9bb0	fe a7 	. . 
 	ret c			;9bb2	d8 	. 
@@ -16880,7 +16886,7 @@ sub_9ba8h:
 	ret nc			;9bb5	d0 	. 
 	ld a,(VAUS_X)		;9bb6	3a ce e0 	: . . 
 	add a,001h		;9bb9	c6 01 	. . 
-	cp (ix+001h)		;9bbb	dd be 01 	. . . 
+	cp (ix+BALL_SPR_PARAMS_IDX_X)		;9bbb	dd be 01 	. . . 
 	ret nc			;9bbe	d0 	. 
 	ld c,007h		;9bbf	0e 07 	. . 
 	ld b,029h		;9bc1	06 29 	. ) 
@@ -16892,9 +16898,9 @@ sub_9ba8h:
 l9bcfh:
 	ld a,(VAUS_X)		;9bcf	3a ce e0 	: . . 
 	add a,b			;9bd2	80 	. 
-	cp (ix+001h)		;9bd3	dd be 01 	. . . 
+	cp (ix+BALL_SPR_PARAMS_IDX_X)		;9bd3	dd be 01 	. . . 
 	ret c			;9bd6	d8 	. 
-	ld (ix+000h),0a9h		;9bd7	dd 36 00 a9 	. 6 . . 
+	ld (ix+BALL_SPR_PARAMS_IDX_Y),169		;9bd7	dd 36 00 a9 	. 6 . . 
 	ld a,(0e324h)		;9bdb	3a 24 e3 	: $ . 
 	cp 001h		;9bde	fe 01 	. . 
 	jp z,l9bebh		;9be0	ca eb 9b 	. . . 
@@ -16912,36 +16918,45 @@ l9bebh:
 
 	ld a,(VAUS_X)		;9bf4	3a ce e0 	: . . 
 	ld c,a			;9bf7	4f 	O 
-	ld a,(ix+001h)		;9bf8	dd 7e 01 	. ~ . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;9bf8	dd 7e 01 	. ~ . 
 	sub c			;9bfb	91 	. 
 	ld (iy+010h),a		;9bfc	fd 77 10 	. w . 
 	pop bc			;9bff	c1 	. 
 	ld a,004h		;9c00	3e 04 	> . 
 	call sub_5befh		;9c02	cd ef 5b 	. . [ 
 l9c05h:
-	ld a,(iy+002h)		;9c05	fd 7e 02 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_VERT)		;9c05	fd 7e 02 	. ~ . 
 	neg		;9c08	ed 44 	. D 
-	ld (iy+002h),a		;9c0a	fd 77 02 	. w . 
+	ld (iy+BALL_TABLE_IDX_VERT),a		;9c0a	fd 77 02 	. w . 
+
 	ld a,(VAUS_X)		;9c0d	3a ce e0 	: . . 
 	ld b,a			;9c10	47 	G 
-	ld a,(ix+001h)		;9c11	dd 7e 01 	. ~ . 
+	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;9c11	dd 7e 01 	. ~ . 
 	sub b			;9c14	90 	. 
 	ld l,a			;9c15	6f 	o 
-	ld h,000h		;9c16	26 00 	& . 
-	call 0b39ah		;9c18	cd 9a b3 	. . . 
-	ld e,l			;9c1b	5d 	] 
+	ld h,0  		;9c16	26 00 	& . 
+	call sub_b39ah	;9c18	cd 9a b3 	. . . 
+
+	; A = BALL_DIRECTION_TABLE[l]
+    ld e,l			;9c1b	5d 	] 
 	ld d,000h		;9c1c	16 00 	. . 
-	ld hl,l9c27h		;9c1e	21 27 9c 	! ' . 
+	ld hl,BALL_SKEWNESS_TABLE		;9c1e	21 27 9c 	! ' . 
 	add hl,de			;9c21	19 	. 
 	ld a,(hl)			;9c22	7e 	~ 
-	ld (iy+006h),a		;9c23	fd 77 06 	. w . 
+    
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;9c23	fd 77 06
 	ret			;9c26	c9 	. 
-l9c27h:
-	rlca			;9c27	07 	. 
-	ld b,005h		;9c28	06 05 	. . 
-	inc b			;9c2a	04 	. 
-	inc bc			;9c2b	03 	. 
-	ld (bc),a			;9c2c	02 	. 
+
+BALL_SKEWNESS_TABLE:
+    ; 7: most skewed, moving left
+    ; 6: a little bit skewed, moving left
+    ; 5: less skewed, moving left
+    ;
+    ; 4: not very skewed, moving right
+    ; 3: a little skewed, moving right
+    ; 2: most skewed, moving right
+    db 7, 6, 5, 4, 3, 2
+
 sub_9c2dh:
 	ld a,(LEVEL)		;9c2d	3a 1b e0
 	cp FINAL_LEVEL		;9c30	fe 20
@@ -17967,7 +17982,7 @@ la589h:
 	cp b			;a589	b8 	. 
 	jp c,la58fh		;a58a	da 8f a5 	. . . 
 	scf			;a58d	37 	7 
-	ret			;a58e	c9 	. 
+	ret			;a58e	c9 	.
 la58fh:
 	or a			;a58f	b7 	. 
 	ret			;a590	c9 	. 
@@ -20303,8 +20318,12 @@ lb376h:
 	ld sp,hl			;b394	f9 	. 
 	jp m,0fafbh		;b395	fa fb fa 	. . . 
 	ld sp,hl			;b398	f9 	. 
-	jp m,0afc5h		;b399	fa c5 af 	. . . 
-	ld b,010h		;b39c	06 10 	. . 
+    db 0xfa
+
+sub_b39ah:
+    push bc         ;b39a	c5
+    xor a           ;b39b	af
+    ld b, 0x10      ;b39c   06 10
 lb39eh:
 	add hl,hl			;b39e	29 	) 
 	rla			;b39f	17 	. 
@@ -20318,6 +20337,7 @@ lb3a7h:
 	djnz lb39eh		;b3a7	10 f5 	. . 
 	pop bc			;b3a9	c1 	. 
 	ret			;b3aa	c9 	. 
+
 	nop			;b3ab	00 	. 
 	nop			;b3ac	00 	. 
 	nop			;b3ad	00 	. 
