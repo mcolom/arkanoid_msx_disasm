@@ -4842,7 +4842,7 @@ sub_5c15h:
 	cp 2		                ;5c1b	fe 02
 	jp z,l5c45h		;5c1d	ca 45 5c 	. E \ 
 
-	ld hl,l5d00h		;5c20	21 00 5d 	! . ] 
+	ld hl,BRICKS_PER_LEVEL		;5c20	21 00 5d 	! . ] 
     
     ; A = LEVEL
 	ld a,(LEVEL)		;5c23	3a 1b e0
@@ -5025,30 +5025,15 @@ l5cf0h:
 	ld e,l			;5cfd	5d 	] 
 	ld d,c			;5cfe	51 	Q 
 	ld e,l			;5cff	5d 	] 
-l5d00h:
-	ld b,d			;5d00	42 	B 
-	ld b,d			;5d01	42 	B 
-	ld hl,(03f50h)		;5d02	2a 50 3f 	* P ? 
-	inc sp			;5d05	33 	3 
-	ld (hl),007h		;5d06	36 07 	6 . 
-	ld d,019h		;5d08	16 19 	. . 
-	ld sp,03808h		;5d0a	31 08 38 	1 . 8 
-	ld b,d			;5d0d	42 	B 
-	ld (hl),c			;5d0e	71 	q 
-	ld (02c2fh),a		;5d0f	32 2f 2c 	2 / , 
-	dec hl			;5d12	2b 	+ 
-	inc d			;5d13	14 	. 
-	inc c			;5d14	0c 	. 
-	ld b,b			;5d15	40 	@ 
-	cpl			;5d16	2f 	/ 
-	dec (hl)			;5d17	35 	5 
-	inc h			;5d18	24 	$ 
-	ld a,(bc)			;5d19	0a 	. 
-	ld b,d			;5d1a	42 	B 
-	dec l			;5d1b	2d 	- 
-	ld c,h			;5d1c	4c 	L 
-	scf			;5d1d	37 	7 
-	jr c,$+28		;5d1e	38 1a 	8 . 
+
+BRICKS_PER_LEVEL:
+    ;  L1  L2  L3  L4  L5  L6  L7 L8  L9  L10
+    db 66, 66, 42, 80, 63, 51, 54, 7, 22, 25
+    ; L11  L12 L13  L14, L15  L16  L17 L18  L19 L20
+    db 49, 8,   56, 66,  113, 50,  47,  44, 43,  20
+    ; L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32
+    db 12, 64, 47, 53, 36, 10, 66, 45, 76, 55, 56, 26
+
 	bit 7,(ix+000h)		;5d20	dd cb 00 7e 	. . . ~ 
 	jp l5cbdh		;5d24	c3 bd 5c 	. . \ 
 	bit 6,(ix+000h)		;5d27	dd cb 00 76 	. . . v 
@@ -5066,6 +5051,7 @@ l5d00h:
 	bit 0,(ix+000h)		;5d51	dd cb 00 46 	. . . F 
 	jp l5cbdh		;5d55	c3 bd 5c 	. . \ 
 
+; ToDo: this routine seems easy...
 sub_5d58h:
 	push af			;5d58	f5 	. 
 	push bc			;5d59	c5 	. 
@@ -20320,6 +20306,7 @@ lb376h:
 	ld sp,hl			;b398	f9 	. 
     db 0xfa
 
+; SEGUIR
 sub_b39ah:
     push bc         ;b39a	c5
     xor a           ;b39b	af
