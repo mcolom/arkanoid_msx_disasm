@@ -44,6 +44,9 @@ KEYBOARD_INPUT: equ 0xe0c0
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
 
+; The code for the music being played
+SONG_NUMBER: equ 0xe5c0
+
 BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
@@ -207,7 +210,7 @@ ROM_START:
 	ldir		        ;4043	ed b0
     
     ; Clear memory from 0xe5c0 to 0xe6bf
-	ld hl,0e5c0h		;4045	21 c0 e5
+	ld hl,SONG_NUMBER		;4045	21 c0 e5
 	ld de,0e5c1h		;4048	11 c1 e5
 	ld bc,000feh		;404b	01 fe 00
 	ld (hl),000h		;404e	36 00
@@ -278,8 +281,8 @@ ROM_START:
 	call sub_43ffh		;40c0	cd ff 43 	. . C 
 
 	ld a,0f8h		;40c3	3e f8 	> . 
-	ld (0e5c0h),a		;40c5	32 c0 e5 	2 . . 
-	call sub_b4e8h		;40c8	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;40c5	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;40c8	cd e8 b4 	. . . 
 
 	ld a,0c3h		;40cb	3e c3 	> . 
 	ld (0fd9ah),a		;40cd	32 9a fd 	2 . . 
@@ -298,8 +301,8 @@ l40d7h:
 	jp z,l4103h		;40e3	ca 03 41 	. . A 
 
 	ld a,005h		;40e6	3e 05 	> . 
-	ld (0e5c0h),a		;40e8	32 c0 e5 	2 . . 
-	call sub_b4e8h		;40eb	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;40e8	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;40eb	cd e8 b4 	. . . 
 
 	ei			    ;40ee
 
@@ -427,8 +430,8 @@ l41dah:
 	ld a,(hl)			;41dd	7e 	~ 
 	or a			;41de	b7 	. 
 	jp z,l40d7h		;41df	ca d7 40 	. . @ 
-	ld (0e5c0h),a		;41e2	32 c0 e5 	2 . . 
-	call sub_b4e8h		;41e5	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;41e2	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;41e5	cd e8 b4 	. . . 
 	ei			;41e8	fb 	. 
 	ld (hl),000h		;41e9	36 00 	6 . 
 	inc hl			;41eb	23 	# 
@@ -2018,8 +2021,8 @@ l4c73h:
 	call LDIRVM		        ;4c81	cd 5c 00
 
 	ld a,0c3h		;4c84	3e c3 	> . 
-	ld (0e5c0h),a		;4c86	32 c0 e5 	2 . . 
-	call sub_b4e8h		;4c89	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;4c86	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;4c89	cd e8 b4 	. . . 
 
     ; Wait 256 ticks
 	ei			            ;4c8c	fb
@@ -2336,8 +2339,8 @@ l4e74h:
 	cp FINAL_LEVEL		;4e8e	fe 20
 	jp z,l4ea5h		;4e90	ca a5 4e 	. . N 
 	ld a,0c4h		;4e93	3e c4 	> . 
-	ld (0e5c0h),a		;4e95	32 c0 e5 	2 . . 
-	call sub_b4e8h		;4e98	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;4e95	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;4e98	cd e8 b4 	. . . 
 
     ; Wait 144 ticks
 	ei			            ;4e9b	fb
@@ -2346,8 +2349,8 @@ l4e74h:
 	jp l4eb4h		        ;4ea2	c3 b4 4e
 l4ea5h:
 	ld a,0c8h		;4ea5	3e c8 	> . 
-	ld (0e5c0h),a		;4ea7	32 c0 e5 	2 . . 
-	call sub_b4e8h		;4eaa	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;4ea7	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;4eaa	cd e8 b4 	. . . 
 
     ; Wait 256 ticks
 	ei			            ;4ead	fb
@@ -2366,14 +2369,15 @@ l4eb4h:
 	ld (0e011h),hl		;4ec7	22 11 e0 	" . . 
 	ld (0e013h),hl		;4eca	22 13 e0 	" . . 
 	ld a,000h		;4ecd	3e 00 	> . 
-	ld (0e5c0h),a		;4ecf	32 c0 e5 	2 . . 
-	call sub_b4e8h		;4ed2	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;4ecf	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;4ed2	cd e8 b4 	. . . 
 
     ; Wait 1 tick
 	ei			            ;4ed5	fb
 	ld hl, 1    		    ;4ed6	21 01 00
 	call DELAY_HL_TICKS		;4ed9	cd 80 43
 	ret			            ;4edc	c9
+
 l4eddh:
 	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
 	ld ix,l50efh		;4ee1	dd 21 ef 50 	. ! . P 
@@ -4853,6 +4857,7 @@ sub_5c15h:
 	add hl,de			;5c29	19
 
     ; Read the number of bricks in this level
+    ; A = BRICKS_PER_LEVEL[LEVEL]
 	ld a,(hl)			;5c2a	7e
 	ld (BRICKS_LEFT),a	;5c2b	32 38 e0
 
@@ -4861,6 +4866,7 @@ sub_5c15h:
 	ld de,0e03ah		;5c31	11 3a e0 	. : . 
     
     ; A = LEVEL/8 + 2
+    ; Fill 0e039h with 131 values of A = LEVEL/8 + 2
 	ld a,(LEVEL)		;5c34	3a 1b e0 	: . . 
 	srl a		;5c37	cb 3f 	. ? 
 	srl a		;5c39	cb 3f 	. ? 
@@ -4887,17 +4893,17 @@ l5c45h:
 	add hl,hl			;5c52	29
     
     ; HL = 2*LEVEL + l5e2fh
-	add hl,de			;5c53	19 	. 
+	add hl,de			;5c53	19
 
     ; Point to the start of the level (the bricks)
     ; DE = l5e2fh[2*LEVEL]
-	ld e,(hl)			;5c54	5e 	^ 
-	inc hl			;5c55	23 	# 
-	ld d,(hl)			;5c56	56 	V 
+	ld e,(hl)			;5c54	5e
+	inc hl			    ;5c55	23
+	ld d,(hl)			;5c56	56
 
-    ; DE = start of the level
-	push de			;5c57	d5 	. 
-	pop iy		;5c58	fd e1 	. . 
+    ; IY = start of the level
+	push de			    ;5c57	d5
+	pop iy		        ;5c58	fd e1
 
 	ld de,l5defh		;5c5a	11 ef 5d 	. . ] 
     
@@ -4925,7 +4931,7 @@ l5c45h:
 	cp 2		                    ;5c6c	fe 02
 	jp nz,l5c74h		            ;5c6e	c2 74 5c
 
-	ld hl,0e027h		;5c71	21 27 e0 	! ' . 
+	ld hl,0e027h		            ;5c71	21 27 e0
 l5c74h:
 	ld b, 17		;5c74	06 11 	. . 
 	xor a			;5c76	af 	. 
@@ -5051,25 +5057,40 @@ BRICKS_PER_LEVEL:
 	bit 0,(ix+000h)		;5d51	dd cb 00 46 	. . . F 
 	jp l5cbdh		;5d55	c3 bd 5c 	. . \ 
 
-; ToDo: this routine seems easy...
+; ToDo
 sub_5d58h:
 	push af			;5d58	f5 	. 
 	push bc			;5d59	c5 	. 
 	push de			;5d5a	d5 	. 
 	push hl			;5d5b	e5 	. 
-	ld a,(iy+000h)		;5d5c	fd 7e 00 	. ~ . 
+	
+    ; HL = 2*IY[0]
+    ld a,(iy+000h)		;5d5c	fd 7e 00 	. ~ . 
 	ld l,a			;5d5f	6f 	o 
 	ld h,000h		;5d60	26 00 	& . 
 	add hl,hl			;5d62	29 	) 
-	ld de,l5ddbh		;5d63	11 db 5d 	. . ] 
+    
+	; HL = l5ddbh + 2*IY[0]
+    ld de,l5ddbh		;5d63	11 db 5d 	. . ] 
 	add hl,de			;5d66	19 	. 
-	ld a,(hl)			;5d67	7e 	~ 
-	ld (ix+000h),a		;5d68	dd 77 00 	. w . 
+    ;
+	; A =  l5ddbh[2*IY[0]]
+    ld a,(hl)			;5d67	7e 	~ 
+    
+	; IX[0] = l5ddbh[2*IY[0]] *** WRITE ***
+    ld (ix+000h),a		;5d68	dd 77 00 	. w . 
+    
+    ; Increment pointers
 	inc hl			;5d6b	23 	# 
 	inc ix		;5d6c	dd 23 	. # 
-	ld a,(hl)			;5d6e	7e 	~ 
+	
+    ; Write again, after incrementing the pointers
+    ld a,(hl)			;5d6e	7e 	~ 
 	ld (ix+000h),a		;5d6f	dd 77 00 	. w . 
+    
+    ; IY++
 	inc iy		;5d72	fd 23 	. # 
+
 	pop hl			;5d74	e1 	. 
 	pop de			;5d75	d1 	. 
 	pop bc			;5d76	c1 	. 
@@ -5274,6 +5295,7 @@ l5e2fh:
 	defb 0ddh,065h	;ld ixh,ixl		;5e6d	dd 65 	. e 
 
     ;include 'bricks_levels.asm'
+    ; LEVEL 1
 	ex af,af'			;5e6f	08 	. 
 	ex af,af'			;5e70	08 	. 
 	ex af,af'			;5e71	08 	. 
@@ -5285,6 +5307,7 @@ l5e2fh:
 	ex af,af'			;5e77	08 	. 
 	ex af,af'			;5e78	08 	. 
 	ex af,af'			;5e79	08 	. 
+
 	inc b			;5e7a	04 	. 
 	inc b			;5e7b	04 	. 
 	inc b			;5e7c	04 	. 
@@ -5296,6 +5319,7 @@ l5e2fh:
 	inc b			;5e82	04 	. 
 	inc b			;5e83	04 	. 
 	inc b			;5e84	04 	. 
+
 	rlca			;5e85	07 	. 
 	rlca			;5e86	07 	. 
 	rlca			;5e87	07 	. 
@@ -5307,6 +5331,7 @@ l5e2fh:
 	rlca			;5e8d	07 	. 
 	rlca			;5e8e	07 	. 
 	rlca			;5e8f	07 	. 
+
 	dec b			;5e90	05 	. 
 	dec b			;5e91	05 	. 
 	dec b			;5e92	05 	. 
@@ -5318,12 +5343,15 @@ l5e2fh:
 	dec b			;5e98	05 	. 
 	dec b			;5e99	05 	. 
 	dec b			;5e9a	05 	. 
+
 	ld b,006h		;5e9b	06 06 	. . 
 	ld b,006h		;5e9d	06 06 	. . 
 	ld b,006h		;5e9f	06 06 	. . 
 	ld b,006h		;5ea1	06 06 	. . 
 	ld b,006h		;5ea3	06 06 	. . 
-	ld b,003h		;5ea5	06 03 	. . 
+    db 6
+    
+    db 3
 	inc bc			;5ea7	03 	. 
 	inc bc			;5ea8	03 	. 
 	inc bc			;5ea9	03 	. 
@@ -5334,6 +5362,8 @@ l5e2fh:
 	inc bc			;5eae	03 	. 
 	inc bc			;5eaf	03 	. 
 	inc bc			;5eb0	03 	. 
+    
+    ; LEVEL 2
 	nop			;5eb1	00 	. 
 	nop			;5eb2	00 	. 
 	ld bc,00100h		;5eb3	01 00 01 	. . . 
@@ -5379,6 +5409,8 @@ l5ec5h:
 	ex af,af'			;5ef0	08 	. 
 	ex af,af'			;5ef1	08 	. 
 	ld (bc),a			;5ef2	02 	. 
+    
+    ; LEVEL 3
 	inc b			;5ef3	04 	. 
 	inc b			;5ef4	04 	. 
 	inc b			;5ef5	04 	. 
@@ -5390,6 +5422,7 @@ l5ec5h:
 	inc b			;5efb	04 	. 
 	inc b			;5efc	04 	. 
 	inc b			;5efd	04 	. 
+    ;
 	add hl,bc			;5efe	09 	. 
 	add hl,bc			;5eff	09 	. 
 	add hl,bc			;5f00	09 	. 
@@ -5401,6 +5434,7 @@ l5ec5h:
 	nop			;5f06	00 	. 
 	nop			;5f07	00 	. 
 	nop			;5f08	00 	. 
+    ;
 	ld b,006h		;5f09	06 06 	. . 
 	ld b,006h		;5f0b	06 06 	. . 
 	ld b,006h		;5f0d	06 06 	. . 
@@ -5439,6 +5473,8 @@ l5ec5h:
 	ld (bc),a			;5f32	02 	. 
 	ld (bc),a			;5f33	02 	. 
 	ld (bc),a			;5f34	02 	. 
+    
+    ; LEVEL 4
 	ex af,af'			;5f35	08 	. 
 	dec b			;5f36	05 	. 
 	ld b,007h		;5f37	06 07 	. . 
@@ -10126,8 +10162,8 @@ l7babh:
 	call DELAY_HL_TICKS		;7bcc	cd 80 43
 
 	ld a,0c7h		;7bcf	3e c7 	> . 
-	ld (0e5c0h),a		;7bd1	32 c0 e5 	2 . . 
-	call sub_b4e8h		;7bd4	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;7bd1	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;7bd4	cd e8 b4 	. . . 
 
 	ei			                    ;7bd7	fb
 
@@ -10178,8 +10214,8 @@ l7c23h:
 	ld (CHEAT2_LEVEL),hl		;7c23	22 05 e0
     
 	ld a,0c6h		;7c26	3e c6 	> . 
-	ld (0e5c0h),a		;7c28	32 c0 e5 	2 . . 
-	call sub_b4e8h		;7c2b	cd e8 b4 	. . . 
+	ld (SONG_NUMBER),a		;7c28	32 c0 e5 	2 . . 
+	call PLAY_MUSIC		;7c2b	cd e8 b4 	. . . 
 	ei			;7c2e	fb 	. 
 
 	ld hl,l7c5dh		            ;7c2f	21 5d 7c
@@ -20410,7 +20446,7 @@ lb3a7h:
 	nop			;b3fd	00 	. 
 	nop			;b3fe	00 	. 
 	nop			;b3ff	00 	. 
-	jp sub_b4e8h		;b400	c3 e8 b4 	. . . 
+	jp PLAY_MUSIC		;b400	c3 e8 b4 	. . . 
 	jp sub_b594h		;b403	c3 94 b5 	. . . 
 	ld (02c27h),hl		;b406	22 27 2c 	" ' , 
 	ld sp,03b36h		;b409	31 36 3b 	1 6 ; 
@@ -20618,31 +20654,41 @@ lb4d1h:
 	jr lb545h		;b4df	18 64 	. d 
 lb4e1h:
 	ld (ix+000h),000h		;b4e1	dd 36 00 00 	. 6 . . 
-	ld (0e5c0h),a		;b4e5	32 c0 e5 	2 . . 
+	ld (SONG_NUMBER),a		;b4e5	32 c0 e5 	2 . . 
 
-sub_b4e8h:
+PLAY_MUSIC:
 	push hl			;b4e8	e5 	. 
 	push de			;b4e9	d5 	. 
 	push bc			;b4ea	c5 	. 
 	push af			;b4eb	f5 	. 
-	ld de,0e5c0h		;b4ec	11 c0 e5 	. . . 
+    
+	; A = SONG_NUMBER
+    ld de,SONG_NUMBER		;b4ec	11 c0 e5 	. . . 
 	ld a,(de)			;b4ef	1a 	. 
-	ld hl,0e5d3h		;b4f0	21 d3 e5 	! . . 
-	cp 080h		;b4f3	fe 80 	. . 
+	
+    ld hl,0e5d3h		;b4f0	21 d3 e5 	! . . 
+	cp 128		        ;b4f3	fe 80 	. . 
 	jr nc,lb4fbh		;b4f5	30 04 	0 . 
+    ; SONG_NUMBER <= 128
 	add a,006h		;b4f7	c6 06 	. . 
 	jr lb515h		;b4f9	18 1a 	. . 
 lb4fbh:
-	cp 0c0h		;b4fb	fe c0 	. . 
+    ; SONG_NUMBER > 128
+	cp 192		    ;b4fb	fe c0 	. . 
 	jr nc,lb503h		;b4fd	30 04 	0 . 
+    ; SONG_NUMBER <= 192
 	add a,090h		;b4ff	c6 90 	. . 
 	jr lb512h		;b501	18 0f 	. . 
 lb503h:
-	sub 0f0h		;b503	d6 f0 	. . 
+    ; SONG_NUMBER > 192
+	sub 240		;b503	d6 f0 	. . 
 	jr nc,lb559h		;b505	30 52 	0 R 
-	add a,030h		;b507	c6 30 	. 0 
+    ; SONG_NUMBER < 240
+    
+    ; A = (A + 48)*2  + 16
+	add a,48		;b507	c6 30 	. 0 
 	add a,a			;b509	87 	. 
-	add a,010h		;b50a	c6 10 	. . 
+	add a,16		;b50a	c6 10 	. . 
 	push af			;b50c	f5 	. 
 	call sub_b51dh		;b50d	cd 1d b5 	. . . 
 	pop af			;b510	f1 	. 
@@ -20659,33 +20705,50 @@ lb518h:
 	ret			;b51c	c9 	. 
 
 sub_b51dh:
+    ; BC = 0xb4.. , with A
 	ld b,0b4h		;b51d	06 b4 	. . 
 	ld c,a			;b51f	4f 	O 
-	ld a,(bc)			;b520	0a 	. 
-	ld c,a			;b521	4f 	O 
-	ld a,(0e5c2h)		;b522	3a c2 e5 	: . . 
+    
+    
+	; C = [0xb4..]
+    ld a,(bc)			;b520	0a 	. 
+    ld c,a			;b521	4f 	O 
+    
+	; Exit if [0e5c2h] = 0
+    ld a,(0e5c2h)		;b522	3a c2 e5 	: . . 
 	and a			;b525	a7 	. 
 	ret z			;b526	c8 	. 
+
 	di			;b527	f3 	. 
-	ld a,(hl)			;b528	7e 	~ 
+	
+    ld a,(hl)			;b528	7e 	~ 
 	ld (hl),001h		;b529	36 01 	6 . 
-	inc hl			;b52b	23 	# 
+    inc hl			;b52b	23 	#
+    
 	and a			;b52c	a7 	. 
 	jr z,lb534h		;b52d	28 05 	( . 
-	ld a,(bc)			;b52f	0a 	. 
+	
+    ld a,(bc)			;b52f	0a 	. 
 	and 0f0h		;b530	e6 f0 	. . 
 	cp (hl)			;b532	be 	. 
 	ret c			;b533	d8 	. 
 lb534h:
+    ; Read in D
 	ld a,(bc)			;b534	0a 	. 
 	and 00fh		;b535	e6 0f 	. . 
 	ld d,a			;b537	57 	W 
 	inc bc			;b538	03 	. 
+
+    ; Read in E
 	ld a,(bc)			;b539	0a 	. 
 	ld e,a			;b53a	5f 	_ 
 	inc bc			;b53b	03 	. 
+
+    ; Read in A
 	ld a,(bc)			;b53c	0a 	. 
 	and 0f0h		;b53d	e6 f0 	. . 
+
+    ; Write (HL) <-- A, E, D
 	ld (hl),a			;b53f	77 	w 
 	inc hl			;b540	23 	# 
 	ld (hl),e			;b541	73 	s 
@@ -20693,8 +20756,11 @@ lb534h:
 	ld (hl),d			;b543	72 	r 
 	inc hl			;b544	23 	# 
 lb545h:
+    ; Read in A
 	ld a,(bc)			;b545	0a 	. 
 	and 00fh		;b546	e6 0f 	. . 
+    
+    ; Write (HL) <-- A, C, B 
 	ld (hl),a			;b548	77 	w 
 	inc hl			;b549	23 	# 
 	ld (hl),c			;b54a	71 	q 
@@ -20702,15 +20768,24 @@ lb545h:
 	ld (hl),b			;b54c	70 	p 
 lb54dh:
 	inc bc			;b54d	03 	. 
+
+    ; Read in A
 	ld a,(bc)			;b54e	0a 	. 
 	inc hl			;b54f	23 	# 
+    
+    ; Write (HL) <-- A
 	ld (hl),a			;b550	77 	w 
 	inc bc			;b551	03 	. 
+
+    ; Read in A
 	ld a,(bc)			;b552	0a 	. 
 	inc hl			;b553	23 	# 
+    
+    ; Write (HL) <-- A
 	ld (hl),a			;b554	77 	w 
 	inc hl			;b555	23 	# 
-	ld (hl),001h		;b556	36 01 	6 . 
+	
+    ld (hl),001h		;b556	36 01 	6 . 
 	ret			;b558	c9 	. 
 
 lb559h:
@@ -20753,12 +20828,18 @@ sub_b586h:
 	ret nc			;b58a	d0 	. 
 	ld e,(hl)			;b58b	5e 	^ 
 lb58ch:
+    ; Write value E to PSG register A
+
+    ; Selected PSG register <-- A
 	out (0a0h),a		;b58c	d3 a0 	. . 
-	push af			;b58e	f5 	. 
+	
+    ; Register A <-- E
+    push af			;b58e	f5 	. 
 	ld a,e			;b58f	7b 	{ 
 	out (0a1h),a		;b590	d3 a1 	. . 
 	pop af			;b592	f1 	. 
 	ret			;b593	c9 	. 
+
 sub_b594h:
 	ld a,(0e5c1h)		;b594	3a c1 e5 	: . . 
 	and a			;b597	a7 	. 
