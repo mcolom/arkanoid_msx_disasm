@@ -7,7 +7,7 @@
 include 'headers/bios.asm'
 include 'sounds.asm'
 
-SPRITES_ATTRIB_TABLE: equ 0x1b00
+VRAM_SPRITES_ATTRIB_TABLE: equ 0x1b00
 
 ; Game state
 ; 0: in title screen
@@ -105,6 +105,14 @@ CAPSULES_LEFT: equ 0xe023
 CAPSULES_RANDOM_NUM: equ 0xe024
 FINAL_LEVEL: equ 32
 
+; Sprite attributes
+; This is written to VRAM continuosly
+SPRITE_ATTRIBS_AREA: equ 0xe18d
+
+TABLE_UNKNOWN_1: equ 0xe101
+
+
+
 
 ; Alien table
 ; Each entry is 20 positions
@@ -155,7 +163,7 @@ BALL_TABLE_IDX_SPEED_POS: equ 7
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 
-TABLE_UNKNOWN_1: equ 0xe101
+
 
 	org	04000h
 
@@ -211,11 +219,12 @@ ROM_START:
 	ldir		        ;4043	ed b0
     
     ; Clear memory from 0xe5c0 to 0xe6bf
+    ; ToDo: sound buffer?
 	ld hl,SOUND_NUMBER		;4045	21 c0 e5
-	ld de,0e5c1h		;4048	11 c1 e5
-	ld bc,000feh		;404b	01 fe 00
-	ld (hl),000h		;404e	36 00
-	ldir		        ;4050	ed b0
+	ld de,SOUND_NUMBER+1	;4048	11 c1 e5
+	ld bc, 254		        ;404b	01 fe 00
+	ld (hl), 0		        ;404e	36 00
+	ldir		            ;4050	ed b0
     
 	ld hl,00050h		;4052	21 50 00
 	ld (0e008h),hl		;4055	22 08 e0
@@ -251,7 +260,7 @@ ROM_START:
 	call FILVRM		    ;4089	cd 56 00
     
     ; Clear VRAM sprite attribute table
-	ld hl,SPRITES_ATTRIB_TABLE		;408c	21 00 1b
+	ld hl,VRAM_SPRITES_ATTRIB_TABLE		;408c	21 00 1b
 	ld bc, 128		                ;408f	01 80 00
 	xor a			                ;4092	af
 	call FILVRM		                ;4093	cd 56 00
@@ -324,8 +333,7 @@ l4103h:
 	ld bc,00005h		;4106	01 05 00 	. . . 
 	ld a,000h		;4109	3e 00 	> . 
 	call FILVRM		;410b	cd 56 00 	. V . 
-	ld hl,0e18dh		;410e	21 8d e1 	! . . 
-l4111h:
+	ld hl,SPRITE_ATTRIBS_AREA		;410e	21 8d e1 	! . . 
 	ld b,020h		;4111	06 20 	.   
 	ld de,00004h		;4113	11 04 00 	. . . 
 l4116h:
@@ -335,7 +343,7 @@ l4116h:
 	ld b,020h		;411b	06 20 	.   
 	ld ix,0e0c9h		;411d	dd 21 c9 e0 	. ! . . 
 l4121h:
-	ld iy,0e18dh		;4121	fd 21 8d e1 	. ! . . 
+	ld iy,SPRITE_ATTRIBS_AREA		;4121	fd 21 8d e1 	. ! . . 
 	ld de,00004h		;4125	11 04 00 	. . . 
 l4128h:
 	ld a,(ix+002h)		;4128	dd 7e 02 	. ~ . 
@@ -368,12 +376,12 @@ l4158h:
 	ld a,(hl)			;4167	7e 	~ 
 	and 001h		;4168	e6 01 	. . 
 	jp z,l418eh		;416a	ca 8e 41 	. . A 
-	ld hl,0e18dh		;416d	21 8d e1 	! . . 
+	ld hl,SPRITE_ATTRIBS_AREA		;416d	21 8d e1 	! . . 
 	ld de,0e546h		;4170	11 46 e5 	. F . 
 	ld bc,00004h		;4173	01 04 00 	. . . 
 	ldir		;4176	ed b0 	. . 
 	ld hl,0e19dh		;4178	21 9d e1 	! . . 
-	ld de,0e18dh		;417b	11 8d e1 	. . . 
+	ld de,SPRITE_ATTRIBS_AREA		;417b	11 8d e1 	. . . 
 	ld bc,00004h		;417e	01 04 00 	. . . 
 	ldir		;4181	ed b0 	. . 
 	ld hl,0e546h		;4183	21 46 e5 	! F . 
@@ -381,15 +389,16 @@ l4158h:
 	ld bc,00004h		;4189	01 04 00 	. . . 
 	ldir		;418c	ed b0 	. . 
 l418eh:
-	ld hl,SPRITES_ATTRIB_TABLE		;418e	21 00 1b 	! . . 
+	ld hl,VRAM_SPRITES_ATTRIB_TABLE		;418e	21 00 1b 	! . . 
 	call SETWRT		;4191	cd 53 00 	. S . 
-	ld hl,0e18dh		;4194	21 8d e1 	! . . 
+	ld hl,SPRITE_ATTRIBS_AREA		;4194	21 8d e1 	! . . 
 	ld a,(VDP_WRITE)		;4197	3a 07 00 	: . . 
 	ld c,a			;419a	4f 	O 
-	ld b,080h		;419b	06 80 	. . 
+	ld b,128		;419b	06 80 	. . 
 l419dh:
 	outi		;419d	ed a3 	. . 
 	jr nz,l419dh		;419f	20 fc 	  . 
+
 	ld a,(0e00ah)		;41a1	3a 0a e0 	: . . 
 	ld l,a			;41a4	6f 	o 
 	ld h,000h		;41a5	26 00 	& . 
@@ -480,7 +489,7 @@ CLEAR_SCREEN:
 	call FILVRM		    ;422e	cd 56 00
 
     ; Clear sprites attribute table
-	ld hl,SPRITES_ATTRIB_TABLE		;4231	21 00 1b
+	ld hl,VRAM_SPRITES_ATTRIB_TABLE		;4231	21 00 1b
 	ld bc, 128		                ;4234	01 80 00
 	ld a,192		                ;4237	3e c0
 	call FILVRM		                ;4239	cd 56 00
@@ -1044,7 +1053,7 @@ l4503h:
 	ld b,c			;4550	41 	A 
 	ld (bc),a			;4551	02 	. 
 l4552h:
-	ld hl,l4111h		;4552	21 11 41 	! . A 
+	ld hl,0x4111		;4552	21 11 41 	! . A 
 	rst 38h			;4555	ff 	. 
 	ld b,e			;4556	43 	C 
 	ld de,01143h		;4557	11 43 11 	. C . 
@@ -1115,7 +1124,7 @@ l4552h:
 	ld b,c			;45d0	41 	A 
 	ld bc,00141h		;45d1	01 41 01 	. A . 
 	ld b,c			;45d4	41 	A 
-	ld bc,l4111h		;45d5	01 11 41 	. . A 
+	ld bc,0x4111		;45d5	01 11 41 	. . A 
 	ld de,03141h		;45d8	11 41 31 	. A 1 
 	ld b,c			;45db	41 	A 
 	ld sp,01141h		;45dc	31 41 11 	1 A . 
@@ -1317,7 +1326,7 @@ l4702h:
 	ld b,c			;472e	41 	A 
 	ld (bc),a			;472f	02 	. 
 	ld b,d			;4730	42 	B 
-	ld bc,l4111h		;4731	01 11 41 	. . A 
+	ld bc,0x4111		;4731	01 11 41 	. . A 
 	ld bc,00111h		;4734	01 11 01 	. . . 
 	ld b,c			;4737	41 	A 
 	ld de,sub_41ffh+2		;4738	11 01 42 	. . B 
@@ -1333,7 +1342,7 @@ l4702h:
 	ld b,c			;4744	41 	A 
 	ld (bc),a			;4745	02 	. 
 	ld b,d			;4746	42 	B 
-	ld bc,l4111h		;4747	01 11 41 	. . A 
+	ld bc,0x4111		;4747	01 11 41 	. . A 
 	inc bc			;474a	03 	. 
 	ld b,c			;474b	41 	A 
 	ld de,l4effh+2		;474c	11 01 4f 	. . O 
@@ -1461,7 +1470,7 @@ l474fh:
 	ld (03203h),a		;4845	32 03 32 	2 . 2 
 sub_4848h:
 	ld b,c			;4848	41 	A 
-	ld bc,l4111h		;4849	01 11 41 	. . A 
+	ld bc,0x4111		;4849	01 11 41 	. . A 
 	ld sp,03141h		;484c	31 41 31 	1 A 1 
 	ld de,04131h		;484f	11 31 41 	. 1 A 
 	ld sp,01241h		;4852	31 41 12 	1 A . 
@@ -1633,8 +1642,8 @@ l4931h:
 	ld b,a			;499d	47 	G 
 	dec de			;499e	1b 	. 
 	ld c,l			;499f	4d 	M 
-	ld hl,l4111h		;49a0	21 11 41 	! . A 
-	ld hl,l4111h		;49a3	21 11 41 	! . A 
+	ld hl,0x4111		;49a0	21 11 41 	! . A 
+	ld hl,0x4111		;49a3	21 11 41 	! . A 
 	ld hl,l4311h		;49a6	21 11 43 	! . C 
 	ld (02241h),hl		;49a9	22 41 22 	" A " 
 	ld b,c			;49ac	41 	A 
@@ -1645,8 +1654,8 @@ l4931h:
 	ld b,c			;49b9	41 	A 
 	ld (02241h),hl		;49ba	22 41 22 	" A " 
 	ld c,l			;49bd	4d 	M 
-	ld hl,l4111h		;49be	21 11 41 	! . A 
-	ld hl,l4111h		;49c1	21 11 41 	! . A 
+	ld hl,0x4111		;49be	21 11 41 	! . A 
+	ld hl,0x4111		;49c1	21 11 41 	! . A 
 	ld hl,l4311h		;49c4	21 11 43 	! . C 
 	ld (02241h),hl		;49c7	22 41 22 	" A " 
 	ld b,c			;49ca	41 	A 
@@ -2331,7 +2340,7 @@ l4e74h:
 
     ; Vaus and the READY string as sprites
 	ld hl,VAUS_AND_READY_SPRITE_TABLE		;4e78	21 49 51
-	ld de,SPRITES_ATTRIB_TABLE		        ;4e7b	11 00 1b
+	ld de,VRAM_SPRITES_ATTRIB_TABLE		        ;4e7b	11 00 1b
 	ld bc, 7 * 4		                    ;4e7e	01 1c 00 	7 sprites
 	call LDIRVM		                        ;4e81	cd 5c 00
     
@@ -10190,7 +10199,7 @@ l7babh:
     ; That's a very nice way to show the text over the
     ; patterns with trasparency.
 	ld hl,GAME_OVER_SPRITE_TABLE		;7bef	21 6d 7c
-	ld de,SPRITES_ATTRIB_TABLE		    ;7bf2	11 00 1b
+	ld de,VRAM_SPRITES_ATTRIB_TABLE		    ;7bf2	11 00 1b
 	ld bc, 4*4		                    ;7bf5	01 10 00    4 sprites
 	call LDIRVM		                    ;7bf8	cd 5c 00
 
@@ -10225,7 +10234,7 @@ l7c23h:
 	ei			;7c2e	fb 	. 
 
 	ld hl,l7c5dh		            ;7c2f	21 5d 7c
-	ld de,SPRITES_ATTRIB_TABLE		;7c32	11 00 1b
+	ld de,VRAM_SPRITES_ATTRIB_TABLE		;7c32	11 00 1b
 	ld bc, 4*4		                ;7c35	01 10 00 4 sprites
 	call LDIRVM		                ;7c38	cd 5c 00
 
