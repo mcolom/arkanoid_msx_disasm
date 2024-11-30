@@ -41,6 +41,10 @@ LASER3_SPR_PARAMS: equ SPR_PARAMS_BASE + 9*SPR_PARAMS_LEN
 SPR_16_SPR_PARAMS: equ SPR_PARAMS_BASE + 16*SPR_PARAMS_LEN
 
 
+SPR_13_SPR_PARAMS: equ SPR_PARAMS_BASE + 13*SPR_PARAMS_LEN ; 0xe101
+
+
+
 ; Ball sprite parameters
 BALL1_SPR_PARAMS: equ SPR_PARAMS_BASE + 10*SPR_PARAMS_LEN; 0xe0f5
 BALL2_SPR_PARAMS: equ SPR_PARAMS_BASE + 11*SPR_PARAMS_LEN
@@ -69,6 +73,10 @@ KEYBOARD_INPUT: equ 0xe0c0
 
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
+
+LASER1_ACTIVE: equ 0xe557
+LASER2_ACTIVE: equ 0xe55b
+LASER3_ACTIVE: equ 0xe55f
 
 ; The code for the SOUND being played
 SOUND_NUMBER: equ 0xe5c0
@@ -134,7 +142,6 @@ FINAL_LEVEL: equ 32
 ; This is written to VRAM continuosly
 SPRITE_ATTRIBS_AREA: equ 0xe18d
 
-TABLE_UNKNOWN_1: equ 0xe101
 
 
 
@@ -2905,23 +2912,27 @@ l5289h:
 	inc b			;529e	04 	. 
 	dec b			;529f	05 	. 
 
-sub_52a0h:
+; Update the score and high score after adding points.
+; The number of points if an entry in POINTS_TABLE as POINTS_TABLE + 3*A.
+ADD_POINTS_AND_UPDATE_SCORES:
+    ; Input value in A
 	push hl			;52a0	e5 	. 
 	push bc			;52a1	c5 	. 
 	push de			;52a2	d5 	. 
 	push af			;52a3	f5 	. 
-	push ix		;52a4	dd e5 	. . 
-	push iy		;52a6	fd e5 	. . 
-	ld hl,00000h		;52a8	21 00 00 	! . . 
-	ld e,a			;52ab	5f 	_ 
-	ld d,000h		;52ac	16 00 	. . 
-	add hl,de			;52ae	19 	. 
-	add hl,de			;52af	19 	. 
-	add hl,de			;52b0	19 	. 
-	ld de,l5363h		;52b1	11 63 53 	. c S 
-	add hl,de			;52b4	19 	. 
-	push hl			;52b5	e5 	. 
-	pop ix		;52b6	dd e1 	. . 
+	push ix		    ;52a4	dd e5
+	push iy		    ;52a6	fd e5
+	ld hl,00000h	;52a8	21 00 00
+	ld e,a			;52ab	5f
+	ld d,0		    ;52ac	16 00       DE = input
+	add hl,de		;52ae	19
+	add hl,de		;52af	19
+	add hl,de		;52b0	19          HL = 3*input
+    
+	ld de,POINTS_TABLE	;52b1	11 63 53
+	add hl,de		;52b4	19
+	push hl			;52b5	e5
+	pop ix		    ;52b6	dd e1       IX = POINTS_TABLE + 3*input
     
 	; Jump if we're at the title screen
     ld a,(GAME_STATE)		;52b8	3a 0b e0
@@ -2932,13 +2943,13 @@ sub_52a0h:
     ; [ToDo]: what is this state? The final Boss Doh?
     cp 3		            ;52c0	fe 03
 	jp z,l52ceh		        ;52c2	ca ce 52
-	
+
     ld hl,SCORE_BCD		;52c5	21 15 e0 	! . . 
-	call BCD_ENCODE_SCORE		;52c8	cd 8a 53 	. . S 
+	call BCD_UPDATE_SCORE_ADD_POINTS		;52c8	cd 8a 53 	. . S 
 	jp l52d7h		;52cb	c3 d7 52 	. . R 
 l52ceh:
 	ld hl,ZEROS_BCD_BUFFER		;52ce	21 18 e0 	! . . 
-	call BCD_ENCODE_SCORE		;52d1	cd 8a 53 	. . S 
+	call BCD_UPDATE_SCORE_ADD_POINTS		;52d1	cd 8a 53 	. . S 
 	jp l52d7h		;52d4	c3 d7 52 	. . R 
 l52d7h:
 	ld iy,HIGH_SCORE_BCD		;52d7	fd 21 07 e0 	. ! . . 
@@ -2972,6 +2983,7 @@ l5310h:
 	pop bc			;5316	c1 	. 
 	pop hl			;5317	e1 	. 
 	ret			;5318	c9 	. 
+
 sub_5319h:
 	ld hl,0e017h		;5319	21 17 e0 	! . . 
 	ld a,(0e020h)		;531c	3a 20 e0 	:   . 
@@ -3012,43 +3024,24 @@ l5350h:
 	daa			;535e	27 	' 
 	ld (0e020h),a		;535f	32 20 e0 	2   . 
 	ret			;5362	c9 	. 
-l5363h:
-	dec b			;5363	05 	. 
-	nop			;5364	00 	. 
-	nop			;5365	00 	. 
-	ld b,000h		;5366	06 00 	. . 
-	nop			;5368	00 	. 
-	rlca			;5369	07 	. 
-	nop			;536a	00 	. 
-	nop			;536b	00 	. 
-	ex af,af'			;536c	08 	. 
-	nop			;536d	00 	. 
-	nop			;536e	00 	. 
-	add hl,bc			;536f	09 	. 
-	nop			;5370	00 	. 
-	nop			;5371	00 	. 
-	djnz l5374h		;5372	10 00 	. . 
-l5374h:
-	nop			;5374	00 	. 
-	ld de,00000h		;5375	11 00 00 	. . . 
-	ld (de),a			;5378	12 	. 
-	nop			;5379	00 	. 
-	nop			;537a	00 	. 
-	ld b,b			;537b	40 	@ 
-	nop			;537c	00 	. 
-	nop			;537d	00 	. 
-	ld h,b			;537e	60 	` 
-	nop			;537f	00 	. 
-	nop			;5380	00 	. 
-	add a,b			;5381	80 	. 
-	nop			;5382	00 	. 
-	nop			;5383	00 	. 
-	nop			;5384	00 	. 
-	ld bc,00000h		;5385	01 00 00 	. . . 
-    db 0x10, 0
 
-; BDC-encode a score from HL
-BCD_ENCODE_SCORE:
+POINTS_TABLE:
+    db    5,    0, 0       ;  0
+    db    6,    0, 0       ;  1
+    db    7,    0, 0       ;  2
+    db    8,    0, 0       ;  3
+    db    9,    0, 0       ;  4
+    db 0x10,    0, 0       ;  5
+    db 0x11,    0, 0       ;  6
+    db 0x12,    0, 0       ;  7
+    db 0x40,    0, 0       ;  8
+    db 0x60,    0, 0       ;  9
+    db 0x80,    0, 0       ; 10
+    db   0,     1, 0       ; 11
+    db   0,  0x10, 0       ; 12
+
+; BDC-encode a score from HL after adding points from (IX+0), (IX+1), (IX+2), 
+BCD_UPDATE_SCORE_ADD_POINTS:
     ; Copy binary score to BCD buffer
 	ld de,SCORE_BCD_BUFFER		    ;538a	11 a0 e5
 	ld bc, 3		        ;538d	01 03 00
@@ -4864,6 +4857,8 @@ l5bd7h:
 l5bebh:
 	ld b,c			;5beb	41 	A 
 	jp nz,l8141h		;5bec	c2 41 81 	. A . 
+
+; ToDo: this function is called a lot of times!
 sub_5befh:
 	push hl			;5bef	e5 	. 
 	push de			;5bf0	d5 	. 
@@ -7778,7 +7773,7 @@ l6972h:
 	ld a,0c1h		;699b	3e c1 	> . 
 	call sub_5befh		;699d	cd ef 5b 	. . [ 
 	ld a,00ch		;69a0	3e 0c 	> . 
-	call sub_52a0h		;69a2	cd a0 52 	. . R 
+	call ADD_POINTS_AND_UPDATE_SCORES		;69a2	cd a0 52 	. . R 
 	call DEACTIVE_ALL_BALLS		;69a5	cd 10 97 	. . . 
 	jp l69bch		;69a8	c3 bc 69 	. . i 
 l69abh:
@@ -7830,7 +7825,7 @@ l69eah:
 	ld a,0c1h		;6a07	3e c1 	> . 
 	call sub_5befh		;6a09	cd ef 5b 	. . [ 
 	ld a,00ch		;6a0c	3e 0c 	> . 
-	call sub_52a0h		;6a0e	cd a0 52 	. . R 
+	call ADD_POINTS_AND_UPDATE_SCORES		;6a0e	cd a0 52 	. . R 
 	call DEACTIVE_ALL_BALLS		;6a11	cd 10 97 	. . . 
 	jp l69bch		;6a14	c3 bc 69 	. . i 
 l6a17h:
@@ -8635,7 +8630,7 @@ l706ah:
 l7072h:
 	ld b,002h		;7072	06 02 	. . 
 l7074h:
-	ld ix,0e557h		;7074	dd 21 57 e5 	. ! W . 
+	ld ix,LASER1_ACTIVE		;7074	dd 21 57 e5 	. ! W . 
 	ld iy,LASER1_SPR_PARAMS		;7078	fd 21 e9 e0 	. ! . . 
 l707ch:
 	ld a,(ix+000h)		;707c	dd 7e 00 	. ~ . 
@@ -8663,7 +8658,7 @@ sub_70b0h:
 	ld a,001h		;70b0	3e 01 	> . 
 	ld (0e519h),a		;70b2	32 19 e5 	2 . . 
 	ld ix,LASER1_SPR_PARAMS		;70b5	dd 21 e9 e0 	. ! . . 
-	ld iy,0e557h		;70b9	fd 21 57 e5 	. ! W . 
+	ld iy,LASER1_ACTIVE		;70b9	fd 21 57 e5 	. ! W . 
 	ld b,003h		;70bd	06 03 	. . 
 l70bfh:
 	push bc			;70bf	c5 	. 
@@ -8923,7 +8918,7 @@ l726eh:
 	cp FINAL_LEVEL		;7271	fe 20
 	jp z,l7286h		;7273	ca 86 72 	. . r 
 	call sub_7605h		;7276	cd 05 76 	. . v 
-	call sub_7888h		;7279	cd 88 78 	. . x 
+	call CHECK_LASERS_HITS_ALIEN		;7279	cd 88 78 	. . x 
 	call sub_7942h		;727c	cd 42 79 	. B y 
 	call UPDATE_ALIEN_APPEAR_FROM_DOOR		;727f	cd 0c 73 	. . s 
 	call UPDATE_DOORS		;7282	cd a0 72 	. . r 
@@ -9440,7 +9435,7 @@ l75edh:
 
 sub_7605h:
     ld ix, ALIEN_TABLE
-    ld iy, TABLE_UNKNOWN_1
+    ld iy, SPR_13_SPR_PARAMS
     ld b, 3
 l760fh:
 	push bc			;760f	c5 	. 
@@ -9731,105 +9726,140 @@ l787dh:
 	cp 006h		;7883	fe 06 	. . 
 	jp l7851h		;7885	c3 51 78 	. Q x 
 
-sub_7888h:
-	ld ix,LASER1_SPR_PARAMS		;7888	dd 21 e9 e0 	. ! . . 
-	ld a,(0e557h)		;788c	3a 57 e5 	: W . 
-	or a			;788f	b7 	. 
-	jp z,l78a1h		;7890	ca a1 78 	. . x 
-	call sub_78d4h		;7893	cd d4 78 	. . x 
-	jp c,l78a1h		;7896	da a1 78 	. . x 
-	xor a			;7899	af 	. 
-	ld (0e557h),a		;789a	32 57 e5 	2 W . 
-	ld (ix+000h),0c0h		;789d	dd 36 00 c0 	. 6 . . 
+; Check if any of the 3 lasers hit an alien.
+; If so, update points and deactivate that laser.
+CHECK_LASERS_HITS_ALIEN:
+    ; Check if laser #1 is active
+	ld ix,LASER1_SPR_PARAMS		    ;7888	dd 21 e9 e0
+	ld a,(LASER1_ACTIVE)		    ;788c	3a 57 e5
+	or a			                ;788f	b7
+	jp z,l78a1h		                ;7890	ca a1 78
+	call CHECK_ALIEN_HIT_BY_LASER	;7893	cd d4 78
+	jp c,l78a1h		                ;7896	da a1 78
+    ; Set laser #1 inactive
+	xor a			                ;7899	af
+	ld (LASER1_ACTIVE),a		    ;789a	32 57 e5
+	ld (ix+0), 192		            ;789d	dd 36 00 c0
 l78a1h:
-	ld ix,LASER2_SPR_PARAMS		;78a1	dd 21 ed e0 	. ! . . 
-	ld a,(0e55bh)		;78a5	3a 5b e5 	: [ . 
-	or a			;78a8	b7 	. 
-	jp z,l78bah		;78a9	ca ba 78 	. . x 
-	call sub_78d4h		;78ac	cd d4 78 	. . x 
-	jp c,l78bah		;78af	da ba 78 	. . x 
-	xor a			;78b2	af 	. 
-	ld (0e55bh),a		;78b3	32 5b e5 	2 [ . 
-	ld (ix+000h),0c0h		;78b6	dd 36 00 c0 	. 6 . . 
+    ; Check if laser #2 is active
+	ld ix,LASER2_SPR_PARAMS		    ;78a1	dd 21 ed e0
+	ld a,(LASER2_ACTIVE)		    ;78a5	3a 5b e5
+	or a			                ;78a8	b7
+	jp z,l78bah		                ;78a9	ca ba 78
+	call CHECK_ALIEN_HIT_BY_LASER	;78ac	cd d4 78
+	jp c,l78bah		                ;78af	da ba 78
+    ; Set laser #2 inactive
+	xor a			                ;78b2	af
+	ld (LASER2_ACTIVE),a		    ;78b3	32 5b e5
+	ld (ix+0), 192		            ;78b6	dd 36 00 c0
 l78bah:
-	ld ix,LASER3_SPR_PARAMS		;78ba	dd 21 f1 e0 	. ! . . 
-	ld a,(0e55fh)		;78be	3a 5f e5 	: _ . 
-	or a			;78c1	b7 	. 
-	jp z,l78d3h		;78c2	ca d3 78 	. . x 
-	call sub_78d4h		;78c5	cd d4 78 	. . x 
-	jp c,l78d3h		;78c8	da d3 78 	. . x 
-	xor a			;78cb	af 	. 
-	ld (0e55fh),a		;78cc	32 5f e5 	2 _ . 
-	ld (ix+000h),0c0h		;78cf	dd 36 00 c0 	. 6 . . 
+    ; Check if laser #3 is active
+	ld ix,LASER3_SPR_PARAMS		    ;78ba	dd 21 f1 e0
+	ld a,(LASER3_ACTIVE)		    ;78be	3a 5f e5
+	or a			                ;78c1	b7
+	jp z,l78d3h		                ;78c2	ca d3 78
+	call CHECK_ALIEN_HIT_BY_LASER	;78c5	cd d4 78
+	jp c,l78d3h		                ;78c8	da d3 78
+    ; Set laser #3 inactive
+	xor a			                ;78cb	af
+	ld (LASER3_ACTIVE),a		    ;78cc	32 5f e5
+	ld (ix+0), 192		            ;78cf	dd 36 00 c0
 l78d3h:
-	ret			;78d3	c9 	. 
+	ret			                    ;78d3	c9
 
-sub_78d4h:
-	ld iy,TABLE_UNKNOWN_1		;78d4	fd 21 01 e1
+CHECK_ALIEN_HIT_BY_LASER:
+    ; IX = LASER(i)_SPR_PARAMS
+	ld iy,SPR_13_SPR_PARAMS		;78d4	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;78d8	21 c8 e4
-	ld b,003h		            ;78db	06 03
+    ; ToDo: probably the table in HL is one byte before, without the +1
+	ld b, 3		                ;78db	06 03
 l78ddh:
-	ld a,(hl)			;78dd	7e 	~ 
-	or a			;78de	b7 	. 
-	jp z,l7935h		;78df	ca 35 79 	. 5 y 
+    ; Skip if alien is not active
+	ld a,(hl)		;78dd	7e
+	or a			;78de	b7
+	jp z,l7935h		;78df	ca 35 79
+
+    ; ToDo: skip if alien...
 	push hl			;78e2	e5 	. 
 	inc hl			;78e3	23 	# 
 	ld a,(hl)			;78e4	7e 	~ 
 	or a			;78e5	b7 	. 
 	pop hl			;78e6	e1 	. 
 	jp nz,l7935h		;78e7	c2 35 79 	. 5 y 
-	ld a,(ix+000h)		;78ea	dd 7e 00 	. ~ . 
-	sub 010h		;78ed	d6 10 	. . 
-	ld e,a			;78ef	5f 	_ 
-	ld a,(iy+000h)		;78f0	fd 7e 00 	. ~ . 
-	ld d,a			;78f3	57 	W 
-	ld a,e			;78f4	7b 	{ 
-	cp d			;78f5	ba 	. 
-	jp nc,l7935h		;78f6	d2 35 79 	. 5 y 
-	ld a,(ix+000h)		;78f9	dd 7e 00 	. ~ . 
-	add a,010h		;78fc	c6 10 	. . 
-	ld e,a			;78fe	5f 	_ 
-	ld a,(iy+000h)		;78ff	fd 7e 00 	. ~ . 
-	ld d,a			;7902	57 	W 
-	ld a,e			;7903	7b 	{ 
-	cp d			;7904	ba 	. 
-	jp c,l7935h		;7905	da 35 79 	. 5 y 
-	ld a,(ix+001h)		;7908	dd 7e 01 	. ~ . 
-	sub 010h		;790b	d6 10 	. . 
-	ld e,a			;790d	5f 	_ 
-	ld a,(iy+001h)		;790e	fd 7e 01 	. ~ . 
-	ld d,a			;7911	57 	W 
-	ld a,e			;7912	7b 	{ 
-	cp d			;7913	ba 	. 
-	jp nc,l7935h		;7914	d2 35 79 	. 5 y 
-	ld a,(ix+001h)		;7917	dd 7e 01 	. ~ . 
-	add a,010h		;791a	c6 10 	. . 
-	ld e,a			;791c	5f 	_ 
-	ld a,(iy+001h)		;791d	fd 7e 01 	. ~ . 
-	ld d,a			;7920	57 	W 
-	ld a,e			;7921	7b 	{ 
-	cp d			;7922	ba 	. 
-	jp c,l7935h		;7923	da 35 79 	. 5 y 
+
+	ld a,(ix+SPR_PARAMS_IDX_Y)	;78ea	dd 7e 00
+	sub 16		                ;78ed	d6 10
+	ld e,a			            ;78ef	5f          E = height - 16
+	ld a,(iy+0)		            ;78f0	fd 7e 00
+	ld d,a			            ;78f3	57          D = ALIEN_Y
+	ld a,e			            ;78f4	7b          A = height - 16
+	cp d			            ;78f5	ba          Compare ALIEN_Y with height - 16
+	jp nc,l7935h		        ;78f6	d2 35 79    Skip if height - 16 >= ALIEN_Y
+    
+    ; height - 16 < ALIEN_DATA[0]
+	ld a,(ix+SPR_PARAMS_IDX_Y)	;78f9	dd 7e 00
+	add a,16		            ;78fc	c6 10
+	ld e,a			            ;78fe	5f          E = height + 16
+	ld a,(iy+0)		            ;78ff	fd 7e 00
+	ld d,a			            ;7902	57          D = ALIEN_Y
+	ld a,e			            ;7903	7b          A = height + 16
+	cp d			            ;7904	ba          Compare ALIEN_Y with height + 16
+	jp c,l7935h		            ;7905	da 35 79    Skip if height + 16 < ALIEN_Y
+    
+    ; height + 16 >= ALIEN_Y
+    ; So:   height - 16 < ALIEN_Y <= height + 16
+
+	ld a,(ix+SPR_PARAMS_IDX_X)  ;7908	dd 7e 01
+	sub 16		                ;790b	d6 10
+	ld e,a			            ;790d	5f          E = width - 16
+	ld a,(iy+1)		            ;790e	fd 7e 01
+	ld d,a			            ;7911	57          D = ALIEN_X
+	ld a,e			            ;7912	7b          A = width - 16
+	cp d			            ;7913	ba          Compare ALIEN_X with width - 16
+	jp nc,l7935h		        ;7914	d2 35 79    Skip if width - 16 >= ALIEN_X
+
+	ld a,(ix+SPR_PARAMS_IDX_X)	;7917	dd 7e 01
+	add a,16		            ;791a	c6 10
+	ld e,a			            ;791c	5f          A = width + 16
+	ld a,(iy+1)	;791d	fd 7e 01
+	ld d,a			            ;7920	57          D = ALIEN_X
+	ld a,e			            ;7921	7b          A = width + 16
+	cp d			            ;7922	ba          Compare ALIEN_X with width + 16
+	jp c,l7935h		            ;7923	da 35 79 	Skip if width + 16 < ALIEN_X
+    
+    ; Finally:
+    ;   height - 16 < ALIEN_Y <= height + 16      and
+    ;   width  - 16 < ALIEN_X <= width  + 16
+    ; The alien has been reached by the laser
+    
+    ; ToDo: what is this function?
 	ld a,0c2h		;7926	3e c2 	> . 
 	call sub_5befh		;7928	cd ef 5b 	. . [ 
-	ld a,005h		;792b	3e 05 	> . 
-	call sub_52a0h		;792d	cd a0 52 	. . R 
-	inc hl			;7930	23 	# 
-	ld (hl),001h		;7931	36 01 	6 . 
-	xor a			;7933	af 	. 
-	ret			;7934	c9 	. 
+
+    ; Give points and update the scores
+	ld a, 5		                        ;792b	3e 05
+	call ADD_POINTS_AND_UPDATE_SCORES	;792d	cd a0 52
+    
+    ; ToDo: what is this in the ALIEN_TABLE?
+	inc hl			                    ;7930	23
+	ld (hl), 1		                    ;7931	36 01
+
+	xor a			                    ;7933	af
+	ret			                        ;7934	c9
+
 l7935h:
-	ld de,00004h		;7935	11 04 00 	. . . 
-	add iy,de		;7938	fd 19 	. . 
-	ld de,00014h		;793a	11 14 00 	. . . 
-	add hl,de			;793d	19 	. 
-	djnz l78ddh		;793e	10 9d 	. . 
-	scf			;7940	37 	7 
-	ret			;7941	c9 	. 
+    ; Next alien
+	ld de,SPR_PARAMS_LEN	;7935	11 04 00
+	add iy,de		        ;7938	fd 19
+	ld de, ALIEN_TABLE_LEN	;793a	11 14 00
+	add hl,de			    ;793d	19
+	djnz l78ddh		        ;793e	10 9d
+	scf			            ;7940	37
+	ret			            ;7941	c9
 
 sub_7942h:
 	ld ix,SPR_PARAMS_BASE		        ;7942	dd 21 cd e0
-	ld iy,TABLE_UNKNOWN_1		;7946	fd 21 01 e1
+	ld iy,SPR_13_SPR_PARAMS		;7946	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;794a	21 c8 e4
 	ld b,003h		;794d	06 03 	. . 
 l794fh:
@@ -9861,7 +9891,7 @@ l797eh:
 	ld a,0c2h		;7988	3e c2 	> . 
 	call sub_5befh		;798a	cd ef 5b 	. . [ 
 	ld a,005h		;798d	3e 05 	> . 
-	call sub_52a0h		;798f	cd a0 52 	. . R 
+	call ADD_POINTS_AND_UPDATE_SCORES		;798f	cd a0 52 	. . R 
 	push hl			;7992	e5 	. 
 	ld (hl),002h		;7993	36 02 	6 . 
 	inc hl			;7995	23 	# 
@@ -9916,7 +9946,7 @@ l79fch:
 
 sub_79fdh:
     ; IX = BALL(i)_SPR_PARAMS
-	ld iy,TABLE_UNKNOWN_1		;79fd	fd 21 01 e1
+	ld iy,SPR_13_SPR_PARAMS		;79fd	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;7a01	21 c8 e4
 	ld b, 3		                ;7a04	06 03
 l7a06h:
@@ -9959,7 +9989,7 @@ l7a06h:
 	cp d			;7a4b	ba 	. 
 	jp c,l7a5bh		;7a4c	da 5b 7a 	. [ z 
 	ld a,005h		;7a4f	3e 05 	> . 
-	call sub_52a0h		;7a51	cd a0 52 	. . R 
+	call ADD_POINTS_AND_UPDATE_SCORES		;7a51	cd a0 52 	. . R 
 	ld (hl),002h		;7a54	36 02 	6 . 
 	inc hl			;7a56	23 	# 
 	ld (hl),001h		;7a57	36 01 	6 . 
@@ -16168,7 +16198,7 @@ l9622h:
 	ld c,(hl)			;9671	4e 	N 
 l9672h:
 	ld a,c			;9672	79 	y 
-	call sub_52a0h		;9673	cd a0 52 	. . R 
+	call ADD_POINTS_AND_UPDATE_SCORES		;9673	cd a0 52 	. . R 
 	ret			;9676	c9 	. 
 l9677h:
 	ex af,af'			;9677	08 	. 
@@ -16273,7 +16303,7 @@ sub_9726h:
 	xor a			;972c	af 	. 
 	ld (0e53ch),a		;972d	32 3c e5 	2 < . 
 	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4 	. ! . . 
-	ld ix,TABLE_UNKNOWN_1		;9734	dd 21 01 e1 	. ! . . 
+	ld ix,SPR_13_SPR_PARAMS		;9734	dd 21 01 e1 	. ! . . 
 l9738h:
 	ld a,(iy+001h)		;9738	fd 7e 01 	. ~ . 
 	or a			;973b	b7 	. 
@@ -20091,7 +20121,7 @@ lb18bh:
 	ld (ix+000h),0c0h		;b193	dd 36 00 c0 	. 6 . . 
 	ld (ix+002h),000h		;b197	dd 36 02 00 	. 6 . . 
 	ld a,00bh		;b19b	3e 0b 	> . 
-	call sub_52a0h		;b19d	cd a0 52 	. . R 
+	call ADD_POINTS_AND_UPDATE_SCORES		;b19d	cd a0 52 	. . R 
 	call sub_b1a8h		;b1a0	cd a8 b1 	. . . 
 	xor a			;b1a3	af 	. 
 	ld (0e317h),a		;b1a4	32 17 e3 	2 . . 
