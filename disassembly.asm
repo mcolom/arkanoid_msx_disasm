@@ -5,6 +5,7 @@
 ; 2183f07fa3ba87360100b2fa21fda0f55c0f8814  a.bin
 
 include 'headers/bios.asm'
+include 'sounds.asm'
 
 SPRITES_ATTRIB_TABLE: equ 0x1b00
 
@@ -44,8 +45,8 @@ KEYBOARD_INPUT: equ 0xe0c0
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
 
-; The code for the music being played
-SONG_NUMBER: equ 0xe5c0
+; The code for the SOUND being played
+SOUND_NUMBER: equ 0xe5c0
 
 BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
@@ -210,7 +211,7 @@ ROM_START:
 	ldir		        ;4043	ed b0
     
     ; Clear memory from 0xe5c0 to 0xe6bf
-	ld hl,SONG_NUMBER		;4045	21 c0 e5
+	ld hl,SOUND_NUMBER		;4045	21 c0 e5
 	ld de,0e5c1h		;4048	11 c1 e5
 	ld bc,000feh		;404b	01 fe 00
 	ld (hl),000h		;404e	36 00
@@ -281,8 +282,8 @@ ROM_START:
 	call sub_43ffh		;40c0	cd ff 43 	. . C 
 
 	ld a,0f8h		;40c3	3e f8 	> . 
-	ld (SONG_NUMBER),a		;40c5	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;40c8	cd e8 b4 	. . . 
+	ld (SOUND_NUMBER),a		;40c5	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;40c8	cd e8 b4 	. . . 
 
 	ld a,0c3h		;40cb	3e c3 	> . 
 	ld (0fd9ah),a		;40cd	32 9a fd 	2 . . 
@@ -300,9 +301,9 @@ l40d7h:
 	or a			;40e2	b7 	. 
 	jp z,l4103h		;40e3	ca 03 41 	. . A 
 
-	ld a,005h		;40e6	3e 05 	> . 
-	ld (SONG_NUMBER),a		;40e8	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;40eb	cd e8 b4 	. . . 
+	ld a,SOUND_NINININI		;40e6	3e 05 	> . 
+	ld (SOUND_NUMBER),a		;40e8	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;40eb	cd e8 b4 	. . . 
 
 	ei			    ;40ee
 
@@ -430,8 +431,8 @@ l41dah:
 	ld a,(hl)			;41dd	7e 	~ 
 	or a			;41de	b7 	. 
 	jp z,l40d7h		;41df	ca d7 40 	. . @ 
-	ld (SONG_NUMBER),a		;41e2	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;41e5	cd e8 b4 	. . . 
+	ld (SOUND_NUMBER),a		;41e2	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;41e5	cd e8 b4 	. . . 
 	ei			;41e8	fb 	. 
 	ld (hl),000h		;41e9	36 00 	6 . 
 	inc hl			;41eb	23 	# 
@@ -2020,9 +2021,9 @@ l4c73h:
 	ld bc,00011h		    ;4c7e	01 11 00
 	call LDIRVM		        ;4c81	cd 5c 00
 
-	ld a,0c3h		;4c84	3e c3 	> . 
-	ld (SONG_NUMBER),a		;4c86	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;4c89	cd e8 b4 	. . . 
+	ld a,SOUND_START_MUSIC		;4c84	3e c3 	> . 
+	ld (SOUND_NUMBER),a		;4c86	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;4c89	cd e8 b4 	. . . 
 
     ; Wait 256 ticks
 	ei			            ;4c8c	fb
@@ -2338,9 +2339,9 @@ l4e74h:
     ld a,(LEVEL)		;4e8b	3a 1b e0
 	cp FINAL_LEVEL		;4e8e	fe 20
 	jp z,l4ea5h		;4e90	ca a5 4e 	. . N 
-	ld a,0c4h		;4e93	3e c4 	> . 
-	ld (SONG_NUMBER),a		;4e95	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;4e98	cd e8 b4 	. . . 
+	ld a,SOUND_LEVEL_START		;4e93	3e c4 	> . 
+	ld (SOUND_NUMBER),a		;4e95	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;4e98	cd e8 b4 	. . . 
 
     ; Wait 144 ticks
 	ei			            ;4e9b	fb
@@ -2348,9 +2349,9 @@ l4e74h:
 	call DELAY_HL_TICKS		;4e9f	cd 80 43
 	jp l4eb4h		        ;4ea2	c3 b4 4e
 l4ea5h:
-	ld a,0c8h		;4ea5	3e c8 	> . 
-	ld (SONG_NUMBER),a		;4ea7	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;4eaa	cd e8 b4 	. . . 
+	ld a,SOUND_DOH_APPEARS		;4ea5	3e c8 	> . 
+	ld (SOUND_NUMBER),a		;4ea7	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;4eaa	cd e8 b4 	. . . 
 
     ; Wait 256 ticks
 	ei			            ;4ead	fb
@@ -2369,8 +2370,8 @@ l4eb4h:
 	ld (0e011h),hl		;4ec7	22 11 e0 	" . . 
 	ld (0e013h),hl		;4eca	22 13 e0 	" . . 
 	ld a,000h		;4ecd	3e 00 	> . 
-	ld (SONG_NUMBER),a		;4ecf	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;4ed2	cd e8 b4 	. . . 
+	ld (SOUND_NUMBER),a		;4ecf	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;4ed2	cd e8 b4 	. . . 
 
     ; Wait 1 tick
 	ei			            ;4ed5	fb
@@ -10161,9 +10162,9 @@ l7babh:
 	ld hl, 60		        ;7bc9	21 3c 00
 	call DELAY_HL_TICKS		;7bcc	cd 80 43
 
-	ld a,0c7h		;7bcf	3e c7 	> . 
-	ld (SONG_NUMBER),a		;7bd1	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;7bd4	cd e8 b4 	. . . 
+	ld a,SOUND_GAME_ENDING		;7bcf	3e c7 	> . 
+	ld (SOUND_NUMBER),a		;7bd1	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;7bd4	cd e8 b4 	. . . 
 
 	ei			                    ;7bd7	fb
 
@@ -10213,9 +10214,9 @@ l7c23h:
     ; Save current level, for cheat #2
 	ld (CHEAT2_LEVEL),hl		;7c23	22 05 e0
     
-	ld a,0c6h		;7c26	3e c6 	> . 
-	ld (SONG_NUMBER),a		;7c28	32 c0 e5 	2 . . 
-	call PLAY_MUSIC		;7c2b	cd e8 b4 	. . . 
+	ld a,SOUND_GAME_OVER		;7c26	3e c6 	> . 
+	ld (SOUND_NUMBER),a		;7c28	32 c0 e5 	2 . . 
+	call PLAY_SOUND		;7c2b	cd e8 b4 	. . . 
 	ei			;7c2e	fb 	. 
 
 	ld hl,l7c5dh		            ;7c2f	21 5d 7c
@@ -20446,7 +20447,7 @@ lb3a7h:
 	nop			;b3fd	00 	. 
 	nop			;b3fe	00 	. 
 	nop			;b3ff	00 	. 
-	jp PLAY_MUSIC		;b400	c3 e8 b4 	. . . 
+	jp PLAY_SOUND		;b400	c3 e8 b4 	. . . 
 	jp sub_b594h		;b403	c3 94 b5 	. . . 
 	ld (02c27h),hl		;b406	22 27 2c 	" ' , 
 	ld sp,03b36h		;b409	31 36 3b 	1 6 ; 
@@ -20654,36 +20655,36 @@ lb4d1h:
 	jr lb545h		;b4df	18 64 	. d 
 lb4e1h:
 	ld (ix+000h),000h		;b4e1	dd 36 00 00 	. 6 . . 
-	ld (SONG_NUMBER),a		;b4e5	32 c0 e5 	2 . . 
+	ld (SOUND_NUMBER),a		;b4e5	32 c0 e5 	2 . . 
 
-PLAY_MUSIC:
+PLAY_SOUND:
 	push hl			;b4e8	e5 	. 
 	push de			;b4e9	d5 	. 
 	push bc			;b4ea	c5 	. 
 	push af			;b4eb	f5 	. 
     
-	; A = SONG_NUMBER
-    ld de,SONG_NUMBER		;b4ec	11 c0 e5 	. . . 
+	; A = SOUND_NUMBER
+    ld de,SOUND_NUMBER		;b4ec	11 c0 e5 	. . . 
 	ld a,(de)			;b4ef	1a 	. 
 	
     ld hl,0e5d3h		;b4f0	21 d3 e5 	! . . 
 	cp 128		        ;b4f3	fe 80 	. . 
 	jr nc,lb4fbh		;b4f5	30 04 	0 . 
-    ; SONG_NUMBER <= 128
+    ; SOUND_NUMBER <= 128
 	add a,006h		;b4f7	c6 06 	. . 
 	jr lb515h		;b4f9	18 1a 	. . 
 lb4fbh:
-    ; SONG_NUMBER > 128
+    ; SOUND_NUMBER > 128
 	cp 192		    ;b4fb	fe c0 	. . 
 	jr nc,lb503h		;b4fd	30 04 	0 . 
-    ; SONG_NUMBER <= 192
+    ; SOUND_NUMBER <= 192
 	add a,090h		;b4ff	c6 90 	. . 
 	jr lb512h		;b501	18 0f 	. . 
 lb503h:
-    ; SONG_NUMBER > 192
+    ; SOUND_NUMBER > 192
 	sub 240		;b503	d6 f0 	. . 
 	jr nc,lb559h		;b505	30 52 	0 R 
-    ; SONG_NUMBER < 240
+    ; SOUND_NUMBER < 240
     
     ; A = (A + 48)*2  + 16
 	add a,48		;b507	c6 30 	. 0 
