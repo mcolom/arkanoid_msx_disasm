@@ -2833,15 +2833,17 @@ l5222h:
 
 ; Draw the game's frame
 DRAW_FRAME:
-	ld hl,l5271h		;5230	21 71 52 	! q R 
+    ; Draw up frame
+	ld hl,FRAME_UP_CHARS		;5230	21 71 52 	! q R 
 	ld bc,00018h		;5233	01 18 00 	. . . 
 	ld de,01801h		;5236	11 01 18 	. . . 
 	call LDIRVM		;5239	cd 5c 00 	. \ . 
 	ld b,017h		;523c	06 17 	. . 
 	ld de,00020h		;523e	11 20 00 	.   . 
+    ; Draw left frame
 l5241h:
 	ld hl,01821h		;5241	21 21 18 	! ! . 
-	ld ix,l5289h		;5244	dd 21 89 52 	. ! . R 
+	ld ix,FRAME_LATERAL_CHARS		;5244	dd 21 89 52 	. ! . R 
 	ld a,(ix+000h)		;5248	dd 7e 00 	. ~ . 
 l524bh:
 	call WRTVRM		;524b	cd 4d 00 	. M . 
@@ -2849,10 +2851,12 @@ l524bh:
 	inc ix		;524f	dd 23 	. # 
 	ld a,(ix+000h)		;5251	dd 7e 00 	. ~ . 
 	djnz l524bh		;5254	10 f5 	. . 
+
+    ; Draw right frame
 	ld b,017h		;5256	06 17 	. . 
 	ld de,00020h		;5258	11 20 00 	.   . 
 	ld hl,01838h		;525b	21 38 18 	! 8 . 
-	ld ix,l5289h		;525e	dd 21 89 52 	. ! . R 
+	ld ix,FRAME_LATERAL_CHARS		;525e	dd 21 89 52 	. ! . R 
 	ld a,(ix+000h)		;5262	dd 7e 00 	. ~ . 
 l5265h:
 	call WRTVRM		;5265	cd 4d 00 	. M . 
@@ -2862,51 +2866,10 @@ l5265h:
 	djnz l5265h		;526e	10 f5 	. . 
 	ret			;5270	c9 	. 
 
-l5271h:
-	ld (bc),a			;5271	02 	. 
-	inc c			;5272	0c 	. 
-	inc c			;5273	0c 	. 
-	inc c			;5274	0c 	. 
-	ex af,af'			;5275	08 	. 
-	add hl,bc			;5276	09 	. 
-	ld a,(bc)			;5277	0a 	. 
-	dec bc			;5278	0b 	. 
-	inc c			;5279	0c 	. 
-	inc c			;527a	0c 	. 
-	inc c			;527b	0c 	. 
-	inc c			;527c	0c 	. 
-	inc c			;527d	0c 	. 
-	inc c			;527e	0c 	. 
-	inc c			;527f	0c 	. 
-	inc c			;5280	0c 	. 
-	ex af,af'			;5281	08 	. 
-	add hl,bc			;5282	09 	. 
-	ld a,(bc)			;5283	0a 	. 
-	dec bc			;5284	0b 	. 
-	inc c			;5285	0c 	. 
-	inc c			;5286	0c 	. 
-	inc c			;5287	0c 	. 
-	dec c			;5288	0d 	. 
-l5289h:
-	inc bc			;5289	03 	. 
-	inc b			;528a	04 	. 
-	dec b			;528b	05 	. 
-	ld b,007h		;528c	06 07 	. . 
-	inc bc			;528e	03 	. 
-	inc b			;528f	04 	. 
-	dec b			;5290	05 	. 
-	ld b,007h		;5291	06 07 	. . 
-	inc bc			;5293	03 	. 
-	inc b			;5294	04 	. 
-	dec b			;5295	05 	. 
-	ld b,007h		;5296	06 07 	. . 
-	inc bc			;5298	03 	. 
-	inc b			;5299	04 	. 
-	dec b			;529a	05 	. 
-	ld b,007h		;529b	06 07 	. . 
-	inc bc			;529d	03 	. 
-	inc b			;529e	04 	. 
-	dec b			;529f	05 	. 
+FRAME_UP_CHARS:
+    db 2, 12, 12, 12, 8, 9, 10, 11, 12, 12, 12, 12, 12, 12, 12, 12, 8, 9, 10, 11, 12, 12, 12, 13
+FRAME_LATERAL_CHARS:
+    db 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3, 4, 5, 6, 7, 3, 4, 5
 
 ; Update the score and high score after adding points.
 ; The number of points if an entry in POINTS_TABLE as POINTS_TABLE + 3*A.
