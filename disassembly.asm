@@ -301,7 +301,7 @@ l40d7h:
 	or a			;40e2	b7 	. 
 	jp z,l4103h		;40e3	ca 03 41 	. . A 
 
-	ld a,SOUND_NINININI		;40e6	3e 05 	> . 
+	ld a,SOUND_PAUSE		;40e6	3e 05 	> . 
 	ld (SOUND_NUMBER),a		;40e8	32 c0 e5 	2 . . 
 	call PLAY_SOUND		;40eb	cd e8 b4 	. . . 
 
