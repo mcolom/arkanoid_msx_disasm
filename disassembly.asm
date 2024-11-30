@@ -9,14 +9,8 @@ include 'sounds.asm'
 
 VRAM_SPRITES_ATTRIB_TABLE: equ 0x1b00
 
-; Game state
-; 0: in title screen
-; 1: normal play
-; 2: normal play, with score updates
-; 3: normal play, but without score updates
-GAME_STATE: equ 0xe00b
-
 DEMO_LEVEL: equ 0xe000
+
 
 ; The two cheats :)
 CHEAT1_ACTIVATED: equ 0xe001
@@ -26,16 +20,46 @@ CHEAT2_ACTIVATED: equ 0xe003
 CHEAT2_KEY_COUNTER: equ 0xe004
 CHEAT2_LEVEL: equ 0xe005
 
-; Ball sprite parameters: (Y, X) position, sprite pattern number, and color
-BALL1_SPR_PARAMS: equ 0xe0f5
-BALL_SPR_PARAMS_LEN: equ 4
-BALL2_SPR_PARAMS: equ BALL1_SPR_PARAMS + BALL_SPR_PARAMS_LEN
-BALL3_SPR_PARAMS: equ BALL2_SPR_PARAMS + BALL_SPR_PARAMS_LEN
-;
-BALL_SPR_PARAMS_IDX_Y: equ 0
-BALL_SPR_PARAMS_IDX_X: equ 1
-BALL_SPR_PARAMS_IDX_PATTERN_NUM: equ 2
-BALL_SPR_PARAMS_IDX_COLOR: equ 3
+SPR_PARAMS_LEN: equ 4
+
+SPR_PARAMS_BASE: equ 0xe0cd
+
+
+; Sprite parameter tables: (Y, X) position, sprite pattern number, and color
+
+; Indices
+SPR_PARAMS_IDX_Y: equ 0
+SPR_PARAMS_IDX_X: equ 1
+SPR_PARAMS_IDX_PATTERN_NUM: equ 2
+SPR_PARAMS_IDX_COLOR: equ 3
+
+; Sprites
+SPR_7_SPR_PARAMS: equ SPR_PARAMS_BASE + 7*SPR_PARAMS_LEN
+SPR_8_SPR_PARAMS: equ SPR_PARAMS_BASE + 8*SPR_PARAMS_LEN
+SPR_9_SPR_PARAMS: equ SPR_PARAMS_BASE + 9*SPR_PARAMS_LEN
+SPR_16_SPR_PARAMS: equ SPR_PARAMS_BASE + 16*SPR_PARAMS_LEN
+
+
+; Ball sprite parameters
+BALL1_SPR_PARAMS: equ SPR_PARAMS_BASE + 10*SPR_PARAMS_LEN; 0xe0f5
+BALL2_SPR_PARAMS: equ SPR_PARAMS_BASE + 11*SPR_PARAMS_LEN
+BALL3_SPR_PARAMS: equ SPR_PARAMS_BASE + 12*SPR_PARAMS_LEN
+
+
+
+
+
+
+
+; Game state
+; 0: in title screen
+; 1: normal play
+; 2: normal play, with score updates
+; 3: normal play, but without score updates
+GAME_STATE: equ 0xe00b
+
+PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4: equ 0xe0bf
+
 
 
 ; The game reads the keyboard and writes a mask of bits of the
@@ -300,57 +324,68 @@ ROM_START:
 	ld (0fd9bh),hl		;40d3	22 9b fd 	" . . 
 	ei			;40d6	fb 	. 
 l40d7h:
-	halt			;40d7	76 	v 
-	ld a,(0e0bfh)		;40d8	3a bf e0 	: . . 
-	bit 6,a		;40db	cb 77 	. w 
-	jr z,l4103h		;40dd	28 24 	( $ 
+    ; Check if the game is paused.
+    ; If already paused, skip playing the pause sound and writing "PAUSE" again
+	halt			                            ;40d7	76
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)   ;40d8	3a bf e0
+	bit 6,a		                                ;40db	cb 77
+	jr z,l4103h		                            ;40dd	28 24
 
-    ; Jump if state is title screen
-	ld a,(GAME_STATE)		;40df	3a 0b e0 	: . . 
-	or a			;40e2	b7 	. 
-	jp z,l4103h		;40e3	ca 03 41 	. . A 
+    ; Skup if state is title screen
+	ld a,(GAME_STATE)		;40df	3a 0b e0
+	or a			        ;40e2	b7
+	jp z,l4103h		        ;40e3	ca 03 41
 
-	ld a,SOUND_PAUSE		;40e6	3e 05 	> . 
-	ld (SOUND_NUMBER),a		;40e8	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;40eb	cd e8 b4 	. . . 
+    ; Play pause sound
+	ld a,SOUND_PAUSE		;40e6	3e 05
+	ld (SOUND_NUMBER),a		;40e8	32 c0 e5
+	call PLAY_SOUND		    ;40eb	cd e8 b4
 
 	ei			    ;40ee
 
     ; Print "PAUSE"
-	ld hl,PAUSE_STR		;40ef	21 1b 42
-	ld de,01a3ah		;40f2	11 3a 1a
-	ld bc,5 		    ;40f5	01 05 00    len("PAUSE")=5
-	call LDIRVM		    ;40f8	cd 5c 00
+	ld hl,PAUSE_STR		            ;40ef	21 1b 42
+	ld de,0x1800 + 26 + 17*32		;40f2	11 3a 1a    Locate at [26, 17]
+	ld bc,5 		                ;40f5	01 05 00    len("PAUSE")=5
+	call LDIRVM		                ;40f8	cd 5c 00
 
+; Do the pause...
 l40fbh:
-	halt			;40fb	76 	v 
-	ld a,(0e0bfh)		;40fc	3a bf e0 	: . . 
-	bit 6,a		;40ff	cb 77 	. w 
+	halt			    ;40fb	76
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;40fc	3a bf e0
+	bit 6,a		        ;40ff	cb 77
 l4101h:
-	jr z,l40fbh		;4101	28 f8 	( . 
+	jr z,l40fbh		    ;4101	28 f8
+    
+; Pause finished
+
 l4103h:
-	ld hl,01a3ah		;4103	21 3a 1a 	! : . 
-	ld bc,00005h		;4106	01 05 00 	. . . 
-	ld a,000h		;4109	3e 00 	> . 
-	call FILVRM		;410b	cd 56 00 	. V . 
-	ld hl,SPRITE_ATTRIBS_AREA		;410e	21 8d e1 	! . . 
-	ld b,020h		;4111	06 20 	.   
-	ld de,00004h		;4113	11 04 00 	. . . 
+    ; Clear the "PAUSE" message
+	ld hl,0x1800 + 26 + 17*32	;4103	21 3a 1a 	Locate at [26, 17]
+	ld bc, 5		            ;4106	01 05 00
+	ld a, 0		                ;4109	3e 00
+	call FILVRM		            ;410b	cd 56 00
+
+    ; Set the Y coordinate of all 32 sprites to 192 (invisible)
+	ld hl,SPRITE_ATTRIBS_AREA	;410e	21 8d e1
+	ld b,32		                ;4111	06 20       32 sprites
+	ld de, SPR_PARAMS_LEN       ;4113	11 04 00
 l4116h:
-	ld (hl),0c0h		;4116	36 c0 	6 . 
-	add hl,de			;4118	19 	. 
-	djnz l4116h		;4119	10 fb 	. . 
-	ld b,020h		;411b	06 20 	.   
-	ld ix,0e0c9h		;411d	dd 21 c9 e0 	. ! . . 
+	ld (hl), 192		        ;4116	36 c0
+	add hl,de			        ;4118	19
+	djnz l4116h		            ;4119	10 fb
+
+	ld b, 32		    ;411b	06 20               32 sprites
+	ld ix,0e0c9h		;411d	dd 21 c9 e0
 l4121h:
-	ld iy,SPRITE_ATTRIBS_AREA		;4121	fd 21 8d e1 	. ! . . 
-	ld de,00004h		;4125	11 04 00 	. . . 
+	ld iy,SPRITE_ATTRIBS_AREA		;4121	fd 21 8d e1
+	ld de, SPR_PARAMS_LEN           ;4125	11 04 00
 l4128h:
 	ld a,(ix+002h)		;4128	dd 7e 02 	. ~ . 
 	or a			;412b	b7 	. 
 	jp z,l4158h		;412c	ca 58 41 	. X A 
 	ld a,(ix+000h)		;412f	dd 7e 00 	. ~ . 
-	cp 0c0h		;4132	fe c0 	. . 
+	cp 192		        ;4132	fe c0 	. . 
 	jp z,l4158h		;4134	ca 58 41 	. X A 
 	ld a,(ix+003h)		;4137	dd 7e 03 	. ~ . 
 	or a			;413a	b7 	. 
@@ -368,6 +403,7 @@ l414ah:
 l4158h:
 	add ix,de		;4158	dd 19 	. . 
 	djnz l4128h		;415a	10 cc 	. . 
+
 	ld a,(0e317h)		;415c	3a 17 e3 	: . . 
 	or a			;415f	b7 	. 
 	jp z,l418eh		;4160	ca 8e 41 	. . A 
@@ -550,7 +586,7 @@ l427ch:
 	and 0f0h		;428e	e6 f0 	. . 
 	and e			;4290	a3 	. 
 	xor e			;4291	ab 	. 
-	ld (0e0bfh),a		;4292	32 bf e0 	2 . . 
+	ld (PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4),a		;4292	32 bf e0 	2 . . 
 	ld b,a			;4295	47 	G 
 
     ; Keep going if we're in the title screen
@@ -1956,11 +1992,12 @@ sub_4b8ah:
 	ld bc,00060h		;4be7	01 60 00 	. ` . 
 	call LDIRVM		;4bea	cd 5c 00 	. \ . 
 
-	ld ix,0e0cdh		;4bed	dd 21 cd e0 	. ! . . 
-	ld (ix+000h),034h		;4bf1	dd 36 00 34 	. 6 . 4 
-	ld (ix+001h),094h		;4bf5	dd 36 01 94 	. 6 . . 
-	ld (ix+002h),0a0h		;4bf9	dd 36 02 a0 	. 6 . . 
-	ld (ix+003h),00ah		;4bfd	dd 36 03 0a 	. 6 . . 
+	ld ix,SPR_PARAMS_BASE		;4bed	dd 21 cd e0
+	ld (ix+000h),52		;4bf1	dd 36 00 34
+	ld (ix+001h),148	;4bf5	dd 36 01 94
+	ld (ix+002h),160	;4bf9	dd 36 02 a0
+	ld (ix+003h),10		;4bfd	dd 36 03 0a
+
 	ld a,001h		;4c01	3e 01 	> . 
 	ld (0e53ch),a		;4c03	32 3c e5 	2 < . 
 
@@ -2007,7 +2044,7 @@ l4c48h:
 	jp nz,l4c73h		;4c54	c2 73 4c 	. s L 
 	jp l4c62h		;4c57	c3 62 4c 	. b L 
 l4c5ah:
-	ld a,(0e0bfh)		;4c5a	3a bf e0 	: . . 
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;4c5a	3a bf e0 	: . . 
 	bit 4,a		;4c5d	cb 67 	. g 
 	jp nz,l4c73h		;4c5f	c2 73 4c 	. s L 
 l4c62h:
@@ -2147,7 +2184,7 @@ l4d09h:
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
     ; ToDo: what is this structure?
-	ld hl,0e0bfh		;4d22	21 bf e0 	! . . 
+	ld hl,PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4		;4d22	21 bf e0 	! . . 
 	ld de,KEYBOARD_INPUT		;4d25	11 c0 e0 	. . . 
 	ld bc,004f5h		;4d28	01 f5 04 	. . . 
 	dec bc			;4d2b	0b 	. 
@@ -2403,7 +2440,7 @@ l4eddh:
 	jp nz,l4f6bh		;4ef1	c2 6b 4f 	. k O 
 	jp l4effh		;4ef4	c3 ff 4e 	. . N 
 l4ef7h:
-	ld a,(0e0bfh)		;4ef7	3a bf e0 	: . . 
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;4ef7	3a bf e0 	: . . 
 	bit 4,a		;4efa	cb 67 	. g 
 	jp nz,l4f6bh		;4efc	c2 6b 4f 	. k O 
 l4effh:
@@ -7638,16 +7675,18 @@ l68bch:
 	push hl			;68c6	e5 	. 
 	cp 001h		;68c7	fe 01 	. . 
 	jp z,l68dch		;68c9	ca dc 68 	. . h 
+
 	ld hl,l6fe7h		;68cc	21 e7 6f 	! . o 
-	ld de,0e0cdh		;68cf	11 cd e0 	. . . 
+	ld de,SPR_PARAMS_BASE		;68cf	11 cd e0 	. . . 
 	ld bc,00010h		;68d2	01 10 00 	. . . 
 l68d5h:
 	ldir		;68d5	ed b0 	. . 
+
 	ld a,001h		;68d7	3e 01 	> . 
 	ld (0e5a9h),a		;68d9	32 a9 e5 	2 . . 
 l68dch:
 	ld ix,0e54bh		;68dc	dd 21 4b e5 	. ! K . 
-	ld iy,0e0cdh		;68e0	fd 21 cd e0 	. ! . . 
+	ld iy,SPR_PARAMS_BASE		;68e0	fd 21 cd e0 	. ! . . 
 	ld a,(ix+000h)		;68e4	dd 7e 00 	. ~ . 
 	cp 001h		;68e7	fe 01 	. . 
 	jp z,l690fh		;68e9	ca 0f 69 	. . i 
@@ -7680,7 +7719,7 @@ l6924h:
 	ld a,(0e00ch)		;6924	3a 0c e0 	: . . 
 	or a			;6927	b7 	. 
 	jp nz,l6946h		;6928	c2 46 69 	. F i 
-	ld a,(0e0bfh)		;692b	3a bf e0 	: . . 
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;692b	3a bf e0 	: . . 
 	and 00fh		;692e	e6 0f 	. . 
 	ld l,a			;6930	6f 	o 
 	ld h,000h		;6931	26 00 	& . 
@@ -7902,7 +7941,7 @@ l6adbh:
 	inc hl			;6b08	23 	# 
 	ld d,(hl)			;6b09	56 	V 
 	ex de,hl			;6b0a	eb 	. 
-	ld de,0e0cdh		;6b0b	11 cd e0 	. . . 
+	ld de,SPR_PARAMS_BASE		;6b0b	11 cd e0 	. . . 
 	ld bc,0000ch		;6b0e	01 0c 00 	. . . 
 	ldir		;6b11	ed b0 	. . 
 	inc (ix+001h)		;6b13	dd 34 01 	. 4 . 
@@ -7924,7 +7963,7 @@ l6b2ch:
 	inc hl			;6b31	23 	# 
 	ld d,(hl)			;6b32	56 	V 
 	ex de,hl			;6b33	eb 	. 
-	ld de,0e0cdh		;6b34	11 cd e0 	. . . 
+	ld de,SPR_PARAMS_BASE		;6b34	11 cd e0 	. . . 
 	ld bc,00010h		;6b37	01 10 00 	. . . 
 	ldir		;6b3a	ed b0 	. . 
 	inc (ix+001h)		;6b3c	dd 34 01 	. 4 . 
@@ -7939,7 +7978,7 @@ l6b48h:
 	inc hl			;6b4d	23 	# 
 	ld d,(hl)			;6b4e	56 	V 
 	ex de,hl			;6b4f	eb 	. 
-	ld de,0e0cdh		;6b50	11 cd e0 	. . . 
+	ld de,SPR_PARAMS_BASE		;6b50	11 cd e0 	. . . 
 	ld bc,00010h		;6b53	01 10 00 	. . . 
 	ldir		;6b56	ed b0 	. . 
 	inc (ix+001h)		;6b58	dd 34 01 	. 4 . 
@@ -8589,14 +8628,14 @@ sub_7040h:
 	jp z,l70afh		;7064	ca af 70 	. . p 
 	jp l7072h		;7067	c3 72 70 	. r p 
 l706ah:
-	ld a,(0e0bfh)		;706a	3a bf e0 	: . . 
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;706a	3a bf e0 	: . . 
 	bit 4,a		;706d	cb 67 	. g 
 	jp z,l70afh		;706f	ca af 70 	. . p 
 l7072h:
 	ld b,002h		;7072	06 02 	. . 
 l7074h:
 	ld ix,0e557h		;7074	dd 21 57 e5 	. ! W . 
-	ld iy,0e0e9h		;7078	fd 21 e9 e0 	. ! . . 
+	ld iy,SPR_7_SPR_PARAMS		;7078	fd 21 e9 e0 	. ! . . 
 l707ch:
 	ld a,(ix+000h)		;707c	dd 7e 00 	. ~ . 
 	or a			;707f	b7 	. 
@@ -8622,7 +8661,7 @@ l70afh:
 sub_70b0h:
 	ld a,001h		;70b0	3e 01 	> . 
 	ld (0e519h),a		;70b2	32 19 e5 	2 . . 
-	ld ix,0e0e9h		;70b5	dd 21 e9 e0 	. ! . . 
+	ld ix,SPR_7_SPR_PARAMS		;70b5	dd 21 e9 e0 	. ! . . 
 	ld iy,0e557h		;70b9	fd 21 57 e5 	. ! W . 
 	ld b,003h		;70bd	06 03 	. . 
 l70bfh:
@@ -9206,7 +9245,7 @@ l7483h:
 	ld (0e581h),a		;7490	32 81 e5 	2 . . 
 	ld b,003h		;7493	06 03 	. . 
 	ld ix,0e563h		;7495	dd 21 63 e5 	. ! c . 
-	ld iy,0e10dh		;7499	fd 21 0d e1 	. ! . . 
+	ld iy,SPR_16_SPR_PARAMS		;7499	fd 21 0d e1 	. ! . . 
 l749dh:
 	ld a,(ix+000h)		;749d	dd 7e 00 	. ~ . 
 	or a			;74a0	b7 	. 
@@ -9228,7 +9267,7 @@ l74bdh:
 sub_74c7h:
 	ld b,003h		;74c7	06 03 	. . 
 	ld ix,0e563h		;74c9	dd 21 63 e5 	. ! c . 
-	ld iy,0e10dh		;74cd	fd 21 0d e1 	. ! . . 
+	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1 	. ! . . 
 l74d1h:
 	push bc			;74d1	c5 	. 
 	ld a,(ix+000h)		;74d2	dd 7e 00 	. ~ . 
@@ -9238,7 +9277,7 @@ l74d1h:
 	or a			;74dc	b7 	. 
 	jp nz,l7501h		;74dd	c2 01 75 	. . u 
 	ld (ix+001h),001h		;74e0	dd 36 01 01 	. 6 . . 
-	ld hl,0e0cdh		;74e4	21 cd e0 	! . . 
+	ld hl,SPR_PARAMS_BASE		;74e4	21 cd e0 	! . . 
 	inc hl			;74e7	23 	# 
 	ld a,(hl)			;74e8	7e 	~ 
 	sub 008h		;74e9	d6 08 	. . 
@@ -9691,7 +9730,7 @@ l787dh:
 	cp 006h		;7883	fe 06 	. . 
 	jp l7851h		;7885	c3 51 78 	. Q x 
 sub_7888h:
-	ld ix,0e0e9h		;7888	dd 21 e9 e0 	. ! . . 
+	ld ix,SPR_7_SPR_PARAMS		;7888	dd 21 e9 e0 	. ! . . 
 	ld a,(0e557h)		;788c	3a 57 e5 	: W . 
 	or a			;788f	b7 	. 
 	jp z,l78a1h		;7890	ca a1 78 	. . x 
@@ -9701,7 +9740,7 @@ sub_7888h:
 	ld (0e557h),a		;789a	32 57 e5 	2 W . 
 	ld (ix+000h),0c0h		;789d	dd 36 00 c0 	. 6 . . 
 l78a1h:
-	ld ix,0e0edh		;78a1	dd 21 ed e0 	. ! . . 
+	ld ix,SPR_8_SPR_PARAMS		;78a1	dd 21 ed e0 	. ! . . 
 	ld a,(0e55bh)		;78a5	3a 5b e5 	: [ . 
 	or a			;78a8	b7 	. 
 	jp z,l78bah		;78a9	ca ba 78 	. . x 
@@ -9711,7 +9750,7 @@ l78a1h:
 	ld (0e55bh),a		;78b3	32 5b e5 	2 [ . 
 	ld (ix+000h),0c0h		;78b6	dd 36 00 c0 	. 6 . . 
 l78bah:
-	ld ix,0e0f1h		;78ba	dd 21 f1 e0 	. ! . . 
+	ld ix,SPR_9_SPR_PARAMS		;78ba	dd 21 f1 e0 	. ! . . 
 	ld a,(0e55fh)		;78be	3a 5f e5 	: _ . 
 	or a			;78c1	b7 	. 
 	jp z,l78d3h		;78c2	ca d3 78 	. . x 
@@ -9787,7 +9826,7 @@ l7935h:
 	ret			;7941	c9 	. 
 
 sub_7942h:
-	ld ix,0e0cdh		        ;7942	dd 21 cd e0
+	ld ix,SPR_PARAMS_BASE		        ;7942	dd 21 cd e0
 	ld iy,TABLE_UNKNOWN_1		;7946	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;794a	21 c8 e4
 	ld b,003h		;794d	06 03 	. . 
@@ -9885,7 +9924,7 @@ l7a06h:
 	ld a,(iy+003h)		;7a0c	fd 7e 03 	. ~ . 
 	or a			;7a0f	b7 	. 
 	jp z,l7a5bh		;7a10	ca 5b 7a 	. [ z 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;7a13	dd 7e 00
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;7a13	dd 7e 00
 	sub 16		                        ;7a16	d6 10
 	ld e,a			;7a18	5f 	_ 
 	ld a,(iy+000h)		;7a19	fd 7e 00 	. ~ . 
@@ -9893,7 +9932,7 @@ l7a06h:
 	ld a,e			;7a1d	7b 	{ 
 	cp d			;7a1e	ba 	. 
 	jp nc,l7a5bh		;7a1f	d2 5b 7a 	. [ z 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;7a22	dd 7e 00
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;7a22	dd 7e 00
 	add a,004h		;7a25	c6 04 	. . 
 	ld e,a			;7a27	5f 	_ 
 	ld a,(iy+000h)		;7a28	fd 7e 00 	. ~ . 
@@ -9901,7 +9940,7 @@ l7a06h:
 	ld a,e			;7a2c	7b 	{ 
 	cp d			;7a2d	ba 	. 
 	jp c,l7a5bh		;7a2e	da 5b 7a 	. [ z 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;7a31	dd 7e 01
+	ld a,(ix+SPR_PARAMS_IDX_X)		;7a31	dd 7e 01
 	sub 16		                        ;7a34	d6 10
 	ld e,a			;7a36	5f 	_ 
 	ld a,(iy+001h)		;7a37	fd 7e 01 	. ~ . 
@@ -9909,7 +9948,7 @@ l7a06h:
 	ld a,e			;7a3b	7b 	{ 
 	cp d			;7a3c	ba 	. 
 	jp nc,l7a5bh		;7a3d	d2 5b 7a 	. [ z 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;7a40	dd 7e 01
+	ld a,(ix+SPR_PARAMS_IDX_X)		;7a40	dd 7e 01
 	add a,004h		;7a43	c6 04 	. . 
 	ld e,a			;7a45	5f 	_ 
 	ld a,(iy+001h)		;7a46	fd 7e 01 	. ~ . 
@@ -9937,8 +9976,8 @@ sub_7a68h:
 	ld a,(0e54bh)		;7a68	3a 4b e5 	: K . 
 	cp 006h		;7a6b	fe 06 	. . 
 	ret z			;7a6d	c8 	. 
-	ld ix,0e0cdh		;7a6e	dd 21 cd e0 	. ! . . 
-	ld iy,0e10dh		;7a72	fd 21 0d e1 	. ! . . 
+	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0 	. ! . . 
+	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1 	. ! . . 
 	ld hl,0e563h		;7a76	21 63 e5 	! c . 
 	ld b,003h		;7a79	06 03 	. . 
 l7a7bh:
@@ -16408,7 +16447,7 @@ l987eh:
 	jp z,l99b8h		                    ;9886	ca b8 99
 
     ; HL = 2*BALL_X
-	ld l,(iy+BALL_SPR_PARAMS_IDX_X)		;9889	fd 6e 01
+	ld l,(iy+SPR_PARAMS_IDX_X)		;9889	fd 6e 01
 	ld h, 0		                        ;988c	26 00
 	add hl,hl			                ;988e	29
 
@@ -16434,17 +16473,17 @@ ACTION_TABLE:
 ; Initialize ball for the level start
 ACTION_989E:
     ; iy = BALL_TABLE1
-    ; ix = BALL_SPR_PARAMS_IDX_Y
-	ld (ix+BALL_SPR_PARAMS_IDX_Y), 169		;                    989e	dd 36 00 a9
+    ; ix = SPR_PARAMS_IDX_Y
+	ld (ix+SPR_PARAMS_IDX_Y), 169		;                    989e	dd 36 00 a9
     ; The other two balls are invisible at row 192
-	ld (ix+BALL_SPR_PARAMS_IDX_Y + 1*BALL_SPR_PARAMS_LEN), 192  ;98a2	dd 36 04 c0
-	ld (ix+BALL_SPR_PARAMS_IDX_Y + 2*BALL_SPR_PARAMS_LEN), 192  ;98a6	dd 36 08 c0
+	ld (ix+SPR_PARAMS_IDX_Y + 1*SPR_PARAMS_LEN), 192  ;98a2	dd 36 04 c0
+	ld (ix+SPR_PARAMS_IDX_Y + 2*SPR_PARAMS_LEN), 192  ;98a6	dd 36 08 c0
 
 	ld (iy+16),  26  ;98aa	fd 36 10 1a
 
     ; Configure sprite of the ball
-	ld (ix+BALL_SPR_PARAMS_IDX_PATTERN_NUM), 0x80   ;98ae	dd 36 02 80
-	ld (ix+BALL_SPR_PARAMS_IDX_COLOR), 15	        ;98b2	dd 36 03 0f     White color
+	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM), 0x80   ;98ae	dd 36 02 80
+	ld (ix+SPR_PARAMS_IDX_COLOR), 15	        ;98b2	dd 36 03 0f     White color
 
 	ld (iy+BALL_TABLE_IDX_GLUE),1	                ;98b6	fd 36 01 01     Ball is glued
 	
@@ -16486,7 +16525,7 @@ ACTION_98F8:
 	jr nz,l9935h		;990b	20 28 	  ( 
 	jp l9917h		;990d	c3 17 99 	. . . 
 l9910h:
-	ld a,(0e0bfh)		;9910	3a bf e0 	: . . 
+	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;9910	3a bf e0 	: . . 
 	bit 4,a		;9913	cb 67 	. g 
 	jr nz,l9935h		;9915	20 1e 	  . 
 l9917h:
@@ -16514,7 +16553,7 @@ l9935h:
 ; And this one with bouncing when reaching the limits of the playfield
 ACTION_9941:
     ; iy = BALL_TABLE1
-    ; ix = BALL_SPR_PARAMS_IDX_Y
+    ; ix = SPR_PARAMS_IDX_Y
 
 	call sub_99dfh		;9941	cd df 99 	. . . 
 
@@ -16523,7 +16562,7 @@ ACTION_9941:
 	or a			                    ;9947	b7
 	jp z,l99b8h		                    ;9948	ca b8 99
 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;994b	dd 7e 01
+	ld a,(ix+SPR_PARAMS_IDX_X)		;994b	dd 7e 01
     
     ; Check if it's moving right
 	bit 7,(iy+BALL_TABLE_IDX_HORIZ)		;994e	fd cb 03 7e     Z if RIGHT
@@ -16539,7 +16578,7 @@ ACTION_9941:
     
     ; Set the position to 185
 	ld a, 185		            ;9960	3e b9
-	ld (ix+BALL_SPR_PARAMS_IDX_X),a		;9962	dd 77 01
+	ld (ix+SPR_PARAMS_IDX_X),a		;9962	dd 77 01
 
 	call sub_99d1h		;9965	cd d1 99 	. . . 
 	jp l9985h		;9968	c3 85 99 	. . . 
@@ -16560,11 +16599,11 @@ l996bh:
 
     ; Set the position to 18
 	ld a, 18		            ;997d	3e 12
-	ld (ix+BALL_SPR_PARAMS_IDX_X),a  ;997f	dd 77 01
+	ld (ix+SPR_PARAMS_IDX_X),a  ;997f	dd 77 01
 
 	call sub_99d1h		        ;9982	cd d1 99
 l9985h:
-	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;9985	dd 7e 00
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9985	dd 7e 00
 
 	bit 7,(iy+BALL_TABLE_IDX_VERT)		    ;9988	fd cb 02 7e     Z if moving DOWN
 	jp z,l99a2h		                    ;998c	ca a2 99        Moving down, skip
@@ -16579,7 +16618,7 @@ l9985h:
     
     ; Set position to 9
 	ld a,9		                ;999a	3e 09
-	ld (ix+BALL_SPR_PARAMS_IDX_Y),a		;999c	dd 77 00
+	ld (ix+SPR_PARAMS_IDX_Y),a		;999c	dd 77 00
 
 	call sub_99d1h		                ;999f	cd d1 99
 l99a2h:
@@ -16589,7 +16628,7 @@ l99a2h:
 	pop iy		;99a9	fd e1 	. . 
 	pop ix		;99ab	dd e1 	. . 
 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;99ad	dd 7e 00
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;99ad	dd 7e 00
 	cp 184		                        ;99b0	fe b8
 	jp c,l99b8h		                    ;99b2	da b8 99 Jump if Y < 184
     
@@ -16600,7 +16639,7 @@ l99b8h:
 	pop ix		                    ;99ba	dd e1
 
     ; Next ball (spr)
-	ld de,BALL_SPR_PARAMS_LEN		;99bc	11 04 00
+	ld de,SPR_PARAMS_LEN		;99bc	11 04 00
 	add ix,de		                ;99bf	dd 19
 
     ; Next ball
@@ -16914,7 +16953,7 @@ l9ba3h:
 	ret			;9ba7	c9 	. 
 
 sub_9ba8h:
-	ld a,(ix+BALL_SPR_PARAMS_IDX_Y)		;9ba8	dd 7e 00 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9ba8	dd 7e 00 	. ~ . 
 	bit 7,(iy+BALL_TABLE_IDX_VERT)		;9bab	fd cb 02 7e 	. . . ~ 
 	ret nz			;9baf	c0 	. 
 	cp 0a7h		;9bb0	fe a7 	. . 
@@ -16923,7 +16962,7 @@ sub_9ba8h:
 	ret nc			;9bb5	d0 	. 
 	ld a,(VAUS_X)		;9bb6	3a ce e0 	: . . 
 	add a,001h		;9bb9	c6 01 	. . 
-	cp (ix+BALL_SPR_PARAMS_IDX_X)		;9bbb	dd be 01 	. . . 
+	cp (ix+SPR_PARAMS_IDX_X)		;9bbb	dd be 01 	. . . 
 	ret nc			;9bbe	d0 	. 
 	ld c,007h		;9bbf	0e 07 	. . 
 	ld b,029h		;9bc1	06 29 	. ) 
@@ -16935,9 +16974,9 @@ sub_9ba8h:
 l9bcfh:
 	ld a,(VAUS_X)		;9bcf	3a ce e0 	: . . 
 	add a,b			;9bd2	80 	. 
-	cp (ix+BALL_SPR_PARAMS_IDX_X)		;9bd3	dd be 01 	. . . 
+	cp (ix+SPR_PARAMS_IDX_X)		;9bd3	dd be 01 	. . . 
 	ret c			;9bd6	d8 	. 
-	ld (ix+BALL_SPR_PARAMS_IDX_Y),169		;9bd7	dd 36 00 a9 	. 6 . . 
+	ld (ix+SPR_PARAMS_IDX_Y),169		;9bd7	dd 36 00 a9 	. 6 . . 
 	ld a,(0e324h)		;9bdb	3a 24 e3 	: $ . 
 	cp 001h		;9bde	fe 01 	. . 
 	jp z,l9bebh		;9be0	ca eb 9b 	. . . 
@@ -16955,7 +16994,7 @@ l9bebh:
 
 	ld a,(VAUS_X)		;9bf4	3a ce e0 	: . . 
 	ld c,a			;9bf7	4f 	O 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;9bf8	dd 7e 01 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9bf8	dd 7e 01 	. ~ . 
 	sub c			;9bfb	91 	. 
 	ld (iy+010h),a		;9bfc	fd 77 10 	. w . 
 	pop bc			;9bff	c1 	. 
@@ -16968,7 +17007,7 @@ l9c05h:
 
 	ld a,(VAUS_X)		;9c0d	3a ce e0 	: . . 
 	ld b,a			;9c10	47 	G 
-	ld a,(ix+BALL_SPR_PARAMS_IDX_X)		;9c11	dd 7e 01 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9c11	dd 7e 01 	. ~ . 
 	sub b			;9c14	90 	. 
 	ld l,a			;9c15	6f 	o 
 	ld h,0  		;9c16	26 00 	& . 
@@ -20003,6 +20042,7 @@ lb12fh:
 	ld (hl),0ffh		;b133	36 ff 	6 . 
 	scf			;b135	37 	7 
 	ret			;b136	c9 	. 
+
 sub_b137h:
 	ld a,(LEVEL)		;b137	3a 1b e0
 	cp FINAL_LEVEL		;b13a	fe 20
@@ -20027,7 +20067,7 @@ sub_b15ch:
 	cp 006h		;b165	fe 06 	. . 
 	ret z			;b167	c8 	. 
 	ld ix,0e0c9h		;b168	dd 21 c9 e0 	. ! . . 
-	ld iy,0e0cdh		;b16c	fd 21 cd e0 	. ! . . 
+	ld iy,SPR_PARAMS_BASE		;b16c	fd 21 cd e0 	. ! . . 
 	ld a,(ix+000h)		;b170	dd 7e 00 	. ~ . 
 	cp 0a8h		;b173	fe a8 	. . 
 	ret c			;b175	d8 	. 
@@ -20281,18 +20321,18 @@ lb30fh:
 	djnz lb30fh		;b327	10 e6 	. . 
 
     ; Position of the ball's sprite
-	ld l,(ix+BALL_SPR_PARAMS_IDX_Y)		;b329	dd 6e 00
-	ld h,(ix+BALL_SPR_PARAMS_IDX_X)		;b32c	dd 66 01
+	ld l,(ix+SPR_PARAMS_IDX_Y)		;b329	dd 6e 00
+	ld h,(ix+SPR_PARAMS_IDX_X)		;b32c	dd 66 01
 
 	ld b, 3		                ;b32f	06 03       3 balls
 	ld ix, BALL1_SPR_PARAMS		;b331	dd 21 f5 e0
-	ld de, BALL_SPR_PARAMS_LEN  ;b335	11 04 00
+	ld de, SPR_PARAMS_LEN       ;b335	11 04 00
 lb338h:
     ; Set ball's sprite parameters
-	ld (ix+BALL_SPR_PARAMS_IDX_Y),l		            ;b338	dd 75 00        Y
-	ld (ix+BALL_SPR_PARAMS_IDX_X),h		            ;b33b	dd 74 01        X
-	ld (ix+BALL_SPR_PARAMS_IDX_PATTERN_NUM), 128	;b33e	dd 36 02 80     Pattern of the ball
-	ld (ix+BALL_SPR_PARAMS_IDX_COLOR),  15	        ;b342	dd 36 03 0f     White color
+	ld (ix+SPR_PARAMS_IDX_Y),l		            ;b338	dd 75 00        Y
+	ld (ix+SPR_PARAMS_IDX_X),h		            ;b33b	dd 74 01        X
+	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM), 128	;b33e	dd 36 02 80     Pattern of the ball
+	ld (ix+SPR_PARAMS_IDX_COLOR),  15	        ;b342	dd 36 03 0f     White color
 
     ; Next ball
 	ld de, 4		    ;b346	11 04 00    Useless, it was already initialized @b335
