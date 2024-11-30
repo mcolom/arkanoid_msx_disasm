@@ -2627,9 +2627,9 @@ l50ffh:
 ; Draws the "ROUND x" message
 DRAW_ROUND_MESSAGE:
     ; Write "ROUND "
-	ld hl,l5144h		;5101	21 44 51
+	ld hl,ROUND_STR		;5101	21 44 51
 	ld de,0194ch		;5104	11 4c 19
-	ld bc,00005h		;5107	01 05 00
+	ld bc,5		        ;5107	01 05 00
 	call LDIRVM		    ;510a	cd 5c 00
 l510dh:
 	ld a,(LEVEL_DISP)		;510d	3a 1c e0
@@ -2664,12 +2664,8 @@ l5131h:
 	call WRTVRM		;5140	cd 4d 00 	. M . 
 	ret			;5143	c9 	. 
 
-l5144h:
-	ld d,d			;5144	52 	R 
-	ld c,a			;5145	4f 	O 
-	ld d,l			;5146	55 	U 
-	ld c,(hl)			;5147	4e 	N 
-	ld b,h			;5148	44 	D 
+ROUND_STR:
+    db "ROUND"
 
 
 ; Table with the Vaus sprite and sprites to write "READY"
