@@ -471,23 +471,27 @@ LDIRVM_32x24_THIRD:
 	call LDIRVM		    ;4223	cd 5c 00
 	ret			        ;4226	c9
 
-sub_4227h:
-	ld hl,01800h		;4227	21 00 18 	! . . 
-	ld bc,00300h		;422a	01 00 03 	. . . 
-	xor a			;422d	af 	. 
-	call FILVRM		;422e	cd 56 00 	. V . 
+; Clear the screen and the area in 0e0c9h
+CLEAR_SCREEN:
+    ; Clear name table
+	ld hl,01800h		;4227	21 00 18
+	ld bc,00300h		;422a	01 00 03
+	xor a			    ;422d	af
+	call FILVRM		    ;422e	cd 56 00
 
-	ld hl,SPRITES_ATTRIB_TABLE		;4231	21 00 1b 	! . . 
-	ld bc, 128		;4234	01 80 00 	. . . 
-	ld a,0c0h		;4237	3e c0 	> . 
-	call FILVRM		;4239	cd 56 00 	. V . 
+    ; Clear sprites attribute table
+	ld hl,SPRITES_ATTRIB_TABLE		;4231	21 00 1b
+	ld bc, 128		                ;4234	01 80 00
+	ld a,192		                ;4237	3e c0
+	call FILVRM		                ;4239	cd 56 00
 
-	ld hl,0e0c9h		;423c	21 c9 e0 	! . . 
-	ld de,0e0cah		;423f	11 ca e0 	. . . 
-	ld bc,00080h		;4242	01 80 00 	. . . 
-	ld (hl),0c0h		;4245	36 c0 	6 . 
-	ldir		;4247	ed b0 	. . 
-	ret			;4249	c9 	. 
+    ; Clear memory
+	ld hl,0e0c9h		;423c	21 c9 e0
+	ld de,0e0cah		;423f	11 ca e0
+	ld bc,128		    ;4242	01 80 00
+	ld (hl),192		    ;4245	36 c0
+	ldir		        ;4247	ed b0
+	ret			        ;4249	c9
 
 l424ah:
 	call RDVDP		;424a	cd 3e 01 	. > . 
@@ -1912,7 +1916,7 @@ sub_4b8ah:
 	ld a,000h		;4baa	3e 00 	> . 
 	ld (0f3ebh),a		;4bac	32 eb f3 	2 . . 
 	call CHGCLR		;4baf	cd 62 00 	. b . 
-	call sub_4227h		;4bb2	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;4bb2	cd 27 42 	. ' B 
 
     ; Fill pattern table (1/3)
 	ld hl,l9024h		        ;4bb5	21 24 90
@@ -2036,7 +2040,7 @@ l4c94h:
 	ld (0e53ch),a		;4c96	32 3c e5 	2 < . 
 	ld a,001h		;4c99	3e 01 	> . 
 	ld (0e00dh),a		;4c9b	32 0d e0 	2 . . 
-	call sub_4227h		;4c9e	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;4c9e	cd 27 42 	. ' B 
 	ret			;4ca1	c9 	. 
 
 l4ca2h:
@@ -2141,7 +2145,7 @@ l4d22h:
 	ld (hl),000h		;4d2c	36 00 	6 . 
 	ldir		;4d2e	ed b0 	. . 
 l4d30h:
-	call sub_4227h		;4d30	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;4d30	cd 27 42 	. ' B 
     
     ; Skip drawing scores and waiting if we're at the title screen
 	ld a,(GAME_STATE)		;4d33	3a 0b e0
@@ -2466,8 +2470,9 @@ l4f7ah:
 	ld (0e011h),hl		;4f83	22 11 e0 	" . . 
 	ld (0e013h),hl		;4f86	22 13 e0 	" . . 
 	ret			;4f89	c9 	. 
+
 ENDING_TEXT_ANIMATION:
-	call sub_4227h		;4f8a	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;4f8a	cd 27 42 	. ' B 
 	xor a			;4f8d	af 	. 
 	ld (0e53ch),a		;4f8e	32 3c e5 	2 < . 
 l4f91h:
@@ -2513,7 +2518,7 @@ l4fbbh:
 	ld hl, 1472		        ;4fd6	21 c0 05
 	call DELAY_HL_TICKS		;4fd9	cd 80 43
 
-	call sub_4227h		;4fdc	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;4fdc	cd 27 42 	. ' B 
 	ret			;4fdf	c9 	. 
 
 DRAW_UP_SCORES:
@@ -10176,7 +10181,7 @@ l7babh:
 	ld hl, 30		        ;7be3	21 1e 00
 	call DELAY_HL_TICKS		;7be6	cd 80 43
 
-	call sub_4227h		;7be9	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;7be9	cd 27 42 	. ' B 
     
     ; Doh if defeated here
 	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
@@ -10193,7 +10198,7 @@ l7babh:
 	ld hl, 240  		    ;7bfb	21 f0 00
 	call DELAY_HL_TICKS		;7bfe	cd 80 43
 
-	call sub_4227h		;7c01	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;7c01	cd 27 42 	. ' B 
 	jp l7c44h		;7c04	c3 44 7c 	. D | 
 
     ; Wait 48 ticks
@@ -10225,10 +10230,10 @@ l7c23h:
 	call LDIRVM		                ;7c38	cd 5c 00
 
     ; Wait 240 ticks
-	ld hl,000f0h		    ;7c3b	21 f0 00
+	ld hl, 240		        ;7c3b	21 f0 00
 	call DELAY_HL_TICKS		;7c3e	cd 80 43
 
-	call sub_4227h		;7c41	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;7c41	cd 27 42 	. ' B 
 l7c44h:
 	ld hl,0e027h		;7c44	21 27 e0 	! ' . 
 	ld de,0e028h		;7c47	11 28 e0 	. ( . 
