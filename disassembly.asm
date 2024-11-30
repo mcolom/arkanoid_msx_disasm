@@ -33,10 +33,11 @@ SPR_PARAMS_IDX_X: equ 1
 SPR_PARAMS_IDX_PATTERN_NUM: equ 2
 SPR_PARAMS_IDX_COLOR: equ 3
 
-; Sprites
-SPR_7_SPR_PARAMS: equ SPR_PARAMS_BASE + 7*SPR_PARAMS_LEN
-SPR_8_SPR_PARAMS: equ SPR_PARAMS_BASE + 8*SPR_PARAMS_LEN
-SPR_9_SPR_PARAMS: equ SPR_PARAMS_BASE + 9*SPR_PARAMS_LEN
+; Laser sprites
+LASER1_SPR_PARAMS: equ SPR_PARAMS_BASE + 7*SPR_PARAMS_LEN
+LASER2_SPR_PARAMS: equ SPR_PARAMS_BASE + 8*SPR_PARAMS_LEN
+LASER3_SPR_PARAMS: equ SPR_PARAMS_BASE + 9*SPR_PARAMS_LEN
+
 SPR_16_SPR_PARAMS: equ SPR_PARAMS_BASE + 16*SPR_PARAMS_LEN
 
 
@@ -8635,7 +8636,7 @@ l7072h:
 	ld b,002h		;7072	06 02 	. . 
 l7074h:
 	ld ix,0e557h		;7074	dd 21 57 e5 	. ! W . 
-	ld iy,SPR_7_SPR_PARAMS		;7078	fd 21 e9 e0 	. ! . . 
+	ld iy,LASER1_SPR_PARAMS		;7078	fd 21 e9 e0 	. ! . . 
 l707ch:
 	ld a,(ix+000h)		;707c	dd 7e 00 	. ~ . 
 	or a			;707f	b7 	. 
@@ -8661,7 +8662,7 @@ l70afh:
 sub_70b0h:
 	ld a,001h		;70b0	3e 01 	> . 
 	ld (0e519h),a		;70b2	32 19 e5 	2 . . 
-	ld ix,SPR_7_SPR_PARAMS		;70b5	dd 21 e9 e0 	. ! . . 
+	ld ix,LASER1_SPR_PARAMS		;70b5	dd 21 e9 e0 	. ! . . 
 	ld iy,0e557h		;70b9	fd 21 57 e5 	. ! W . 
 	ld b,003h		;70bd	06 03 	. . 
 l70bfh:
@@ -9729,8 +9730,9 @@ l787dh:
 	ld a,(ix+00ch)		;7880	dd 7e 0c 	. ~ . 
 	cp 006h		;7883	fe 06 	. . 
 	jp l7851h		;7885	c3 51 78 	. Q x 
+
 sub_7888h:
-	ld ix,SPR_7_SPR_PARAMS		;7888	dd 21 e9 e0 	. ! . . 
+	ld ix,LASER1_SPR_PARAMS		;7888	dd 21 e9 e0 	. ! . . 
 	ld a,(0e557h)		;788c	3a 57 e5 	: W . 
 	or a			;788f	b7 	. 
 	jp z,l78a1h		;7890	ca a1 78 	. . x 
@@ -9740,7 +9742,7 @@ sub_7888h:
 	ld (0e557h),a		;789a	32 57 e5 	2 W . 
 	ld (ix+000h),0c0h		;789d	dd 36 00 c0 	. 6 . . 
 l78a1h:
-	ld ix,SPR_8_SPR_PARAMS		;78a1	dd 21 ed e0 	. ! . . 
+	ld ix,LASER2_SPR_PARAMS		;78a1	dd 21 ed e0 	. ! . . 
 	ld a,(0e55bh)		;78a5	3a 5b e5 	: [ . 
 	or a			;78a8	b7 	. 
 	jp z,l78bah		;78a9	ca ba 78 	. . x 
@@ -9750,7 +9752,7 @@ l78a1h:
 	ld (0e55bh),a		;78b3	32 5b e5 	2 [ . 
 	ld (ix+000h),0c0h		;78b6	dd 36 00 c0 	. 6 . . 
 l78bah:
-	ld ix,SPR_9_SPR_PARAMS		;78ba	dd 21 f1 e0 	. ! . . 
+	ld ix,LASER3_SPR_PARAMS		;78ba	dd 21 f1 e0 	. ! . . 
 	ld a,(0e55fh)		;78be	3a 5f e5 	: _ . 
 	or a			;78c1	b7 	. 
 	jp z,l78d3h		;78c2	ca d3 78 	. . x 
