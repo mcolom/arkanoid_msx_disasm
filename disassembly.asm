@@ -150,6 +150,8 @@ SPRITE_ATTRIBS_AREA: equ 0xe18d
 ; Each entry is 20 positions
 ALIEN_TABLE: equ 0xe4c7
 ALIEN_TABLE_LEN: equ 20
+;
+ALIEN_TABLE_IDX_COLOR: equ 0
 ALIEN_TABLE_IDX_ACTIVE: equ 1
 ; [ToDo] Incomplete table
 
@@ -8936,8 +8938,8 @@ l72ceh:
 	ld bc, 4		    ;72ce	01 04 00 The door is 4 tiles
 	call LDIRVM		    ;72d1	cd 5c 00
 
-    ; Increment X = (ix+004h).
-    ; If X = 0 THEN call sub_7377h and exit
+    ; Increment X = (ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER).
+    ; If X = 0 THEN call SET_ALIEN_COLOR_BY_LEVEL and exit
     ; If X != 6 THEN exit
     ; Clear the DOOR_TABLE
     
@@ -8945,7 +8947,7 @@ l72ceh:
 	ld a,(ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)		;72d7	dd 7e 04
 	cp 3		                                    ;72da	fe 03
 	jp nz,l72e3h		;72dc	c2 e3 72 	. . r 
-	call sub_7377h		;72df	cd 77 73 	. w s 
+	call SET_ALIEN_COLOR_BY_LEVEL		;72df	cd 77 73 	. w s 
 	ret			;72e2	c9 	. 
 
 l72e3h:
@@ -9053,36 +9055,53 @@ TABLE_ALIENS_PER_LEVEL:
     db 3, 3, 3, 3, 3, 3, 3, 3, 3, 3
     db 3, 3, 3, 3, 3, 3, 3, 3, 3
 
-TABLE_0123:
-    db 0, 1, 2, 3
+ALIEN_COLOR_CODES:
+    db 0 ; blue
+    db 1 ; green
+    db 2 ; sky blue
+    db 3 ; red
 
-sub_7377h:
-	ld a,(LEVEL)		;7377	3a 1b e0 	: . . 
-	ld e,a			;737a	5f 	_ 
-	ld d,000h		;737b	16 00 	. . 
-	ld hl,TABLE_ALIENS_PER_LEVEL		;737d	21 53 73 	! S s 
-	add hl,de			;7380	19 	. 
-	ld b,(hl)			;7381	46 	F 
-	ld iy,ALIEN_TABLE		;7382	fd 21 c7 e4 	. ! . . 
+; Set the alien's color according to the level
+SET_ALIEN_COLOR_BY_LEVEL:
+    ; Get the number of aliens in this level
+	ld a,(LEVEL)                    ;7377	3a 1b e0
+	ld e,a			                ;737a	5f
+	ld d,000h		                ;737b	16 00   DE = LEVEL
+	ld hl,TABLE_ALIENS_PER_LEVEL	;737d	21 53 73 	! S s 
+	add hl,de			            ;7380	19      HL = TABLE_ALIENS_PER_LEVEL + LEVEL
+	ld b,(hl)			            ;7381	46      B = TABLE_ALIENS_PER_LEVEL[LEVEL]
+
+	ld iy,ALIEN_TABLE		        ;7382	fd 21 c7 e4
 l7386h:
-	ld a,(iy+001h)		;7386	fd 7e 01 	. ~ . 
-	or a			;7389	b7 	. 
-	jp nz,l73a2h		;738a	c2 a2 73 	. . s 
-	ld (iy+001h),001h		;738d	fd 36 01 01 	. 6 . . 
-	ld a,(LEVEL)		;7391	3a 1b e0 	: . . 
-	and 003h		;7394	e6 03 	. . 
-	ld e,a			;7396	5f 	_ 
-	ld d,000h		;7397	16 00 	. . 
-	ld hl,TABLE_0123		;7399	21 73 73 	! s s 
-	add hl,de			;739c	19 	. 
-	ld a,(hl)			;739d	7e 	~ 
-	ld (iy+000h),a		;739e	fd 77 00 	. w . 
+    ; Skip this alien if not active
+	ld a,(iy+ALIEN_TABLE_IDX_ACTIVE) ;7386	fd 7e 01
+	or a			                 ;7389	b7
+	jp nz,l73a2h		             ;738a	c2 a2 73
+    
+    ; The alien is active
+    
+    ; Mark it as active. Why? We know already it's active...
+	ld (iy+ALIEN_TABLE_IDX_ACTIVE), 1	;738d	fd 36 01 01
+    
+    ; Set the alien's color according to the current level
+	ld a,(LEVEL)	    ;7391	3a 1b e0
+	and 3		        ;7394	e6 03
+	ld e,a			    ;7396	5f
+	ld d,0		        ;7397	16 00          DE = LEVEL mod 4
+	ld hl,ALIEN_COLOR_CODES	;7399	21 73 73
+	add hl,de			;739c	19             HL = ALIEN_COLOR_CODES + LEVEL
+
+    ; Set alien's color
+	ld a,(hl)			            ;739d	7e  A = ALIEN_COLOR_CODES[LEVEL]
+	ld (iy+ALIEN_TABLE_IDX_COLOR),a	;739e	fd 77 00
 	ret			;73a1	c9 	. 
 l73a2h:
-	ld de,00014h		;73a2	11 14 00 	. . . 
-	add iy,de		;73a5	fd 19 	. . 
-	djnz l7386h		;73a7	10 dd 	. . 
-	ret			;73a9	c9 	. 
+    ; Next alien
+	ld de, ALIEN_TABLE_LEN	;73a2	11 14 00
+	add iy,de		        ;73a5	fd 19
+	djnz l7386h		        ;73a7	10 dd
+	ret			            ;73a9	c9
+
 sub_73aah:
 	ld ix,0e50dh		;73aa	dd 21 0d e5 	. ! . . 
 	ld a,(ix+000h)		;73ae	dd 7e 00 	. ~ . 
@@ -9730,7 +9749,6 @@ CHECK_ALIEN_HIT_BY_LASER:
     ; IX = LASER(i)_SPR_PARAMS
 	ld iy,SPR_13_SPR_PARAMS		;78d4	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;78d8	21 c8 e4
-    ; ToDo: probably the table in HL is one byte before, without the +1
 	ld b, 3		                ;78db	06 03
 l78ddh:
     ; Skip if alien is not active
