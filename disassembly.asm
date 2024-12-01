@@ -106,6 +106,22 @@ DECODED_ZEROS: equ 0xe594
 ; 0: up, 1: on the right
 SCORE_POSITION: equ 0xe544
 
+; The shape of Vaus
+; 0, 1: normal
+; 2: enlarged
+
+VAUS_ACTION_STATE: equ 0xe54b
+;
+VAUS_ACTION_STATE_KEEP: equ 1
+VAUS_ACTION_STATE_ENLARGING: equ 2
+VAUS_ACTION_STATE_SHRINKING: equ 3
+VAUS_ACTION_STATE_LASER: equ 4
+VAUS_ACTION_STATE_UNLASER: equ 5
+VAUS_ACTION_STATE_EXPLODING: equ 6
+VAUS_ACTION_STATE_THROUGH_PORTAL: equ 7
+
+
+
 ; Counts how many ticks the title screen is displayed
 TITLE_TICKS: equ 0xe53f
 
@@ -7642,26 +7658,32 @@ l68d5h:
 	ld a,001h		;68d7	3e 01 	> . 
 	ld (0e5a9h),a		;68d9	32 a9 e5 	2 . . 
 l68dch:
-	ld ix,0e54bh		;68dc	dd 21 4b e5 	. ! K . 
-	ld iy,SPR_PARAMS_BASE		;68e0	fd 21 cd e0 	. ! . . 
-	ld a,(ix+000h)		;68e4	dd 7e 00 	. ~ . 
-	cp 001h		;68e7	fe 01 	. . 
-	jp z,l690fh		;68e9	ca 0f 69 	. . i 
-	cp 002h		;68ec	fe 02 	. . 
-	jp z,l6c3eh		;68ee	ca 3e 6c 	. > l 
-	cp 003h		;68f1	fe 03 	. . 
-	jp z,l6d78h		;68f3	ca 78 6d 	. x m 
-	cp 004h		;68f6	fe 04 	. . 
-	jp z,l6f31h		;68f8	ca 31 6f 	. 1 o 
-	cp 005h		;68fb	fe 05 	. . 
-	jp z,l6cceh		;68fd	ca ce 6c 	. . l 
-	cp 006h		;6900	fe 06 	. . 
-	jp z,l6e0eh		;6902	ca 0e 6e 	. . n 
-	cp 007h		;6905	fe 07 	. . 
-	jp z,l6adbh		;6907	ca db 6a 	. . j 
-	ld (ix+000h),001h		;690a	dd 36 00 01 	. 6 . . 
+	ld ix,VAUS_ACTION_STATE		;68dc	dd 21 4b e5
+	ld iy,SPR_PARAMS_BASE		;68e0	fd 21 cd e0
+    
+    ; Choose action on VAUS_ACTION_STATE
+	ld a,(ix+0)		                        ;68e4	dd 7e 00
+	cp VAUS_ACTION_STATE_KEEP		        ;68e7	fe 01
+	jp z,l690fh		                        ;68e9	ca 0f 69
+	cp VAUS_ACTION_STATE_ENLARGING		    ;68ec	fe 02
+	jp z,l6c3eh		                        ;68ee	ca 3e 6c
+	cp VAUS_ACTION_STATE_SHRINKING		    ;68f1	fe 03
+	jp z,l6d78h		                        ;68f3	ca 78 6d
+	cp VAUS_ACTION_STATE_LASER		        ;68f6	fe 04
+	jp z,l6f31h		                        ;68f8	ca 31 6f
+	cp VAUS_ACTION_STATE_UNLASER		    ;68fb	fe 05
+	jp z,l6cceh		                        ;68fd	ca ce 6c
+	cp VAUS_ACTION_STATE_EXPLODING		    ;6900	fe 06
+	jp z,l6e0eh		                        ;6902	ca 0e 6e
+	cp VAUS_ACTION_STATE_THROUGH_PORTAL		;6905	fe 07
+	jp z,l6adbh		                        ;6907	ca db 6a
+    
+    ; Transformation completed, keep current state
+	ld (ix+0),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
 	ret nz			;690e	c0 	. 
 l690fh:
+    ; VAUS_ACTION_STATE_KEEP
+
     ; Keep going if we're at the title screen
 	ld a,(GAME_STATE)		;690f	3a 0b e0 	: . . 
 	or a			;6912	b7 	. 
@@ -7877,6 +7899,7 @@ l6ac7h:
 	ld (iy+00dh),a		;6ad7	fd 77 0d 	. w . 
 	ret			;6ada	c9 	. 
 l6adbh:
+    ; VAUS_ACTION_STATE_THROUGH_PORTAL
 	ld ix,0e553h		;6adb	dd 21 53 e5 	. ! S . 
 	inc (ix+000h)		;6adf	dd 34 00 	. 4 . 
 	ld a,(ix+000h)		;6ae2	dd 7e 00 	. ~ . 
@@ -7907,7 +7930,7 @@ l6adbh:
 	ret nz			;6b1b	c0 	. 
 l6b1ch:
 	ld a,000h		;6b1c	3e 00 	> . 
-	ld (0e54bh),a		;6b1e	32 4b e5 	2 K . 
+	ld (VAUS_ACTION_STATE),a		;6b1e	32 4b e5 	2 K . 
 	ld a,002h		;6b21	3e 02 	> . 
 	ld (0e00ah),a		;6b23	32 0a e0 	2 . . 
 	ld a,001h		;6b26	3e 01 	> . 
@@ -8148,6 +8171,7 @@ l6c24h:
 	nop			;6c3c	00 	. 
 	nop			;6c3d	00 	. 
 l6c3eh:
+    ; VAUS_ACTION_STATE_ENLARGING
 	ld a,(ix+006h)		;6c3e	dd 7e 06 	. ~ . 
 	cp 001h		;6c41	fe 01 	. . 
 	jp z,l6cceh		;6c43	ca ce 6c 	. . l 
@@ -8200,6 +8224,7 @@ l6cb8h:
 	ld (ix+001h),000h		;6cc7	dd 36 01 00 	. 6 . . 
 	jp l690fh		;6ccb	c3 0f 69 	. . i 
 l6cceh:
+    ; VAUS_ACTION_STATE_UNLASER
 	inc (ix+002h)		;6cce	dd 34 02 	. 4 . 
 	ld a,(ix+002h)		;6cd1	dd 7e 02 	. ~ . 
 	cp 005h		;6cd4	fe 05 	. . 
@@ -8260,6 +8285,7 @@ l6d71h:
 	ld (ix+000h),001h		;6d71	dd 36 00 01 	. 6 . . 
 	jp l690fh		;6d75	c3 0f 69 	. . i 
 l6d78h:
+    ; VAUS_ACTION_STATE_SHRINKING
 	inc (ix+002h)		;6d78	dd 34 02 	. 4 . 
 	ld a,(ix+002h)		;6d7b	dd 7e 02 	. ~ . 
 	cp 005h		;6d7e	fe 05 	. . 
@@ -8314,6 +8340,7 @@ l6dffh:
 	ld (ix+007h),000h		;6e07	dd 36 07 00 	. 6 . . 
 	jp l690fh		;6e0b	c3 0f 69 	. . i 
 l6e0eh:
+    ; VAUS_ACTION_STATE_EXPLODING
 	ld (ix+006h),000h		;6e0e	dd 36 06 00 	. 6 . . 
 	inc (ix+003h)		;6e12	dd 34 03 	. 4 . 
 	ld a,(ix+003h)		;6e15	dd 7e 03 	. ~ . 
@@ -8426,6 +8453,7 @@ l6f12h:
 	ld (0e00ah),a		;6f2d	32 0a e0 	2 . . 
 	ret			;6f30	c9 	. 
 l6f31h:
+    ; VAUS_ACTION_STATE_LASER
 	ld (ix+006h),001h		;6f31	dd 36 06 01 	. 6 . . 
 	ld a,(ix+005h)		;6f35	dd 7e 05 	. ~ . 
 	cp 002h		;6f38	fe 02 	. . 
@@ -8563,7 +8591,7 @@ sub_7039h:
 	call sub_70b0h		;703c	cd b0 70 	. . p 
 	ret			;703f	c9 	. 
 sub_7040h:
-	ld ix,0e54bh		;7040	dd 21 4b e5 	. ! K . 
+	ld ix,VAUS_ACTION_STATE		;7040	dd 21 4b e5 	. ! K . 
 	ld a,(ix+006h)		;7044	dd 7e 06 	. ~ . 
 	or a			;7047	b7 	. 
 	ret z			;7048	c8 	. 
@@ -9834,53 +9862,78 @@ l7935h:
 	scf			            ;7940	37
 	ret			            ;7941	c9
 
+; SEGUIR
 sub_7942h:
-	ld ix,SPR_PARAMS_BASE		        ;7942	dd 21 cd e0
-	ld iy,SPR_13_SPR_PARAMS		;7946	fd 21 01 e1
-	ld hl,ALIEN_TABLE + 1		;794a	21 c8 e4
-	ld b,003h		;794d	06 03 	. . 
+	ld ix,SPR_PARAMS_BASE		    ;7942	dd 21 cd e0
+	ld iy,SPR_13_SPR_PARAMS		    ;7946	fd 21 01 e1
+	ld hl,ALIEN_TABLE + 1		    ;794a	21 c8 e4
+	ld b,3		                    ;794d	06 03           3 aliens
 l794fh:
-	ld a,(0e54bh)		;794f	3a 4b e5 	: K . 
-	cp 006h		;7952	fe 06 	. . 
-	ret z			;7954	c8 	. 
-	ld a,(hl)			;7955	7e 	~ 
-	cp 001h		;7956	fe 01 	. . 
-	jp nz,l7999h		;7958	c2 99 79 	. . y 
-	ld a,(iy+000h)		;795b	fd 7e 00 	. ~ . 
-	cp 0a0h		;795e	fe a0 	. . 
-	jp c,l7999h		;7960	da 99 79 	. . y 
-	cp 0b8h		;7963	fe b8 	. . 
-	jp nc,l7999h		;7965	d2 99 79 	. . y 
-	ld a,(ix+001h)		;7968	dd 7e 01 	. ~ . 
-	add a,008h		;796b	c6 08 	. . 
-	cp (iy+001h)		;796d	fd be 01 	. . . 
-	jp nc,l7999h		;7970	d2 99 79 	. . y 
-	ld c,028h		;7973	0e 28 	. ( 
-	ld a,(0e321h)		;7975	3a 21 e3 	: ! . 
-	or a			;7978	b7 	. 
-	jp z,l797eh		;7979	ca 7e 79 	. ~ y 
-	ld c,038h		;797c	0e 38 	. 8 
+    ; Skip if Vaus is exploding
+	ld a,(VAUS_ACTION_STATE)		;794f	3a 4b e5
+	cp VAUS_ACTION_STATE_EXPLODING  ;7952	fe 06
+	ret z			    ;7954	c8
+
+    ; Skip this alien if not active
+	ld a,(hl)			;7955	7e
+	cp 1		        ;7956	fe 01
+	jp nz,l7999h		;7958	c2 99 79
+
+    ; Skip if ALIEN_Y < 160 or ALIEN_Y > 184
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;795b	fd 7e 00
+	cp 160		                    ;795e	fe a0
+	jp c,l7999h		                ;7960	da 99 79
+	cp 184		                    ;7963	fe b8
+	jp nc,l7999h		            ;7965	d2 99 79
+    
+    ; 160 < ALIEN_Y <= 184
+    
+	ld a,(ix+SPR_PARAMS_IDX_X)		;7968	dd 7e 01
+	add a,8		                    ;796b	c6 08
+	cp (iy+SPR_PARAMS_IDX_X)		;796d	fd be 01
+	jp nc,l7999h		            ;7970	d2 99 79
+    
+    ; ALIEN_X > X + 8
+
+    ; Choose C = 40 or C = 56 according to (0e321h)
+    ; ToDo: what if (0e321h)?
+	ld c,40		    ;7973	0e 28
+	ld a,(0e321h)	;7975	3a 21 e3
+	or a			;7978	b7
+	jp z,l797eh		;7979	ca 7e 79
+	ld c,56		    ;797c	0e 38
 l797eh:
-	ld a,(ix+001h)		;797e	dd 7e 01 	. ~ . 
-	add a,c			;7981	81 	. 
-	cp (iy+001h)		;7982	fd be 01 	. . . 
-	jp c,l7999h		;7985	da 99 79 	. . y 
+	ld a,(ix+SPR_PARAMS_IDX_X)	;797e	dd 7e 01
+	add a,c			            ;7981	81          A = X + constant (40 or 56)
+
+    ; Compare with ALIEN_X
+	cp (iy+SPR_PARAMS_IDX_X)    ;7982	fd be 01
+	jp c,l7999h		            ;7985	da 99 79    Skip
+    
+    ; ALIEN_X < X + constant (40 or 56)
+    
+    ; So for X:   X+8 < ALIEN_Y <= X + constant (40 or 56)
+    ; And for Y:  160 < ALIEN_Y <= 184
 	ld a,0c2h		;7988	3e c2 	> . 
 	call sub_5befh		;798a	cd ef 5b 	. . [ 
-	ld a,005h		;798d	3e 05 	> . 
-	call ADD_POINTS_AND_UPDATE_SCORES		;798f	cd a0 52 	. . R 
+
+    ; Add points
+	ld a,5  		                    ;798d	3e 05
+	call ADD_POINTS_AND_UPDATE_SCORES	;798f	cd a0 52
+
 	push hl			;7992	e5 	. 
 	ld (hl),002h		;7993	36 02 	6 . 
 	inc hl			;7995	23 	# 
 	ld (hl),001h		;7996	36 01 	6 . 
 	pop hl			;7998	e1 	. 
 l7999h:
-	ld de,00004h		;7999	11 04 00 	. . . 
-	add iy,de		;799c	fd 19 	. . 
-	ld de,00014h		;799e	11 14 00 	. . . 
-	add hl,de			;79a1	19 	. 
-	djnz l794fh		;79a2	10 ab 	. . 
-	ret			;79a4	c9 	.
+    ; Next alien
+	ld de,SPR_PARAMS_LEN		;7999	11 04 00
+	add iy,de		            ;799c	fd 19
+	ld de,ALIEN_TABLE_LEN		;799e	11 14 00
+	add hl,de			        ;79a1	19
+	djnz l794fh		            ;79a2	10 ab
+	ret			                ;79a4	c9
 
 sub_79a5h:
 	ld ix,BALL1_SPR_PARAMS		                        ;79a5	dd 21 f5 e0
@@ -9981,10 +10034,13 @@ l7a5bh:
 	djnz l7a06h		;7a64	10 a0 	. . 
 	scf			;7a66	37 	7 
 	ret			;7a67	c9 	. 
+
 sub_7a68h:
-	ld a,(0e54bh)		;7a68	3a 4b e5 	: K . 
-	cp 006h		;7a6b	fe 06 	. . 
-	ret z			;7a6d	c8 	. 
+    ; Skip if Vaus is exploding
+    ld a,(VAUS_ACTION_STATE)		;7a68	3a 4b e5
+	cp VAUS_ACTION_STATE_EXPLODING	;7a6b	fe 06
+	ret z			                ;7a6d	c8
+    
 	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0 	. ! . . 
 	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1 	. ! . . 
 	ld hl,0e563h		;7a76	21 63 e5 	! c . 
@@ -10006,8 +10062,11 @@ l7a7bh:
 	add a,020h		;7a9b	c6 20 	.   
 	cp (iy+001h)		;7a9d	fd be 01 	. . . 
 	jp c,l7ab4h		;7aa0	da b4 7a 	. . z 
-	ld a,006h		;7aa3	3e 06 	> . 
-	ld (0e54bh),a		;7aa5	32 4b e5 	2 K . 
+
+    ; Set Vaus action state to exploding
+	ld a,VAUS_ACTION_STATE_EXPLODING	;7aa3	3e 06
+	ld (VAUS_ACTION_STATE),a		    ;7aa5	32 4b e5
+
 	ld (iy+000h),0c0h		;7aa8	fd 36 00 c0 	. 6 . . 
 	ld a,007h		;7aac	3e 07 	> . 
 	call sub_5befh		;7aae	cd ef 5b 	. . [ 
@@ -16906,11 +16965,15 @@ sub_9b2ah:
 	dec (hl)			;9b48	35 	5 
 	ret			;9b49	c9 	. 
 l9b4ah:
-	ld a,(0e54bh)		;9b4a	3a 4b e5 	: K . 
-	cp 007h		;9b4d	fe 07 	. . 
-	ret z			;9b4f	c8 	. 
-	ld a,006h		;9b50	3e 06 	> . 
-	ld (0e54bh),a		;9b52	32 4b e5 	2 K . 
+    ; Skip if Vaus is going through the portal
+	ld a,(VAUS_ACTION_STATE)		    ;9b4a	3a 4b e5
+	cp VAUS_ACTION_STATE_THROUGH_PORTAL	;9b4d	fe 07
+	ret z			                    ;9b4f	c8
+
+	; Set Vaus is exploding
+    ld a,VAUS_ACTION_STATE_EXPLODING	;9b50	3e 06
+	ld (VAUS_ACTION_STATE),a		    ;9b52	32 4b e5
+    
 	ld a,007h		;9b55	3e 07 	> . 
 	call sub_5befh		;9b57	cd ef 5b 	. . [ 
 	ret			;9b5a	c9 	. 
@@ -20068,14 +20131,19 @@ sub_b137h:
 	ld (ix+000h),000h		;b153	dd 36 00 00 	. 6 . . 
 	ld (iy+000h),0c0h		;b157	fd 36 00 c0 	. 6 . . 
 	ret			;b15b	c9 	. 
+
 sub_b15ch:
+    ; Skip if we're in the final level
 	ld a,(LEVEL)		;b15c	3a 1b e0
 	cp FINAL_LEVEL		;b15f	fe 20
-	ret z			;b161	c8 	. 
-	ld a,(0e54bh)		;b162	3a 4b e5 	: K . 
-	cp 006h		;b165	fe 06 	. . 
-	ret z			;b167	c8 	. 
-	ld ix,0e0c9h		;b168	dd 21 c9 e0 	. ! . . 
+	ret z			    ;b161	c8
+    
+    ; Skip if Vaus is exploding
+	ld a,(VAUS_ACTION_STATE)		;b162	3a 4b e5
+	cp VAUS_ACTION_STATE_EXPLODING	;b165	fe 06
+	ret z			                ;b167	c8
+	
+    ld ix,0e0c9h		;b168	dd 21 c9 e0 	. ! . . 
 	ld iy,SPR_PARAMS_BASE		;b16c	fd 21 cd e0 	. ! . . 
 	ld a,(ix+000h)		;b170	dd 7e 00 	. ~ . 
 	cp 0a8h		;b173	fe a8 	. . 
@@ -20187,8 +20255,11 @@ lb203h:
 	ld (0e324h),a		;b227	32 24 e3 	2 $ . 
 lb22ah:
 	call sub_b2a7h		;b22a	cd a7 b2 	. . . 
-	ld a,002h		;b22d	3e 02 	> . 
-	ld (0e54bh),a		;b22f	32 4b e5 	2 K . 
+    
+    ; Set Vaus is enlarging
+	ld a,VAUS_ACTION_STATE_ENLARGING	;b22d	3e 02
+	ld (VAUS_ACTION_STATE),a		    ;b22f	32 4b e5
+
 	ld (0e321h),a		;b232	32 21 e3 	2 ! . 
 	ld a,0c0h		;b235	3e c0 	> . 
 	call sub_5befh		;b237	cd ef 5b 	. . [ 
@@ -20212,8 +20283,11 @@ lb247h:
 	ld (0e324h),a		;b25c	32 24 e3 	2 $ . 
 lb25fh:
 	call sub_b2a7h		;b25f	cd a7 b2 	. . . 
-	ld a,004h		;b262	3e 04 	> . 
-	ld (0e54bh),a		;b264	32 4b e5 	2 K . 
+    
+    ; Set Vaus is obtaining lasers
+	ld a,VAUS_ACTION_STATE_LASER	;b262	3e 04
+	ld (VAUS_ACTION_STATE),a		;b264	32 4b e5
+
 	ld a,001h		;b267	3e 01 	> . 
 	ld (0e322h),a		;b269	32 22 e3 	2 " . 
 	xor a			;b26c	af 	. 
@@ -20244,23 +20318,27 @@ lb292h:
 	ld a,0c5h		;b2a1	3e c5 	> . 
 	call sub_5befh		;b2a3	cd ef 5b 	. . [ 
 	ret			;b2a6	c9 	. 
+
+; SEGUIR
 sub_b2a7h:
 	ld a,(0e550h)		;b2a7	3a 50 e5 	: P . 
-	cp 002h		;b2aa	fe 02 	. . 
-	jr nz,lb2b2h		;b2ac	20 04 	  . 
-	ld a,003h		;b2ae	3e 03 	> . 
-	jr lb2bdh		;b2b0	18 0b 	. . 
+
+	cp VAUS_ACTION_STATE_ENLARGING		;b2aa	fe 02
+	jr nz,lb2b2h		                ;b2ac	20 04
+	ld a,VAUS_ACTION_STATE_SHRINKING	;b2ae	3e 03
+	jr lb2bdh		                    ;b2b0	18 0b
 lb2b2h:
 	or a			;b2b2	b7 	. 
 	jr nz,lb2c0h		;b2b3	20 0b 	  . 
-	ld a,(0e551h)		;b2b5	3a 51 e5 	: Q . 
-	or a			;b2b8	b7 	. 
-	jr z,lb2c0h		;b2b9	28 05 	( . 
-	ld a,005h		;b2bb	3e 05 	> . 
+	ld a,(0e551h)		            ;b2b5	3a 51 e5
+	or a			                ;b2b8	b7
+	jr z,lb2c0h		                ;b2b9	28 05
+	ld a,VAUS_ACTION_STATE_UNLASER	;b2bb	3e 05
 lb2bdh:
-	ld (0e54bh),a		;b2bd	32 4b e5 	2 K . 
+    ; Set Vaus action state
+	ld (VAUS_ACTION_STATE),a		;b2bd	32 4b e5
 lb2c0h:
-	ret			;b2c0	c9 	. 
+	ret			                    ;b2c0	c9
 
 ; SEGUIR
 sub_b2c1h:
