@@ -9018,7 +9018,7 @@ l732ch:
 	jp nz,l734bh		                    ;7330	c2 4b 73
 
     ; Set doors active
-	ld a,001h		                        ;7333	3e 01
+	ld a,1  		                        ;7333	3e 01
 	ld (DOOR_TABLE),a		                ;7335	32 70 e5
 
     ; Alien will appear on the right
@@ -9094,7 +9094,7 @@ l7386h:
     ; Set alien's color
 	ld a,(hl)			            ;739d	7e  A = ALIEN_COLOR_CODES[LEVEL]
 	ld (iy+ALIEN_TABLE_IDX_COLOR),a	;739e	fd 77 00
-	ret			;73a1	c9 	. 
+	ret			                    ;73a1	c9
 l73a2h:
     ; Next alien
 	ld de, ALIEN_TABLE_LEN	;73a2	11 14 00
@@ -9767,7 +9767,7 @@ l78ddh:
 	ld a,(ix+SPR_PARAMS_IDX_Y)	;78ea	dd 7e 00
 	sub 16		                ;78ed	d6 10
 	ld e,a			            ;78ef	5f          E = height - 16
-	ld a,(iy+0)		            ;78f0	fd 7e 00
+	ld a,(iy+SPR_PARAMS_IDX_Y)  ;78f0	fd 7e 00
 	ld d,a			            ;78f3	57          D = ALIEN_Y
 	ld a,e			            ;78f4	7b          A = height - 16
 	cp d			            ;78f5	ba          Compare ALIEN_Y with height - 16
@@ -9777,7 +9777,7 @@ l78ddh:
 	ld a,(ix+SPR_PARAMS_IDX_Y)	;78f9	dd 7e 00
 	add a,16		            ;78fc	c6 10
 	ld e,a			            ;78fe	5f          E = height + 16
-	ld a,(iy+0)		            ;78ff	fd 7e 00
+	ld a,(iy+SPR_PARAMS_IDX_Y)  ;78ff	fd 7e 00
 	ld d,a			            ;7902	57          D = ALIEN_Y
 	ld a,e			            ;7903	7b          A = height + 16
 	cp d			            ;7904	ba          Compare ALIEN_Y with height + 16
@@ -9789,7 +9789,7 @@ l78ddh:
 	ld a,(ix+SPR_PARAMS_IDX_X)  ;7908	dd 7e 01
 	sub 16		                ;790b	d6 10
 	ld e,a			            ;790d	5f          E = width - 16
-	ld a,(iy+1)		            ;790e	fd 7e 01
+	ld a,(iy+SPR_PARAMS_IDX_X)		            ;790e	fd 7e 01
 	ld d,a			            ;7911	57          D = ALIEN_X
 	ld a,e			            ;7912	7b          A = width - 16
 	cp d			            ;7913	ba          Compare ALIEN_X with width - 16
@@ -9798,7 +9798,7 @@ l78ddh:
 	ld a,(ix+SPR_PARAMS_IDX_X)	;7917	dd 7e 01
 	add a,16		            ;791a	c6 10
 	ld e,a			            ;791c	5f          A = width + 16
-	ld a,(iy+1)	;791d	fd 7e 01
+	ld a,(iy+SPR_PARAMS_IDX_X)	;791d	fd 7e 01
 	ld d,a			            ;7920	57          D = ALIEN_X
 	ld a,e			            ;7921	7b          A = width + 16
 	cp d			            ;7922	ba          Compare ALIEN_X with width + 16
