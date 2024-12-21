@@ -129,6 +129,9 @@ TICKS_240: equ 0xe515
 
 DOH_HITS: equ 0xe5b3
 
+; Vaus is enlarged, because of the blue capsule
+VAUS_IS_ENLARGED: equ 0xe321
+
 ; Extra balls, apart from the current.
 ; For example, after getting the cyan brick, there are
 ; 3 balls = 2 EXTRA_BALLS.
@@ -8908,7 +8911,7 @@ l726eh:
 	jp z,l7286h		;7273	ca 86 72 	. . r 
 	call sub_7605h		;7276	cd 05 76 	. . v 
 	call CHECK_LASERS_HITS_ALIEN		;7279	cd 88 78 	. . x 
-	call sub_7942h		;727c	cd 42 79 	. B y 
+	call CHECK_ALIEN_HIT_BY_VAUS		;727c	cd 42 79 	. B y 
 	call UPDATE_ALIEN_APPEAR_FROM_DOOR		;727f	cd 0c 73 	. . s 
 	call UPDATE_DOORS		;7282	cd a0 72 	. . r 
 	ret			;7285	c9 	. 
@@ -9862,12 +9865,14 @@ l7935h:
 	scf			            ;7940	37
 	ret			            ;7941	c9
 
-; SEGUIR
-sub_7942h:
+; Check if Vaus has hit the alien and give points
+CHECK_ALIEN_HIT_BY_VAUS:
 	ld ix,SPR_PARAMS_BASE		    ;7942	dd 21 cd e0
 	ld iy,SPR_13_SPR_PARAMS		    ;7946	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		    ;794a	21 c8 e4
-	ld b,3		                    ;794d	06 03           3 aliens
+    
+    ; Loop over 3 aliens
+	ld b, 3		                    ;794d	06 03
 l794fh:
     ; Skip if Vaus is exploding
 	ld a,(VAUS_ACTION_STATE)		;794f	3a 4b e5
@@ -9888,6 +9893,7 @@ l794fh:
     
     ; 160 < ALIEN_Y <= 184
     
+    ; Skip if ALIEN_X <= X + 8
 	ld a,(ix+SPR_PARAMS_IDX_X)		;7968	dd 7e 01
 	add a,8		                    ;796b	c6 08
 	cp (iy+SPR_PARAMS_IDX_X)		;796d	fd be 01
@@ -9895,16 +9901,15 @@ l794fh:
     
     ; ALIEN_X > X + 8
 
-    ; Choose C = 40 or C = 56 according to (0e321h)
-    ; ToDo: what if (0e321h)?
+    ; Choose C = 40 or C = 56 according to VAUS_IS_ENLARGED
 	ld c,40		    ;7973	0e 28
-	ld a,(0e321h)	;7975	3a 21 e3
+	ld a,(VAUS_IS_ENLARGED)	;7975	3a 21 e3
 	or a			;7978	b7
 	jp z,l797eh		;7979	ca 7e 79
 	ld c,56		    ;797c	0e 38
 l797eh:
 	ld a,(ix+SPR_PARAMS_IDX_X)	;797e	dd 7e 01
-	add a,c			            ;7981	81          A = X + constant (40 or 56)
+	add a,c			            ;7981	81          A = X + size (40 or 56)
 
     ; Compare with ALIEN_X
 	cp (iy+SPR_PARAMS_IDX_X)    ;7982	fd be 01
@@ -9912,7 +9917,7 @@ l797eh:
     
     ; ALIEN_X < X + constant (40 or 56)
     
-    ; So for X:   X+8 < ALIEN_Y <= X + constant (40 or 56)
+    ; So for  X   X+8 < ALIEN_Y <= X + constant (40 or 56)
     ; And for Y:  160 < ALIEN_Y <= 184
 	ld a,0c2h		;7988	3e c2 	> . 
 	call sub_5befh		;798a	cd ef 5b 	. . [ 
@@ -9921,6 +9926,8 @@ l797eh:
 	ld a,5  		                    ;798d	3e 05
 	call ADD_POINTS_AND_UPDATE_SCORES	;798f	cd a0 52
 
+    ; hl = ALIEN_TABLE + 1
+    ; ToDo: what is it accessing here?
 	push hl			;7992	e5 	. 
 	ld (hl),002h		;7993	36 02 	6 . 
 	inc hl			;7995	23 	# 
@@ -19949,7 +19956,7 @@ sub_b028h:
 	ld a,(0e324h)		;b04b	3a 24 e3 	: $ . 
 	cp 001h		;b04e	fe 01 	. . 
 	jr z,lb063h		;b050	28 11 	( . 
-	ld a,(0e321h)		;b052	3a 21 e3 	: ! . 
+	ld a,(VAUS_IS_ENLARGED)		;b052	3a 21 e3 	: ! . 
 	or a			;b055	b7 	. 
 	jr nz,lb068h		;b056	20 10 	  . 
 	ld a,(0e322h)		;b058	3a 22 e3 	: " . 
@@ -20154,7 +20161,7 @@ sub_b15ch:
 	cp (ix+001h)		;b17c	dd be 01 	. . . 
 	ret nc			;b17f	d0 	. 
 	ld c,020h		;b180	0e 20 	.   
-	ld a,(0e321h)		;b182	3a 21 e3 	: ! . 
+	ld a,(VAUS_IS_ENLARGED)		;b182	3a 21 e3 	: ! . 
 	or a			;b185	b7 	. 
 	jp z,lb18bh		;b186	ca 8b b1 	. . . 
 	ld c,030h		;b189	0e 30 	. 0 
@@ -20171,12 +20178,13 @@ lb18bh:
 	xor a			;b1a3	af 	. 
 	ld (0e317h),a		;b1a4	32 17 e3 	2 . . 
 	ret			;b1a7	c9 	. 
+
 sub_b1a8h:
 	ld a,(0e317h)		;b1a8	3a 17 e3 	: . . 
 	or a			;b1ab	b7 	. 
 	ret z			;b1ac	c8 	. 
 	ld hl,0e320h		;b1ad	21 20 e3 	!   . 
-	ld de,0e321h		;b1b0	11 21 e3 	. ! . 
+	ld de,VAUS_IS_ENLARGED		;b1b0	11 21 e3 	. ! . 
 	ld (hl),000h		;b1b3	36 00 	6 . 
 	ld bc,00003h		;b1b5	01 03 00 	. . . 
 	ldir		;b1b8	ed b0 	. . 
@@ -20259,8 +20267,8 @@ lb22ah:
     ; Set Vaus is enlarging
 	ld a,VAUS_ACTION_STATE_ENLARGING	;b22d	3e 02
 	ld (VAUS_ACTION_STATE),a		    ;b22f	32 4b e5
+	ld (VAUS_IS_ENLARGED),a		        ;b232	32 21 e3
 
-	ld (0e321h),a		;b232	32 21 e3 	2 ! . 
 	ld a,0c0h		;b235	3e c0 	> . 
 	call sub_5befh		;b237	cd ef 5b 	. . [ 
 	ret			;b23a	c9 	. 
