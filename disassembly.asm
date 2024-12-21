@@ -127,7 +127,11 @@ TITLE_TICKS: equ 0xe53f
 
 TICKS_240: equ 0xe515
 
+CURRENT_CAPSULE_TYPE: equ 0xe519
+
 DOH_HITS: equ 0xe5b3
+
+SOUND_INHIBIT_COUNTER: equ 0xe51e
 
 ; Vaus is enlarged, because of the blue capsule
 VAUS_IS_ENLARGED: equ 0xe321
@@ -520,9 +524,12 @@ l41eeh:
 	djnz l41eeh		;41f3	10 f9 	. . 
 	dec hl			;41f5	2b 	+ 
 	ld (hl),000h		;41f6	36 00 	6 . 
-	ld hl,0e51eh		;41f8	21 1e e5 	! . . 
-	dec (hl)			;41fb	35 	5 
-	jp l40d7h		;41fc	c3 d7 40 	. . @ 
+
+    ; Normally this is executed when you've more than one ball
+	ld hl,SOUND_INHIBIT_COUNTER		;41f8	21 1e e5
+	dec (hl)			            ;41fb	35 	5
+	jp l40d7h		                ;41fc	c3 d7 40
+
 sub_41ffh:
 	ld de,l93f4h		;41ff	11 f4 93 	. . . 
 	ld hl,02000h		;4202	21 00 20 	! .   
@@ -4839,26 +4846,34 @@ l5bebh:
 	jp nz,l8141h		;5bec	c2 41 81 	. A . 
 
 ; ToDo: this function is called a lot of times!
+; When the ball hits a brick, an alien, or Vaus
 sub_5befh:
 	push hl			;5bef	e5 	. 
 	push de			;5bf0	d5 	. 
 	push bc			;5bf1	c5 	. 
-	ld c,a			;5bf2	4f 	O 
-	ld a,(0e519h)		;5bf3	3a 19 e5 	: . . 
-	or a			;5bf6	b7 	. 
-	jp nz,l5c11h		;5bf7	c2 11 5c 	. . \ 
-	ld a,(0e51eh)		;5bfa	3a 1e e5 	: . . 
+    
+    ; Exit if no capsule
+	ld c,a			                ;5bf2	4f
+	ld a,(CURRENT_CAPSULE_TYPE)		;5bf3	3a 19 e5
+	or a			                ;5bf6	b7
+	jp nz,l5c11h		            ;5bf7	c2 11 5c
+    
+    ; HL = 0e520h + [SOUND_INHIBIT_COUNTER]
+	ld a,(SOUND_INHIBIT_COUNTER)		;5bfa	3a 1e e5 	: . . 
 	ld e,a			;5bfd	5f 	_ 
 	ld d,000h		;5bfe	16 00 	. . 
 	ld hl,0e520h		;5c00	21 20 e5 	!   . 
 	add hl,de			;5c03	19 	. 
+    ; 0e520h[SOUND_INHIBIT_COUNTER] = param
 	ld (hl),c			;5c04	71 	q 
-	ld hl,0e51eh		;5c05	21 1e e5 	! . . 
-	inc (hl)			;5c08	34 	4 
-	ld a,(hl)			;5c09	7e 	~ 
-	cp 008h		;5c0a	fe 08 	. . 
-	jp nz,l5c11h		;5c0c	c2 11 5c 	. . \ 
-	ld (hl),007h		;5c0f	36 07 	6 . 
+
+    ; Increment SOUND_INHIBIT_COUNTER, with a limit of 7
+	ld hl,SOUND_INHIBIT_COUNTER		;5c05	21 1e e5
+	inc (hl)			            ;5c08	34
+	ld a,(hl)			            ;5c09	7e
+	cp 8		                    ;5c0a	fe 08
+	jp nz,l5c11h		            ;5c0c	c2 11 5c
+	ld (hl), 7		                ;5c0f	36 07
 l5c11h:
 	pop bc			;5c11	c1 	. 
 	pop de			;5c12	d1 	. 
@@ -8648,7 +8663,7 @@ l70afh:
 	ret			;70af	c9 	. 
 sub_70b0h:
 	ld a,001h		;70b0	3e 01 	> . 
-	ld (0e519h),a		;70b2	32 19 e5 	2 . . 
+	ld (CURRENT_CAPSULE_TYPE),a		;70b2	32 19 e5 	2 . . 
 	ld ix,LASER1_SPR_PARAMS		;70b5	dd 21 e9 e0 	. ! . . 
 	ld iy,LASER1_ACTIVE		;70b9	fd 21 57 e5 	. ! W . 
 	ld b,003h		;70bd	06 03 	. . 
@@ -8725,9 +8740,11 @@ l715dh:
 	add iy,de		;7163	fd 19 	. . 
 	dec b			;7165	05 	. 
 	jp nz,l70bfh		;7166	c2 bf 70 	. . p 
-	xor a			;7169	af 	. 
-	ld (0e519h),a		;716a	32 19 e5 	2 . . 
-	ret			;716d	c9 	. 
+    
+    ; No capsule
+	xor a			                ;7169	af
+	ld (CURRENT_CAPSULE_TYPE),a	    ;716a	32 19 e5
+	ret			                    ;716d	c9
 
 ; Speed up all active balls if the counter has reached its maximum
 UPDATE_SPEED_ALL_BALLS:
