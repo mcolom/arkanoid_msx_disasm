@@ -127,7 +127,8 @@ TITLE_TICKS: equ 0xe53f
 
 TICKS_240: equ 0xe515
 
-CURRENT_CAPSULE_TYPE: equ 0xe519
+; Lasers are being fired
+LASERS_FIRING: equ 0xe519
 
 DOH_HITS: equ 0xe5b3
 
@@ -4852,12 +4853,15 @@ sub_5befh:
 	push de			;5bf0	d5 	. 
 	push bc			;5bf1	c5 	. 
     
-    ; Exit if no capsule
+    
 	ld c,a			                ;5bf2	4f
-	ld a,(CURRENT_CAPSULE_TYPE)		;5bf3	3a 19 e5
+    
+    ; Exit if lasers are being fired
+	ld a,(LASERS_FIRING)		    ;5bf3	3a 19 e5
 	or a			                ;5bf6	b7
 	jp nz,l5c11h		            ;5bf7	c2 11 5c
     
+    ; ToDo: what is this?
     ; HL = 0e520h + [SOUND_INHIBIT_COUNTER]
 	ld a,(SOUND_INHIBIT_COUNTER)		;5bfa	3a 1e e5 	: . . 
 	ld e,a			;5bfd	5f 	_ 
@@ -4875,10 +4879,10 @@ sub_5befh:
 	jp nz,l5c11h		            ;5c0c	c2 11 5c
 	ld (hl), 7		                ;5c0f	36 07
 l5c11h:
-	pop bc			;5c11	c1 	. 
-	pop de			;5c12	d1 	. 
-	pop hl			;5c13	e1 	. 
-	ret			;5c14	c9 	. 
+	pop bc			;5c11	c1
+	pop de			;5c12	d1
+	pop hl			;5c13	e1
+	ret			    ;5c14	c9
 
 ; SEGUIR
 sub_5c15h:
@@ -8661,9 +8665,12 @@ l70a6h:
 	djnz l707ch		;70ad	10 cd 	. . 
 l70afh:
 	ret			;70af	c9 	. 
+
 sub_70b0h:
-	ld a,001h		;70b0	3e 01 	> . 
-	ld (CURRENT_CAPSULE_TYPE),a		;70b2	32 19 e5 	2 . . 
+	; Set lasers are being fired
+    ld a, 1		                ;70b0	3e 01
+	ld (LASERS_FIRING),a		;70b2	32 19 e5
+    
 	ld ix,LASER1_SPR_PARAMS		;70b5	dd 21 e9 e0 	. ! . . 
 	ld iy,LASER1_ACTIVE		;70b9	fd 21 57 e5 	. ! W . 
 	ld b,003h		;70bd	06 03 	. . 
@@ -8741,9 +8748,9 @@ l715dh:
 	dec b			;7165	05 	. 
 	jp nz,l70bfh		;7166	c2 bf 70 	. . p 
     
-    ; No capsule
+    ; Set lasers are not being fired
 	xor a			                ;7169	af
-	ld (CURRENT_CAPSULE_TYPE),a	    ;716a	32 19 e5
+	ld (LASERS_FIRING),a	        ;716a	32 19 e5
 	ret			                    ;716d	c9
 
 ; Speed up all active balls if the counter has reached its maximum
