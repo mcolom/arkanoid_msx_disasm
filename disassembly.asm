@@ -65,14 +65,15 @@ GAME_STATE: equ 0xe00b
 
 PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4: equ 0xe0bf
 
-
-
 ; The game reads the keyboard and writes a mask of bits of the
 ; relevant keys here
 KEYBOARD_INPUT: equ 0xe0c0
 
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
+
+; ToDo: this table is related to sounds, but how?
+SOUND_RELATED_TABLE: equ 0xe520
 
 LASER1_ACTIVE: equ 0xe557
 LASER2_ACTIVE: equ 0xe55b
@@ -132,7 +133,8 @@ LASERS_FIRING: equ 0xe519
 
 DOH_HITS: equ 0xe5b3
 
-SOUND_INHIBIT_COUNTER: equ 0xe51e
+; How many sounds are being played
+SOUNDS_COUNT: equ 0xe51e
 
 ; Vaus is enlarged, because of the blue capsule
 VAUS_IS_ENLARGED: equ 0xe321
@@ -506,7 +508,7 @@ l41b1h:
 	call sub_7b94h		;41d4	cd 94 7b 	. . { 
 	jp l41dah		;41d7	c3 da 41 	. . A 
 l41dah:
-	ld hl,0e520h		;41da	21 20 e5 	!   . 
+	ld hl,SOUND_RELATED_TABLE		;41da	21 20 e5 	!   . 
 	ld a,(hl)			;41dd	7e 	~ 
 	or a			;41de	b7 	. 
 	jp z,l40d7h		;41df	ca d7 40 	. . @ 
@@ -526,8 +528,8 @@ l41eeh:
 	dec hl			;41f5	2b 	+ 
 	ld (hl),000h		;41f6	36 00 	6 . 
 
-    ; Normally this is executed when you've more than one ball
-	ld hl,SOUND_INHIBIT_COUNTER		;41f8	21 1e e5
+    ; Sound done
+	ld hl,SOUNDS_COUNT		;41f8	21 1e e5
 	dec (hl)			            ;41fb	35 	5
 	jp l40d7h		                ;41fc	c3 d7 40
 
@@ -2993,7 +2995,7 @@ l5336h:
 	inc (hl)			;5339	34 	4
 	call DRAW_LIVES		;533a	cd b9 71 	. . q 
 	ld a,0c5h		;533d	3e c5 	> . 
-	call sub_5befh		;533f	cd ef 5b 	. . [ 
+	call ADD_SOUND		;533f	cd ef 5b 	. . [ 
 	ld hl,0e021h		;5342	21 21 e0 	! ! . 
 	inc (hl)			;5345	34 	4 
 	ld e,040h		;5346	1e 40 	. @ 
@@ -4846,33 +4848,32 @@ l5bebh:
 	ld b,c			;5beb	41 	A 
 	jp nz,l8141h		;5bec	c2 41 81 	. A . 
 
-; ToDo: this function is called a lot of times!
-; When the ball hits a brick, an alien, or Vaus
-sub_5befh:
-	push hl			;5bef	e5 	. 
-	push de			;5bf0	d5 	. 
-	push bc			;5bf1	c5 	. 
+; Add a sound to the queue
+; Param A: sound code
+ADD_SOUND:
+	push hl			;5bef	e5
+	push de			;5bf0	d5
+	push bc			;5bf1	c5
+
+	ld c,a          ;5bf2	4f
     
-    
-	ld c,a			                ;5bf2	4f
-    
-    ; Exit if lasers are being fired
+    ; Exit if lasers are being fired. No sounds in that case.
 	ld a,(LASERS_FIRING)		    ;5bf3	3a 19 e5
 	or a			                ;5bf6	b7
 	jp nz,l5c11h		            ;5bf7	c2 11 5c
-    
-    ; ToDo: what is this?
-    ; HL = 0e520h + [SOUND_INHIBIT_COUNTER]
-	ld a,(SOUND_INHIBIT_COUNTER)		;5bfa	3a 1e e5 	: . . 
-	ld e,a			;5bfd	5f 	_ 
-	ld d,000h		;5bfe	16 00 	. . 
-	ld hl,0e520h		;5c00	21 20 e5 	!   . 
-	add hl,de			;5c03	19 	. 
-    ; 0e520h[SOUND_INHIBIT_COUNTER] = param
-	ld (hl),c			;5c04	71 	q 
 
-    ; Increment SOUND_INHIBIT_COUNTER, with a limit of 7
-	ld hl,SOUND_INHIBIT_COUNTER		;5c05	21 1e e5
+    ; HL = SOUND_RELATED_TABLE + [SOUNDS_COUNT]
+	ld a,(SOUNDS_COUNT)		        ;5bfa	3a 1e e5
+	ld e,a			                ;5bfd	5f
+	ld d, 0		                    ;5bfe	16 00
+	ld hl,SOUND_RELATED_TABLE		;5c00	21 20 e5
+	add hl,de			            ;5c03	19
+
+    ; SOUND_RELATED_TABLE[SOUNDS_COUNT] = sound_code
+	ld (hl),c			            ;5c04	71
+
+    ; Increment SOUNDS_COUNT, with a limit of 7
+	ld hl,SOUNDS_COUNT		        ;5c05	21 1e e5
 	inc (hl)			            ;5c08	34
 	ld a,(hl)			            ;5c09	7e
 	cp 8		                    ;5c0a	fe 08
@@ -7776,7 +7777,7 @@ l6972h:
 
 	ld (ix+000h),007h		;6997	dd 36 00 07 	. 6 . . 
 	ld a,0c1h		;699b	3e c1 	> . 
-	call sub_5befh		;699d	cd ef 5b 	. . [ 
+	call ADD_SOUND		;699d	cd ef 5b 	. . [ 
 	ld a,00ch		;69a0	3e 0c 	> . 
 	call ADD_POINTS_AND_UPDATE_SCORES		;69a2	cd a0 52 	. . R 
 	call DEACTIVE_ALL_BALLS		;69a5	cd 10 97 	. . . 
@@ -7828,7 +7829,7 @@ l69eah:
 
 	ld (ix+000h),007h		;6a03	dd 36 00 07 	. 6 . . 
 	ld a,0c1h		;6a07	3e c1 	> . 
-	call sub_5befh		;6a09	cd ef 5b 	. . [ 
+	call ADD_SOUND		;6a09	cd ef 5b 	. . [ 
 	ld a,00ch		;6a0c	3e 0c 	> . 
 	call ADD_POINTS_AND_UPDATE_SCORES		;6a0e	cd a0 52 	. . R 
 	call DEACTIVE_ALL_BALLS		;6a11	cd 10 97 	. . . 
@@ -8655,7 +8656,7 @@ l707ch:
 	ld (iy+002h),084h		;7093	fd 36 02 84 	. 6 . . 
 	ld (iy+003h),005h		;7097	fd 36 03 05 	. 6 . . 
 	ld a,006h		;709b	3e 06 	> . 
-	call sub_5befh		;709d	cd ef 5b 	. . [ 
+	call ADD_SOUND		;709d	cd ef 5b 	. . [ 
 	call UPDATE_SPEED_ALL_BALLS		;70a0	cd 6e 71 	. n q 
 	jp l70afh		;70a3	c3 af 70 	. . p 
 l70a6h:
@@ -9866,7 +9867,7 @@ l78ddh:
     
     ; ToDo: what is this function?
 	ld a,0c2h		;7926	3e c2 	> . 
-	call sub_5befh		;7928	cd ef 5b 	. . [ 
+	call ADD_SOUND		;7928	cd ef 5b 	. . [ 
 
     ; Give points and update the scores
 	ld a, 5		                        ;792b	3e 05
@@ -9944,7 +9945,7 @@ l797eh:
     ; So for  X   X+8 < ALIEN_Y <= X + constant (40 or 56)
     ; And for Y:  160 < ALIEN_Y <= 184
 	ld a,0c2h		;7988	3e c2 	> . 
-	call sub_5befh		;798a	cd ef 5b 	. . [ 
+	call ADD_SOUND		;798a	cd ef 5b 	. . [ 
 
     ; Add points
 	ld a,5  		                    ;798d	3e 05
@@ -9979,7 +9980,7 @@ sub_79a5h:
 	ld iy,BALL_TABLE1		;79b6	fd 21 4e e2 	. ! N . 
 	call sub_9b8ah		;79ba	cd 8a 9b 	. . . 
 	ld a,0c2h		;79bd	3e c2 	> . 
-	call sub_5befh		;79bf	cd ef 5b 	. . [ 
+	call ADD_SOUND		;79bf	cd ef 5b 	. . [ 
 l79c2h:
 	ld ix,BALL2_SPR_PARAMS		;79c2	dd 21 f9 e0 	. ! . . 
 	ld a,(BALL_TABLE2)		;79c6	3a 62 e2 	: b . 
@@ -9990,7 +9991,7 @@ l79c2h:
 	ld iy,BALL_TABLE2		;79d3	fd 21 62 e2 	. ! b . 
 	call sub_9b8ah		;79d7	cd 8a 9b 	. . . 
 	ld a,0c2h		;79da	3e c2 	> . 
-	call sub_5befh		;79dc	cd ef 5b 	. . [ 
+	call ADD_SOUND		;79dc	cd ef 5b 	. . [ 
 l79dfh:
 	ld ix,BALL3_SPR_PARAMS		;79df	dd 21 fd e0 	. ! . . 
 	ld a,(BALL_TABLE3)		;79e3	3a 76 e2 	: v . 
@@ -10001,7 +10002,7 @@ l79dfh:
 	ld iy,BALL_TABLE3		;79f0	fd 21 76 e2 	. ! v . 
 	call sub_9b8ah		;79f4	cd 8a 9b 	. . . 
 	ld a,0c2h		;79f7	3e c2 	> . 
-	call sub_5befh		;79f9	cd ef 5b 	. . [ 
+	call ADD_SOUND		;79f9	cd ef 5b 	. . [ 
 l79fch:
 	ret			;79fc	c9 	. 
 
@@ -10100,7 +10101,7 @@ l7a7bh:
 
 	ld (iy+000h),0c0h		;7aa8	fd 36 00 c0 	. 6 . . 
 	ld a,007h		;7aac	3e 07 	> . 
-	call sub_5befh		;7aae	cd ef 5b 	. . [ 
+	call ADD_SOUND		;7aae	cd ef 5b 	. . [ 
 	call DEACTIVE_ALL_BALLS		;7ab1	cd 10 97 	. . . 
 l7ab4h:
 	ld de,00004h		;7ab4	11 04 00 	. . . 
@@ -16324,7 +16325,7 @@ l96d7h:
 	ld (ix+000h),012h		;96e0	dd 36 00 12 	. 6 . . 
 l96e4h:
 	ld a,008h		;96e4	3e 08 	> . 
-	call sub_5befh		;96e6	cd ef 5b 	. . [ 
+	call ADD_SOUND		;96e6	cd ef 5b 	. . [ 
 	ld a,001h		;96e9	3e 01 	> . 
 	ld (0e2b9h),a		;96eb	32 b9 e2 	2 . . 
 
@@ -16341,7 +16342,7 @@ l96e4h:
 	ld (0e50dh),a		;96fe	32 0d e5 	2 . . 
 	call DEACTIVE_ALL_BALLS		;9701	cd 10 97 	. . . 
 	ld a,009h		;9704	3e 09 	> . 
-	call sub_5befh		;9706	cd ef 5b 	. . [ 
+	call ADD_SOUND		;9706	cd ef 5b 	. . [ 
 	ret			;9709	c9 	. 
 l970ah:
 	ld a,001h		;970a	3e 01 	> . 
@@ -16646,7 +16647,7 @@ l9935h:
 	ld (iy+BALL_TABLE_IDX_GLUE), 2		;9935	fd 36 01 02     Ball moves normally
 
 	ld a,001h		;9939	3e 01 	> . 
-	call sub_5befh		;993b	cd ef 5b 	. . [ 
+	call ADD_SOUND		;993b	cd ef 5b 	. . [ 
 	jp l99b8h		;993e	c3 b8 99 	. . . 
 
 ; And this one with bouncing when reaching the limits of the playfield
@@ -17006,7 +17007,7 @@ l9b4ah:
 	ld (VAUS_ACTION_STATE),a		    ;9b52	32 4b e5
     
 	ld a,007h		;9b55	3e 07 	> . 
-	call sub_5befh		;9b57	cd ef 5b 	. . [ 
+	call ADD_SOUND		;9b57	cd ef 5b 	. . [ 
 	ret			;9b5a	c9 	. 
 
 sub_9b5bh:
@@ -17084,7 +17085,7 @@ l9bcfh:
 	cp 001h		;9bde	fe 01 	. . 
 	jp z,l9bebh		;9be0	ca eb 9b 	. . . 
 	ld a,001h		;9be3	3e 01 	> . 
-	call sub_5befh		;9be5	cd ef 5b 	. . [ 
+	call ADD_SOUND		;9be5	cd ef 5b 	. . [ 
 	jp l9c05h		;9be8	c3 05 9c 	. . . 
 l9bebh:
 	push bc			;9beb	c5 	. 
@@ -17102,7 +17103,7 @@ l9bebh:
 	ld (iy+010h),a		;9bfc	fd 77 10 	. w . 
 	pop bc			;9bff	c1 	. 
 	ld a,004h		;9c00	3e 04 	> . 
-	call sub_5befh		;9c02	cd ef 5b 	. . [ 
+	call ADD_SOUND		;9c02	cd ef 5b 	. . [ 
 l9c05h:
 	ld a,(iy+BALL_TABLE_IDX_VERT)		;9c05	fd 7e 02 	. ~ . 
 	neg		;9c08	ed 44 	. D 
@@ -18939,7 +18940,7 @@ laaefh:
 	pop iy		;aafb	fd e1 	. . 
 	call 0ab7ah		;aafd	cd 7a ab 	. z . 
 	ld a,002h		;ab00	3e 02 	> . 
-	call sub_5befh		;ab02	cd ef 5b 	. . [ 
+	call ADD_SOUND		;ab02	cd ef 5b 	. . [ 
 	ret			;ab05	c9 	. 
 lab06h:
 	ld a,(BRICK_ROW)		;ab06	3a aa e2 	: . . 
@@ -18963,7 +18964,7 @@ lab10h:
 	ld (0e53dh),a		;ab2b	32 3d e5 	2 = . 
 	call sub_97afh		;ab2e	cd af 97 	. . . 
 	ld a,003h		;ab31	3e 03 	> . 
-	call sub_5befh		;ab33	cd ef 5b 	. . [ 
+	call ADD_SOUND		;ab33	cd ef 5b 	. . [ 
 	xor a			;ab36	af 	. 
 	ret			;ab37	c9 	. 
 sub_ab38h:
@@ -20294,7 +20295,7 @@ lb22ah:
 	ld (VAUS_IS_ENLARGED),a		        ;b232	32 21 e3
 
 	ld a,0c0h		;b235	3e c0 	> . 
-	call sub_5befh		;b237	cd ef 5b 	. . [ 
+	call ADD_SOUND		;b237	cd ef 5b 	. . [ 
 	ret			;b23a	c9 	. 
 
 	ld a,(0e324h)		;b23b	3a 24 e3 	: $ . 
@@ -20348,7 +20349,7 @@ lb292h:
 	inc (hl)			;b29d	34 	4 
 	call DRAW_LIVES		;b29e	cd b9 71 	. . q 
 	ld a,0c5h		;b2a1	3e c5 	> . 
-	call sub_5befh		;b2a3	cd ef 5b 	. . [ 
+	call ADD_SOUND		;b2a3	cd ef 5b 	. . [ 
 	ret			;b2a6	c9 	. 
 
 ; SEGUIR
