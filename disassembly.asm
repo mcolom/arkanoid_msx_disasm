@@ -350,9 +350,9 @@ ROM_START:
 
 	call sub_43ffh		;40c0	cd ff 43 	. . C 
 
-	ld a,0f8h		;40c3	3e f8 	> . 
-	ld (SOUND_NUMBER),a		;40c5	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;40c8	cd e8 b4 	. . . 
+	ld a,SOUND_NOP		;40c3	3e f8
+	ld (SOUND_NUMBER),a	;40c5	32 c0 e5
+	call PLAY_SOUND		;40c8	cd e8 b4
 
 	ld a,0c3h		;40cb	3e c3 	> . 
 	ld (0fd9ah),a		;40cd	32 9a fd 	2 . . 
@@ -2110,7 +2110,7 @@ l4c73h:
 	ld bc,00011h		    ;4c7e	01 11 00
 	call LDIRVM		        ;4c81	cd 5c 00
 
-	ld a,SOUND_START_MUSIC		;4c84	3e c3 	> . 
+	ld a,SOUND_GAME_START_MUSIC		;4c84	3e c3 	> . 
 	ld (SOUND_NUMBER),a		;4c86	32 c0 e5 	2 . . 
 	call PLAY_SOUND		;4c89	cd e8 b4 	. . . 
 
@@ -2428,7 +2428,7 @@ l4e74h:
     ld a,(LEVEL)		;4e8b	3a 1b e0
 	cp FINAL_LEVEL		;4e8e	fe 20
 	jp z,l4ea5h		;4e90	ca a5 4e 	. . N 
-	ld a,SOUND_LEVEL_START		;4e93	3e c4 	> . 
+	ld a,SOUND_LEVEL_START_MUSIC		;4e93	3e c4 	> . 
 	ld (SOUND_NUMBER),a		;4e95	32 c0 e5 	2 . . 
 	call PLAY_SOUND		;4e98	cd e8 b4 	. . . 
 
@@ -2438,7 +2438,7 @@ l4e74h:
 	call DELAY_HL_TICKS		;4e9f	cd 80 43
 	jp l4eb4h		        ;4ea2	c3 b4 4e
 l4ea5h:
-	ld a,SOUND_DOH_APPEARS		;4ea5	3e c8 	> . 
+	ld a,SOUND_DOH_LEVEL_STARTS		;4ea5	3e c8 	> . 
 	ld (SOUND_NUMBER),a		;4ea7	32 c0 e5 	2 . . 
 	call PLAY_SOUND		;4eaa	cd e8 b4 	. . . 
 
@@ -2458,9 +2458,9 @@ l4eb4h:
 	ld (0e00fh),hl		;4ec4	22 0f e0 	" . . 
 	ld (0e011h),hl		;4ec7	22 11 e0 	" . . 
 	ld (0e013h),hl		;4eca	22 13 e0 	" . . 
-	ld a,000h		;4ecd	3e 00 	> . 
-	ld (SOUND_NUMBER),a		;4ecf	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;4ed2	cd e8 b4 	. . . 
+	ld a, SOUND_NOP_0	;4ecd	3e 00
+	ld (SOUND_NUMBER),a	;4ecf	32 c0 e5
+	call PLAY_SOUND		;4ed2	cd e8 b4
 
     ; Wait 1 tick
 	ei			            ;4ed5	fb
@@ -2994,8 +2994,10 @@ l5336h:
 	ld hl,LIVES		    ;5336	21 1d e0
 	inc (hl)			;5339	34 	4
 	call DRAW_LIVES		;533a	cd b9 71 	. . q 
-	ld a,0c5h		;533d	3e c5 	> . 
-	call ADD_SOUND		;533f	cd ef 5b 	. . [ 
+
+	ld a,SOUND_LIFE		;533d	3e c5
+	call ADD_SOUND		;533f	cd ef 5b
+
 	ld hl,0e021h		;5342	21 21 e0 	! ! . 
 	inc (hl)			;5345	34 	4 
 	ld e,040h		;5346	1e 40 	. @ 
@@ -7776,8 +7778,10 @@ l6972h:
 	jp z,l69abh		        ;6994	ca ab 69
 
 	ld (ix+000h),007h		;6997	dd 36 00 07 	. 6 . . 
-	ld a,0c1h		;699b	3e c1 	> . 
-	call ADD_SOUND		;699d	cd ef 5b 	. . [ 
+
+	ld a,SOUND_VAUS_GOES_THROUGH_PORTAL_H	;699b	3e c1
+	call ADD_SOUND		                    ;699d	cd ef 5b
+
 	ld a,00ch		;69a0	3e 0c 	> . 
 	call ADD_POINTS_AND_UPDATE_SCORES		;69a2	cd a0 52 	. . R 
 	call DEACTIVE_ALL_BALLS		;69a5	cd 10 97 	. . . 
@@ -7828,8 +7832,10 @@ l69eah:
 	jp z,l69abh		        ;6a00	ca ab 69
 
 	ld (ix+000h),007h		;6a03	dd 36 00 07 	. 6 . . 
-	ld a,0c1h		;6a07	3e c1 	> . 
-	call ADD_SOUND		;6a09	cd ef 5b 	. . [ 
+
+	ld a,SOUND_VAUS_GOES_THROUGH_PORTAL_H	;6a07	3e c1
+	call ADD_SOUND		                    ;6a09	cd ef 5b
+
 	ld a,00ch		;6a0c	3e 0c 	> . 
 	call ADD_POINTS_AND_UPDATE_SCORES		;6a0e	cd a0 52 	. . R 
 	call DEACTIVE_ALL_BALLS		;6a11	cd 10 97 	. . . 
@@ -8655,8 +8661,10 @@ l707ch:
 	ld (iy+001h),a		;7090	fd 77 01 	. w . 
 	ld (iy+002h),084h		;7093	fd 36 02 84 	. 6 . . 
 	ld (iy+003h),005h		;7097	fd 36 03 05 	. 6 . . 
-	ld a,006h		;709b	3e 06 	> . 
-	call ADD_SOUND		;709d	cd ef 5b 	. . [ 
+
+	ld a,SOUND_VAUS_FIRING_X3	;709b	3e 06
+	call ADD_SOUND		        ;709d	cd ef 5b
+
 	call UPDATE_SPEED_ALL_BALLS		;70a0	cd 6e 71 	. n q 
 	jp l70afh		;70a3	c3 af 70 	. . p 
 l70a6h:
@@ -9865,9 +9873,9 @@ l78ddh:
     ;   width  - 16 < ALIEN_X <= width  + 16
     ; The alien has been reached by the laser
     
-    ; ToDo: what is this function?
-	ld a,0c2h		;7926	3e c2 	> . 
-	call ADD_SOUND		;7928	cd ef 5b 	. . [ 
+    ; Play sound
+	ld a, SOUND_ALIEN_DESTROYED		;7926	3e c2
+	call ADD_SOUND		            ;7928	cd ef 5b
 
     ; Give points and update the scores
 	ld a, 5		                        ;792b	3e 05
@@ -9944,8 +9952,8 @@ l797eh:
     
     ; So for  X   X+8 < ALIEN_Y <= X + constant (40 or 56)
     ; And for Y:  160 < ALIEN_Y <= 184
-	ld a,0c2h		;7988	3e c2 	> . 
-	call ADD_SOUND		;798a	cd ef 5b 	. . [ 
+	ld a, SOUND_ALIEN_DESTROYED		;7988	3e c2
+	call ADD_SOUND		            ;798a	cd ef 5b
 
     ; Add points
 	ld a,5  		                    ;798d	3e 05
@@ -9979,8 +9987,9 @@ sub_79a5h:
 	jp c,l79c2h		;79b3	da c2 79 	. . y 
 	ld iy,BALL_TABLE1		;79b6	fd 21 4e e2 	. ! N . 
 	call sub_9b8ah		;79ba	cd 8a 9b 	. . . 
-	ld a,0c2h		;79bd	3e c2 	> . 
-	call ADD_SOUND		;79bf	cd ef 5b 	. . [ 
+
+	ld a,SOUND_ALIEN_DESTROYED	;79bd	3e c2
+	call ADD_SOUND		        ;79bf	cd ef 5b
 l79c2h:
 	ld ix,BALL2_SPR_PARAMS		;79c2	dd 21 f9 e0 	. ! . . 
 	ld a,(BALL_TABLE2)		;79c6	3a 62 e2 	: b . 
@@ -9990,8 +9999,9 @@ l79c2h:
 	jp c,l79dfh		;79d0	da df 79 	. . y 
 	ld iy,BALL_TABLE2		;79d3	fd 21 62 e2 	. ! b . 
 	call sub_9b8ah		;79d7	cd 8a 9b 	. . . 
-	ld a,0c2h		;79da	3e c2 	> . 
-	call ADD_SOUND		;79dc	cd ef 5b 	. . [ 
+
+	ld a,SOUND_ALIEN_DESTROYED	;79da	3e c2
+	call ADD_SOUND		        ;79dc	cd ef 5b
 l79dfh:
 	ld ix,BALL3_SPR_PARAMS		;79df	dd 21 fd e0 	. ! . . 
 	ld a,(BALL_TABLE3)		;79e3	3a 76 e2 	: v . 
@@ -10001,8 +10011,9 @@ l79dfh:
 	jp c,l79fch		;79ed	da fc 79 	. . y 
 	ld iy,BALL_TABLE3		;79f0	fd 21 76 e2 	. ! v . 
 	call sub_9b8ah		;79f4	cd 8a 9b 	. . . 
-	ld a,0c2h		;79f7	3e c2 	> . 
-	call ADD_SOUND		;79f9	cd ef 5b 	. . [ 
+
+	ld a,SOUND_ALIEN_DESTROYED	;79f7	3e c2
+	call ADD_SOUND		        ;79f9	cd ef 5b
 l79fch:
 	ret			;79fc	c9 	. 
 
@@ -10100,8 +10111,10 @@ l7a7bh:
 	ld (VAUS_ACTION_STATE),a		    ;7aa5	32 4b e5
 
 	ld (iy+000h),0c0h		;7aa8	fd 36 00 c0 	. 6 . . 
-	ld a,007h		;7aac	3e 07 	> . 
-	call ADD_SOUND		;7aae	cd ef 5b 	. . [ 
+
+	ld a,SOUND_VAUS_DESTROYED	;7aac	3e 07
+	call ADD_SOUND		        ;7aae	cd ef 5b
+
 	call DEACTIVE_ALL_BALLS		;7ab1	cd 10 97 	. . . 
 l7ab4h:
 	ld de,00004h		;7ab4	11 04 00 	. . . 
@@ -16324,8 +16337,9 @@ l96d7h:
 	call sub_9b5bh		;96dd	cd 5b 9b 	. [ . 
 	ld (ix+000h),012h		;96e0	dd 36 00 12 	. 6 . . 
 l96e4h:
-	ld a,008h		;96e4	3e 08 	> . 
-	call ADD_SOUND		;96e6	cd ef 5b 	. . [ 
+	ld a, SOUND_DOH_HIT	;96e4	3e 08
+	call ADD_SOUND		;96e6	cd ef 5b
+
 	ld a,001h		;96e9	3e 01 	> . 
 	ld (0e2b9h),a		;96eb	32 b9 e2 	2 . . 
 
@@ -16341,9 +16355,11 @@ l96e4h:
 	ld a,001h		;96fc	3e 01 	> . 
 	ld (0e50dh),a		;96fe	32 0d e5 	2 . . 
 	call DEACTIVE_ALL_BALLS		;9701	cd 10 97 	. . . 
-	ld a,009h		;9704	3e 09 	> . 
-	call ADD_SOUND		;9706	cd ef 5b 	. . [ 
-	ret			;9709	c9 	. 
+
+	ld a,SOUND_DOH_DEFEATED		;9704	3e 09
+	call ADD_SOUND		        ;9706	cd ef 5b
+	ret			                ;9709	c9
+
 l970ah:
 	ld a,001h		;970a	3e 01 	> . 
 	ld (0e505h),a		;970c	32 05 e5 	2 . . 
@@ -16646,9 +16662,9 @@ l9930h:
 l9935h:
 	ld (iy+BALL_TABLE_IDX_GLUE), 2		;9935	fd 36 01 02     Ball moves normally
 
-	ld a,001h		;9939	3e 01 	> . 
-	call ADD_SOUND		;993b	cd ef 5b 	. . [ 
-	jp l99b8h		;993e	c3 b8 99 	. . . 
+	ld a, SOUND_BALL_BOUNCES_ON_VAUS	;9939	3e 01
+	call ADD_SOUND		                ;993b	cd ef 5b
+	jp l99b8h		                    ;993e	c3 b8 99
 
 ; And this one with bouncing when reaching the limits of the playfield
 ACTION_9941:
@@ -17006,9 +17022,9 @@ l9b4ah:
     ld a,VAUS_ACTION_STATE_EXPLODING	;9b50	3e 06
 	ld (VAUS_ACTION_STATE),a		    ;9b52	32 4b e5
     
-	ld a,007h		;9b55	3e 07 	> . 
-	call ADD_SOUND		;9b57	cd ef 5b 	. . [ 
-	ret			;9b5a	c9 	. 
+	ld a, SOUND_VAUS_DESTROYED		;9b55	3e 07
+	call ADD_SOUND		            ;9b57	cd ef 5b
+	ret			                    ;9b5a	c9
 
 sub_9b5bh:
 	push af			;9b5b	f5 	. 
@@ -17084,9 +17100,10 @@ l9bcfh:
 	ld a,(0e324h)		;9bdb	3a 24 e3 	: $ . 
 	cp 001h		;9bde	fe 01 	. . 
 	jp z,l9bebh		;9be0	ca eb 9b 	. . . 
-	ld a,001h		;9be3	3e 01 	> . 
-	call ADD_SOUND		;9be5	cd ef 5b 	. . [ 
-	jp l9c05h		;9be8	c3 05 9c 	. . . 
+
+	ld a,SOUND_BALL_BOUNCES_ON_VAUS		;9be3	3e 01
+	call ADD_SOUND		                ;9be5	cd ef 5b
+	jp l9c05h		                    ;9be8	c3 05 9c
 l9bebh:
 	push bc			;9beb	c5 	. 
     
@@ -17102,8 +17119,9 @@ l9bebh:
 	sub c			;9bfb	91 	. 
 	ld (iy+010h),a		;9bfc	fd 77 10 	. w . 
 	pop bc			;9bff	c1 	. 
-	ld a,004h		;9c00	3e 04 	> . 
-	call ADD_SOUND		;9c02	cd ef 5b 	. . [ 
+
+	ld a,SOUND_GLUED_BALL_CATCHED	;9c00	3e 04
+	call ADD_SOUND		            ;9c02	cd ef 5b
 l9c05h:
 	ld a,(iy+BALL_TABLE_IDX_VERT)		;9c05	fd 7e 02 	. ~ . 
 	neg		;9c08	ed 44 	. D 
@@ -18939,9 +18957,10 @@ laaefh:
 	call sub_abd3h		;aaf8	cd d3 ab 	. . . 
 	pop iy		;aafb	fd e1 	. . 
 	call 0ab7ah		;aafd	cd 7a ab 	. z . 
-	ld a,002h		;ab00	3e 02 	> . 
-	call ADD_SOUND		;ab02	cd ef 5b 	. . [ 
-	ret			;ab05	c9 	. 
+
+	ld a,SOUND_BRICK_DESTROYED		;ab00	3e 02
+	call ADD_SOUND		            ;ab02	cd ef 5b
+	ret			                    ;ab05	c9
 lab06h:
 	ld a,(BRICK_ROW)		;ab06	3a aa e2 	: . . 
 	inc a			;ab09	3c 	< 
@@ -18963,10 +18982,12 @@ lab10h:
 	ld a,(BRICK_COL)		;ab28	3a ab e2 	: . . 
 	ld (0e53dh),a		;ab2b	32 3d e5 	2 = . 
 	call sub_97afh		;ab2e	cd af 97 	. . . 
-	ld a,003h		;ab31	3e 03 	> . 
-	call ADD_SOUND		;ab33	cd ef 5b 	. . [ 
-	xor a			;ab36	af 	. 
-	ret			;ab37	c9 	. 
+
+	ld a,SOUND_HARD_BRICK_HIT		;ab31	3e 03
+	call ADD_SOUND		            ;ab33	cd ef 5b
+	xor a			                ;ab36	af
+	ret			                    ;ab37	c9
+
 sub_ab38h:
 	push iy		;ab38	fd e5 	. . 
 	ld iy,BALL_TABLE1		;ab3a	fd 21 4e e2 	. ! N . 
@@ -20294,9 +20315,9 @@ lb22ah:
 	ld (VAUS_ACTION_STATE),a		    ;b22f	32 4b e5
 	ld (VAUS_IS_ENLARGED),a		        ;b232	32 21 e3
 
-	ld a,0c0h		;b235	3e c0 	> . 
-	call ADD_SOUND		;b237	cd ef 5b 	. . [ 
-	ret			;b23a	c9 	. 
+	ld a,SOUND_VAUS_INCREASES_SIZE_H	;b235	3e c0
+	call ADD_SOUND		                ;b237	cd ef 5b
+	ret			                        ;b23a	c9
 
 	ld a,(0e324h)		;b23b	3a 24 e3 	: $ . 
 	or a			;b23e	b7 	. 
@@ -20348,9 +20369,10 @@ lb292h:
 	ld hl,LIVES		;b29a	21 1d e0 	! . . 
 	inc (hl)			;b29d	34 	4 
 	call DRAW_LIVES		;b29e	cd b9 71 	. . q 
-	ld a,0c5h		;b2a1	3e c5 	> . 
-	call ADD_SOUND		;b2a3	cd ef 5b 	. . [ 
-	ret			;b2a6	c9 	. 
+
+	ld a,SOUND_LIFE		;b2a1	3e c5
+	call ADD_SOUND		;b2a3	cd ef 5b
+	ret			        ;b2a6	c9
 
 ; SEGUIR
 sub_b2a7h:
