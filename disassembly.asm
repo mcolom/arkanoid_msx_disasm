@@ -329,16 +329,19 @@ ROM_START:
 	ld a,0bfh		;4062	3e bf 	> . 
 	ld (0e5cbh),a		;4064	32 cb e5 	2 . . 
 
+    ; Configure VDP TABLES
 	ld hl,VDP_BASE_POINTERS		;4067	21 76 43
-	ld de, GRPNAM		;406a	11 c7 f3 	BASE(10) - SCREEN 2 name table
-	ld bc, 10		    ;406d	01 0a 00
-	ldir		;4070	ed b0 	. . 
+	ld de, GRPNAM		        ;406a	11 c7 f3
+	ld bc, 10		            ;406d	01 0a 00
+	ldir		                ;4070	ed b0
 
-	ld hl,0f3e0h		;4072	21 e0 f3 	! . . 
-	set 1,(hl)		;4075	cb ce 	. . 
+    ; Use 16x16 sprites
+	ld hl, RG1SAV	;4072	21 e0 f3 Mirror of VDP register 1 (Basic: VDP(1))
+	set 1,(hl)		;4075	cb ce
 
-	ld a,001h		;4077	3e 01 	> . 
-	ld (0f3ebh),a	;4079	32 eb f3 	2 . . 
+    ; Set border color to black
+	ld a, 1		    ;4077	3e 01
+	ld (BDRCLR),a	;4079	32 eb f3
     
 	; Switches to SCREEN 2 (high resolution screen with 256×192 pixels)
     call INIGRP		;407c	cd 72 00
@@ -347,8 +350,8 @@ ROM_START:
 	call DISSCR		;407f	cd 41 00
 
     ; Clear VRAM name table
-    ld hl,01800h		;4082	21 00 18
-	ld bc,00300h		;4085	01 00 03
+    ld hl, 0x1800		;4082	21 00 18
+	ld bc,  0x300		;4085	01 00 03
 	xor a			    ;4088	af
 	call FILVRM		    ;4089	cd 56 00
     
@@ -373,9 +376,10 @@ ROM_START:
 	ld de, 2 * 8*32*24/3	;40ab	11 00 10
 	call LDIRVM_32x24_THIRD		    ;40ae	cd 20 42
 
-    ; Fill color table
-	call sub_41ffh		;40b1	cd ff 41 	. . A 
+    ; Fill title's screen pattern table
+	call FILL_TITLE_PATTERNS_AND_COLORS		;40b1	cd ff 41
 
+    ; Fill color table
 	ld hl,l8684h		;40b4	21 84 86 	! . . 
 	ld de,03800h		;40b7	11 00 38 	. . 8 
 	ld bc,00800h		;40ba	01 00 08 	. . . 
@@ -567,14 +571,15 @@ l41eeh:
 	dec (hl)			            ;41fb	35 	5
 	jp l40d7h		                ;41fc	c3 d7 40
 
-sub_41ffh:
+FILL_TITLE_PATTERNS_AND_COLORS:
 	ld de,l93f4h		;41ff	11 f4 93 	. . . 
 	ld hl,02000h		;4202	21 00 20 	! .   
-l4205h:
 	call sub_4389h		;4205	cd 89 43 	. . C 
+
 	ld de,l93f4h		;4208	11 f4 93 	. . . 
 	ld hl,02800h		;420b	21 00 28 	! . ( 
 	call sub_4389h		;420e	cd 89 43 	. . C 
+
 	ld de,l93f4h		;4211	11 f4 93 	. . . 
 	ld hl,03000h		;4214	21 00 30 	! . 0 
 	call sub_4389h		;4217	cd 89 43 	. . C 
@@ -823,10 +828,11 @@ l4381h:
 	ret			    ;4388	c9
 
 sub_4389h:
-	ld a,h			;4389	7c 	| 
-	add a,008h		;438a	c6 08 	. . 
-	ld b,a			;438c	47 	G 
-	ld c,l			;438d	4d 	M 
+    ; HL = 0x2000, 0x2800, 0x3000
+	ld a,h			;4389	7c          20
+	add a,8		    ;438a	c6 08       28
+	ld b,a			;438c	47          B = 28
+	ld c,l			;438d	4d          C = L
 l438eh:
 	ld a,h			;438e	7c 	| 
 	cp b			;438f	b8 	. 
@@ -1090,7 +1096,7 @@ l4445h:
 	ld de,l4403h+2		;44e1	11 05 44 	. . D 
 	rlca			;44e4	07 	. 
 	ld de,00343h		;44e5	11 43 03 	. C . 
-	ld de,l4205h		;44e8	11 05 42 	. . B 
+	ld de,0x4205		;44e8	11 05 42 	. . B 
 	ld a,(bc)			;44eb	0a 	. 
 	ld b,c			;44ec	41 	A 
 	ld hl,(l4b11h)		;44ed	2a 11 4b 	* . K 
@@ -1123,7 +1129,7 @@ l4503h:
 	ld hl,00442h		;451a	21 42 04 	! B . 
 	ld b,c			;451d	41 	A 
 	ld (bc),a			;451e	02 	. 
-	ld hl,sub_41ffh+2		;451f	21 01 42 	! . B 
+	ld hl,FILL_TITLE_PATTERNS_AND_COLORS+2		;451f	21 01 42 	! . B 
 	inc b			;4522	04 	. 
 	ld b,c			;4523	41 	A 
 	ld bc,00221h		;4524	01 21 02 	. ! . 
@@ -1429,7 +1435,7 @@ l4702h:
 	ld bc,0x4111		;4731	01 11 41 	. . A 
 	ld bc,00111h		;4734	01 11 01 	. . . 
 	ld b,c			;4737	41 	A 
-	ld de,sub_41ffh+2		;4738	11 01 42 	. . B 
+	ld de,FILL_TITLE_PATTERNS_AND_COLORS+2		;4738	11 01 42 	. . B 
 	ld (bc),a			;473b	02 	. 
 	ld b,c			;473c	41 	A 
 	inc bc			;473d	03 	. 
@@ -2042,7 +2048,8 @@ sub_4b8ah:
 	ld de, 2 * 8*32*24/3		;4bca	11 00 10
 	call LDIRVM_32x24_THIRD		;4bcd	cd 20 42
 
-	call sub_41ffh		;4bd0	cd ff 41 	. . A 
+    ; Fill the patterns and colors for the title's screen
+	call FILL_TITLE_PATTERNS_AND_COLORS		;4bd0	cd ff 41
 
 	ld hl,01800h		;4bd3	21 00 18 	! . . 
 	ld a,000h		;4bd6	3e 00 	> . 
