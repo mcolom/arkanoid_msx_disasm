@@ -329,9 +329,9 @@ ROM_START:
 	ld a,0bfh		;4062	3e bf 	> . 
 	ld (0e5cbh),a		;4064	32 cb e5 	2 . . 
 
-	ld hl,l4376h		;4067	21 76 43 	! v C 
-	ld de,0f3c7h		;406a	11 c7 f3 	. . . 
-	ld bc,0000ah		;406d	01 0a 00 	. . . 
+	ld hl,VDP_BASE_POINTERS		;4067	21 76 43
+	ld de, GRPNAM		;406a	11 c7 f3 	BASE(10) - SCREEN 2 name table
+	ld bc, 10		    ;406d	01 0a 00
 	ldir		;4070	ed b0 	. . 
 
 	ld hl,0f3e0h		;4072	21 e0 f3 	! . . 
@@ -807,17 +807,8 @@ l4370h:
 	ld (0e00ch),a		;4372	32 0c e0 	2 . . 
 	ret			;4375	c9 	. 
 
-l4376h:
-	nop			;4376	00 	. 
-	jr l4379h		;4377	18 00 	. . 
-l4379h:
-	jr nz,l437bh		;4379	20 00 	  . 
-l437bh:
-	nop			;437b	00 	. 
-	nop			;437c	00 	. 
-	dec de			;437d	1b 	. 
-	nop			;437e	00 	. 
-    db 0x38
+VDP_BASE_POINTERS:
+    dw 0x1800, 0x2000, 0x0000, 0x1b00, 0x3800
 
 ; Wait HL ints
 DELAY_HL_TICKS:
