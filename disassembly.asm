@@ -164,6 +164,7 @@ CAPSULES_LEFT: equ 0xe023
 CAPSULES_RANDOM_NUM: equ 0xe024
 FINAL_LEVEL: equ 32
 
+TOTAL_SPRITES: equ 32
 ; Sprite attributes
 ; This is written to VRAM continuosly
 SPRITE_ATTRIBS_AREA: equ 0xe18d
@@ -403,15 +404,15 @@ l4103h:
 	call FILVRM		            ;410b	cd 56 00
 
     ; Set the Y coordinate of all 32 sprites to 192 (invisible)
-	ld hl,SPRITE_ATTRIBS_AREA	;410e	21 8d e1
-	ld b,32		                ;4111	06 20       32 sprites
+	ld hl, SPRITE_ATTRIBS_AREA	;410e	21 8d e1
+	ld b,  TOTAL_SPRITES        ;4111	06 20       32 sprites
 	ld de, SPR_PARAMS_LEN       ;4113	11 04 00
 l4116h:
 	ld (hl), 192		        ;4116	36 c0
 	add hl,de			        ;4118	19
 	djnz l4116h		            ;4119	10 fb
 
-	ld b, 32		    ;411b	06 20               32 sprites
+	ld b, TOTAL_SPRITES		    ;411b	06 20               32 sprites
 	ld ix,0e0c9h		;411d	dd 21 c9 e0
 l4121h:
 	ld iy,SPRITE_ATTRIBS_AREA		;4121	fd 21 8d e1
@@ -466,7 +467,7 @@ l418eh:
 	ld hl,SPRITE_ATTRIBS_AREA		;4194	21 8d e1 	! . . 
 	ld a,(VDP_WRITE)		;4197	3a 07 00 	: . . 
 	ld c,a			;419a	4f 	O 
-	ld b,128		;419b	06 80 	. . 
+	ld b,TOTAL_SPRITES * SPR_PARAMS_LEN 	;419b	06 80   32 sprites, each entry 4 bytes
 l419dh:
 	outi		;419d	ed a3 	. . 
 	jr nz,l419dh		;419f	20 fc 	  . 
