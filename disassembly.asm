@@ -355,11 +355,12 @@ ROM_START:
 	ld (SOUND_NUMBER),a	;40c5	32 c0 e5
 	call PLAY_SOUND		;40c8	cd e8 b4
 
-	ld a,0c3h		;40cb	3e c3 	> . 
-	ld (0fd9ah),a		;40cd	32 9a fd 	2 . . 
-	ld hl,l424ah		;40d0	21 4a 42 	! J B 
-	ld (0fd9bh),hl		;40d3	22 9b fd 	" . . 
-	ei			;40d6	fb 	. 
+    ; Set VDP hook handler
+	ld a, 0c3h		    ;40cb	3e c3       JP...
+	ld (0fd9ah),a		;40cd	32 9a fd
+	ld hl,VDP_HOOK_HANDLER		;40d0	21 4a 42
+	ld (0fd9bh),hl		;40d3	22 9b fd
+	ei			        ;40d6	fb
 l40d7h:
     ; Check if the game is paused.
     ; If already paused, skip playing the pause sound and writing "PAUSE" again
@@ -578,7 +579,7 @@ CLEAR_SCREEN:
 	ldir		        ;4247	ed b0
 	ret			        ;4249	c9
 
-l424ah:
+VDP_HOOK_HANDLER:
 	call RDVDP		;424a	cd 3e 01 	. > . 
 	call sub_b594h		;424d	cd 94 b5 	. . . 
 	ld a,006h		;4250	3e 06 	> . 
