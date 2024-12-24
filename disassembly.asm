@@ -236,40 +236,69 @@ BALL_TABLE_IDX_GLUE_COUNTER: equ 14
     dw 0                ; TEXT
     db 0, 0, 0, 0, 0, 0 ; RESERVED
 
-sub_4010h:
+; Get the slot of the current page.
+; This function takes into account if the slot is expanded or not.
+GET_CURRENT_PAGE_SLOT:
     ; Reads the primary slot register
 	call RSLREG		;4010	cd 38 01
+    
+    ; It tells which slots are assigned to each of the 4 pages
+    ; p3p3.p2p2.p1p1.p0p0
 
-	rrca			;4013	0f 	. 
-	rrca			;4014	0f 	. 
-	and 003h		;4015	e6 03 	. . 
-	ld c,a			;4017	4f 	O 
-	ld b,000h		;4018	06 00 	. . 
-	ld hl,0fcc1h		;401a	21 c1 fc 	! . . 
-	add hl,bc			;401d	09 	. 
-	or (hl)			;401e	b6 	. 
-	ret p			;401f	f0 	. 
-	ld c,a			;4020	4f 	O 
-	inc hl			;4021	23 	# 
-	inc hl			;4022	23 	# 
-	inc hl			;4023	23 	# 
-	inc hl			;4024	23 	# 
-	ld a,(hl)			;4025	7e 	~ 
-	and 00ch		;4026	e6 0c 	. . 
-	or c			;4028	b1 	. 
-	ret			;4029	c9 	.
+	; A = 00.00.00.p1p1
+    rrca			;4013	0f      p0p3p3p2p2p1p1p0
+	rrca			;4014	0f      p0p0p3p3p2p2p1p1
+	and 3		    ;4015	e6 03   00.00.00.p1p1    
+
+    ; BC = slot corresponding to page 1 (this one)
+	ld c,a			;4017	4f
+	ld b,0		    ;4018	06 00   BC = 00.00.00.p1p1
+    
+    ; Check EXPTBL[s1]
+    ; #80 = expanded, 0 = not expanded
+	ld hl, EXPTBL	;401a	21 c1 fc
+	add hl,bc		;401d	09
+	or (hl)			;401e	b6
+    
+    ; A = 00.00.00.p1p1 if the slot is not expanded
+    ; A = 10.00.00.p1p1 if the slot is     expanded
+	
+    ; Exit with A = slot for page 1 if the slot is not expanded
+    ret p			;401f	f0
+    
+    ; The slot is expanded
+    ld c,a			;4020	4f      ; C = 10.00.00.p1p1
+    
+    ; HL = mirror of the secondary slot selection register
+	inc hl			;4021	23
+	inc hl			;4022	23
+	inc hl			;4023	23
+	inc hl			;4024	23
+    
+    ; A = secondary slot
+	ld a,(hl)		;4025	7e      q3q3.q2q2.q1q1.q0q0     AND
+	and 00ch		;4026	e6 0c    11 . 00 . 00 . 00
+    ;                                ==================
+    ;                               q3q3. 00.  00.  00
+
+	or c			;4028	b1
+    ;                           q3q3. 00 . 00 .  00          OR
+    ;                            10 . 00 . 00 . p1p1
+    ;                            ===================
+    ;                           1q3 . 00 . 00 . p1p1
+	ret			    ;4029	c9
     
 ROM_START:
 	di			;402a	f3
 	im 1		;402b	ed 56
 
-	ld sp,0f370h		;402d	31 70 f3
-	call sub_4010h		;4030	cd 10 40
-	ld h,080h		;4033	26 80 	& . 
-    
+	ld sp,0f370h		            ;402d	31 70 f3
+	call GET_CURRENT_PAGE_SLOT	;4030	cd 10 40
+
     ;Switches indicated slot at indicated page on perpetually
     ; A - Slot ID
     ; H - Bit 6 and 7 must contain the page number (00-11)
+    ld h,080h		;4033	26 80       page 2 (10.00.00.00)
 	call ENASLT		;4035	cd 24 00
     
 	; Clear memory from 0xe000 to 0xe5b3
@@ -291,20 +320,23 @@ ROM_START:
 	ld (0e008h),hl		;4055	22 08 e0
 
     ; Turn off CAPS lamp
-	ld a,001h		    ;4058	3e 01
-	call CHGCAP		    ;405a	cd 32 01
-    
-    
+	ld a, 1		        ;4058	3e 01
+	call CHGCAP		    ;405a	cd 32 01    
+
 	ld a,0ffh		;405d	3e ff 	> . 
 	ld (0e5c3h),a		;405f	32 c3 e5 	2 . . 
+
 	ld a,0bfh		;4062	3e bf 	> . 
 	ld (0e5cbh),a		;4064	32 cb e5 	2 . . 
+
 	ld hl,l4376h		;4067	21 76 43 	! v C 
 	ld de,0f3c7h		;406a	11 c7 f3 	. . . 
 	ld bc,0000ah		;406d	01 0a 00 	. . . 
 	ldir		;4070	ed b0 	. . 
+
 	ld hl,0f3e0h		;4072	21 e0 f3 	! . . 
 	set 1,(hl)		;4075	cb ce 	. . 
+
 	ld a,001h		;4077	3e 01 	> . 
 	ld (0f3ebh),a	;4079	32 eb f3 	2 . . 
     
