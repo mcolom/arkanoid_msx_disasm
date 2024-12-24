@@ -829,27 +829,43 @@ l4381h:
 
 sub_4389h:
     ; HL = 0x2000, 0x2800, 0x3000
-	ld a,h			;4389	7c          20
-	add a,8		    ;438a	c6 08       28
-	ld b,a			;438c	47          B = 28
-	ld c,l			;438d	4d          C = L
+    
+    ; Obtain upper limit by adding 8 to H.
+    ; For example, HL = 0x2000 ==> limit at 0x2800
+	ld a,h			;4389	7c
+	add a,8		    ;438a	c6 08
+	ld b,a			;438c	47
+	ld c,l			;438d	4d
+
 l438eh:
-	ld a,h			;438e	7c 	| 
-	cp b			;438f	b8 	. 
-	ret z			;4390	c8 	. 
-	ld a,(de)			;4391	1a 	. 
-	and 0f0h		;4392	e6 f0 	. . 
-	cp 000h		;4394	fe 00 	. . 
-	jr z,l43a0h		;4396	28 08 	( . 
-	ld a,(de)			;4398	1a 	. 
-	call WRTVRM		;4399	cd 4d 00 	. M . 
-	inc hl			;439c	23 	# 
-	inc de			;439d	13 	. 
-	jr l438eh		;439e	18 ee 	. . 
+    ; Exit if limit reached
+	ld a,h			;438e	7c
+	cp b			;438f	b8
+	ret z			;4390	c8
+
+    ; Read value v and check if v < 16.
+	ld a,(de)		;4391	1a
+	and 0f0h		;4392	e6 f0   1111.0000
+
+	cp 0		    ;4394	fe 00
+	jr z,l43a0h		;4396	28 08   Jump if v < 16
+
+    ; v >= 16
+    ; Write the value as is, and keep iterating
+	ld a,(de)		;4398	1a
+	call WRTVRM		;4399	cd 4d 00
+	inc hl			;439c	23
+	inc de			;439d	13
+	jr l438eh		;439e	18 ee
+
 l43a0h:
-	push bc			;43a0	c5 	. 
-	ld a,(de)			;43a1	1a 	. 
-	and 00fh		;43a2	e6 0f 	. . 
+    ; v < 16
+	push bc			;43a0	c5
+    
+    ; Read value
+	ld a,(de)		;43a1	1a
+	and 00fh		;43a2	e6 0f   0000.1111
+    
 	ld c,a			;43a4	4f 	O 
 	inc de			;43a5	13 	. 
 	ld a,(de)			;43a6	1a 	. 
