@@ -573,15 +573,15 @@ l41eeh:
 
 FILL_COLORS_ALL_SCREEN:
 	ld de,l93f4h		            ;41ff	11 f4 93
-	ld hl,02000h		            ;4202	21 00 20
+	ld hl,02000h + 0 * 32*24*8/3    ;4202	21 00 20
 	call DECOMPRESS_TILE_COLORS	    ;4205	cd 89 43
 
 	ld de,l93f4h		            ;4208	11 f4 93
-	ld hl,02800h		            ;420b	21 00 28
+	ld hl,02000h + 1 * 32*24*8/3    ;420b	21 00 28
 	call DECOMPRESS_TILE_COLORS	    ;420e	cd 89 43
 
 	ld de,l93f4h		            ;4211	11 f4 93
-	ld hl,03000h		            ;4214	21 00 30
+	ld hl,02000h + 2 * 32*24*8/3    ;4214	21 00 30
 	call DECOMPRESS_TILE_COLORS		;4217	cd 89 43
 	ret			                    ;421a	c9
 
