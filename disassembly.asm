@@ -377,7 +377,7 @@ ROM_START:
 	call LDIRVM_32x24_THIRD		    ;40ae	cd 20 42
 
     ; Fill title's screen pattern table
-	call FILL_TITLE_PATTERNS_AND_COLORS		;40b1	cd ff 41
+	call FILL_COLORS_ALL_SCREEN		;40b1	cd ff 41
 
     ; Fill color table
 	ld hl,l8684h		;40b4	21 84 86 	! . . 
@@ -571,19 +571,19 @@ l41eeh:
 	dec (hl)			            ;41fb	35 	5
 	jp l40d7h		                ;41fc	c3 d7 40
 
-FILL_TITLE_PATTERNS_AND_COLORS:
-	ld de,l93f4h		;41ff	11 f4 93 	. . . 
-	ld hl,02000h		;4202	21 00 20 	! .   
-	call sub_4389h		;4205	cd 89 43 	. . C 
+FILL_COLORS_ALL_SCREEN:
+	ld de,l93f4h		            ;41ff	11 f4 93
+	ld hl,02000h		            ;4202	21 00 20
+	call DECOMPRESS_TILE_COLORS	    ;4205	cd 89 43
 
-	ld de,l93f4h		;4208	11 f4 93 	. . . 
-	ld hl,02800h		;420b	21 00 28 	! . ( 
-	call sub_4389h		;420e	cd 89 43 	. . C 
+	ld de,l93f4h		            ;4208	11 f4 93
+	ld hl,02800h		            ;420b	21 00 28
+	call DECOMPRESS_TILE_COLORS	    ;420e	cd 89 43
 
-	ld de,l93f4h		;4211	11 f4 93 	. . . 
-	ld hl,03000h		;4214	21 00 30 	! . 0 
-	call sub_4389h		;4217	cd 89 43 	. . C 
-	ret			;421a	c9 	. 
+	ld de,l93f4h		            ;4211	11 f4 93
+	ld hl,03000h		            ;4214	21 00 30
+	call DECOMPRESS_TILE_COLORS		;4217	cd 89 43
+	ret			                    ;421a	c9
 
 PAUSE_STR:
     db "PAUSE"
@@ -812,8 +812,14 @@ l4370h:
 	ld (0e00ch),a		;4372	32 0c e0 	2 . . 
 	ret			;4375	c9 	. 
 
+; VDP base pointers
+; See https://www.msx.org/wiki/System_variables_and_work_area
 VDP_BASE_POINTERS:
-    dw 0x1800, 0x2000, 0x0000, 0x1b00, 0x3800
+    dw 0x1800 ; Name table
+    dw 0x2000 ; Color table
+    dw 0x0000 ; Pattern table
+    dw 0x1b00 ; Sprite attribute table
+    dw 0x3800 ; Sprite pattern table
 
 ; Wait HL ints
 DELAY_HL_TICKS:
@@ -827,7 +833,7 @@ l4381h:
 	pop af			;4387	f1
 	ret			    ;4388	c9
 
-sub_4389h:
+DECOMPRESS_TILE_COLORS:
     ; HL = 0x2000, 0x2800, 0x3000
     
     ; Obtain upper limit by adding 8 to H.
@@ -845,13 +851,13 @@ l438eh:
 
     ; Read value v and check if v < 16.
 	ld a,(de)		;4391	1a
-	and 0f0h		;4392	e6 f0   1111.0000
+	and 0xf0		;4392	e6 f0   1111.0000
 
 	cp 0		    ;4394	fe 00
 	jr z,l43a0h		;4396	28 08   Jump if v < 16
 
     ; v >= 16
-    ; Write the value as is, and keep iterating
+    ; Write the value to VRAM as is, and keep iterating
 	ld a,(de)		;4398	1a
 	call WRTVRM		;4399	cd 4d 00
 	inc hl			;439c	23
@@ -859,88 +865,115 @@ l438eh:
 	jr l438eh		;439e	18 ee
 
 l43a0h:
-    ; v < 16
+    ; v < 16: compressed
 	push bc			;43a0	c5
     
     ; Read value
 	ld a,(de)		;43a1	1a
-	and 00fh		;43a2	e6 0f   0000.1111
+	and 0x0f		;43a2	e6 0f   0000.1111
     
-	ld c,a			;43a4	4f 	O 
-	inc de			;43a5	13 	. 
-	ld a,(de)			;43a6	1a 	. 
-	ld b,a			;43a7	47 	G 
-	inc de			;43a8	13 	. 
-	ld a,(de)			;43a9	1a 	. 
-	ex af,af'			;43aa	08 	. 
-	inc de			;43ab	13 	. 
-	ld a,(de)			;43ac	1a 	. 
-	inc de			;43ad	13 	. 
-	ex af,af'			;43ae	08 	. 
-	inc b			;43af	04 	. 
-	dec b			;43b0	05 	. 
-	jr nz,l43b4h		;43b1	20 01 	  . 
-	dec c			;43b3	0d 	. 
+    ; Read the number of repetions in BC
+	ld c,a			;43a4	4f
+	inc de			;43a5	13
+    
+	ld a,(de)		;43a6	1a  
+	ld b,a			;43a7	47
+    
+    ; Read the value
+	inc de			;43a8	13
+	ld a,(de)		;43a9	1a  A = value
+    
+    ; Now use the shadow registers
+	ex af,af'		;43aa	08
+	inc de			;43ab	13
+    
+	ld a,(de)		;43ac	1a  A' = value'
+    inc de			;43ad	13
+	
+    ; Back to normal registers
+    ex af,af'		;43ae	08
+    
+    ; Decrement the 16-bit counter in BC
+	inc b			;43af	04
+	dec b			;43b0	05
+	jr nz,l43b4h	;43b1	20 01
+	dec c			;43b3	0d
+
+; Write BC times value and value'
 l43b4h:
-	call WRTVRM		;43b4	cd 4d 00 	. M . 
-	inc hl			;43b7	23 	# 
-	ex af,af'			;43b8	08 	. 
-	call WRTVRM		;43b9	cd 4d 00 	. M . 
-	inc hl			;43bc	23 	# 
-	ex af,af'			;43bd	08 	. 
-	djnz l43b4h		;43be	10 f4 	. . 
+    ; Write value to VRAM
+	call WRTVRM		;43b4	cd 4d 00
+	inc hl			;43b7	23
+
+    ; Write value' to VRAM
+    ; Shadow regs
+	ex af,af'		;43b8	08
+	call WRTVRM		;43b9	cd 4d 00
+	inc hl			;43bc	23
+    ; Normal regs
+	ex af,af'		;43bd	08
+    
+    ; Iterate with BC
+	djnz l43b4h		;43be	10 f4
 	dec c			;43c0	0d 	. 
-	jp p,l43b4h		;43c1	f2 b4 43 	. . C 
-	pop bc			;43c4	c1 	. 
-	jr l438eh		;43c5	18 c7 	. . 
-	ld a,h			;43c7	7c 	| 
-	add a,008h		;43c8	c6 08 	. . 
-	ld b,a			;43ca	47 	G 
-	ld c,l			;43cb	4d 	M 
+	jp p,l43b4h		;43c1	f2 b4 43
+
+	pop bc			;43c4	c1
+    
+    ; Keep iterating until all the tiles have been decompressed
+	jr l438eh		;43c5	18 c7
+    
+    ; Dead code...
+    ; It's the same, actually
+	ld a,h			;43c7	7c
+	add a,008h		;43c8	c6 08
+	ld b,a			;43ca	47
+	ld c,l			;43cb	4d
 l43cch:
-	ld a,h			;43cc	7c 	| 
-	cp b			;43cd	b8 	. 
-	ret z			;43ce	c8 	. 
-	ld a,(de)			;43cf	1a 	. 
-	and 0f0h		;43d0	e6 f0 	. . 
-	cp 000h		;43d2	fe 00 	. . 
-	jr z,l43dch		;43d4	28 06 	( . 
-	ld a,(de)			;43d6	1a 	. 
-	ld (hl),a			;43d7	77 	w 
-	inc hl			;43d8	23 	# 
-	inc de			;43d9	13 	. 
-	jr l43cch		;43da	18 f0 	. . 
+	ld a,h			;43cc	7c
+	cp b			;43cd	b8
+	ret z			;43ce	c8
+	ld a,(de)		;43cf	1a
+	and 0f0h		;43d0	e6 f0
+	cp 000h		    ;43d2	fe 00
+	jr z,l43dch		;43d4	28 06
+	ld a,(de)		;43d6	1a
+	ld (hl),a		;43d7	77
+	inc hl			;43d8	23
+	inc de			;43d9	13
+	jr l43cch		;43da	18 f0
 l43dch:
-	push bc			;43dc	c5 	. 
-	ld a,(de)			;43dd	1a 	. 
-	and 00fh		;43de	e6 0f 	. . 
-	ld c,a			;43e0	4f 	O 
-	inc de			;43e1	13 	. 
-	ld a,(de)			;43e2	1a 	. 
-	ld b,a			;43e3	47 	G 
-	inc de			;43e4	13 	. 
-	ld a,(de)			;43e5	1a 	. 
-	ex af,af'			;43e6	08 	. 
-	inc de			;43e7	13 	. 
-	ld a,(de)			;43e8	1a 	. 
-	inc de			;43e9	13 	. 
-	ex af,af'			;43ea	08 	. 
-	inc b			;43eb	04 	. 
-	dec b			;43ec	05 	. 
-	jr nz,l43f0h		;43ed	20 01 	  . 
-	dec c			;43ef	0d 	. 
+	push bc			;43dc	c5
+	ld a,(de)		;43dd	1a
+	and 00fh		;43de	e6 0f
+	ld c,a			;43e0	4f
+	inc de			;43e1	13
+	ld a,(de)		;43e2	1a
+	ld b,a			;43e3	47
+	inc de			;43e4	13
+	ld a,(de)		;43e5	1a
+	ex af,af'		;43e6	08
+	inc de			;43e7	13
+	ld a,(de)		;43e8	1a
+	inc de			;43e9	13
+	ex af,af'		;43ea	08
+	inc b			;43eb	04
+	dec b			;43ec	05
+	jr nz,l43f0h	;43ed	20 01
+	dec c			;43ef	0d
 l43f0h:
-	ld (hl),a			;43f0	77 	w 
-	inc hl			;43f1	23 	# 
-	ex af,af'			;43f2	08 	. 
-	ld (hl),a			;43f3	77 	w 
-	inc hl			;43f4	23 	# 
-	ex af,af'			;43f5	08 	. 
-	djnz l43f0h		;43f6	10 f8 	. . 
-	dec c			;43f8	0d 	. 
-	jp p,l43f0h		;43f9	f2 f0 43 	. . C 
-	pop bc			;43fc	c1 	. 
-	jr l43cch		;43fd	18 cd 	. . 
+	ld (hl),a		;43f0	77
+	inc hl			;43f1	23
+	ex af,af'		;43f2	08
+	ld (hl),a		;43f3	77
+	inc hl			;43f4	23
+	ex af,af'		;43f5	08
+	djnz l43f0h		;43f6	10 f8
+	dec c			;43f8	0d
+	jp p,l43f0h		;43f9	f2 f0 43
+	pop bc			;43fc	c1
+	jr l43cch		;43fd	18 cd
+
 sub_43ffh:
 	xor a			;43ff	af 	. 
 	ld (0e53ch),a		;4400	32 3c e5 	2 < . 
@@ -992,6 +1025,7 @@ l442bh:
 	xor a			;4440	af 	. 
 	ld (0e53ch),a		;4441	32 3c e5 	2 < . 
 	ret			;4444	c9 	. 
+
 l4445h:
 	nop			;4445	00 	. 
 	ret nz			;4446	c0 	. 
@@ -1145,7 +1179,7 @@ l4503h:
 	ld hl,00442h		;451a	21 42 04 	! B . 
 	ld b,c			;451d	41 	A 
 	ld (bc),a			;451e	02 	. 
-	ld hl,FILL_TITLE_PATTERNS_AND_COLORS+2		;451f	21 01 42 	! . B 
+	ld hl,FILL_COLORS_ALL_SCREEN+2		;451f	21 01 42 	! . B 
 	inc b			;4522	04 	. 
 	ld b,c			;4523	41 	A 
 	ld bc,00221h		;4524	01 21 02 	. ! . 
@@ -1451,7 +1485,7 @@ l4702h:
 	ld bc,0x4111		;4731	01 11 41 	. . A 
 	ld bc,00111h		;4734	01 11 01 	. . . 
 	ld b,c			;4737	41 	A 
-	ld de,FILL_TITLE_PATTERNS_AND_COLORS+2		;4738	11 01 42 	. . B 
+	ld de,FILL_COLORS_ALL_SCREEN+2		;4738	11 01 42 	. . B 
 	ld (bc),a			;473b	02 	. 
 	ld b,c			;473c	41 	A 
 	inc bc			;473d	03 	. 
@@ -2065,12 +2099,13 @@ sub_4b8ah:
 	call LDIRVM_32x24_THIRD		;4bcd	cd 20 42
 
     ; Fill the patterns and colors for the title's screen
-	call FILL_TITLE_PATTERNS_AND_COLORS		;4bd0	cd ff 41
+	call FILL_COLORS_ALL_SCREEN	;4bd0	cd ff 41
 
-	ld hl,01800h		;4bd3	21 00 18 	! . . 
-	ld a,000h		;4bd6	3e 00 	> . 
-	ld bc,00300h		;4bd8	01 00 03 	. . . 
-	call FILVRM		;4bdb	cd 56 00 	. V . 
+    ; Clear name table
+	ld hl,01800h	;4bd3	21 00 18
+	ld a, 0		    ;4bd6	3e 00
+	ld bc, 32*24	;4bd8	01 00 03
+	call FILVRM		;4bdb	cd 56 00
 
     call DRAW_UP_SCORES		;4bde	cd e0 4f 	. . O 
 
@@ -2079,13 +2114,15 @@ sub_4b8ah:
 	ld bc,00060h		;4be7	01 60 00 	. ` . 
 	call LDIRVM		;4bea	cd 5c 00 	. \ . 
 
+    ; ToDo: complete
 	ld ix,SPR_PARAMS_BASE		;4bed	dd 21 cd e0
-	ld (ix+000h),52		;4bf1	dd 36 00 34
-	ld (ix+001h),148	;4bf5	dd 36 01 94
-	ld (ix+002h),160	;4bf9	dd 36 02 a0
-	ld (ix+003h),10		;4bfd	dd 36 03 0a
+	ld (ix+000h),52		        ;4bf1	dd 36 00 34
+	ld (ix+001h),148	        ;4bf5	dd 36 01 94
+	ld (ix+002h),160	        ;4bf9	dd 36 02 a0
+	ld (ix+003h),10		        ;4bfd	dd 36 03 0a
 
-	ld a,001h		;4c01	3e 01 	> . 
+    ; ToDo: what is this var?
+	ld a,001h		    ;4c01	3e 01 	> . 
 	ld (0e53ch),a		;4c03	32 3c e5 	2 < . 
 
     ; Write "PRESS START BUTTON"
@@ -2311,17 +2348,18 @@ l4d46h:
 	ld de, 2 * 8*32*24/3		;4d60	11 00 10
 	call LDIRVM_32x24_THIRD		;4d63	cd 20 42
 
-	ld de,l8584h		;4d66	11 84 85 	. . . 
-	ld hl,02000h		;4d69	21 00 20 	! .   
-	call sub_4389h		;4d6c	cd 89 43 	. . C 
+    ; Decompress colors
+	ld de,l8584h		            ;4d66	11 84 85
+	ld hl,02000h + 0 * 8*32*24/3	;4d69	21 00 20
+	call DECOMPRESS_TILE_COLORS		;4d6c	cd 89 43
 
-	ld de,l8584h		;4d6f	11 84 85 	. . . 
-	ld hl,02800h		;4d72	21 00 28 	! . ( 
-	call sub_4389h		;4d75	cd 89 43 	. . C 
+	ld de,l8584h		            ;4d6f	11 84 85
+	ld hl,02000h + 1 * 8*32*24/3	;4d72	21 00 28
+	call DECOMPRESS_TILE_COLORS		;4d75	cd 89 43
 
-	ld de,l8584h		;4d78	11 84 85 	. . . 
-	ld hl,03000h		;4d7b	21 00 30 	! . 0 
-	call sub_4389h		;4d7e	cd 89 43 	. . C 
+	ld de,l8584h		            ;4d78	11 84 85
+	ld hl,02000h + 2 * 8*32*24/3	;4d7b	21 00 30
+	call DECOMPRESS_TILE_COLORS		;4d7e	cd 89 43
 
 	ld hl,01800h		;4d81	21 00 18 	! . . 
 	ld a,000h		;4d84	3e 00 	> . 
