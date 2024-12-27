@@ -7355,7 +7355,7 @@ l66adh:
 	nop			;66c0	00 	. 
 	ld bc,020ffh		;66c1	01 ff 20 	. .   
 	dec h			;66c4	25 	% 
-	call p,sub_95a2h		;66c5	f4 a2 95 	. . . 
+	call p,0x95a2		;66c5	f4 a2 95 	. . . 
 	ld d,d			;66c8	52 	R 
 	adc a,d			;66c9	8a 	. 
 	ld e,a			;66ca	5f 	_ 
@@ -14926,136 +14926,23 @@ include 'title_patterns.asm'
 TITLE_COLORS_COMPRESSED:
 include 'title_colors.asm'
 
-	rst 38h			;9573	ff 	. 
-	rst 38h			;9574	ff 	. 
-	rst 38h			;9575	ff 	. 
-	rst 38h			;9576	ff 	. 
-	rst 38h			;9577	ff 	. 
-	rst 38h			;9578	ff 	. 
-	rst 38h			;9579	ff 	. 
-	rst 38h			;957a	ff 	. 
-	nop			;957b	00 	. 
-	nop			;957c	00 	. 
-	nop			;957d	00 	. 
-	nop			;957e	00 	. 
-	nop			;957f	00 	. 
-	nop			;9580	00 	. 
-	nop			;9581	00 	. 
-	nop			;9582	00 	. 
-	nop			;9583	00 	. 
-	nop			;9584	00 	. 
-	nop			;9585	00 	. 
-	nop			;9586	00 	. 
-	nop			;9587	00 	. 
-	nop			;9588	00 	. 
-	nop			;9589	00 	. 
-	nop			;958a	00 	. 
-	nop			;958b	00 	. 
-	nop			;958c	00 	. 
-	nop			;958d	00 	. 
-	nop			;958e	00 	. 
-	nop			;958f	00 	. 
-	nop			;9590	00 	. 
-	nop			;9591	00 	. 
-	nop			;9592	00 	. 
-	nop			;9593	00 	. 
-	nop			;9594	00 	. 
-	nop			;9595	00 	. 
-	nop			;9596	00 	. 
-	nop			;9597	00 	. 
-	nop			;9598	00 	. 
-	nop			;9599	00 	. 
-	nop			;959a	00 	. 
-	ld d,b			;959b	50 	P 
-	ld d,l			;959c	55 	U 
-	ld d,e			;959d	53 	S 
-	ld c,b			;959e	48 	H 
-	nop			;959f	00 	. 
-	ld d,e			;95a0	53 	S 
-	ld d,b			;95a1	50 	P 
-sub_95a2h:
-	ld b,c			;95a2	41 	A 
-	ld b,e			;95a3	43 	C 
-	ld b,l			;95a4	45 	E 
-	nop			;95a5	00 	. 
-	ld c,e			;95a6	4b 	K 
-	ld b,l			;95a7	45 	E 
-	ld e,c			;95a8	59 	Y 
-	nop			;95a9	00 	. 
-	nop			;95aa	00 	. 
-	nop			;95ab	00 	. 
-	nop			;95ac	00 	. 
-	nop			;95ad	00 	. 
-	nop			;95ae	00 	. 
-	nop			;95af	00 	. 
-	nop			;95b0	00 	. 
-	nop			;95b1	00 	. 
-	nop			;95b2	00 	. 
-	nop			;95b3	00 	. 
-	nop			;95b4	00 	. 
-	nop			;95b5	00 	. 
-	nop			;95b6	00 	. 
-	nop			;95b7	00 	. 
-	nop			;95b8	00 	. 
-	nop			;95b9	00 	. 
-	nop			;95ba	00 	. 
-	nop			;95bb	00 	. 
-	nop			;95bc	00 	. 
-	nop			;95bd	00 	. 
-	nop			;95be	00 	. 
-	nop			;95bf	00 	. 
-	nop			;95c0	00 	. 
-	nop			;95c1	00 	. 
-	nop			;95c2	00 	. 
-	nop			;95c3	00 	. 
-	nop			;95c4	00 	. 
-	nop			;95c5	00 	. 
-	nop			;95c6	00 	. 
-	nop			;95c7	00 	. 
-	nop			;95c8	00 	. 
-	nop			;95c9	00 	. 
-	nop			;95ca	00 	. 
-	nop			;95cb	00 	. 
-	nop			;95cc	00 	. 
-	nop			;95cd	00 	. 
-	nop			;95ce	00 	. 
-	nop			;95cf	00 	. 
-	nop			;95d0	00 	. 
-	nop			;95d1	00 	. 
-	nop			;95d2	00 	. 
-	nop			;95d3	00 	. 
-	nop			;95d4	00 	. 
-	nop			;95d5	00 	. 
-	nop			;95d6	00 	. 
-	nop			;95d7	00 	. 
-	nop			;95d8	00 	. 
-	nop			;95d9	00 	. 
-	nop			;95da	00 	. 
-	nop			;95db	00 	. 
-	nop			;95dc	00 	. 
-	nop			;95dd	00 	. 
-	nop			;95de	00 	. 
-	nop			;95df	00 	. 
-	nop			;95e0	00 	. 
-	nop			;95e1	00 	. 
-	nop			;95e2	00 	. 
-	nop			;95e3	00 	. 
-	nop			;95e4	00 	. 
-	nop			;95e5	00 	. 
-	nop			;95e6	00 	. 
-	nop			;95e7	00 	. 
-	nop			;95e8	00 	. 
-	nop			;95e9	00 	. 
-	nop			;95ea	00 	. 
-	nop			;95eb	00 	. 
-	nop			;95ec	00 	. 
-	nop			;95ed	00 	. 
-	nop			;95ee	00 	. 
-	nop			;95ef	00 	. 
-	nop			;95f0	00 	. 
-	nop			;95f1	00 	. 
-	or a			;95f2	b7 	. 
-	nop			;95f3	00 	. 
+; Unused
+; It contains the unused text "PUSH SPACE KEY"
+db 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff ; 9573
+db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+db "PUSH"
+db 0
+db "SPACE"
+db 0
+db "KEY"
+db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+db 0, 0, 0, 0, 0, 0, 0, 0, 0
+db 0xb7, 0
+
 sub_95f4h:
 	call sub_b137h		;95f4	cd 37 b1 	. 7 . 
 	call sub_b15ch		;95f7	cd 5c b1 	. \ . 
