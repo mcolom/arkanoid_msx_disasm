@@ -69,8 +69,19 @@ PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4: equ 0xe0bf
 ; relevant keys here
 KEYBOARD_INPUT: equ 0xe0c0
 
+; Actions for the title's screen
+TITLE_SCREEN_ACTION: equ 0xe53c
+TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN: equ 0
+TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN: equ 1
+TITLE_SCREEN_ACTION_START_GAME: equ 2
+TITLE_SCREEN_ACTION_DEMO: equ 5
+
+
+
 VAUS_X:  equ 0xe0ce
 VAUS_X2: equ 0xe53e
+
+
 
 ; ToDo: this table is related to sounds, but how?
 SOUND_RELATED_TABLE: equ 0xe520
@@ -735,7 +746,7 @@ l42d9h:
 	jp z,l42f6h		;42e2	ca f6 42 	. . B 
 	xor a			;42e5	af 	. 
 	ld (0e00ah),a		;42e6	32 0a e0 	2 . . 
-	ld hl,0e53ch		;42e9	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;42e9	21 3c e5 	! < . 
 	ld de,0e53dh		;42ec	11 3d e5 	. = . 
 	ld (hl),000h		;42ef	36 00 	6 . 
 	ld bc,00007h		;42f1	01 07 00 	. . . 
@@ -807,7 +818,7 @@ l4322h:
 	jp z,l4370h		;435c	ca 70 43 	. p C 
 	xor a			;435f	af 	. 
 	ld (0e00ah),a		;4360	32 0a e0 	2 . . 
-	ld hl,0e53ch		;4363	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;4363	21 3c e5 	! < . 
 	ld de,0e53dh		;4366	11 3d e5 	. = . 
 	ld (hl),000h		;4369	36 00 	6 . 
 	ld bc,00007h		;436b	01 07 00 	. . . 
@@ -980,10 +991,11 @@ l43f0h:
 	jr l43cch		;43fd	18 cd
 
 sub_43ffh:
-	xor a			;43ff	af 	. 
-	ld (0e53ch),a		;4400	32 3c e5 	2 < . 
+    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
+	xor a			            ;43ff	af
+	ld (TITLE_SCREEN_ACTION),a	;4400	32 3c e5
 l4403h:
-	ld a,(0e53ch)		;4403	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;4403	3a 3c e5 	: < . 
 l4406h:
 	ld l,a			;4406	6f 	o 
 	ld h,000h		;4407	26 00 	& . 
@@ -1022,14 +1034,18 @@ l442bh:
 	ld a,(hl)			;4430	7e 	~ 
 	cp 0ffh		;4431	fe ff 	. . 
 	jp nz,l441ch		;4433	c2 1c 44 	. . D 
-	ld hl,0e53ch		;4436	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;4436	21 3c e5 	! < . 
+
+    ; ToDo: what is this var in TITLE_SCREEN_ACTION+1?
 	inc (hl)			;4439	34 	4 
 	ld a,(hl)			;443a	7e 	~ 
 	cp 020h		;443b	fe 20 	.   
 	jp nz,l4403h		;443d	c2 03 44 	. . D 
-	xor a			;4440	af 	. 
-	ld (0e53ch),a		;4441	32 3c e5 	2 < . 
-	ret			;4444	c9 	. 
+
+    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
+	xor a			            ;4440	af
+	ld (TITLE_SCREEN_ACTION),a	;4441	32 3c e5
+	ret			                ;4444	c9
 
 ; ToDo: what is this table?
 ; Related to function sub_43ffh
@@ -2078,16 +2094,21 @@ sub_4b8ah:
 	jp nz,l4eddh		;4b95	c2 dd 4e 	. . N 
     
     
-    ; [ToDo] This is a switch according to 0e53ch
-	ld a,(0e53ch)		;4b98	3a 3c e5 	: < . 
-	cp 001h		;4b9b	fe 01 	. . 
-	jp z,l4c48h		;4b9d	ca 48 4c 	. H L 
-	cp 002h		;4ba0	fe 02 	. . 
-	jp z,l4cc6h		;4ba2	ca c6 4c 	. . L 
-	cp 005h		;4ba5	fe 05 	. . 
-	jp z,l4ca2h		;4ba7	ca a2 4c 	. . L 
-	ld a,000h		;4baa	3e 00 	> . 
+    ; Switch according to TITLE_SCREEN_ACTION
+	ld a,(TITLE_SCREEN_ACTION)		            ;4b98	3a 3c e5
+	cp TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN	;4b9b	fe 01
+	jp z,l4c48h		                            ;4b9d	ca 48 4c
+    
+	cp TITLE_SCREEN_ACTION_START_GAME		    ;4ba0	fe 02
+	jp z,l4cc6h		                            ;4ba2	ca c6 4c
+	cp TITLE_SCREEN_ACTION_DEMO		            ;4ba5	fe 05
+    
+	jp z,l4ca2h		                            ;4ba7	ca a2 4c
+    
+    ; ToDo: what is this var?
+    ld a, 0		;4baa	3e 00 	> . 
 	ld (0f3ebh),a		;4bac	32 eb f3 	2 . . 
+    
 	call CHGCLR		;4baf	cd 62 00 	. b . 
 	call CLEAR_SCREEN		;4bb2	cd 27 42 	. ' B 
 
@@ -2132,9 +2153,8 @@ sub_4b8ah:
 	ld (ix+002h),160	        ;4bf9	dd 36 02 a0
 	ld (ix+003h),10		        ;4bfd	dd 36 03 0a
 
-    ; ToDo: what is this var?
-	ld a,001h		    ;4c01	3e 01 	> . 
-	ld (0e53ch),a		;4c03	32 3c e5 	2 < . 
+	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN		;4c01	3e 01
+	ld (TITLE_SCREEN_ACTION),a		                    ;4c03	32 3c e5
 
     ; Write "PRESS START BUTTON"
 	ld hl,PUSH_START_BUTTON_STR		;4c06	21 b3 54
@@ -2174,6 +2194,7 @@ sub_4b8ah:
 	ret			        ;4c47	c9
 
 l4c48h:
+    ; TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN
 	ld a,(0e00ch)		;4c48	3a 0c e0 	: . . 
 	or a			;4c4b	b7 	. 
 	jp z,l4c5ah		;4c4c	ca 5a 4c 	. Z L 
@@ -2200,8 +2221,8 @@ l4c62h:
 	ret			            ;4c72	c9
 
 l4c73h:
-	ld a,002h		;4c73	3e 02 	> . 
-	ld (0e53ch),a		;4c75	32 3c e5 	2 < . 
+	ld a,TITLE_SCREEN_ACTION_START_GAME		;4c73	3e 02
+	ld (TITLE_SCREEN_ACTION),a		        ;4c75	32 3c e5
 
     ; Print "GAME START"
 	ld hl,GAME_START_STR	;4c78	21 cc 54
@@ -2220,14 +2241,17 @@ l4c73h:
 	ret			            ;4c93	c9
 
 l4c94h:
-	ld a,005h		;4c94	3e 05 	> . 
-	ld (0e53ch),a		;4c96	32 3c e5 	2 < . 
+	ld a,TITLE_SCREEN_ACTION_DEMO		;4c94	3e 05 	> . 
+	ld (TITLE_SCREEN_ACTION),a		;4c96	32 3c e5 	2 < . 
+
 	ld a,001h		;4c99	3e 01 	> . 
 	ld (0e00dh),a		;4c9b	32 0d e0 	2 . . 
 	call CLEAR_SCREEN		;4c9e	cd 27 42 	. ' B 
 	ret			;4ca1	c9 	. 
 
 l4ca2h:
+    ; TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
+
     ; Set we're at the title screen
 	ld a, 0		            ;4ca2	3e 00   No "xor a" optimization here :)
 	ld (GAME_STATE),a		;4ca4	32 0b e0
@@ -2259,6 +2283,8 @@ DEMO_LEVELS_TABLE:
     db 12, 3, 6, 1
 
 l4cc6h:
+    ; TITLE_SCREEN_ACTION_START_GAME
+
     ; Set we're in normal play
 	ld a, 1		            ;4cc6	3e 01
 	ld (GAME_STATE),a		;4cc8	32 0b e0
@@ -2652,7 +2678,7 @@ l4f60h:
 	jp l4f7ah		;4f68	c3 7a 4f 	. z O 
 l4f6bh:
 	ld hl,00000h		;4f6b	21 00 00 	! . . 
-	ld (0e53ch),hl		;4f6e	22 3c e5 	" < . 
+	ld (TITLE_SCREEN_ACTION),hl		;4f6e	22 3c e5 	" < . 
 	ld (VAUS_X2),hl		;4f71	22 3e e5 	" > . 
 	ld (0e540h),hl		;4f74	22 40 e5 	" @ . 
 	ld (0e542h),hl		;4f77	22 42 e5 	" B . 
@@ -2665,14 +2691,16 @@ l4f7ah:
 	ret			;4f89	c9 	. 
 
 ENDING_TEXT_ANIMATION:
-	call CLEAR_SCREEN		;4f8a	cd 27 42 	. ' B 
-	xor a			;4f8d	af 	. 
-	ld (0e53ch),a		;4f8e	32 3c e5 	2 < . 
+	call CLEAR_SCREEN		    ;4f8a	cd 27 42
+    
+    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
+	xor a			            ;4f8d	af
+	ld (TITLE_SCREEN_ACTION),a	;4f8e	32 3c e5
 l4f91h:
 	push ix		;4f91	dd e5 	. . 
 	xor a			;4f93	af 	. 
 	ld (0e53dh),a		;4f94	32 3d e5 	2 = . 
-	ld a,(0e53ch)		;4f97	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;4f97	3a 3c e5 	: < . 
 	ld e,a			;4f9a	5f 	_ 
 	sla e		;4f9b	cb 23 	. # 
 	ld d,000h		;4f9d	16 00 	. . 
@@ -2701,7 +2729,10 @@ l4fbbh:
 	ld (0e53dh),a		;4fc4	32 3d e5 	2 = . 
 	jp nz,l4fa8h		;4fc7	c2 a8 4f 	. . O 
 	pop ix		;4fca	dd e1 	. . 
-	ld hl,0e53ch		;4fcc	21 3c e5 	! < . 
+    
+    ; Here it's not TITLE_SCREEN_ACTION, but most probably
+    ; it's reusing the var for something else
+	ld hl,TITLE_SCREEN_ACTION		;4fcc	21 3c e5 	! < . 
 	inc (hl)			;4fcf	34 	4 
 	ld a,(hl)			;4fd0	7e 	~ 
 	cp 009h		;4fd1	fe 09 	. . 
@@ -5297,14 +5328,16 @@ l5d82h:
 	ret			;5d9c	c9 	. 
 
 sub_5d9dh:
+    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
 	xor a			;5d9d	af 	. 
-	ld (0e53ch),a		;5d9e	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;5d9e	32 3c e5 	2 < . 
+
 	ld ix,0e36eh		;5da1	dd 21 6e e3 	. ! n . 
 l5da5h:
 	xor a			;5da5	af 	. 
 	ld (0e53dh),a		;5da6	32 3d e5 	2 = . 
 l5da9h:
-	ld a,(0e53ch)		;5da9	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;5da9	3a 3c e5 	: < . 
 	and 003h		;5dac	e6 03 	. . 
 	ld l,a			;5dae	6f 	o 
 	ld h,000h		;5daf	26 00 	& . 
@@ -5325,7 +5358,7 @@ l5da9h:
 	ld a,(hl)			;5dca	7e 	~ 
 	cp 016h		;5dcb	fe 16 	. . 
 	jp nz,l5da9h		;5dcd	c2 a9 5d 	. . ] 
-	ld hl,0e53ch		;5dd0	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;5dd0	21 3c e5 	! < . 
 	inc (hl)			;5dd3	34 	4 
 	ld a,(hl)			;5dd4	7e 	~ 
 	cp 00ch		;5dd5	fe 0c 	. . 
@@ -8813,7 +8846,7 @@ sub_70b0h:
 l70bfh:
 	push bc			;70bf	c5 	. 
 	xor a			;70c0	af 	. 
-	ld (0e53ch),a		;70c1	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;70c1	32 3c e5 	2 < . 
 	ld a,(iy+000h)		;70c4	fd 7e 00 	. ~ . 
 	or a			;70c7	b7 	. 
 	jp z,l715dh		;70c8	ca 5d 71 	. ] q 
@@ -8845,8 +8878,10 @@ l70bfh:
 	ld (BRICK_COL),a		;7107	32 ab e2 	2 . . 
 	call sub_ada8h		;710a	cd a8 ad 	. . . 
 	jp nc,l7118h		;710d	d2 18 71 	. . q 
-	ld a,001h		;7110	3e 01 	> . 
-	ld (0e53ch),a		;7112	32 3c e5 	2 < . 
+
+	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN		;7110	3e 01
+	ld (TITLE_SCREEN_ACTION),a		                    ;7112	32 3c e5
+
 	call sub_aa05h		;7115	cd 05 aa 	. . . 
 l7118h:
 	ld a,(ix+001h)		;7118	dd 7e 01 	. ~ . 
@@ -8863,11 +8898,13 @@ l7118h:
 	ld (BRICK_COL),a		;7131	32 ab e2 	2 . . 
 	call sub_ada8h		;7134	cd a8 ad 	. . . 
 	jp nc,l7142h		;7137	d2 42 71 	. B q 
-	ld a,001h		;713a	3e 01 	> . 
-	ld (0e53ch),a		;713c	32 3c e5 	2 < . 
+
+	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN	;713a	3e 01
+	ld (TITLE_SCREEN_ACTION),a		                ;713c	32 3c e5
+
 	call sub_aa05h		;713f	cd 05 aa 	. . . 
 l7142h:
-	ld a,(0e53ch)		;7142	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;7142	3a 3c e5 	: < . 
 	or a			;7145	b7 	. 
 	jp z,l715dh		;7146	ca 5d 71 	. ] q 
 	ld (ix+000h),0c0h		;7149	dd 36 00 c0 	. 6 . . 
@@ -8962,7 +8999,7 @@ l71c1h:
 	jp c,l71c8h		;71c3	da c8 71
 	ld a, 6		    ;71c6	3e 06
 l71c8h:
-	ld (0e53ch),a		;71c8	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;71c8	32 3c e5 	2 < . 
 	xor a			;71cb	af 	. 
 	ld (0e53dh),a		;71cc	32 3d e5 	2 = . 
 	ld iy,0197ah		;71cf	fd 21 7a 19 	. ! z . 
@@ -8982,7 +9019,7 @@ l71e7h:
 	call LDIRVM		;71e7	cd 5c 00 	. \ . 
 	ld hl,0e53dh		;71ea	21 3d e5 	! = . 
 	inc (hl)			;71ed	34 	4 
-	ld hl,0e53ch		;71ee	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;71ee	21 3c e5 	! < . 
 	dec (hl)			;71f1	35 	5 
 	jp nz,l71d3h		;71f2	c2 d3 71 	. . q 
 	ret			;71f5	c9 	. 
@@ -9058,7 +9095,7 @@ sub_7241h:
 	jp nz,l726eh		;7258	c2 6e 72 	. n r 
 	ld a,000h		;725b	3e 00 	> . 
 	ld (0e00ah),a		;725d	32 0a e0 	2 . . 
-	ld hl,0e53ch		;7260	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;7260	21 3c e5 	! < . 
 	ld de,0e53dh		;7263	11 3d e5 	. = . 
 	ld bc,00007h		;7266	01 07 00 	. . . 
 	ld (hl),000h		;7269	36 00 	6 . 
@@ -10826,7 +10863,7 @@ sub_9726h:
 	cp FINAL_LEVEL		;9729	fe 20
 	ret z			    ;972b	c8
 	xor a			;972c	af 	. 
-	ld (0e53ch),a		;972d	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;972d	32 3c e5 	2 < . 
 	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4 	. ! . . 
 	ld ix,SPR_13_SPR_PARAMS		;9734	dd 21 01 e1 	. ! . . 
 l9738h:
@@ -10880,7 +10917,7 @@ l979bh:
 	add iy,de		;979e	fd 19 	. . 
 	ld de,00004h		;97a0	11 04 00 	. . . 
 	add ix,de		;97a3	dd 19 	. . 
-	ld hl,0e53ch		;97a5	21 3c e5 	! < . 
+	ld hl,TITLE_SCREEN_ACTION		;97a5	21 3c e5 	! < . 
 	inc (hl)			;97a8	34 	4 
 	ld a,(hl)			;97a9	7e 	~ 
 	cp 003h		;97aa	fe 03 	. . 
@@ -10905,8 +10942,12 @@ l97c6h:
 	ld (ix+003h),h		;97d0	dd 74 03 	. t . 
 	ld (ix+004h),000h		;97d3	dd 36 04 00 	. 6 . . 
 	ld (ix+005h),000h		;97d7	dd 36 05 00 	. 6 . . 
-	ld a,(0e53ch)		;97db	3a 3c e5 	: < . 
+    
+    ; ToDo: it's reusing TITLE_SCREEN_ACTION for something else.
+    ; What is it?
+	ld a,(TITLE_SCREEN_ACTION)		;97db	3a 3c e5 	: < . 
 	ld (ix+006h),a		;97de	dd 77 06 	. w . 
+
 	ld a,(0e53dh)		;97e1	3a 3d e5 	: = . 
 	ld (ix+007h),a		;97e4	dd 77 07 	. w . 
 l97e7h:
@@ -11727,7 +11768,7 @@ l9d54h:
 	jp nc,l9d99h		;9d63	d2 99 9d 	. . . 
 	call sub_ada8h		;9d66	cd a8 ad 	. . . 
 	jp nc,l9d81h		;9d69	d2 81 9d 	. . . 
-	ld a,(0e53ch)		;9d6c	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;9d6c	3a 3c e5 	: < . 
 	ld (ix+000h),a		;9d6f	dd 77 00 	. w . 
 	ld a,(0e53dh)		;9d72	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9d75	dd 77 01 	. w . 
@@ -11891,7 +11932,7 @@ l9ef0h:
 	jp nc,l9f35h		;9eff	d2 35 9f 	. 5 . 
 	call sub_ada8h		;9f02	cd a8 ad 	. . . 
 	jp nc,l9f1dh		;9f05	d2 1d 9f 	. . . 
-	ld a,(0e53ch)		;9f08	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;9f08	3a 3c e5 	: < . 
 	ld (ix+000h),a		;9f0b	dd 77 00 	. w . 
 	ld a,(0e53dh)		;9f0e	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9f11	dd 77 01 	. w . 
@@ -12054,7 +12095,7 @@ la090h:
 	jp nc,la0cch		;a096	d2 cc a0 	. . . 
 	call sub_ada8h		;a099	cd a8 ad 	. . . 
 	jp nc,la0b4h		;a09c	d2 b4 a0 	. . . 
-	ld a,(0e53ch)		;a09f	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;a09f	3a 3c e5 	: < . 
 	ld (ix+000h),a		;a0a2	dd 77 00 	. w . 
 	ld a,(0e53dh)		;a0a5	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a0a8	dd 77 01 	. w . 
@@ -12217,7 +12258,7 @@ la21eh:
 	jp nc,la263h		;a22d	d2 63 a2 	. c . 
 	call sub_ada8h		;a230	cd a8 ad 	. . . 
 	jp nc,la24bh		;a233	d2 4b a2 	. K . 
-	ld a,(0e53ch)		;a236	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;a236	3a 3c e5 	: < . 
 	ld (ix+000h),a		;a239	dd 77 00 	. w . 
 	ld a,(0e53dh)		;a23c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a23f	dd 77 01 	. w . 
@@ -12302,7 +12343,7 @@ la2eeh:
 	ld (BRICK_COL),a		;a2fd	32 ab e2 	2 . . 
 	call sub_ada8h		;a300	cd a8 ad 	. . . 
 	jp nc,la31bh		;a303	d2 1b a3 	. . . 
-	ld a,(0e53ch)		;a306	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;a306	3a 3c e5 	: < . 
 	ld (ix+000h),a		;a309	dd 77 00 	. w . 
 	ld a,(0e53dh)		;a30c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a30f	dd 77 01 	. w . 
@@ -12604,7 +12645,7 @@ la56ah:
 	ld b,a			;a56d	47 	G 
 	ld a,(0e587h)		;a56e	3a 87 e5 	: . . 
 	add a,b			;a571	80 	. 
-	ld (0e53ch),a		;a572	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;a572	32 3c e5 	2 < . 
 	ld b,a			;a575	47 	G 
 	ld a,0bch		;a576	3e bc 	> . 
 	bit 7,(iy+003h)		;a578	fd cb 03 7e 	. . . ~ 
@@ -12741,8 +12782,9 @@ la65bh:
 	jp z,la66ch		;a666	ca 6c a6 	. l . 
 	ld a,(0e2c5h)		;a669	3a c5 e2 	: . . 
 la66ch:
-	ld (0e53ch),a		;a66c	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;a66c	32 3c e5 	2 < . 
 	ret			;a66f	c9 	. 
+
 sub_a670h:
 	ld hl,0e541h		;a670	21 41 e5 	! A . 
 	ld (hl),000h		;a673	36 00 	6 . 
@@ -12864,11 +12906,12 @@ la750h:
 la751h:
 	push af			;a751	f5 	. 
 	ld a,(0e2c4h)		;a752	3a c4 e2 	: . . 
-	ld (0e53ch),a		;a755	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;a755	32 3c e5 	2 < . 
 	ld a,b			;a758	78 	x 
 	ld (0e53dh),a		;a759	32 3d e5 	2 = . 
 	pop af			;a75c	f1 	. 
 	ret			;a75d	c9 	. 
+
 la75eh:
 	ld a,(BRICK_COL)		;a75e	3a ab e2 	: . . 
 	sla a		;a761	cb 27 	. ' 
@@ -12899,7 +12942,7 @@ la789h:
 la78ah:
 	push af			;a78a	f5 	. 
 	ld a,(0e2c4h)		;a78b	3a c4 e2 	: . . 
-	ld (0e53ch),a		;a78e	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;a78e	32 3c e5 	2 < . 
 	ld a,b			;a791	78 	x 
 	ld (0e53dh),a		;a792	32 3d e5 	2 = . 
 	pop af			;a795	f1 	. 
@@ -12936,7 +12979,7 @@ la7c9h:
 la7cah:
 	push af			;a7ca	f5 	. 
 	ld a,(0e2c5h)		;a7cb	3a c5 e2 	: . . 
-	ld (0e53ch),a		;a7ce	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;a7ce	32 3c e5 	2 < . 
 	ld a,b			;a7d1	78 	x 
 	ld (0e53dh),a		;a7d2	32 3d e5 	2 = . 
 	pop af			;a7d5	f1 	. 
@@ -12971,7 +13014,7 @@ la802h:
 la803h:
 	push af			;a803	f5 	. 
 	ld a,(0e2c5h)		;a804	3a c5 e2 	: . . 
-	ld (0e53ch),a		;a807	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;a807	32 3c e5 	2 < . 
 	ld a,b			;a80a	78 	x 
 	ld (0e53dh),a		;a80b	32 3d e5 	2 = . 
 	pop af			;a80e	f1 	. 
@@ -13419,7 +13462,7 @@ lab10h:
 	ld d,000h		;ab1f	16 00 	. . 
 	add hl,de			;ab21	19 	. 
 	ld a,(BRICK_ROW)		;ab22	3a aa e2 	: . . 
-	ld (0e53ch),a		;ab25	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;ab25	32 3c e5 	2 < . 
 	ld a,(BRICK_COL)		;ab28	3a ab e2 	: . . 
 	ld (0e53dh),a		;ab2b	32 3d e5 	2 = . 
 	call sub_97afh		;ab2e	cd af 97 	. . . 
@@ -14878,7 +14921,7 @@ lb2f5h:
 	ld c,(iy+BALL_TABLE_IDX_SPEED_POS)		;b2fd	fd 4e 07
 
 	ld a,(iy+BALL_TABLE_IDX_SPEED_COUNTER)	;b300	fd 7e 0d
-	ld (0e53ch),a		;b303	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		;b303	32 3c e5 	2 < . 
 
 	ld b, 3		            ;b306	06 03   Therea are 3 balls to loop over
 	ld iy,BALL_TABLE1		;b308	fd 21 4e e2
@@ -14893,7 +14936,7 @@ lb30fh:
 	ld a,(hl)			;b317	7e 	~ 
 	ld (iy+006h),a		;b318	fd 77 06 	. w . 
 
-	ld a,(0e53ch)		;b31b	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)		;b31b	3a 3c e5 	: < . 
 	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a		;b31e	fd 77 0d
 
 	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		    ;b321	fd 71 07
