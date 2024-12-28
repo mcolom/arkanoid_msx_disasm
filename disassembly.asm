@@ -20,6 +20,11 @@ CHEAT2_ACTIVATED: equ 0xe003
 CHEAT2_KEY_COUNTER: equ 0xe004
 CHEAT2_LEVEL: equ 0xe005
 
+GAME_TRANSITION_ACTION: equ 0xe00a
+GAME_TRANSITION_ACTION_START_LEVEL: equ 0 ; start level
+GAME_TRANSITION_ACTION_PLAY_LEVEL: equ  1 ; normal play
+GAME_TRANSITION_ACTION_NEXT_LEVEL: equ  2 ; pause and go to the next level
+
 IN_DEMO: equ 0xe00d
 
 SPR_PARAMS_LEN: equ 4
@@ -527,30 +532,38 @@ l419dh:
 	outi		;419d	ed a3 	. . 
 	jr nz,l419dh		;419f	20 fc 	  . 
 
-	ld a,(0e00ah)		;41a1	3a 0a e0 	: . . 
-	ld l,a			;41a4	6f 	o 
-	ld h,000h		;41a5	26 00 	& . 
-	add hl,hl			;41a7	29 	) 
-	ld de,l41b1h		;41a8	11 b1 41 	. . A 
-	add hl,de			;41ab	19 	. 
-	ld e,(hl)			;41ac	5e 	^ 
-	inc hl			;41ad	23 	# 
-	ld d,(hl)			;41ae	56 	V 
-	ex de,hl			;41af	eb 	. 
-	jp (hl)			;41b0	e9 	. 
-l41b1h:
-	or a			;41b1	b7 	. 
-	ld b,c			;41b2	41 	A 
-	ret nz			;41b3	c0 	. 
-	ld b,c			;41b4	41 	A 
-	call nc,0cd41h		;41b5	d4 41 cd 	. A . 
-	ld b,h			;41b8	44 	D 
-	nop			;41b9	00 	. 
-	call sub_4b8ah		;41ba	cd 8a 4b 	. . K 
+    ; Jump to the right transition
+	ld a,(GAME_TRANSITION_ACTION)		;41a1	3a 0a e0
+	
+    ; HL = GAME_TRANSITION_JUMP_TABLE + 2*GAME_TRANSITION_ACTION
+    ld l,a			                    ;41a4	6f
+	ld h, 0		                        ;41a5	26 00
+	add hl,hl			                ;41a7	29
+	ld de,GAME_TRANSITION_JUMP_TABLE	;41a8	11 b1 41
+	add hl,de			                ;41ab	19
     
-	jp l41dah		;41bd	c3 da 41 	. . A 
+    ; DE = GAME_TRANSITION_JUMP_TABLE[2*GAME_TRANSITION_ACTION]
+	ld e,(hl)			                ;41ac	5e
+	inc hl			                    ;41ad	23
+	ld d,(hl)			                ;41ae	56
+	
+    ; Jump to GAME_TRANSITION_JUMP_TABLE[2*GAME_TRANSITION_ACTION]
+    ex de,hl			                ;41af	eb
+	jp (hl)			                    ;41b0	e9
+
+; Table for the parametrized jump at 41b0
+GAME_TRANSITION_JUMP_TABLE:
+    dw TRANSITION_START_LEVEL  ; GAME_TRANSITION_ACTION_START_LEVEL
+    dw TRANSITION_PLAY_LEVEL   ; GAME_TRANSITION_ACTION_PLAY_LEVEL
+    dw TRANSITION_NEXT_LEVEL   ; GAME_TRANSITION_ACTION_NEXT_LEVEL
+
+; And its three actions:
+TRANSITION_START_LEVEL:
+    call ENASCR     ;41b7
+	call sub_4b8ah	;41ba	cd 8a 4b 	. . K 
+	jp go_on_after_transition		;41bd	c3 da 41 	. . A 
     
-    ; Dead code?
+TRANSITION_PLAY_LEVEL:
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
 	call sub_95f4h		;41c3	cd f4 95 	. . . 
 	call sub_7241h		;41c6	cd 41 72 	. A r 
@@ -560,10 +573,14 @@ l41b1h:
 	ld (SCORE_POSITION),a		;41cb	32 44 e5
 
 	call DRAW_SCORE_NUMBERS		;41ce	cd b9 53 	. . S 
-	jp l41dah		;41d1	c3 da 41 	. . A 
+	jp go_on_after_transition		;41d1	c3 da 41 	. . A 
+
+TRANSITION_NEXT_LEVEL:
 	call sub_7b94h		;41d4	cd 94 7b 	. . { 
-	jp l41dah		;41d7	c3 da 41 	. . A 
-l41dah:
+	jp go_on_after_transition		;41d7	c3 da 41 	. . A 
+
+go_on_after_transition:
+    ; Related to playing sounds
 	ld hl,SOUND_RELATED_TABLE		;41da	21 20 e5 	!   . 
 	ld a,(hl)			;41dd	7e 	~ 
 	or a			;41de	b7 	. 
@@ -590,15 +607,15 @@ l41eeh:
 	jp l40d7h		                ;41fc	c3 d7 40
 
 FILL_COLORS_ALL_SCREEN:
-	ld de,TITLE_COLORS_COMPRESSED		            ;41ff	11 f4 93
+	ld de,TITLE_COLORS_COMPRESSED   ;41ff	11 f4 93
 	ld hl,02000h + 0 * 32*24*8/3    ;4202	21 00 20
 	call DECOMPRESS_TILE_COLORS	    ;4205	cd 89 43
 
-	ld de,TITLE_COLORS_COMPRESSED		            ;4208	11 f4 93
+	ld de,TITLE_COLORS_COMPRESSED   ;4208	11 f4 93
 	ld hl,02000h + 1 * 32*24*8/3    ;420b	21 00 28
 	call DECOMPRESS_TILE_COLORS	    ;420e	cd 89 43
 
-	ld de,TITLE_COLORS_COMPRESSED		            ;4211	11 f4 93
+	ld de,TITLE_COLORS_COMPRESSED   ;4211	11 f4 93
 	ld hl,02000h + 2 * 32*24*8/3    ;4214	21 00 30
 	call DECOMPRESS_TILE_COLORS		;4217	cd 89 43
 	ret			                    ;421a	c9
@@ -743,11 +760,14 @@ l42bbh:
 l42d9h:
 	bit 4,b		;42d9	cb 60 	. ` 
 	jp z,l42fch		;42db	ca fc 42 	. . B 
-	ld a,(0e00ah)		;42de	3a 0a e0 	: . . 
+
+	ld a,(GAME_TRANSITION_ACTION)		;42de	3a 0a e0 	: . . 
 	or a			;42e1	b7 	. 
 	jp z,l42f6h		;42e2	ca f6 42 	. . B 
+
 	xor a			;42e5	af 	. 
-	ld (0e00ah),a		;42e6	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;42e6	32 0a e0 	2 . . 
+
 	ld hl,TITLE_SCREEN_ACTION		;42e9	21 3c e5 	! < . 
 	ld de,0e53dh		;42ec	11 3d e5 	. = . 
 	ld (hl),000h		;42ef	36 00 	6 . 
@@ -815,11 +835,14 @@ l4322h:
 
 	bit 1,b		;4355	cb 48 	. H 
 	ret z			;4357	c8 	. 
-	ld a,(0e00ah)		;4358	3a 0a e0 	: . . 
+
+	ld a,(GAME_TRANSITION_ACTION)		;4358	3a 0a e0 	: . . 
 	or a			;435b	b7 	. 
 	jp z,l4370h		;435c	ca 70 43 	. p C 
+
 	xor a			;435f	af 	. 
-	ld (0e00ah),a		;4360	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;4360	32 0a e0 	2 . . 
+
 	ld hl,TITLE_SCREEN_ACTION		;4363	21 3c e5 	! < . 
 	ld de,0e53dh		;4366	11 3d e5 	. = . 
 	ld (hl),000h		;4369	36 00 	6 . 
@@ -2200,6 +2223,7 @@ l4c48h:
 	ld a,(0e00ch)		;4c48	3a 0c e0 	: . . 
 	or a			;4c4b	b7 	. 
 	jp z,l4c5ah		;4c4c	ca 5a 4c 	. Z L 
+
 	ld a,(0e0c5h)		;4c4f	3a c5 e0 	: . . 
 	bit 1,a		;4c52	cb 4f 	. O 
 	jp nz,l4c73h		;4c54	c2 73 4c 	. s L 
@@ -2380,7 +2404,7 @@ l4d30h:
 	call DELAY_HL_TICKS		;4d43	cd 80 43
 l4d46h:
 	ld a,001h		;4d46	3e 01 	> . 
-	ld (0e00ah),a		;4d48	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;4d48	32 0a e0 	2 . . 
 
     ; Load in-game patterns into VRAM
 
@@ -8132,8 +8156,10 @@ l6adbh:
 l6b1ch:
 	ld a,000h		;6b1c	3e 00 	> . 
 	ld (VAUS_ACTION_STATE),a		;6b1e	32 4b e5 	2 K . 
+
 	ld a,002h		;6b21	3e 02 	> . 
-	ld (0e00ah),a		;6b23	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;6b23	32 0a e0 	2 . . 
+
 	ld a,001h		;6b26	3e 01 	> . 
 	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0 	2 " . 
 	ret			;6b2b	c9 	. 
@@ -8649,9 +8675,10 @@ l6f12h:
 	ld a,000h		;6f1f	3e 00 	> . 
 	ld (VAUS_X2),a		;6f21	32 3e e5 	2 > . 
 	ld (ix+006h),000h		;6f24	dd 36 06 00 	. 6 . . 
+
 	ld a,002h		;6f28	3e 02 	> . 
 	ld (BRICK_REPAINT_TYPE),a		;6f2a	32 22 e0 	2 " . 
-	ld (0e00ah),a		;6f2d	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;6f2d	32 0a e0 	2 . . 
 	ret			;6f30	c9 	. 
 l6f31h:
     ; VAUS_ACTION_STATE_LASER
@@ -8809,6 +8836,7 @@ sub_7040h:
     ld a,(0e00ch)		;7058	3a 0c e0 	: . . 
 	or a			;705b	b7 	. 
 	jp z,l706ah		;705c	ca 6a 70 	. j p 
+
 	ld a,(0e0c5h)		;705f	3a c5 e0 	: . . 
 	bit 1,a		;7062	cb 4f 	. O 
 	jp z,l70afh		;7064	ca af 70 	. . p 
@@ -9105,8 +9133,10 @@ sub_7241h:
 	ld a,h			;7255	7c 	| 
 	cp 00bh		;7256	fe 0b 	. . 
 	jp nz,l726eh		;7258	c2 6e 72 	. n r 
+
 	ld a,000h		;725b	3e 00 	> . 
-	ld (0e00ah),a		;725d	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;725d	32 0a e0 	2 . . 
+
 	ld hl,TITLE_SCREEN_ACTION		;7260	21 3c e5 	! < . 
 	ld de,0e53dh		;7263	11 3d e5 	. = . 
 	ld bc,00007h		;7266	01 07 00 	. . . 
@@ -9414,8 +9444,9 @@ l7441h:
 	ld a,(ix+004h)		;7444	dd 7e 04 	. ~ . 
 	cp 078h		;7447	fe 78 	. x 
 	ret nz			;7449	c0 	. 
+
 	ld a,002h		;744a	3e 02 	> . 
-	ld (0e00ah),a		;744c	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;744c	32 0a e0 	2 . . 
 	ret			;744f	c9 	. 
 l7450h:
 	pop af			;7450	f1 	. 
@@ -10583,8 +10614,10 @@ l7c44h:
 	ldir		;7c50	ed b0 	. . 
 
     ; Reset states
+
 	xor a			        ;7c52	af
-	ld (0e00ah),a		    ;7c53	32 0a e0
+	ld (GAME_TRANSITION_ACTION),a		    ;7c53	32 0a e0
+
     ; Set we're in the title screen
 	ld (GAME_STATE),a		;7c56	32 0b e0
     ; Reset Doh hits
@@ -10620,7 +10653,7 @@ GAME_OVER_SPRITE_TABLE:
     
 l7c7dh:
 	xor a			;7c7d	af 	. 
-	ld (0e00ah),a		;7c7e	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;7c7e	32 0a e0 	2 . . 
 
     ; Wait 60 ticks
 	ld hl, 60   		    ;7c81	21 3c 00
@@ -11091,18 +11124,18 @@ ACTION_989E:
 
 	ld (iy+16),  26  ;98aa	fd 36 10 1a
 
-    ; Configure sprite of the ball
+    ; Configure sprite of the ball. Start as glued to Vaus.
 	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM), 0x80   ;98ae	dd 36 02 80
-	ld (ix+SPR_PARAMS_IDX_COLOR), 15	        ;98b2	dd 36 03 0f     White color
+	ld (ix+SPR_PARAMS_IDX_COLOR), 15	       ;98b2	dd 36 03 0f     White color
 
-	ld (iy+BALL_TABLE_IDX_GLUE),1	                ;98b6	fd 36 01 01     Ball is glued
+	ld (iy+BALL_TABLE_IDX_GLUE),1	           ;98b6	fd 36 01 01     Ball is glued
 	
     ; Initialize glue timer
-    ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 120	    ;98ba	fd 36 0e 78
+    ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 120	;98ba	fd 36 0e 78
     
     ; Set direction
-	ld (iy+BALL_TABLE_IDX_SKEWNESS),3              ;98be	fd 36 06 03
-	ld (iy+BALL_TABLE_IDX_VERT), 0xff		        ;98c2	fd 36 02 ff Ball moves UP
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),3           ;98be	fd 36 06 03
+	ld (iy+BALL_TABLE_IDX_VERT), 0xff		    ;98c2	fd 36 02 ff     Ball moves UP
 
     ; A = SPEED_TABLE_POSITIONS[LEVEL]
 	ld a,(LEVEL)		            ;98c6	3a 1b e0
@@ -11127,9 +11160,11 @@ ACTION_98F8:
 	or a			        ;98fb	b7
 	jp z,l9935h		        ;98fc	ca 35 99
 
+    ; ToDo: what is this var?
 	ld a,(0e00ch)		;98ff	3a 0c e0 	: . . 
 	or a			;9902	b7 	. 
 	jp z,l9910h		;9903	ca 10 99 	. . . 
+
 	ld a,(0e0c5h)		;9906	3a c5 e0 	: . . 
 	bit 1,a		;9909	cb 4f 	. O 
 	jr nz,l9935h		;990b	20 28 	  ( 
@@ -11146,6 +11181,7 @@ l9917h:
 	ld hl,0e324h		;991c	21 24 e3 	! $ . 
 	bit 1,(hl)		;991f	cb 4e 	. N 
 	jp nz,l9930h		;9921	c2 30 99 	. 0 . 
+    
 	ld a,(VAUS_X)		;9924	3a ce e0 	: . . 
 	add a,(iy+010h)		;9927	fd 86 10 	. . . 
 	ld (ix+001h),a		;992a	dd 77 01 	. w . 
@@ -13534,8 +13570,9 @@ lab6ah:
 
 	xor a			;ab86	af 	. 
 	ld (BRICK_REPAINT_TYPE),a		;ab87	32 22 e0 	2 " . 
+
 	ld a,002h		;ab8a	3e 02 	> . 
-	ld (0e00ah),a		;ab8c	32 0a e0 	2 . . 
+	ld (GAME_TRANSITION_ACTION),a		;ab8c	32 0a e0 	2 . . 
     
 ; Erase a brick and overwritte its chars with the
 ; proper background patterns.
@@ -14945,6 +14982,7 @@ lb30fh:
     ; Ball is moving normally, not glued
 	ld (iy+BALL_TABLE_IDX_GLUE), 2		;b313	fd 36 01 02
 
+    ; ToDo
 	ld a,(hl)			;b317	7e 	~ 
 	ld (iy+006h),a		;b318	fd 77 06 	. w . 
 
