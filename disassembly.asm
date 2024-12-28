@@ -559,9 +559,10 @@ GAME_TRANSITION_JUMP_TABLE:
 
 ; And its three actions:
 TRANSITION_START_LEVEL:
-    call ENASCR     ;41b7
-	call sub_4b8ah	;41ba	cd 8a 4b 	. . K 
-	jp go_on_after_transition		;41bd	c3 da 41 	. . A 
+    ; Enable the screen and draw the title's screen
+    call ENASCR                 ;41b7
+	call DRAW_TITLE_SCREEN	    ;41ba	cd 8a 4b
+	jp go_on_after_transition	;41bd	c3 da 41
     
 TRANSITION_PLAY_LEVEL:
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
@@ -2108,8 +2109,8 @@ l4b11h:
 	ld b,d			;4b88	42 	B 
 	rst 38h			;4b89	ff 	. 
 
-sub_4b8ah:
-    ; Go on if we're at the title screen
+DRAW_TITLE_SCREEN:
+    ; Go on if we're at the title's screen
 	ld a,(GAME_STATE)   ;4b8a	3a 0b e0
 	or a			    ;4b8d	b7
 	jp nz,l4d09h		;4b8e	c2 09 4d
