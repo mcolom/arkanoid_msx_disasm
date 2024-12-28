@@ -20,6 +20,8 @@ CHEAT2_ACTIVATED: equ 0xe003
 CHEAT2_KEY_COUNTER: equ 0xe004
 CHEAT2_LEVEL: equ 0xe005
 
+IN_DEMO: equ 0xe00d
+
 SPR_PARAMS_LEN: equ 4
 
 SPR_PARAMS_BASE: equ 0xe0cd
@@ -2085,15 +2087,15 @@ l4b11h:
 
 sub_4b8ah:
     ; Go on if we're at the title screen
-	ld a,(GAME_STATE)		;4b8a	3a 0b e0
-	or a			        ;4b8d	b7
-	jp nz,l4d09h		    ;4b8e	c2 09 4d
+	ld a,(GAME_STATE)   ;4b8a	3a 0b e0
+	or a			    ;4b8d	b7
+	jp nz,l4d09h		;4b8e	c2 09 4d
 
-	ld a,(0e00dh)		;4b91	3a 0d e0 	: . . 
-	or a			;4b94	b7 	. 
-	jp nz,l4eddh		;4b95	c2 dd 4e 	. . N 
-    
-    
+    ; If in demo, go to show the story's text and start the demo
+	ld a,(IN_DEMO)		;4b91	3a 0d e0
+	or a			    ;4b94	b7
+	jp nz,l4eddh		;4b95	c2 dd 4e
+
     ; Switch according to TITLE_SCREEN_ACTION
 	ld a,(TITLE_SCREEN_ACTION)		            ;4b98	3a 3c e5
 	cp TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN	;4b9b	fe 01
@@ -2244,10 +2246,12 @@ l4c94h:
 	ld a,TITLE_SCREEN_ACTION_DEMO		;4c94	3e 05 	> . 
 	ld (TITLE_SCREEN_ACTION),a		;4c96	32 3c e5 	2 < . 
 
-	ld a,001h		;4c99	3e 01 	> . 
-	ld (0e00dh),a		;4c9b	32 0d e0 	2 . . 
-	call CLEAR_SCREEN		;4c9e	cd 27 42 	. ' B 
-	ret			;4ca1	c9 	. 
+	; Set we're in the demo
+    ld a, 1		        ;4c99	3e 01
+	ld (IN_DEMO),a		;4c9b	32 0d e0
+    
+	call CLEAR_SCREEN	;4c9e	cd 27 42
+	ret			        ;4ca1	c9
 
 l4ca2h:
     ; TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
@@ -2585,13 +2589,19 @@ l4eb4h:
 	ld a,001h		                                ;4eb4	3e 01
 	ld (BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE),a		;4eb6	32 4e e2
 
+    ; ToDo: what is this var?
 	ld a,068h		;4eb9	3e 68 	> h 
 	ld (0e0f6h),a		;4ebb	32 f6 e0 	2 . . 
+    
+    ; Clear some variables
+    ; ToDo: what are the other vars?
 	ld hl,00000h		;4ebe	21 00 00 	! . . 
-	ld (0e00dh),hl		;4ec1	22 0d e0 	" . . 
+	ld (IN_DEMO),hl		;4ec1	22 0d e0 	" . . 
 	ld (0e00fh),hl		;4ec4	22 0f e0 	" . . 
 	ld (0e011h),hl		;4ec7	22 11 e0 	" . . 
 	ld (0e013h),hl		;4eca	22 13 e0 	" . . 
+
+    ; Clear sound
 	ld a, SOUND_NOP_0	;4ecd	3e 00
 	ld (SOUND_NUMBER),a	;4ecf	32 c0 e5
 	call PLAY_SOUND		;4ed2	cd e8 b4
@@ -2603,6 +2613,7 @@ l4eb4h:
 	ret			            ;4edc	c9
 
 l4eddh:
+    ; In demo
 	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
 	ld ix,l50efh		;4ee1	dd 21 ef 50 	. ! . P 
 	ld a,(0e00ch)		;4ee5	3a 0c e0 	: . . 
@@ -2683,8 +2694,9 @@ l4f6bh:
 	ld (0e540h),hl		;4f74	22 40 e5 	" @ . 
 	ld (0e542h),hl		;4f77	22 42 e5 	" B . 
 l4f7ah:
+    ; Clear some variables
 	ld hl,00000h		;4f7a	21 00 00 	! . . 
-	ld (0e00dh),hl		;4f7d	22 0d e0 	" . . 
+	ld (IN_DEMO),hl		;4f7d	22 0d e0 	" . . 
 	ld (0e00fh),hl		;4f80	22 0f e0 	" . . 
 	ld (0e011h),hl		;4f83	22 11 e0 	" . . 
 	ld (0e013h),hl		;4f86	22 13 e0 	" . . 
