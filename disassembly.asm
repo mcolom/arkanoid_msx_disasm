@@ -135,6 +135,7 @@ SCORE_POSITION: equ 0xe544
 
 VAUS_ACTION_STATE: equ 0xe54b
 ;
+VAUS_ACTION_WAIT_READY: equ 0
 VAUS_ACTION_STATE_KEEP: equ 1
 VAUS_ACTION_STATE_ENLARGING: equ 2
 VAUS_ACTION_STATE_SHRINKING: equ 3
@@ -8159,12 +8160,13 @@ l6adbh:
 	ld a,(ix+001h)		;6b16	dd 7e 01 	. ~ . 
 	cp 004h		;6b19	fe 04 	. . 
 	ret nz			;6b1b	c0 	. 
-l6b1ch:
-	ld a,000h		;6b1c	3e 00 	> . 
-	ld (VAUS_ACTION_STATE),a		;6b1e	32 4b e5 	2 K . 
 
-	ld a,002h		;6b21	3e 02 	> . 
-	ld (GAME_TRANSITION_ACTION),a		;6b23	32 0a e0 	2 . . 
+l6b1ch:
+	ld a,VAUS_ACTION_WAIT_READY		;6b1c	3e 00
+	ld (VAUS_ACTION_STATE),a		;6b1e	32 4b e5
+
+	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;6b21	3e 02
+	ld (GAME_TRANSITION_ACTION),a		        ;6b23	32 0a e0
 
 	ld a,BRICK_REPAINT_UNKNOWN		;6b26	3e 01
 	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0
@@ -13588,8 +13590,9 @@ lab6ah:
 	xor a			            ;ab86	af
 	ld (BRICK_REPAINT_TYPE),a	;ab87	32 22 e0
 
-	ld a,002h		;ab8a	3e 02 	> . 
-	ld (GAME_TRANSITION_ACTION),a		;ab8c	32 0a e0 	2 . . 
+    ; Transition to the next level
+	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;ab8a	3e 02
+	ld (GAME_TRANSITION_ACTION),a		        ;ab8c	32 0a e0
     
 ; Erase a brick and overwritte its chars with the
 ; proper background patterns.
