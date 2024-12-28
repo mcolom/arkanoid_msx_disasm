@@ -70,7 +70,8 @@ BALL3_SPR_PARAMS: equ SPR_PARAMS_BASE + 12*SPR_PARAMS_LEN
 ; 3: demo
 GAME_STATE: equ 0xe00b
 
-PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4: equ 0xe0bf
+; Pause in bit 6 and start in bit 4
+PAUSE_B6_AND_START_B4: equ 0xe0bf
 
 ; The game reads the keyboard and writes a mask of bits of the
 ; relevant keys here
@@ -424,7 +425,7 @@ l40d7h:
     ; Check if the game is paused.
     ; If already paused, skip playing the pause sound and writing "PAUSE" again
 	halt			                            ;40d7	76
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)   ;40d8	3a bf e0
+	ld a,(PAUSE_B6_AND_START_B4)   ;40d8	3a bf e0
 	bit 6,a		                                ;40db	cb 77
 	jr z,l4103h		                            ;40dd	28 24
 
@@ -449,7 +450,7 @@ l40d7h:
 ; Do the pause...
 l40fbh:
 	halt			    ;40fb	76
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;40fc	3a bf e0
+	ld a,(PAUSE_B6_AND_START_B4)		;40fc	3a bf e0
 	bit 6,a		        ;40ff	cb 77
 l4101h:
 	jr z,l40fbh		    ;4101	28 f8
@@ -700,7 +701,7 @@ l427ch:
 	and 0f0h		;428e	e6 f0 	. . 
 	and e			;4290	a3 	. 
 	xor e			;4291	ab 	. 
-	ld (PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4),a		;4292	32 bf e0 	2 . . 
+	ld (PAUSE_B6_AND_START_B4),a		;4292	32 bf e0 	2 . . 
 	ld b,a			;4295	47 	G 
 
     ; Keep going if we're in the title screen
@@ -2230,7 +2231,7 @@ l4c48h:
 	jp nz,l4c73h		;4c54	c2 73 4c 	. s L 
 	jp l4c62h		;4c57	c3 62 4c 	. b L 
 l4c5ah:
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;4c5a	3a bf e0 	: . . 
+	ld a,(PAUSE_B6_AND_START_B4)		;4c5a	3a bf e0 	: . . 
 	bit 4,a		;4c5d	cb 67 	. g 
 	jp nz,l4c73h		;4c5f	c2 73 4c 	. s L 
 l4c62h:
@@ -2382,7 +2383,7 @@ l4d09h:
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
     ; ToDo: what is this structure?
-	ld hl,PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4		;4d22	21 bf e0 	! . . 
+	ld hl,PAUSE_B6_AND_START_B4		;4d22	21 bf e0 	! . . 
 	ld de,KEYBOARD_INPUT		;4d25	11 c0 e0 	. . . 
 	ld bc,004f5h		;4d28	01 f5 04 	. . . 
 	dec bc			;4d2b	0b 	. 
@@ -2649,7 +2650,7 @@ l4eddh:
 	jp nz,l4f6bh		;4ef1	c2 6b 4f 	. k O 
 	jp l4effh		;4ef4	c3 ff 4e 	. . N 
 l4ef7h:
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;4ef7	3a bf e0 	: . . 
+	ld a,(PAUSE_B6_AND_START_B4)		;4ef7	3a bf e0 	: . . 
 	bit 4,a		;4efa	cb 67 	. g 
 	jp nz,l4f6bh		;4efc	c2 6b 4f 	. k O 
 l4effh:
@@ -7771,6 +7772,7 @@ l6814h:
 	ld d,b			;6831	50 	P 
 	cp 01fh		;6832	fe 1f 	. . 
 	ret nz			;6834	c0 	. 
+
 sub_6835h:
 	call 068c4h		;6835	cd c4 68 	. . h 
 	call sub_7039h		;6838	cd 39 70 	. 9 p 
@@ -7920,7 +7922,7 @@ l6924h:
 	ld a,(0e00ch)		;6924	3a 0c e0 	: . . 
 	or a			;6927	b7 	. 
 	jp nz,l6946h		;6928	c2 46 69 	. F i 
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;692b	3a bf e0 	: . . 
+	ld a,(PAUSE_B6_AND_START_B4)		;692b	3a bf e0 	: . . 
 	and 00fh		;692e	e6 0f 	. . 
 	ld l,a			;6930	6f 	o 
 	ld h,000h		;6931	26 00 	& . 
@@ -8843,7 +8845,7 @@ sub_7040h:
 	jp z,l70afh		;7064	ca af 70 	. . p 
 	jp l7072h		;7067	c3 72 70 	. r p 
 l706ah:
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;706a	3a bf e0 	: . . 
+	ld a,(PAUSE_B6_AND_START_B4)		;706a	3a bf e0 	: . . 
 	bit 4,a		;706d	cb 67 	. g 
 	jp z,l70afh		;706f	ca af 70 	. . p 
 l7072h:
@@ -11171,7 +11173,7 @@ ACTION_98F8:
 	jr nz,l9935h		;990b	20 28 	  ( 
 	jp l9917h		;990d	c3 17 99 	. . . 
 l9910h:
-	ld a,(PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4)		;9910	3a bf e0 	: . . 
+	ld a,(PAUSE_B6_AND_START_B4)		;9910	3a bf e0 	: . . 
 	bit 4,a		;9913	cb 67 	. g 
 	jr nz,l9935h		;9915	20 1e 	  . 
 l9917h:
