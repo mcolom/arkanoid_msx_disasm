@@ -385,6 +385,8 @@ ROM_START:
 	ld bc,00800h		;40ba	01 00 08 	. . . 
 	call LDIRVM		;40bd	cd 5c 00 	. \ . 
 
+    ; ToDo: what is this function?
+    ; Without it, it hangs when the ball hits a brick
 	call sub_43ffh		;40c0	cd ff 43 	. . C 
 
 	ld a,SOUND_NOP		;40c3	3e f8
@@ -1026,6 +1028,8 @@ l442bh:
 	ld (0e53ch),a		;4441	32 3c e5 	2 < . 
 	ret			;4444	c9 	. 
 
+; ToDo: what is this table?
+; Related to function sub_43ffh
 l4445h:
 	nop			;4445	00 	. 
 	ret nz			;4446	c0 	. 
@@ -2059,6 +2063,7 @@ l4b11h:
 	daa			;4b87	27 	' 
 	ld b,d			;4b88	42 	B 
 	rst 38h			;4b89	ff 	. 
+
 sub_4b8ah:
     ; Go on if we're at the title screen
 	ld a,(GAME_STATE)		;4b8a	3a 0b e0
