@@ -59,8 +59,8 @@ BALL3_SPR_PARAMS: equ SPR_PARAMS_BASE + 12*SPR_PARAMS_LEN
 ; Game state
 ; 0: in title screen
 ; 1: normal play
-; 2: normal play, with score updates
-; 3: normal play, but without score updates
+; 2: normal play, but without score updates
+; 3: demo
 GAME_STATE: equ 0xe00b
 
 PAUSE_STATUS_BIT_6_AND_OTHER_BIT_4: equ 0xe0bf
@@ -92,6 +92,9 @@ BALL_LOOP_INDEX: equ 0xe2ac
 ; BCD-encoded scores and heading
 SCORE_BCD: equ 0xe015
 HIGH_SCORE_BCD: equ 0xe007
+
+; Target score to get a life
+SCORE_LIFE_BCD: equ 0xe01e
 
 SCORE_BCD_BUFFER: equ 0xe5a0
 ZEROS_BCD_BUFFER: equ 0xe018
@@ -2260,15 +2263,20 @@ l4cc6h:
 	ld a, 1		            ;4cc6	3e 01
 	ld (GAME_STATE),a		;4cc8	32 0b e0
 
-	ld hl,SCORE_BCD		;4ccb	21 15 e0 	! . . 
-	ld de,0e016h		;4cce	11 16 e0 	. . . 
-	ld bc,0059fh		;4cd1	01 9f 05 	. . . 
-	dec bc			;4cd4	0b 	. 
-	ld (hl),000h		;4cd5	36 00 	6 . 
-	ldir		;4cd7	ed b0 	. . 
-	ld a,020h		;4cd9	3e 20 	>   
-	ld (0e01fh),a		;4cdb	32 1f e0 	2 . . 
-	ld c,002h		;4cde	0e 02 	. . 
+	ld hl,SCORE_BCD		;4ccb	21 15 e0
+	ld de,SCORE_BCD+1	;4cce	11 16 e0
+	ld bc,0059fh		;4cd1	01 9f 05
+	dec bc			    ;4cd4	0b
+	ld (hl),000h	    ;4cd5	36 00
+	ldir		        ;4cd7	ed b0
+    
+    ; Set that next points objective for a life if 20000
+	ld a, 0x20		;4cd9	3e 20
+	ld (0e01fh),a	;4cdb	32 1f e0
+    
+    
+    ; We start normally with 2 lives
+	ld c, 2		    ;4cde	0e 02
 
     ; Check if the cheat has been activated
     ; If so, give the 240 lives. Otherwise, don't!
@@ -3029,92 +3037,110 @@ ADD_POINTS_AND_UPDATE_SCORES:
 	cp 0		            ;52bb	fe 00
 	jp z,l5310h		        ;52bd	ca 10 53
 	
-    ; Jump if we're at state "normal play, but without score updates"
-    ; [ToDo]: what is this state? The final Boss Doh?
+    ; Jump if we're at demo state
     cp 3		            ;52c0	fe 03
 	jp z,l52ceh		        ;52c2	ca ce 52
 
-    ld hl,SCORE_BCD		;52c5	21 15 e0 	! . . 
-	call BCD_UPDATE_SCORE_ADD_POINTS		;52c8	cd 8a 53 	. . S 
-	jp l52d7h		;52cb	c3 d7 52 	. . R 
-l52ceh:
-	ld hl,ZEROS_BCD_BUFFER		;52ce	21 18 e0 	! . . 
-	call BCD_UPDATE_SCORE_ADD_POINTS		;52d1	cd 8a 53 	. . S 
-	jp l52d7h		;52d4	c3 d7 52 	. . R 
-l52d7h:
-	ld iy,HIGH_SCORE_BCD		;52d7	fd 21 07 e0 	. ! . . 
-	ld a,(SCORE_BCD_BUFFER + 2)		;52db	3a a2 e5 	: . . 
-	cp (iy+002h)		;52de	fd be 02 	. . . 
-	jp z,l52eah		;52e1	ca ea 52 	. . R 
-	jp c,l530dh		;52e4	da 0d 53 	. . S 
-	jp l5302h		;52e7	c3 02 53 	. . S 
-l52eah:
-	ld a,(SCORE_BCD_BUFFER + 1)		;52ea	3a a1 e5 	: . . 
-	cp (iy+001h)		;52ed	fd be 01 	. . . 
-	jp z,l52f9h		;52f0	ca f9 52 	. . R 
-	jp c,l530dh		;52f3	da 0d 53 	. . S 
-	jp l5302h		;52f6	c3 02 53 	. . S 
-l52f9h:
-	ld a,(SCORE_BCD_BUFFER)		;52f9	3a a0 e5 	: . . 
-	cp (iy+000h)		;52fc	fd be 00 	. . . 
-	jp c,l530dh		;52ff	da 0d 53 	. . S 
-l5302h:
-	ld de,HIGH_SCORE_BCD		;5302	11 07 e0 	. . . 
-	ld hl,SCORE_BCD_BUFFER		;5305	21 a0 e5 	! . . 
-	ld bc,00003h		;5308	01 03 00 	. . . 
-	ldir		;530b	ed b0 	. . 
-l530dh:
-	call sub_5319h		;530d	cd 19 53 	. . S 
-l5310h:
-	pop iy		;5310	fd e1 	. . 
-	pop ix		;5312	dd e1 	. . 
-	pop af			;5314	f1 	. 
-	pop de			;5315	d1 	. 
-	pop bc			;5316	c1 	. 
-	pop hl			;5317	e1 	. 
-	ret			;5318	c9 	. 
+    ld hl,SCORE_BCD		                    ;52c5	21 15 e0
 
-sub_5319h:
-	ld hl,0e017h		;5319	21 17 e0 	! . . 
-	ld a,(0e020h)		;531c	3a 20 e0 	:   . 
-	cp (hl)			;531f	be 	. 
-	jp c,l5336h		;5320	da 36 53 	. 6 S 
-	ret nz			;5323	c0 	. 
-	dec hl			;5324	2b 	+ 
-	ld a,(0e01fh)		;5325	3a 1f e0 	: . . 
-	cp (hl)			;5328	be 	. 
-	jp c,l5336h		;5329	da 36 53 	. 6 S 
-	ret nz			;532c	c0 	. 
-	dec hl			;532d	2b 	+ 
-	ld a,(0e01eh)		;532e	3a 1e e0 	: . . 
-	cp (hl)			;5331	be 	. 
-	jp c,l5336h		;5332	da 36 53 	. 6 S 
-	ret nz			;5335	c0 	. 
+    ; Update the score
+	call BCD_UPDATE_SCORE_ADD_POINTS		;52c8	cd 8a 53
+	jp l52d7h		                        ;52cb	c3 d7 52
+l52ceh:
+    ; We're in demo, don't update the score
+	ld hl,ZEROS_BCD_BUFFER		            ;52ce	21 18 e0
+	call BCD_UPDATE_SCORE_ADD_POINTS		;52d1	cd 8a 53
+	jp l52d7h		                        ;52d4	c3 d7 52 Unneeded. A copy-paste of the previous? :)
+
+; Compare the current score with the high score, and update the
+; high score is needed.
+l52d7h:
+	ld iy,HIGH_SCORE_BCD		;52d7	fd 21 07 e0
+	ld a,(SCORE_BCD_BUFFER + 2)	;52db	3a a2 e5
+	cp (iy+002h)		        ;52de	fd be 02
+	jp z,l52eah		    ;52e1	ca ea 52
+	jp c,l530dh		    ;52e4	da 0d 53
+	jp l5302h		    ;52e7	c3 02 53
+l52eah:
+	ld a,(SCORE_BCD_BUFFER + 1)		;52ea	3a a1 e5
+	cp (iy+001h)		            ;52ed	fd be 01
+	jp z,l52f9h		    ;52f0	ca f9 52
+	jp c,l530dh		    ;52f3	da 0d 53
+	jp l5302h		    ;52f6	c3 02 53
+l52f9h:
+	ld a,(SCORE_BCD_BUFFER)		    ;52f9	3a a0 e5
+	cp (iy+000h)		            ;52fc	fd be 00 	. . . 
+	jp c,l530dh		    ;52ff	da 0d 53
+l5302h:
+    ; Update high score with the current
+	ld de,HIGH_SCORE_BCD		;5302	11 07 e0
+	ld hl,SCORE_BCD_BUFFER		;5305	21 a0 e5
+	ld bc, 3		            ;5308	01 03 00
+	ldir		                ;530b	ed b0
+l530dh:
+    ; Check if according to the score a new live should be granted
+	call CHECK_SCORE_LIFE_TARGET		;530d	cd 19 53
+l5310h:
+	pop iy		;5310	fd e1
+	pop ix		;5312	dd e1
+	pop af		;5314	f1
+	pop de		;5315	d1
+	pop bc		;5316	c1
+	pop hl		;5317	e1
+	ret			;5318	c9
+
+; ToDo: finish decoding this function
+CHECK_SCORE_LIFE_TARGET:
+    ; Compare the current score with the target to get a life
+	ld hl,SCORE_BCD+2	    ;5319	21 17 e0
+	ld a,(SCORE_LIFE_BCD+2)	;531c	3a 20 e0
+	cp (hl)			        ;531f	be
+	jp c,l5336h		        ;5320	da 36 53
+	ret nz			        ;5323	c0
+    
+	dec hl			        ;5324	2b
+	ld a,(SCORE_LIFE_BCD+1)	;5325	3a 1f e0
+	cp (hl)			        ;5328	be
+	jp c,l5336h		        ;5329	da 36 53
+	ret nz			        ;532c	c0
+    
+	dec hl			        ;532d	2b
+	ld a,(SCORE_LIFE_BCD)	;532e	3a 1e e0
+	cp (hl)			        ;5331	be
+	jp c,l5336h		        ;5332	da 36 53
+	ret nz			        ;5335	c0
 l5336h:
+    ; Increment lives
 	ld hl,LIVES		    ;5336	21 1d e0
 	inc (hl)			;5339	34 	4
-	call DRAW_LIVES		;533a	cd b9 71 	. . q 
+	call DRAW_LIVES		;533a	cd b9 71
 
+    ; Play life sound
 	ld a,SOUND_LIFE		;533d	3e c5
 	call ADD_SOUND		;533f	cd ef 5b
 
-	ld hl,0e021h		;5342	21 21 e0 	! ! . 
-	inc (hl)			;5345	34 	4 
+    ; Increment target for the next life
+	ld hl,SCORE_LIFE_BCD+3      ;5342	21 21 e0
+	inc (hl)			        ;5345	34
+    
+    ; Set 40000 points
 	ld e,040h		;5346	1e 40 	. @ 
 	ld a,(hl)			;5348	7e 	~ 
 	cp 001h		;5349	fe 01 	. . 
 	jp z,l5350h		;534b	ca 50 53 	. P S 
+    
+    ; Set 60000 points
 	ld e,060h		;534e	1e 60 	. ` 
 l5350h:
-	ld a,(0e01fh)		;5350	3a 1f e0 	: . . 
+	ld a,(SCORE_LIFE_BCD+1)		;5350	3a 1f e0 	: . . 
 	add a,e			;5353	83 	. 
 	daa			;5354	27 	' 
-	ld (0e01fh),a		;5355	32 1f e0 	2 . . 
+	ld (SCORE_LIFE_BCD+1),a		;5355	32 1f e0 	2 . . 
 	ret nc			;5358	d0 	. 
-	ld a,(0e020h)		;5359	3a 20 e0 	:   . 
+	ld a,(SCORE_LIFE_BCD+2)		;5359	3a 20 e0 	:   . 
 	add a,001h		;535c	c6 01 	. . 
 	daa			;535e	27 	' 
-	ld (0e020h),a		;535f	32 20 e0 	2   . 
+	ld (SCORE_LIFE_BCD+2),a		;535f	32 20 e0 	2   . 
 	ret			;5362	c9 	. 
 
 POINTS_TABLE:
@@ -10223,6 +10249,9 @@ l7ab4h:
 	add hl,de			;7ab9	19 	. 
 	djnz l7a7bh		;7aba	10 bf 	. . 
 	ret			;7abc	c9 	. 
+
+; ToDo
+; This is a table, used at 0x777b
 l7abdh:
 	push bc			;7abd	c5 	. 
 	ld a,d			;7abe	7a 	z 
