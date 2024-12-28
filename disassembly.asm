@@ -833,6 +833,7 @@ l4381h:
 	pop af			;4387	f1
 	ret			    ;4388	c9
 
+; Decompress tile colors
 DECOMPRESS_TILE_COLORS:
     ; HL = 0x2000, 0x2800, 0x3000
     ; Obtain upper limit by adding 8 to H.
@@ -10565,258 +10566,19 @@ l7d7fh:
 	add a,e			;7d82	83 	. 
 	ld a,(de)			;7d83	1a 	. 
 
-
-IN_GAME_TILES:
 ; Patterns in game
 ; One third, 8*0x300/3 = 2048 bytes
+IN_GAME_TILES:
 include 'in_game_patterns.asm'
 
-
+; In-game compressed colors 
+; One third, 8*0x300/3 = 2048 bytes
 IN_GAME_COLORS:
-	nop			;8584	00 	. 
-	inc b			;8585	04 	. 
-	nop			;8586	00 	. 
-	nop			;8587	00 	. 
-	nop			;8588	00 	. 
-	inc b			;8589	04 	. 
-	ld de,0e111h		;858a	11 11 e1 	. . . 
-	pop hl			;858d	e1 	. 
-	pop af			;858e	f1 	. 
-	nop			;858f	00 	. 
-	inc bc			;8590	03 	. 
-	pop hl			;8591	e1 	. 
-	pop hl			;8592	e1 	. 
-	pop hl			;8593	e1 	. 
-	nop			;8594	00 	. 
-	inc bc			;8595	03 	. 
-	rst 28h			;8596	ef 	. 
-	rst 28h			;8597	ef 	. 
-	nop			;8598	00 	. 
-	inc b			;8599	04 	. 
-	rst 28h			;859a	ef 	. 
-	pop hl			;859b	e1 	. 
-	nop			;859c	00 	. 
-	inc bc			;859d	03 	. 
-	rst 28h			;859e	ef 	. 
-	rst 28h			;859f	ef 	. 
-	rst 28h			;85a0	ef 	. 
-	nop			;85a1	00 	. 
-	add hl,bc			;85a2	09 	. 
-	pop hl			;85a3	e1 	. 
-	pop hl			;85a4	e1 	. 
-	pop hl			;85a5	e1 	. 
-	pop af			;85a6	f1 	. 
-	nop			;85a7	00 	. 
-	inc bc			;85a8	03 	. 
-	pop hl			;85a9	e1 	. 
-	pop hl			;85aa	e1 	. 
-	pop hl			;85ab	e1 	. 
-l85ach:
-	pop af			;85ac	f1 	. 
-	nop			;85ad	00 	. 
-	inc bc			;85ae	03 	. 
-	pop hl			;85af	e1 	. 
-	pop hl			;85b0	e1 	. 
-	pop hl			;85b1	e1 	. 
-	pop af			;85b2	f1 	. 
-	nop			;85b3	00 	. 
-	inc bc			;85b4	03 	. 
-	pop hl			;85b5	e1 	. 
-	pop hl			;85b6	e1 	. 
-	pop hl			;85b7	e1 	. 
-	pop af			;85b8	f1 	. 
-	nop			;85b9	00 	. 
-	inc bc			;85ba	03 	. 
-	pop hl			;85bb	e1 	. 
-	pop hl			;85bc	e1 	. 
-	pop hl			;85bd	e1 	. 
-	pop af			;85be	f1 	. 
-	nop			;85bf	00 	. 
-	inc bc			;85c0	03 	. 
-	pop hl			;85c1	e1 	. 
-	pop hl			;85c2	e1 	. 
-	pop hl			;85c3	e1 	. 
-	pop af			;85c4	f1 	. 
-	nop			;85c5	00 	. 
-	ld h,0e1h		;85c6	26 e1 	& . 
-	pop hl			;85c8	e1 	. 
-	pop hl			;85c9	e1 	. 
-	nop			;85ca	00 	. 
-	inc bc			;85cb	03 	. 
-	rst 28h			;85cc	ef 	. 
-	rst 28h			;85cd	ef 	. 
-	nop			;85ce	00 	. 
-	ld (bc),a			;85cf	02 	. 
-	rst 28h			;85d0	ef 	. 
-	pop hl			;85d1	e1 	. 
-	nop			;85d2	00 	. 
-	inc bc			;85d3	03 	. 
-	pop hl			;85d4	e1 	. 
-	pop hl			;85d5	e1 	. 
-	rst 28h			;85d6	ef 	. 
-	pop hl			;85d7	e1 	. 
-	nop			;85d8	00 	. 
-	inc bc			;85d9	03 	. 
-	rst 28h			;85da	ef 	. 
-	rst 28h			;85db	ef 	. 
-	pop hl			;85dc	e1 	. 
-	pop hl			;85dd	e1 	. 
-	pop hl			;85de	e1 	. 
-	nop			;85df	00 	. 
-	inc bc			;85e0	03 	. 
-	rst 28h			;85e1	ef 	. 
-	rst 28h			;85e2	ef 	. 
-	nop			;85e3	00 	. 
-	ld (bc),a			;85e4	02 	. 
-	rst 28h			;85e5	ef 	. 
-	pop hl			;85e6	e1 	. 
-	nop			;85e7	00 	. 
-	ex af,af'			;85e8	08 	. 
-	pop af			;85e9	f1 	. 
-	pop af			;85ea	f1 	. 
-	nop			;85eb	00 	. 
-	ld (bc),a			;85ec	02 	. 
-	rst 28h			;85ed	ef 	. 
-	pop hl			;85ee	e1 	. 
-	pop hl			;85ef	e1 	. 
-	pop hl			;85f0	e1 	. 
-	nop			;85f1	00 	. 
-	inc bc			;85f2	03 	. 
-	rst 28h			;85f3	ef 	. 
-	rst 28h			;85f4	ef 	. 
-	rst 28h			;85f5	ef 	. 
-	pop hl			;85f6	e1 	. 
-	rst 28h			;85f7	ef 	. 
-	nop			;85f8	00 	. 
-	ld (bc),a			;85f9	02 	. 
-	pop af			;85fa	f1 	. 
-	pop af			;85fb	f1 	. 
-	nop			;85fc	00 	. 
-	inc b			;85fd	04 	. 
-	nop			;85fe	00 	. 
-	nop			;85ff	00 	. 
-	nop			;8600	00 	. 
-	ld (bc),a			;8601	02 	. 
-	pop af			;8602	f1 	. 
-	pop af			;8603	f1 	. 
-	pop af			;8604	f1 	. 
-	rst 28h			;8605	ef 	. 
-	pop hl			;8606	e1 	. 
-	rst 28h			;8607	ef 	. 
-	nop			;8608	00 	. 
-	inc c			;8609	0c 	. 
-	pop af			;860a	f1 	. 
-	pop af			;860b	f1 	. 
-	nop			;860c	00 	. 
-	ex af,af'			;860d	08 	. 
-	sub c			;860e	91 	. 
-	sub c			;860f	91 	. 
-	nop			;8610	00 	. 
-	ex af,af'			;8611	08 	. 
-	ld (hl),c			;8612	71 	q 
-	ld (hl),c			;8613	71 	q 
-	nop			;8614	00 	. 
-	inc b			;8615	04 	. 
-	ld sp,00031h		;8616	31 31 00 	1 1 . 
-	ex af,af'			;8619	08 	. 
-	add a,c			;861a	81 	. 
-	add a,c			;861b	81 	. 
-	nop			;861c	00 	. 
-	inc c			;861d	0c 	. 
-	pop af			;861e	f1 	. 
-	pop af			;861f	f1 	. 
-	nop			;8620	00 	. 
-	inc b			;8621	04 	. 
-	add a,c			;8622	81 	. 
-	add a,c			;8623	81 	. 
-	nop			;8624	00 	. 
-	jr z,$-13		;8625	28 f1 	( . 
-	pop af			;8627	f1 	. 
-	nop			;8628	00 	. 
-	jr l85ach		;8629	18 81 	. . 
-	add a,c			;862b	81 	. 
-	nop			;862c	00 	. 
-	ld l,h			;862d	6c 	l 
-	pop af			;862e	f1 	. 
-	pop af			;862f	f1 	. 
-	nop			;8630	00 	. 
-	inc b			;8631	04 	. 
-	ld sp,00031h		;8632	31 31 00 	1 1 . 
-	ex af,af'			;8635	08 	. 
-	add a,c			;8636	81 	. 
-	add a,c			;8637	81 	. 
-	nop			;8638	00 	. 
-	inc b			;8639	04 	. 
-	ld d,c			;863a	51 	Q 
-	ld d,c			;863b	51 	Q 
-	nop			;863c	00 	. 
-	inc b			;863d	04 	. 
-	pop af			;863e	f1 	. 
-	pop af			;863f	f1 	. 
-	nop			;8640	00 	. 
-	inc b			;8641	04 	. 
-	ld d,c			;8642	51 	Q 
-	ld d,c			;8643	51 	Q 
-	nop			;8644	00 	. 
-	ex af,af'			;8645	08 	. 
-	pop de			;8646	d1 	. 
-	pop de			;8647	d1 	. 
-	nop			;8648	00 	. 
-	ex af,af'			;8649	08 	. 
-	or c			;864a	b1 	. 
-	or c			;864b	b1 	. 
-	nop			;864c	00 	. 
-	inc bc			;864d	03 	. 
-	rst 28h			;864e	ef 	. 
-	rst 28h			;864f	ef 	. 
-	pop af			;8650	f1 	. 
-	pop af			;8651	f1 	. 
-	pop af			;8652	f1 	. 
-	nop			;8653	00 	. 
-	inc bc			;8654	03 	. 
-	pop hl			;8655	e1 	. 
-	pop hl			;8656	e1 	. 
-	pop hl			;8657	e1 	. 
-	nop			;8658	00 	. 
-	inc bc			;8659	03 	. 
-	xor a			;865a	af 	. 
-	xor a			;865b	af 	. 
-	pop af			;865c	f1 	. 
-	pop af			;865d	f1 	. 
-	pop af			;865e	f1 	. 
-	nop			;865f	00 	. 
-	inc bc			;8660	03 	. 
-	and c			;8661	a1 	. 
-	and c			;8662	a1 	. 
-	and c			;8663	a1 	. 
-	pop hl			;8664	e1 	. 
-	pop af			;8665	f1 	. 
-	nop			;8666	00 	. 
-	inc bc			;8667	03 	. 
-	pop hl			;8668	e1 	. 
-	pop hl			;8669	e1 	. 
-	pop hl			;866a	e1 	. 
-	pop af			;866b	f1 	. 
-	nop			;866c	00 	. 
-	inc bc			;866d	03 	. 
-	pop hl			;866e	e1 	. 
-	pop hl			;866f	e1 	. 
-	nop			;8670	00 	. 
-	inc c			;8671	0c 	. 
-	pop af			;8672	f1 	. 
-	pop af			;8673	f1 	. 
-	nop			;8674	00 	. 
-	adc a,b			;8675	88 	. 
-	nop			;8676	00 	. 
-	nop			;8677	00 	. 
-	ld bc,0x81b0		;8678	01 b0 81 	. . . 
-	add a,c			;867b	81 	. 
-	nop			;867c	00 	. 
-	ld de,00000h		;867d	11 00 00 	. . . 
-	nop			;8680	00 	. 
-	rst 38h			;8681	ff 	. 
-	rst 38h			;8682	ff 	. 
-	inc de			;8683	13 	. 
+include 'in_game_colors.asm'
+
+; Unused
+db 0xff, 0xff, 0x13
+
 l8684h:
 	nop			;8684	00 	. 
 	nop			;8685	00 	. 
