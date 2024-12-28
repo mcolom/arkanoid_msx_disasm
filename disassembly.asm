@@ -580,7 +580,7 @@ TRANSITION_PLAY_LEVEL:
 	jp go_on_after_transition		;41d1	c3 da 41 	. . A 
 
 TRANSITION_NEXT_LEVEL:
-	call sub_7b94h		;41d4	cd 94 7b 	. . { 
+	call NEXT_OR_SAME_LEVEL		;41d4	cd 94 7b 	. . { 
 	jp go_on_after_transition		;41d7	c3 da 41 	. . A 
 
 go_on_after_transition:
@@ -10507,7 +10507,8 @@ l7b7ch:
 	jr z,l7b53h		;7b91	28 c0 	( . 
 	ex af,af'			;7b93	08 	. 
 
-sub_7b94h:
+; This is called when the level is finished, or when a life is lost
+NEXT_OR_SAME_LEVEL:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;7b94	3a 0b e0
 	or a			        ;7b97	b7
@@ -10532,36 +10533,46 @@ sub_7b94h:
 	ex de,hl			        ;7ba9	eb
 	jp (hl)			            ;7baa	e9
 
-
 l7babh:
-    dw ACTION_BRICK_REPAINT_7bb1
-    dw ACTION_BRICK_REPAINT_7bb1
-    dw ACTION_BRICK_REPAINT_7c07
+    dw ACTION_INC_LEVEL
+    dw ACTION_INC_LEVEL
+    dw ACTION_LIFE_LOST
 
-ACTION_BRICK_REPAINT_7bb1:
-	ld a,(LEVEL_DISP)		;7bb1	3a 1c e0 	: . . 
-	add a,001h		;7bb4	c6 01 	. . 
-	daa			;7bb6	27 	' 
-	ld (LEVEL_DISP),a		;7bb7	32 1c e0 	2 . . 
-	ld hl,LEVEL		;7bba	21 1b e0 	! . . 
+ACTION_INC_LEVEL:
+    ; Increment the displayed level
+	ld a,(LEVEL_DISP)		;7bb1	3a 1c e0
+	add a, 1		        ;7bb4	c6 01
+	daa			            ;7bb6	27
+	ld (LEVEL_DISP),a		;7bb7	32 1c e0
+
+    ; Increment the level
+	ld hl,LEVEL		    ;7bba	21 1b e0
 	inc (hl)			;7bbd	34 	4 
 	ld a,(hl)			;7bbe	7e
+    
+    ; Check if we've completed the game
 	cp FINAL_LEVEL+1	;7bbf	fe 21
-	jp nz,l7c7dh		;7bc1	c2 7d 7c 	. } | 
-	ld (hl),000h		;7bc4	36 00 	6 . 
-	inc hl			;7bc6	23 	# 
-	ld (hl),000h		;7bc7	36 00 	6 . 
+	jp nz,l7c7dh		;7bc1	c2 7d 7c
+    
+    ; Yes, we've completed the game!
+    
+    ; Clear LEVEL and LEVEL_DISP
+	ld (hl), 0		;7bc4	36 00
+	inc hl			;7bc6	23
+	ld (hl), 0		;7bc7	36 00
 
     ; Wait 60 ticks
 	ld hl, 60		        ;7bc9	21 3c 00
 	call DELAY_HL_TICKS		;7bcc	cd 80 43
 
-	ld a,SOUND_GAME_ENDING		;7bcf	3e c7 	> . 
-	ld (SOUND_NUMBER),a		;7bd1	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;7bd4	cd e8 b4 	. . . 
+	; Play the ending music
+    ld a,SOUND_GAME_ENDING	;7bcf	3e c7
+	ld (SOUND_NUMBER),a		;7bd1	32 c0 e5
+	call PLAY_SOUND		    ;7bd4	cd e8 b4
 
-	ei			                    ;7bd7	fb
+	ei                      ;7bd7	fb
 
+    ; Show the ending text animation
 	ld iy,ENDING_STR		        ;7bd8	fd 21 88 7c
 	ld ix,0x7d72		            ;7bdc	dd 21 72 7d
 	call ENDING_TEXT_ANIMATION		;7be0	cd 8a 4f
@@ -10572,7 +10583,7 @@ ACTION_BRICK_REPAINT_7bb1:
 
 	call CLEAR_SCREEN		;7be9	cd 27 42 	. ' B 
     
-    ; Doh is defeated here
+    ; Draw the scores
 	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
 
     ; Draw GAME OVER with sprites.
@@ -10590,34 +10601,42 @@ ACTION_BRICK_REPAINT_7bb1:
 	call CLEAR_SCREEN		;7c01	cd 27 42 	. ' B 
 	jp brick_repaint_action_done		;7c04	c3 44 7c 	. D | 
 
-ACTION_BRICK_REPAINT_7c07:
+ACTION_LIFE_LOST:
     ; Wait 48 ticks
 	ld hl,00030h		    ;7c07	21 30 00
 	call DELAY_HL_TICKS		;7c0a	cd 80 43
 
-	ld hl,LIVES		;7c0d	21 1d e0 	! . . 
-	dec (hl)			;7c10	35 	5 
-	ld a,(hl)			;7c11	7e 	~ 
-	cp 0ffh		;7c12	fe ff 	. . 
-	jp nz,l7c7dh		;7c14	c2 7d 7c 	. } | 
-	ld hl,(LEVEL)		;7c17	2a 1b e0 	* . . 
+	; Decrement lives
+    ld hl,LIVES		    ;7c0d	21 1d e0
+	dec (hl)			;7c10	35 	5
+
+    ; Was it the last life?
+    ld a,(hl)			;7c11	7e
+	cp 0ffh		        ;7c12	fe ff
+	jp nz,l7c7dh		;7c14	c2 7d 7c    Jump to l7c7dh if more lives left
+    
+    ; It was the last life
+    ; Store the current level in HL or 0x321F (level 0x1F = 32+1, and displayed as 32) for Doh's
+	ld hl,(LEVEL)		;7c17	2a 1b
 	ld a,l			    ;7c1a	7d
 	cp FINAL_LEVEL		;7c1b	fe 20
 	jp nz,l7c23h		;7c1d	c2 23 7c
-	ld hl,0321fh		;7c20	21 1f 32 	A weird code for Doh's level!
+	ld hl,0321fh		;7c20	21 1f 32    Level 0x1f+1=32 and displayed as 32
 l7c23h:
     ; Save current level, for cheat #2
 	ld (CHEAT2_LEVEL),hl		;7c23	22 05 e0
     
-	ld a,SOUND_GAME_OVER		;7c26	3e c6 	> . 
-	ld (SOUND_NUMBER),a		;7c28	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;7c2b	cd e8 b4 	. . . 
-	ei			;7c2e	fb 	. 
+    ; Play GAME OVER music
+	ld a,SOUND_GAME_OVER	;7c26	3e c6
+	ld (SOUND_NUMBER),a		;7c28	32 c0 e5
+	call PLAY_SOUND		    ;7c2b	cd e8 b4
+	ei			            ;7c2e	fb
 
-	ld hl,l7c5dh		            ;7c2f	21 5d 7c
-	ld de,VRAM_SPRITES_ATTRIB_TABLE		;7c32	11 00 1b
-	ld bc, 4*4		                ;7c35	01 10 00 4 sprites
-	call LDIRVM		                ;7c38	cd 5c 00
+    ; Write "GAME OVER" with sprites
+	ld hl,l7c5dh		                ;7c2f	21 5d 7c
+	ld de,VRAM_SPRITES_ATTRIB_TABLE	    ;7c32	11 00 1b
+	ld bc, 4*4		                    ;7c35	01 10 00 4 sprites
+	call LDIRVM		                    ;7c38	cd 5c 00
 
     ; Wait 240 ticks
 	ld hl, 240		        ;7c3b	21 f0 00
