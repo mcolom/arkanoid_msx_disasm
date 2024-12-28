@@ -177,10 +177,11 @@ LIVES: equ 0xe01d
 BRICKS_LEFT: equ 0xe038
 
 ; This controls how the screen is repainted with bricks
-; 0: set the initial configuration, all the bricks of the level
-; 1: ???
-; 2: only paint the non-destroyed bricks
 BRICK_REPAINT_TYPE: equ 0xe022
+BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks of the level
+BRICK_REPAINT_UNKNOWN: equ 1   ; ???
+BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
+
 
 CAPSULES_LEFT: equ 0xe023
 CAPSULES_RANDOM_NUM: equ 0xe024
@@ -2306,6 +2307,7 @@ l4ca2h:
 	ld (LEVEL),a		;4cb8	32 1b e0
 
     ; Bricks in the initial configuration
+    ; BRICK_REPAINT_INITIAL
 	xor a			            ;4cbb	af
 	ld (BRICK_REPAINT_TYPE),a	;4cbc	32 22 e0
 	jp l4d09h		;4cbf	c3 09 4d
@@ -2369,7 +2371,7 @@ l4d00h:
 l4d09h:
     ; Skip initialization to zero if there's no need to reset the brick config
 	ld a,(BRICK_REPAINT_TYPE)		;4d09	3a 22 e0
-	cp 2		                    ;4d0c	fe 02
+	cp BRICK_REPAINT_REMAINING      ;4d0c	fe 02
 	jp z,l4d22h		                ;4d0e	ca 22 4d
 
     ; ToDo: what is this structure?
@@ -2551,7 +2553,7 @@ l4e22h:
 
     ; Skip the following if we're not doing a full brick repaint
 	ld a,(BRICK_REPAINT_TYPE)	;4e48	3a 22 e0
-	cp 2		                ;4e4b	fe 02
+	cp BRICK_REPAINT_REMAINING  ;4e4b	fe 02
 	jp z,l4e65h		            ;4e4d	ca 65 4e
     
 	ld a,(LEVEL)		;4e50	3a 1b e0 	: . . 
@@ -2575,6 +2577,7 @@ l4e71h:
 	call sub_5180h		;4e71	cd 80 51 	. . Q 
 l4e74h:
     ; Full brick repaint
+    ; BRICK_REPAINT_INITIAL
 	xor a			                ;4e74	af
 	ld (BRICK_REPAINT_TYPE),a		;4e75	32 22 e0
 
@@ -5089,8 +5092,8 @@ sub_5c15h:
     
     ; Skip the following if we're not doing a full brick repaint
 	ld a,(BRICK_REPAINT_TYPE)	;5c18	3a 22 e0
-	cp 2		                ;5c1b	fe 02
-	jp z,l5c45h		;5c1d	ca 45 5c 	. E \ 
+	cp BRICK_REPAINT_REMAINING  ;5c1b	fe 02
+	jp z,l5c45h		            ;5c1d	ca 45 5c
 
 	ld hl,BRICKS_PER_LEVEL		;5c20	21 00 5d 	! . ] 
     
@@ -5174,7 +5177,7 @@ l5c45h:
 
     ; Set HL=0xe027 if we're not doing a full brick repaint
 	ld a,(BRICK_REPAINT_TYPE)		;5c69	3a 22 e0
-	cp 2		                    ;5c6c	fe 02
+	cp BRICK_REPAINT_REMAINING      ;5c6c	fe 02
 	jp nz,l5c74h		            ;5c6e	c2 74 5c
 
 	ld hl,0e027h		            ;5c71	21 27 e0
@@ -8163,9 +8166,10 @@ l6b1ch:
 	ld a,002h		;6b21	3e 02 	> . 
 	ld (GAME_TRANSITION_ACTION),a		;6b23	32 0a e0 	2 . . 
 
-	ld a,001h		;6b26	3e 01 	> . 
-	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0 	2 " . 
-	ret			;6b2b	c9 	. 
+	ld a,BRICK_REPAINT_UNKNOWN		;6b26	3e 01
+	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0
+	ret			                    ;6b2b	c9
+
 l6b2ch:
 	ld hl,l6b9ch		;6b2c	21 9c 6b 	! . k 
 	add hl,de			;6b2f	19 	. 
@@ -8679,10 +8683,11 @@ l6f12h:
 	ld (VAUS_X2),a		;6f21	32 3e e5 	2 > . 
 	ld (ix+006h),000h		;6f24	dd 36 06 00 	. 6 . . 
 
-	ld a,002h		;6f28	3e 02 	> . 
-	ld (BRICK_REPAINT_TYPE),a		;6f2a	32 22 e0 	2 " . 
-	ld (GAME_TRANSITION_ACTION),a		;6f2d	32 0a e0 	2 . . 
-	ret			;6f30	c9 	. 
+	ld a,BRICK_REPAINT_REMAINING	;6f28	3e 02
+	ld (BRICK_REPAINT_TYPE),a		;6f2a	32 22 e0
+	ld (GAME_TRANSITION_ACTION),a	;6f2d	32 0a e0
+	ret			                    ;6f30	c9
+
 l6f31h:
     ; VAUS_ACTION_STATE_LASER
 	ld (ix+006h),001h		;6f31	dd 36 06 01 	. 6 . . 
@@ -10504,26 +10509,34 @@ sub_7b94h:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;7b94	3a 0b e0
 	or a			        ;7b97	b7
-	jp z,l7c44h		        ;7b98	ca 44 7c
+	jp z,brick_repaint_action_done		        ;7b98	ca 44 7c
 
-	ld a,(BRICK_REPAINT_TYPE)		;7b9b	3a 22 e0 	: " . 
-	ld l,a			;7b9e	6f 	o 
-	ld h,000h		;7b9f	26 00 	& . 
-	add hl,hl			;7ba1	29 	) 
-	ld de,l7babh		;7ba2	11 ab 7b 	. . { 
-	add hl,de			;7ba5	19 	. 
-	ld e,(hl)			;7ba6	5e 	^ 
-	inc hl			;7ba7	23 	# 
-	ld d,(hl)			;7ba8	56 	V 
-	ex de,hl			;7ba9	eb 	. 
-	jp (hl)			;7baa	e9 	. 
+    ; HL = 2*BRICK_REPAINT_TYPE
+	ld a,(BRICK_REPAINT_TYPE)	;7b9b	3a 22 e0
+	ld l,a			            ;7b9e	6f
+	ld h, 0		                ;7b9f	26 00
+	add hl,hl			        ;7ba1	29
+    
+	; HL = l7babh + 2*BRICK_REPAINT_TYPE
+    ld de,l7babh		        ;7ba2	11 ab 7b
+	add hl,de			        ;7ba5	19    
+    
+    ; DE = l7babh[2*BRICK_REPAINT_TYPE]
+	ld e,(hl)			        ;7ba6	5e
+	inc hl			            ;7ba7	23
+	ld d,(hl)			        ;7ba8	56
+    
+    ; Jump to l7babh[2*BRICK_REPAINT_TYPE]
+	ex de,hl			        ;7ba9	eb
+	jp (hl)			            ;7baa	e9
+
+
 l7babh:
-	or c			;7bab	b1 	. 
-	ld a,e			;7bac	7b 	{ 
-	or c			;7bad	b1 	. 
-	ld a,e			;7bae	7b 	{ 
-	rlca			;7baf	07 	. 
-	ld a,h			;7bb0	7c 	| 
+    dw ACTION_BRICK_REPAINT_7bb1
+    dw ACTION_BRICK_REPAINT_7bb1
+    dw ACTION_BRICK_REPAINT_7c07
+
+ACTION_BRICK_REPAINT_7bb1:
 	ld a,(LEVEL_DISP)		;7bb1	3a 1c e0 	: . . 
 	add a,001h		;7bb4	c6 01 	. . 
 	daa			;7bb6	27 	' 
@@ -10557,7 +10570,7 @@ l7babh:
 
 	call CLEAR_SCREEN		;7be9	cd 27 42 	. ' B 
     
-    ; Doh if defeated here
+    ; Doh is defeated here
 	call DRAW_UP_SCORES		;7bec	cd e0 4f 	. . O 
 
     ; Draw GAME OVER with sprites.
@@ -10573,8 +10586,9 @@ l7babh:
 	call DELAY_HL_TICKS		;7bfe	cd 80 43
 
 	call CLEAR_SCREEN		;7c01	cd 27 42 	. ' B 
-	jp l7c44h		;7c04	c3 44 7c 	. D | 
+	jp brick_repaint_action_done		;7c04	c3 44 7c 	. D | 
 
+ACTION_BRICK_REPAINT_7c07:
     ; Wait 48 ticks
 	ld hl,00030h		    ;7c07	21 30 00
 	call DELAY_HL_TICKS		;7c0a	cd 80 43
@@ -10608,7 +10622,8 @@ l7c23h:
 	call DELAY_HL_TICKS		;7c3e	cd 80 43
 
 	call CLEAR_SCREEN		;7c41	cd 27 42 	. ' B 
-l7c44h:
+
+brick_repaint_action_done:
 	ld hl,0e027h		;7c44	21 27 e0 	! ' . 
 	ld de,0e028h		;7c47	11 28 e0 	. ( . 
 	ld bc,0058dh		;7c4a	01 8d 05 	. . . 
@@ -10617,15 +10632,13 @@ l7c44h:
 	ldir		;7c50	ed b0 	. . 
 
     ; Reset states
-
-	xor a			        ;7c52	af
-	ld (GAME_TRANSITION_ACTION),a		    ;7c53	32 0a e0
-
+	xor a			                ;7c52	af
+	ld (GAME_TRANSITION_ACTION),a	;7c53	32 0a e0
     ; Set we're in the title screen
-	ld (GAME_STATE),a		;7c56	32 0b e0
+	ld (GAME_STATE),a		        ;7c56	32 0b e0
     ; Reset Doh hits
-	ld (DOH_HITS),a		    ;7c59	32 b3 e5
-	ret			            ;7c5c	c9
+	ld (DOH_HITS),a		            ;7c59	32 b3 e5
+	ret			                    ;7c5c	c9
 
 l7c5dh:
 	adc a,b			;7c5d	88 	. 
@@ -13571,8 +13584,9 @@ lab6ah:
 	ld (BRICKS_LEFT),a		;ab81	32 38 e0
 	jr nz,ERASE_BRICK		    ;ab84	20 09
 
-	xor a			;ab86	af 	. 
-	ld (BRICK_REPAINT_TYPE),a		;ab87	32 22 e0 	2 " . 
+    ; BRICK_REPAINT_INITIAL
+	xor a			            ;ab86	af
+	ld (BRICK_REPAINT_TYPE),a	;ab87	32 22 e0
 
 	ld a,002h		;ab8a	3e 02 	> . 
 	ld (GAME_TRANSITION_ACTION),a		;ab8c	32 0a e0 	2 . . 
