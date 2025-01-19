@@ -11235,7 +11235,7 @@ l9917h:
 	ld (ix+001h),a		;992a	dd 77 01 	. w . 
 	jp l99b8h		;992d	c3 b8 99 	. . . 
 l9930h:
-    ; The ball is not sticky
+    ; Vaus is not sticky
 	ld a,GLUING_STATE_NOT_STICKY		;9930	3e 00
 	ld (GLUING_STATUS),a		        ;9932	32 24 e3
 l9935h:
@@ -11319,7 +11319,7 @@ l9985h:
 l99a2h:
 	push ix		;99a2	dd e5 	. . 
 	push iy		;99a4	fd e5 	. . 
-	call sub_9ba8h		;99a6	cd a8 9b 	. . . 
+	call CHECK_UPDATE_BALL_GLUE_AND_SKEWNESS		;99a6	cd a8 9b 	. . . 
 	pop iy		;99a9	fd e1 	. . 
 	pop ix		;99ab	dd e1 	. . 
 
@@ -11651,17 +11651,21 @@ l9ba3h:
 	pop af			;9ba6	f1 	. 
 	ret			;9ba7	c9 	. 
 
-; SEGUIR
-sub_9ba8h:
+; Checks if the ball has reached Vaus
+; If so, make it bounce with the proper skewness (or stick to Vaus if
+; it's sticky).
+CHECK_UPDATE_BALL_GLUE_AND_SKEWNESS:
 	ld a,(ix+SPR_PARAMS_IDX_Y)		    ;9ba8	dd 7e 00
 	bit 7,(iy+BALL_TABLE_IDX_VERT)		;9bab	fd cb 02 7e     Z if the ball is moving DOWN
 	ret nz			                    ;9baf	c0              Return if moving UP
+    
+    ; The ball is moving down
 
 	cp 167		    ;9bb0	fe a7
 	ret c			;9bb2	d8      Return if Y < 167
 	cp 173		    ;9bb3	fe ad
 	ret nc			;9bb5	d0      Return if Y >= 173
-    
+
     ; 167 < BALL_Y < 173
     
     ld a,(VAUS_X)		;9bb6	3a ce e0
@@ -11692,10 +11696,10 @@ l9bcfh:
 	ret c			                ;9bd6	d8      Return if VAUS_X + limit < BALL_X
     
     ; VAUS_X + limit >= BALL_X
-	ld (ix+SPR_PARAMS_IDX_Y),169	;9bd7	dd 36 00 a9
+	ld (ix+SPR_PARAMS_IDX_Y), 169	;9bd7	dd 36 00 a9
     
-    ; Check if the ball is sticky.
-    ; If so, glue it to Vaus.
+    ; Check if Vaus is sticky.
+    ; If so, glue the ball to Vaus.
     ; Otherwise, make the ball bouncing sound.
 	ld a,(GLUING_STATUS)		;9bdb	3a 24 e3
 	cp GLUING_STATE_STICKY		;9bde	fe 01
@@ -11735,8 +11739,12 @@ l9c05h:
 	ld l,a			                    ;9c15	6f
 	ld h,0  		                    ;9c16	26 00       HL = X - VAUS_X
     
-    ; Divide X - VAUS_X by C (7 or 10).
-    ; The result is put in HL and remainder in A.
+    ; To compute the skewness of the ball when bouncing, it considers Vaus is
+    ; divided into several pieces (7 if normal size, or 10 if enlarged) and
+    ; according to which of them the ball has hit, it set the different skewnesses.    
+    
+    ; Divide X - VAUS_X by C (7 or 10 is Vaus is enlarged).
+    ; The result is put in HL.
 	call DIVIDE_HL_BY_C	                ;9c18	cd 9a b3
 
 	; A = BALL_DIRECTION_TABLE[l]
@@ -14874,12 +14882,12 @@ lb1cah:
 	or d			;b1d7	b2 	. 
 	ld e,0b2h		;b1d8	1e b2 	. . 
 
-    ; Skip if the ball is not sticky
+    ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
 	or a			;b1dd	b7 	. 
 	jp z,lb1e6h		;b1de	ca e6 b1 	. . . 
 
-    ; The ball is sticky, set GLUING_STATE_NO_LONGER_STICKY
+    ; Vaus is sticky, set GLUING_STATE_NO_LONGER_STICKY
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b1e1	3e 02
 	ld (GLUING_STATUS),a		            ;b1e3	32 24 e3
 lb1e6h:
@@ -14921,7 +14929,7 @@ lb203h:
 	ret			;b21d	c9 	. 
 
     ; Dead code?
-    ; Skip if the ball is not sticky
+    ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b21e	3a 24 e3 	: $ . 
 	or a			;b221	b7 	. 
 	jp z,lb22ah		;b222	ca 2a b2 	. * . 
@@ -14941,7 +14949,7 @@ lb22ah:
 	call ADD_SOUND		                ;b237	cd ef 5b
 	ret			                        ;b23a	c9
 
-    ; Skip if the ball is not sticky
+    ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		        ;b23b	3a 24 e3
 	or a			                    ;b23e	b7
 	jp z,lb247h		                    ;b23f	ca 47 b2
@@ -14956,7 +14964,7 @@ lb247h:
 	call sub_b2c1h		;b24f	cd c1 b2 	. . . 
 	ret			;b252	c9 	. 
     
-    ; Skip if the ball is not sticky
+    ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b253	3a 24 e3
 	or a			            ;b256	b7
 	jp z,lb25fh		            ;b257	ca 5f b2
@@ -14976,7 +14984,7 @@ lb25fh:
 	ld (SPEEDUP_ALL_BALLS_COUNTER),a		;b26d	32 29 e5 	2 ) . 
 	ret			;b270	c9 	. 
     
-    ; Skip if the ball is not sticky
+    ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b271	3a 24 e3
 	or a			            ;b274	b7
 	jp z,lb27dh		            ;b275	ca 7d b2
@@ -14988,7 +14996,7 @@ lb27dh:
 	ld (PORTAL_OPEN),a		;b27f	32 26 e3 	2 & . 
 	call sub_b2a7h		;b282	cd a7 b2 	. . . 
 	ret			;b285	c9 	. 
-    ; Skip if the ball is not sticky
+    ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b286	3a 24 e3
 	or a			            ;b289	b7
 	jp z,lb292h		            ;b28a	ca 92 b2
