@@ -129,6 +129,9 @@ DECODED_ZEROS: equ 0xe594
 ; 0: up, 1: on the right
 SCORE_POSITION: equ 0xe544
 
+; It can be VAUS_ACTION_STATE_ENLARGING or VAUS_ACTION_STATE_SHRINKING
+VAUS_SIZING_STATE: equ 0xe550
+
 ; The shape of Vaus
 ; 0, 1: normal
 ; 2: enlarged
@@ -161,6 +164,14 @@ SOUNDS_COUNT: equ 0xe51e
 
 ; Vaus is enlarged, because of the blue capsule
 VAUS_IS_ENLARGED: equ 0xe321
+
+; 0: ball does not stick to Vaus
+; 1: ball sticks to Vaus
+; 2: ball sticks but is not glue anymore when released
+GLUING_STATUS: equ 0xe324
+GLUING_STATE_NOT_STICKY: equ 0
+GLUING_STATE_STICKY: equ 1
+GLUING_STATE_NO_LONGER_STICKY: equ 2
 
 ; Extra balls, apart from the current.
 ; For example, after getting the cyan brick, there are
@@ -451,12 +462,11 @@ l40d7h:
 
 ; Do the pause...
 l40fbh:
-	halt			    ;40fb	76
-	ld a,(PAUSE_B6_AND_START_B4)		;40fc	3a bf e0
-	bit 6,a		        ;40ff	cb 77
+	halt			                ;40fb	76
+	ld a,(PAUSE_B6_AND_START_B4)	;40fc	3a bf e0
+	bit 6,a		                    ;40ff	cb 77
 l4101h:
-	jr z,l40fbh		    ;4101	28 f8
-    
+	jr z,l40fbh		                ;4101	28 f8    
 ; Pause finished
 
 l4103h:
@@ -8144,7 +8154,7 @@ l6adbh:
 	ld a,(0e551h)		;6af3	3a 51 e5 	: Q . 
 	cp 001h		;6af6	fe 01 	. . 
 	jp z,l6b48h		;6af8	ca 48 6b 	. H k 
-	ld a,(0e550h)		;6afb	3a 50 e5 	: P . 
+	ld a,(VAUS_SIZING_STATE)		;6afb	3a 50 e5 	: P . 
 	cp 000h		;6afe	fe 00 	. . 
 	jp nz,l6b2ch		;6b00	c2 2c 6b 	. , k 
 	ld hl,l6b64h		;6b03	21 64 6b 	! d k 
@@ -11215,17 +11225,19 @@ l9917h:
 	dec (iy+BALL_TABLE_IDX_GLUE_COUNTER)	;9917	fd 35 0e
 	jr z,l9935h		                        ;991a	28 19
 
-	ld hl,0e324h		;991c	21 24 e3 	! $ . 
-	bit 1,(hl)		;991f	cb 4e 	. N 
-	jp nz,l9930h		;9921	c2 30 99 	. 0 . 
+    ; Check GLUING_STATE_NO_LONGER_STICKY
+	ld hl,GLUING_STATUS		;991c	21 24 e3
+	bit 1,(hl)		        ;991f	cb 4e
+	jp nz,l9930h		    ;9921	c2 30 99
     
 	ld a,(VAUS_X)		;9924	3a ce e0 	: . . 
 	add a,(iy+010h)		;9927	fd 86 10 	. . . 
 	ld (ix+001h),a		;992a	dd 77 01 	. w . 
 	jp l99b8h		;992d	c3 b8 99 	. . . 
 l9930h:
-	ld a,000h		;9930	3e 00 	> . 
-	ld (0e324h),a		;9932	32 24 e3 	2 $ . 
+    ; The ball is not sticky
+	ld a,GLUING_STATE_NOT_STICKY		;9930	3e 00
+	ld (GLUING_STATUS),a		        ;9932	32 24 e3
 l9935h:
 	ld (iy+BALL_TABLE_IDX_GLUE), 2		;9935	fd 36 01 02     Ball moves normally
 
@@ -11639,34 +11651,55 @@ l9ba3h:
 	pop af			;9ba6	f1 	. 
 	ret			;9ba7	c9 	. 
 
+; SEGUIR
 sub_9ba8h:
-	ld a,(ix+SPR_PARAMS_IDX_Y)		;9ba8	dd 7e 00 	. ~ . 
-	bit 7,(iy+BALL_TABLE_IDX_VERT)		;9bab	fd cb 02 7e 	. . . ~ 
-	ret nz			;9baf	c0 	. 
-	cp 0a7h		;9bb0	fe a7 	. . 
-	ret c			;9bb2	d8 	. 
-	cp 0adh		;9bb3	fe ad 	. . 
-	ret nc			;9bb5	d0 	. 
-	ld a,(VAUS_X)		;9bb6	3a ce e0 	: . . 
-	add a,001h		;9bb9	c6 01 	. . 
-	cp (ix+SPR_PARAMS_IDX_X)		;9bbb	dd be 01 	. . . 
-	ret nc			;9bbe	d0 	. 
-	ld c,007h		;9bbf	0e 07 	. . 
-	ld b,029h		;9bc1	06 29 	. ) 
-	ld a,(0e550h)		;9bc3	3a 50 e5 	: P . 
-	cp 002h		;9bc6	fe 02 	. . 
-	jp nz,l9bcfh		;9bc8	c2 cf 9b 	. . . 
-	ld c,00ah		;9bcb	0e 0a 	. . 
-	ld b,039h		;9bcd	06 39 	. 9 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		    ;9ba8	dd 7e 00
+	bit 7,(iy+BALL_TABLE_IDX_VERT)		;9bab	fd cb 02 7e     Z if the ball is moving DOWN
+	ret nz			                    ;9baf	c0              Return if moving UP
+
+	cp 167		    ;9bb0	fe a7
+	ret c			;9bb2	d8      Return if Y < 167
+	cp 173		    ;9bb3	fe ad
+	ret nc			;9bb5	d0      Return if Y >= 173
+    
+    ; 167 < BALL_Y < 173
+    
+    ld a,(VAUS_X)		;9bb6	3a ce e0
+	add a,1		        ;9bb9	c6 01       A = VAUS_X + 1
+    
+	cp (ix+SPR_PARAMS_IDX_X)		;9bbb	dd be 01
+	ret nc			                ;9bbe	d0  Exit if VAUS_X + 1 >= BALL_X
+    
+    ; VAUS_X < BALL_X - 1
+    
+    ; By default (Vaus not enlarged) set C=7, B=41
+	ld c, 7 		;9bbf	0e 07
+	ld b, 41		;9bc1	06 29
+
+	ld a,(VAUS_SIZING_STATE)		    ;9bc3	3a 50 e5
+	cp VAUS_ACTION_STATE_ENLARGING		;9bc6	fe 02
+	jp nz,l9bcfh		                ;9bc8	c2 cf 9b
+    ; If Vaus is enlarged, set C=10, B=57
+	ld c, 10		;9bcb	0e 0a
+	ld b, 57		;9bcd	06 39
+
 l9bcfh:
-	ld a,(VAUS_X)		;9bcf	3a ce e0 	: . . 
-	add a,b			;9bd2	80 	. 
-	cp (ix+SPR_PARAMS_IDX_X)		;9bd3	dd be 01 	. . . 
-	ret c			;9bd6	d8 	. 
-	ld (ix+SPR_PARAMS_IDX_Y),169		;9bd7	dd 36 00 a9 	. 6 . . 
-	ld a,(0e324h)		;9bdb	3a 24 e3 	: $ . 
-	cp 001h		;9bde	fe 01 	. . 
-	jp z,l9bebh		;9be0	ca eb 9b 	. . . 
+	ld a,(VAUS_X)		            ;9bcf	3a ce e0    A = VAUS_X
+	add a,b			                ;9bd2	80          A = VAUS_X + limit
+    
+    ; Check if VAUS_X + limit 
+	cp (ix+SPR_PARAMS_IDX_X)		;9bd3	dd be 01
+	ret c			                ;9bd6	d8      Return if VAUS_X + limit < BALL_X
+    
+    ; VAUS_X + limit >= BALL_X
+	ld (ix+SPR_PARAMS_IDX_Y),169	;9bd7	dd 36 00 a9
+    
+    ; Check if the ball is sticky.
+    ; If so, glue it to Vaus.
+    ; Otherwise, make the ball bouncing sound.
+	ld a,(GLUING_STATUS)		;9bdb	3a 24 e3
+	cp GLUING_STATE_STICKY		;9bde	fe 01
+	jp z,l9bebh		            ;9be0	ca eb 9b
 
 	ld a,SOUND_BALL_BOUNCES_ON_VAUS		;9be3	3e 01
 	call ADD_SOUND		                ;9be5	cd ef 5b
@@ -11677,40 +11710,48 @@ l9bebh:
     ; Initialize BALL_TABLE_IDX_GLUE_COUNTER
 	ld (iy+BALL_TABLE_IDX_GLUE_COUNTER), 240		;9bec	fd 36 0e f0
 
-	; Ball is glued
-    ld (iy+BALL_TABLE_IDX_GLUE), 1		;9bf0	fd 36 01 01
+	; Set the ball is glued
+    ld (iy+BALL_TABLE_IDX_GLUE), 1		            ;9bf0	fd 36 01 01
 
-	ld a,(VAUS_X)		;9bf4	3a ce e0 	: . . 
-	ld c,a			;9bf7	4f 	O 
-	ld a,(ix+SPR_PARAMS_IDX_X)		;9bf8	dd 7e 01 	. ~ . 
-	sub c			;9bfb	91 	. 
-	ld (iy+010h),a		;9bfc	fd 77 10 	. w . 
-	pop bc			;9bff	c1 	. 
+	ld a,(VAUS_X)		        ;9bf4	3a ce e0    A = VAUS_X
+	ld c,a			            ;9bf7	4f          C = VAUS_X
+	ld a,(ix+SPR_PARAMS_IDX_X)	;9bf8	dd 7e 01    A = X
+	sub c			            ;9bfb	91          A = X - VAUS_X
+	ld (iy+010h),a		        ;9bfc	fd 77 10    Store X - VAUS_X. ToDo: give a name
+	pop bc			            ;9bff	c1
 
 	ld a,SOUND_GLUED_BALL_CATCHED	;9c00	3e 04
 	call ADD_SOUND		            ;9c02	cd ef 5b
 l9c05h:
-	ld a,(iy+BALL_TABLE_IDX_VERT)		;9c05	fd 7e 02 	. ~ . 
-	neg		;9c08	ed 44 	. D 
-	ld (iy+BALL_TABLE_IDX_VERT),a		;9c0a	fd 77 02 	. w . 
+    ; Invert ball vertical direction
+	ld a,(iy+BALL_TABLE_IDX_VERT)		;9c05	fd 7e 02
+	neg		                            ;9c08	ed 44
+	ld (iy+BALL_TABLE_IDX_VERT),a		;9c0a	fd 77 02
 
-	ld a,(VAUS_X)		;9c0d	3a ce e0 	: . . 
-	ld b,a			;9c10	47 	G 
-	ld a,(ix+SPR_PARAMS_IDX_X)		;9c11	dd 7e 01 	. ~ . 
-	sub b			;9c14	90 	. 
-	ld l,a			;9c15	6f 	o 
-	ld h,0  		;9c16	26 00 	& . 
-	call sub_b39ah	;9c18	cd 9a b3 	. . . 
+	ld a,(VAUS_X)		                ;9c0d	3a ce e0
+	ld b,a			                    ;9c10	47 	G       B = VAUS_X
+	ld a,(ix+SPR_PARAMS_IDX_X)		    ;9c11	dd 7e 01    A = X
+	sub b			                    ;9c14	90          A = X - VAUS_X
+	ld l,a			                    ;9c15	6f
+	ld h,0  		                    ;9c16	26 00       HL = X - VAUS_X
+    
+    ; Divide X - VAUS_X by C (7 or 10).
+    ; The result is put in HL and remainder in A.
+	call DIVIDE_HL_BY_C	                ;9c18	cd 9a b3
 
 	; A = BALL_DIRECTION_TABLE[l]
-    ld e,l			;9c1b	5d 	] 
-	ld d,000h		;9c1c	16 00 	. . 
-	ld hl,BALL_SKEWNESS_TABLE		;9c1e	21 27 9c 	! ' . 
-	add hl,de			;9c21	19 	. 
-	ld a,(hl)			;9c22	7e 	~ 
+    ; DE =  (X - VAUS_X) \ C
+    ld e,l			                ;9c1b	5d
+	ld d,0		                    ;9c1c	16 00
+	ld hl,BALL_SKEWNESS_TABLE		;9c1e	21 27 9c
+    ; HL = BALL_SKEWNESS_TABLE + (X - VAUS_X) \ C
+	add hl,de			            ;9c21	19
+    ; A = BALL_SKEWNESS_TABLE[(X - VAUS_X) \ C]
+	ld a,(hl)			            ;9c22	7e
     
-	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;9c23	fd 77 06
-	ret			;9c26	c9 	. 
+    ; Set ball skewness
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a	;9c23	fd 77 06
+	ret			                        ;9c26	c9
 
 BALL_SKEWNESS_TABLE:
     ; 7: most skewed, moving left
@@ -14571,9 +14612,11 @@ sub_b028h:
 	jp c,lb073h		;b042	da 73 b0 	. s . 
 	call sub_b10ah		;b045	cd 0a b1 	. . . 
 	jp c,lb073h		;b048	da 73 b0 	. s . 
-	ld a,(0e324h)		;b04b	3a 24 e3 	: $ . 
-	cp 001h		;b04e	fe 01 	. . 
-	jr z,lb063h		;b050	28 11 	( . 
+
+	ld a,(GLUING_STATUS)		;b04b	3a 24 e3
+	cp GLUING_STATE_STICKY		;b04e	fe 01
+	jr z,lb063h		            ;b050	28 11
+
 	ld a,(VAUS_IS_ENLARGED)		;b052	3a 21 e3 	: ! . 
 	or a			;b055	b7 	. 
 	jr nz,lb068h		;b056	20 10 	  . 
@@ -14830,11 +14873,15 @@ lb1cah:
 	add a,(hl)			;b1d6	86 	. 
 	or d			;b1d7	b2 	. 
 	ld e,0b2h		;b1d8	1e b2 	. . 
-	ld a,(0e324h)		;b1da	3a 24 e3 	: $ . 
+
+    ; Skip if the ball is not sticky
+	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
 	or a			;b1dd	b7 	. 
 	jp z,lb1e6h		;b1de	ca e6 b1 	. . . 
-	ld a,002h		;b1e1	3e 02 	> . 
-	ld (0e324h),a		;b1e3	32 24 e3 	2 $ . 
+
+    ; The ball is sticky, set GLUING_STATE_NO_LONGER_STICKY
+	ld a,GLUING_STATE_NO_LONGER_STICKY		;b1e1	3e 02
+	ld (GLUING_STATUS),a		            ;b1e3	32 24 e3
 lb1e6h:
 	ld a,001h		;b1e6	3e 01 	> . 
 	ld (0e320h),a		;b1e8	32 20 e3 	2   . 
@@ -14868,17 +14915,20 @@ lb203h:
 	ret			                                ;b214	c9
 
     ; Dead code?
-	ld a,001h		;b215	3e 01 	> . 
-	ld (0e324h),a		;b217	32 24 e3 	2 $ . 
-	call sub_b2a7h		;b21a	cd a7 b2 	. . . 
+	ld a,GLUING_STATE_STICKY	;b215	3e 01
+	ld (GLUING_STATUS),a		;b217	32 24 e3
+	call sub_b2a7h		    ;b21a	cd a7 b2 	. . . 
 	ret			;b21d	c9 	. 
 
     ; Dead code?
-	ld a,(0e324h)		;b21e	3a 24 e3 	: $ . 
+    ; Skip if the ball is not sticky
+	ld a,(GLUING_STATUS)		;b21e	3a 24 e3 	: $ . 
 	or a			;b221	b7 	. 
 	jp z,lb22ah		;b222	ca 2a b2 	. * . 
-	ld a,002h		;b225	3e 02 	> . 
-	ld (0e324h),a		;b227	32 24 e3 	2 $ . 
+    
+    ; Set GLUING_STATE_NO_LONGER_STICKY
+	ld a,GLUING_STATE_NO_LONGER_STICKY		;b225	3e 02
+	ld (GLUING_STATUS),a		            ;b227	32 24 e3
 lb22ah:
 	call sub_b2a7h		;b22a	cd a7 b2 	. . . 
     
@@ -14891,22 +14941,28 @@ lb22ah:
 	call ADD_SOUND		                ;b237	cd ef 5b
 	ret			                        ;b23a	c9
 
-	ld a,(0e324h)		;b23b	3a 24 e3 	: $ . 
-	or a			;b23e	b7 	. 
-	jp z,lb247h		;b23f	ca 47 b2 	. G . 
-	ld a,002h		;b242	3e 02 	> . 
-	ld (0e324h),a		;b244	32 24 e3 	2 $ . 
+    ; Skip if the ball is not sticky
+	ld a,(GLUING_STATUS)		        ;b23b	3a 24 e3
+	or a			                    ;b23e	b7
+	jp z,lb247h		                    ;b23f	ca 47 b2
+    
+    ; Set GLUING_STATE_NO_LONGER_STICKY
+	ld a,GLUING_STATE_NO_LONGER_STICKY	;b242	3e 02
+	ld (GLUING_STATUS),a		        ;b244	32 24 e3
 lb247h:
 	ld a,002h		;b247	3e 02 	> . 
 	ld (EXTRA_BALLS),a		;b249	32 25 e3 	2 % . 
 	call sub_b2a7h		;b24c	cd a7 b2 	. . . 
 	call sub_b2c1h		;b24f	cd c1 b2 	. . . 
 	ret			;b252	c9 	. 
-	ld a,(0e324h)		;b253	3a 24 e3 	: $ . 
-	or a			;b256	b7 	. 
-	jp z,lb25fh		;b257	ca 5f b2 	. _ . 
-	ld a,002h		;b25a	3e 02 	> . 
-	ld (0e324h),a		;b25c	32 24 e3 	2 $ . 
+    
+    ; Skip if the ball is not sticky
+	ld a,(GLUING_STATUS)		;b253	3a 24 e3
+	or a			            ;b256	b7
+	jp z,lb25fh		            ;b257	ca 5f b2
+    ; Set GLUING_STATE_NO_LONGER_STICKY
+	ld a,GLUING_STATE_NO_LONGER_STICKY  ;b25a	3e 02
+	ld (GLUING_STATUS),a		        ;b25c	32 24 e3
 lb25fh:
 	call sub_b2a7h		;b25f	cd a7 b2 	. . . 
     
@@ -14919,21 +14975,26 @@ lb25fh:
 	xor a			;b26c	af 	. 
 	ld (SPEEDUP_ALL_BALLS_COUNTER),a		;b26d	32 29 e5 	2 ) . 
 	ret			;b270	c9 	. 
-	ld a,(0e324h)		;b271	3a 24 e3 	: $ . 
-	or a			;b274	b7 	. 
-	jp z,lb27dh		;b275	ca 7d b2 	. } . 
-	ld a,002h		;b278	3e 02 	> . 
-	ld (0e324h),a		;b27a	32 24 e3 	2 $ . 
+    
+    ; Skip if the ball is not sticky
+	ld a,(GLUING_STATUS)		;b271	3a 24 e3
+	or a			            ;b274	b7
+	jp z,lb27dh		            ;b275	ca 7d b2
+    ; Set GLUING_STATE_NO_LONGER_STICKY
+	ld a,GLUING_STATE_NO_LONGER_STICKY  ;b278	3e 02
+	ld (GLUING_STATUS),a		        ;b27a	32 24 e3
 lb27dh:
 	ld a,001h		;b27d	3e 01 	> . 
 	ld (PORTAL_OPEN),a		;b27f	32 26 e3 	2 & . 
 	call sub_b2a7h		;b282	cd a7 b2 	. . . 
 	ret			;b285	c9 	. 
-	ld a,(0e324h)		;b286	3a 24 e3 	: $ . 
-	or a			;b289	b7 	. 
-	jp z,lb292h		;b28a	ca 92 b2 	. . . 
-	ld a,002h		;b28d	3e 02 	> . 
-	ld (0e324h),a		;b28f	32 24 e3 	2 $ . 
+    ; Skip if the ball is not sticky
+	ld a,(GLUING_STATUS)		;b286	3a 24 e3
+	or a			            ;b289	b7
+	jp z,lb292h		            ;b28a	ca 92 b2
+    ; Set GLUING_STATE_NO_LONGER_STICKY
+	ld a,GLUING_STATE_NO_LONGER_STICKY		;b28d	3e 02
+	ld (GLUING_STATUS),a		            ;b28f	32 24 e3
 lb292h:
 	call sub_b2a7h		;b292	cd a7 b2 	. . . 
 	ld a,001h		;b295	3e 01 	> . 
@@ -14948,7 +15009,7 @@ lb292h:
 
 ; SEGUIR
 sub_b2a7h:
-	ld a,(0e550h)		;b2a7	3a 50 e5 	: P . 
+	ld a,(VAUS_SIZING_STATE)		    ;b2a7	3a 50 e5
 
 	cp VAUS_ACTION_STATE_ENLARGING		;b2aa	fe 02
 	jr nz,lb2b2h		                ;b2ac	20 04
@@ -15112,24 +15173,28 @@ lb376h:
 	ld sp,hl			;b398	f9 	. 
     db 0xfa
 
-; SEGUIR
-sub_b39ah:
+; 16/8 division
+; Divides HL by C.
+; Place the quotient in HL and the remainder in A
+; See: https://wikiti.brandonw.net/index.php?title=Z80_Routines:Math:Division
+DIVIDE_HL_BY_C:
     push bc         ;b39a	c5
+
     xor a           ;b39b	af
-    ld b, 0x10      ;b39c   06 10
+    ld b, 16        ;b39c   06 10
 lb39eh:
-	add hl,hl			;b39e	29 	) 
-	rla			;b39f	17 	. 
-	jr c,lb3a5h		;b3a0	38 03 	8 . 
-	cp c			;b3a2	b9 	. 
-	jr c,lb3a7h		;b3a3	38 02 	8 . 
+	add hl,hl		;b39e	29
+	rla			    ;b39f	17
+	jr c,lb3a5h		;b3a0	38 03
+	cp c			;b3a2	b9
+	jr c,lb3a7h		;b3a3	38 02
 lb3a5h:
-	sub c			;b3a5	91 	. 
-	inc l			;b3a6	2c 	, 
+	sub c			;b3a5	91
+	inc l			;b3a6	2c
 lb3a7h:
-	djnz lb39eh		;b3a7	10 f5 	. . 
-	pop bc			;b3a9	c1 	. 
-	ret			;b3aa	c9 	. 
+	djnz lb39eh		;b3a7	10 f5
+	pop bc			;b3a9	c1
+	ret			    ;b3aa	c9
 
 	nop			;b3ab	00 	. 
 	nop			;b3ac	00 	. 
