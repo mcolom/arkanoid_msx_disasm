@@ -258,6 +258,8 @@ BALL_TABLE_IDX_SKEWNESS: equ 6
 BALL_TABLE_IDX_SPEED_POS: equ 7
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
+BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
+
 
 
 
@@ -8601,6 +8603,7 @@ l6e0eh:
 	add a,010h		;6e2d	c6 10 	. . 
 	ld (iy+009h),a		;6e2f	fd 77 09 	. w . 
 	add a,010h		;6e32	c6 10 	. . 
+    ; ToDo: put the symbols of all these variables!
 	ld (iy+00dh),a		;6e34	fd 77 0d 	. w . 
 	ld (iy+003h),008h		;6e37	fd 36 03 08 	. 6 . . 
 	ld (iy+007h),00eh		;6e3b	fd 36 07 0e 	. 6 . . 
@@ -11157,7 +11160,7 @@ l987eh:
 	jp (hl)			    ;9897	e9
 ACTION_TABLE:
     dw ACTION_989E
-    dw ACTION_98F8
+    dw ACTION_BALL_FOLLOWS_VAUS_IF_STICKY
     dw ACTION_9941
 
 ; Initialize ball for the level start
@@ -11200,8 +11203,10 @@ SPEED_TABLE_POSITIONS:
     db 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12
     db 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13, 13
 
-; This one deals with the glue state
-ACTION_98F8:
+; If the ball is sticky, decrement the sticky counter and make the
+; ball follow sticky Vaus.
+; Otherwise, make it bounce normally.
+ACTION_BALL_FOLLOWS_VAUS_IF_STICKY:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;98f8	3a 0b e0
 	or a			        ;98fb	b7
@@ -11230,10 +11235,14 @@ l9917h:
 	bit 1,(hl)		        ;991f	cb 4e
 	jp nz,l9930h		    ;9921	c2 30 99
     
-	ld a,(VAUS_X)		;9924	3a ce e0 	: . . 
-	add a,(iy+010h)		;9927	fd 86 10 	. . . 
-	ld (ix+001h),a		;992a	dd 77 01 	. w . 
-	jp l99b8h		;992d	c3 b8 99 	. . . 
+    ; ld ix,BALL1_SPR_PARAMS
+    ; Set the position of the ball to where it hit Vaus.
+    ; It's the position VAUS_X + VAUS_HIT
+    ; Thus, this makes the ball follow sticky Vaus.
+	ld a,(VAUS_X)		                    ;9924	3a ce e0
+	add a,(iy+BALL_TABLE_IDX_VAUS_HIT_X)	;9927	fd 86 10
+	ld (ix+SPR_PARAMS_IDX_X),a              ;992a	dd 77 01
+	jp l99b8h		                        ;992d	c3 b8 99
 l9930h:
     ; Vaus is not sticky
 	ld a,GLUING_STATE_NOT_STICKY		;9930	3e 00
@@ -11693,9 +11702,12 @@ l9bcfh:
     
     ; Check if VAUS_X + limit 
 	cp (ix+SPR_PARAMS_IDX_X)		;9bd3	dd be 01
-	ret c			                ;9bd6	d8      Return if VAUS_X + limit < BALL_X
+	ret c			                ;9bd6	d8      Return if BALL_X > VAUS_X + limit
     
-    ; VAUS_X + limit >= BALL_X
+    ; BALL_X <= VAUS_X + limit
+    ; At this point the ball is hitting Vaus
+    
+    ; Set BALL_Y to 169
 	ld (ix+SPR_PARAMS_IDX_Y), 169	;9bd7	dd 36 00 a9
     
     ; Check if Vaus is sticky.
@@ -11717,11 +11729,11 @@ l9bebh:
 	; Set the ball is glued
     ld (iy+BALL_TABLE_IDX_GLUE), 1		            ;9bf0	fd 36 01 01
 
-	ld a,(VAUS_X)		        ;9bf4	3a ce e0    A = VAUS_X
-	ld c,a			            ;9bf7	4f          C = VAUS_X
-	ld a,(ix+SPR_PARAMS_IDX_X)	;9bf8	dd 7e 01    A = X
-	sub c			            ;9bfb	91          A = X - VAUS_X
-	ld (iy+010h),a		        ;9bfc	fd 77 10    Store X - VAUS_X. ToDo: give a name
+	ld a,(VAUS_X)		                ;9bf4	3a ce e0    A = VAUS_X
+	ld c,a			                    ;9bf7	4f          C = VAUS_X
+	ld a,(ix+SPR_PARAMS_IDX_X)	        ;9bf8	dd 7e 01    A = BALL_X
+	sub c			                    ;9bfb	91          A = BALL_X - VAUS_X
+	ld (iy+BALL_TABLE_IDX_VAUS_HIT_X),a ;9bfc	fd 77 10    Store X - VAUS_X
 	pop bc			            ;9bff	c1
 
 	ld a,SOUND_GLUED_BALL_CATCHED	;9c00	3e 04
@@ -11734,10 +11746,10 @@ l9c05h:
 
 	ld a,(VAUS_X)		                ;9c0d	3a ce e0
 	ld b,a			                    ;9c10	47 	G       B = VAUS_X
-	ld a,(ix+SPR_PARAMS_IDX_X)		    ;9c11	dd 7e 01    A = X
-	sub b			                    ;9c14	90          A = X - VAUS_X
+	ld a,(ix+SPR_PARAMS_IDX_X)		    ;9c11	dd 7e 01    A = BALL_X
+	sub b			                    ;9c14	90          A = BALL_X - VAUS_X
 	ld l,a			                    ;9c15	6f
-	ld h,0  		                    ;9c16	26 00       HL = X - VAUS_X
+	ld h,0  		                    ;9c16	26 00       HL = BALL_X - VAUS_X
     
     ; To compute the skewness of the ball when bouncing, it considers Vaus is
     ; divided into several pieces (7 if normal size, or 10 if enlarged) and
