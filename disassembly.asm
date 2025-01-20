@@ -154,6 +154,9 @@ VAUS_ACTION_STATE_THROUGH_PORTAL: equ 7
 ; Vaus changes its size in 3 steps
 VAUS_TABLE_IDX_SIZING_STEP: equ 1
 
+; Vaus changes to laser in 10 steps
+VAUS_TABLE_IDX_LASERING_STEP: equ 2
+
 
 
 
@@ -8485,11 +8488,11 @@ l6cb8h:
 	jp l690fh		;6ccb	c3 0f 69 	. . i 
 l6cceh:
     ; VAUS_ACTION_STATE_UNLASER
-	inc (ix+002h)		;6cce	dd 34 02 	. 4 . 
-	ld a,(ix+002h)		;6cd1	dd 7e 02 	. ~ . 
-	cp 005h		;6cd4	fe 05 	. . 
-	jp nz,l690fh		;6cd6	c2 0f 69 	. . i 
-	ld (ix+002h),000h		;6cd9	dd 36 02 00 	. 6 . . 
+	inc (ix+VAUS_TABLE_IDX_LASERING_STEP)		;6cce	dd 34 02
+	ld a,(ix+VAUS_TABLE_IDX_LASERING_STEP)		;6cd1	dd 7e 02
+	cp 5		                                ;6cd4	fe 05
+	jp nz,l690fh		                        ;6cd6	c2 0f 69
+	ld (ix+VAUS_TABLE_IDX_LASERING_STEP),0		;6cd9	dd 36 02 00 	. 6 . . 
 	ld a,(ix+007h)		;6cdd	dd 7e 07 	. ~ . 
 	cp 002h		;6ce0	fe 02 	. . 
 	jp z,l6d2ch		;6ce2	ca 2c 6d 	. , m 
@@ -8724,11 +8727,16 @@ l6f31h:
 	ld a,(ix+005h)		;6f35	dd 7e 05 	. ~ . 
 	cp 002h		;6f38	fe 02 	. . 
 	jp z,l6fe0h		;6f3a	ca e0 6f 	. . o 
-	inc (ix+002h)		;6f3d	dd 34 02 	. 4 . 
-	ld a,(ix+002h)		;6f40	dd 7e 02 	. ~ . 
-	cp 00ah		;6f43	fe 0a 	. . 
+    
+    ; Next lasering transformation step
+	inc (ix+VAUS_TABLE_IDX_LASERING_STEP)		;6f3d	dd 34 02
+	ld a,(ix+VAUS_TABLE_IDX_LASERING_STEP)		;6f40	dd 7e 02
+	cp 10		                                ;6f43	fe 0a
 	jp nz,l690fh		;6f45	c2 0f 69 	. . i 
-	ld (ix+002h),000h		;6f48	dd 36 02 00 	. 6 . . 
+    
+    ; Transformation completed
+	ld (ix+VAUS_TABLE_IDX_LASERING_STEP),0		;6f48	dd 36 02 00
+    
 	ld a,(ix+007h)		;6f4c	dd 7e 07 	. ~ . 
 	cp 001h		;6f4f	fe 01 	. . 
 	jp z,l6f80h		;6f51	ca 80 6f 	. . o 
