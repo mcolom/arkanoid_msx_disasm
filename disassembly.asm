@@ -136,9 +136,13 @@ VAUS_SIZING_STATE: equ 0xe550
 ; 0, 1: normal
 ; 2: enlarged
 
-VAUS_ACTION_STATE: equ 0xe54b
+;VAUS_TABLE_ACTION_STATE: equ 0xe54b
+VAUS_TABLE: equ 0xe54b
+
+; State of wait (waiting to be ready, doing nothing, enlarging, exploding, ...)
+VAUS_TABLE_IDX_ACTION_STATE: equ 0
 ;
-VAUS_ACTION_WAIT_READY: equ 0
+VAUS_ACTION_STATE_WAIT_READY: equ 0
 VAUS_ACTION_STATE_KEEP: equ 1
 VAUS_ACTION_STATE_ENLARGING: equ 2
 VAUS_ACTION_STATE_SHRINKING: equ 3
@@ -146,6 +150,10 @@ VAUS_ACTION_STATE_LASER: equ 4
 VAUS_ACTION_STATE_UNLASER: equ 5
 VAUS_ACTION_STATE_EXPLODING: equ 6
 VAUS_ACTION_STATE_THROUGH_PORTAL: equ 7
+
+; Vaus changes its size in 3 steps
+VAUS_TABLE_IDX_SIZING_STEP: equ 1
+
 
 
 
@@ -7898,11 +7906,11 @@ l68d5h:
 	ld a,001h		;68d7	3e 01 	> . 
 	ld (0e5a9h),a		;68d9	32 a9 e5 	2 . . 
 l68dch:
-	ld ix,VAUS_ACTION_STATE		;68dc	dd 21 4b e5
+	ld ix,VAUS_TABLE		;68dc	dd 21 4b e5
 	ld iy,SPR_PARAMS_BASE		;68e0	fd 21 cd e0
     
-    ; Choose action on VAUS_ACTION_STATE
-	ld a,(ix+0)		                        ;68e4	dd 7e 00
+    ; Choose action on VAUS_TABLE_ACTION_STATE
+	ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)         ;68e4	dd 7e 00
 	cp VAUS_ACTION_STATE_KEEP		        ;68e7	fe 01
 	jp z,l690fh		                        ;68e9	ca 0f 69
 	cp VAUS_ACTION_STATE_ENLARGING		    ;68ec	fe 02
@@ -7919,8 +7927,8 @@ l68dch:
 	jp z,l6adbh		                        ;6907	ca db 6a
     
     ; Transformation completed, keep current state
-	ld (ix+0),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
-	ret nz			;690e	c0 	. 
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
+	ret nz			                        ;690e	c0
 l690fh:
     ; VAUS_ACTION_STATE_KEEP
 
@@ -8174,8 +8182,8 @@ l6adbh:
 	ret nz			;6b1b	c0 	. 
 
 l6b1ch:
-	ld a,VAUS_ACTION_WAIT_READY		;6b1c	3e 00
-	ld (VAUS_ACTION_STATE),a		;6b1e	32 4b e5
+	ld a,VAUS_ACTION_STATE_WAIT_READY		;6b1c	3e 00
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;6b1e	32 4b e5
 
 	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;6b21	3e 02
 	ld (GAME_TRANSITION_ACTION),a		        ;6b23	32 0a e0
@@ -8464,12 +8472,16 @@ l6c94h:
 	ld (iy+00dh),a		;6cb1	fd 77 0d 	. w . 
 	ld (ix+005h),002h		;6cb4	dd 36 05 02 	. 6 . . 
 l6cb8h:
-	inc (ix+001h)		;6cb8	dd 34 01 	. 4 . 
-	ld a,(ix+001h)		;6cbb	dd 7e 01 	. ~ . 
-	cp 002h		;6cbe	fe 02 	. . 
-	jp nz,l690fh		;6cc0	c2 0f 69 	. . i 
-	ld (ix+000h),001h		;6cc3	dd 36 00 01 	. 6 . . 
-	ld (ix+001h),000h		;6cc7	dd 36 01 00 	. 6 . . 
+    ; Next enlarging step
+	inc (ix+VAUS_TABLE_IDX_SIZING_STEP)		;6cb8	dd 34 01
+	ld a,(ix+VAUS_TABLE_IDX_SIZING_STEP)	;6cbb	dd 7e 01
+	cp 2		                            ;6cbe	fe 02
+	jp nz,l690fh		                    ;6cc0	c2 0f 69
+    
+    ; Sizing is now in the last step
+    
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_KEEP		;6cc3	dd 36 00 01
+	ld (ix+VAUS_TABLE_IDX_SIZING_STEP), 0		                    ;6cc7	dd 36 01 00
 	jp l690fh		;6ccb	c3 0f 69 	. . i 
 l6cceh:
     ; VAUS_ACTION_STATE_UNLASER
@@ -8572,10 +8584,13 @@ l6db6h:
 	ld (iy+00dh),a		;6dda	fd 77 0d 	. w . 
 	ld (ix+005h),000h		;6ddd	dd 36 05 00 	. 6 . . 
 l6de1h:
-	inc (ix+001h)		;6de1	dd 34 01 	. 4 . 
-	ld a,(ix+001h)		;6de4	dd 7e 01 	. ~ . 
-	cp 002h		;6de7	fe 02 	. . 
-	jp nz,l690fh		;6de9	c2 0f 69 	. . i 
+    ; Vaus shrinking
+	inc (ix+VAUS_TABLE_IDX_SIZING_STEP)		;6de1	dd 34 01
+	ld a,(ix+VAUS_TABLE_IDX_SIZING_STEP)	;6de4	dd 7e 01
+	cp 2		                            ;6de7	fe 02
+	jp nz,l690fh		                    ;6de9	c2 0f 69
+    
+    ; Vaus has completed shrinking
 	ld a,(ix+006h)		;6dec	dd 7e 06 	. ~ . 
 	cp 001h		;6def	fe 01 	. . 
 	jp z,l6dffh		;6df1	ca ff 6d 	. . m 
@@ -8583,8 +8598,8 @@ l6de1h:
 	ld (ix+001h),000h		;6df8	dd 36 01 00 	. 6 . . 
 	jp l690fh		;6dfc	c3 0f 69 	. . i 
 l6dffh:
-	ld (ix+000h),004h		;6dff	dd 36 00 04 	. 6 . . 
-	ld (ix+001h),000h		;6e03	dd 36 01 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_LASER		;6dff	dd 36 00 04
+	ld (ix+VAUS_TABLE_IDX_SIZING_STEP),0		                    ;6e03	dd 36 01 00
 	ld (ix+007h),000h		;6e07	dd 36 07 00 	. 6 . . 
 	jp l690fh		;6e0b	c3 0f 69 	. . i 
 l6e0eh:
@@ -8842,7 +8857,7 @@ sub_7039h:
 	call sub_70b0h		;703c	cd b0 70 	. . p 
 	ret			;703f	c9 	. 
 sub_7040h:
-	ld ix,VAUS_ACTION_STATE		;7040	dd 21 4b e5 	. ! K . 
+	ld ix,VAUS_TABLE		;7040	dd 21 4b e5 	. ! K . 
 	ld a,(ix+006h)		;7044	dd 7e 06 	. ~ . 
 	or a			;7047	b7 	. 
 	ret z			;7048	c8 	. 
@@ -10138,7 +10153,7 @@ CHECK_ALIEN_HIT_BY_VAUS:
 	ld b, 3		                    ;794d	06 03
 l794fh:
     ; Skip if Vaus is exploding
-	ld a,(VAUS_ACTION_STATE)		;794f	3a 4b e5
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		;794f	3a 4b e5
 	cp VAUS_ACTION_STATE_EXPLODING  ;7952	fe 06
 	ret z			    ;7954	c8
 
@@ -10310,7 +10325,7 @@ l7a5bh:
 
 sub_7a68h:
     ; Skip if Vaus is exploding
-    ld a,(VAUS_ACTION_STATE)		;7a68	3a 4b e5
+    ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		;7a68	3a 4b e5
 	cp VAUS_ACTION_STATE_EXPLODING	;7a6b	fe 06
 	ret z			                ;7a6d	c8
     
@@ -10338,7 +10353,7 @@ l7a7bh:
 
     ; Set Vaus action state to exploding
 	ld a,VAUS_ACTION_STATE_EXPLODING	;7aa3	3e 06
-	ld (VAUS_ACTION_STATE),a		    ;7aa5	32 4b e5
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		    ;7aa5	32 4b e5
 
 	ld (iy+000h),0c0h		;7aa8	fd 36 00 c0 	. 6 . . 
 
@@ -11234,8 +11249,7 @@ l9917h:
 	ld hl,GLUING_STATUS		;991c	21 24 e3
 	bit 1,(hl)		        ;991f	cb 4e
 	jp nz,l9930h		    ;9921	c2 30 99
-    
-    ; ld ix,BALL1_SPR_PARAMS
+
     ; Set the position of the ball to where it hit Vaus.
     ; It's the position VAUS_X + VAUS_HIT
     ; Thus, this makes the ball follow sticky Vaus.
@@ -11602,13 +11616,13 @@ sub_9b2ah:
 	ret			;9b49	c9 	. 
 l9b4ah:
     ; Skip if Vaus is going through the portal
-	ld a,(VAUS_ACTION_STATE)		    ;9b4a	3a 4b e5
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		    ;9b4a	3a 4b e5
 	cp VAUS_ACTION_STATE_THROUGH_PORTAL	;9b4d	fe 07
 	ret z			                    ;9b4f	c8
 
 	; Set Vaus is exploding
     ld a,VAUS_ACTION_STATE_EXPLODING	;9b50	3e 06
-	ld (VAUS_ACTION_STATE),a		    ;9b52	32 4b e5
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		    ;9b52	32 4b e5
     
 	ld a, SOUND_VAUS_DESTROYED		;9b55	3e 07
 	call ADD_SOUND		            ;9b57	cd ef 5b
@@ -14827,7 +14841,7 @@ sub_b15ch:
 	ret z			    ;b161	c8
     
     ; Skip if Vaus is exploding
-	ld a,(VAUS_ACTION_STATE)		;b162	3a 4b e5
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		;b162	3a 4b e5
 	cp VAUS_ACTION_STATE_EXPLODING	;b165	fe 06
 	ret z			                ;b167	c8
 	
@@ -14954,7 +14968,7 @@ lb22ah:
     
     ; Set Vaus is enlarging
 	ld a,VAUS_ACTION_STATE_ENLARGING	;b22d	3e 02
-	ld (VAUS_ACTION_STATE),a		    ;b22f	32 4b e5
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		    ;b22f	32 4b e5
 	ld (VAUS_IS_ENLARGED),a		        ;b232	32 21 e3
 
 	ld a,SOUND_VAUS_INCREASES_SIZE_H	;b235	3e c0
@@ -14988,7 +15002,7 @@ lb25fh:
     
     ; Set Vaus is obtaining lasers
 	ld a,VAUS_ACTION_STATE_LASER	;b262	3e 04
-	ld (VAUS_ACTION_STATE),a		;b264	32 4b e5
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;b264	32 4b e5
 
 	ld a,001h		;b267	3e 01 	> . 
 	ld (0e322h),a		;b269	32 22 e3 	2 " . 
@@ -15036,15 +15050,20 @@ sub_b2a7h:
 	ld a,VAUS_ACTION_STATE_SHRINKING	;b2ae	3e 03
 	jr lb2bdh		                    ;b2b0	18 0b
 lb2b2h:
+    ; Vaus is not large
+    
 	or a			;b2b2	b7 	. 
 	jr nz,lb2c0h		;b2b3	20 0b 	  . 
-	ld a,(0e551h)		            ;b2b5	3a 51 e5
+    
+    ; Vaus is at normal size
+	
+    ld a,(0e551h)		            ;b2b5	3a 51 e5
 	or a			                ;b2b8	b7
 	jr z,lb2c0h		                ;b2b9	28 05
 	ld a,VAUS_ACTION_STATE_UNLASER	;b2bb	3e 05
 lb2bdh:
     ; Set Vaus action state
-	ld (VAUS_ACTION_STATE),a		;b2bd	32 4b e5
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;b2bd	32 4b e5
 lb2c0h:
 	ret			                    ;b2c0	c9
 
