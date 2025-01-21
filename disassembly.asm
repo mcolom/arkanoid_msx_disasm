@@ -129,13 +129,6 @@ DECODED_ZEROS: equ 0xe594
 ; 0: up, 1: on the right
 SCORE_POSITION: equ 0xe544
 
-; It can be VAUS_ACTION_STATE_ENLARGING or VAUS_ACTION_STATE_SHRINKING
-VAUS_SIZING_STATE: equ 0xe550
-
-; The shape of Vaus
-; 0, 1: normal
-; 2: enlarged
-
 ;VAUS_TABLE_ACTION_STATE: equ 0xe54b
 VAUS_TABLE: equ 0xe54b
 
@@ -156,6 +149,19 @@ VAUS_TABLE_IDX_SIZING_STEP: equ 1
 
 ; Vaus changes to laser in 10 steps
 VAUS_TABLE_IDX_LASERING_STEP: equ 2
+
+; Vaus destruction steps are controled by these two counters
+VAUS_TABLE_IDX_DESTRUCTION_STEP1: equ 3
+VAUS_TABLE_IDX_DESTRUCTION_STEP2: equ 4
+
+
+VAUS_TABLE_IDX_SIZING: equ 5
+; It can be VAUS_ACTION_STATE_ENLARGING or VAUS_ACTION_STATE_SHRINKING
+; The shape of Vaus
+; 0, 1: normal
+; 2: enlarged
+
+
 
 
 
@@ -8167,7 +8173,7 @@ l6adbh:
 	ld a,(0e551h)		;6af3	3a 51 e5 	: Q . 
 	cp 001h		;6af6	fe 01 	. . 
 	jp z,l6b48h		;6af8	ca 48 6b 	. H k 
-	ld a,(VAUS_SIZING_STATE)		;6afb	3a 50 e5 	: P . 
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)		;6afb	3a 50 e5 	: P . 
 	cp 000h		;6afe	fe 00 	. . 
 	jp nz,l6b2ch		;6b00	c2 2c 6b 	. , k 
 	ld hl,l6b64h		;6b03	21 64 6b 	! d k 
@@ -8458,7 +8464,7 @@ l6c3eh:
 	ld a,0f4h		;6c85	3e f4 	> . 
 	add a,(iy+00dh)		;6c87	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6c8a	fd 77 0d 	. w . 
-	ld (ix+005h),001h		;6c8d	dd 36 05 01 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_KEEP		;6c8d	dd 36 05 01
 	jp l6cb8h		;6c91	c3 b8 6c 	. . l 
 l6c94h:
 	ld a,0fch		;6c94	3e fc 	> . 
@@ -8473,7 +8479,7 @@ l6c94h:
 	ld a,004h		;6cac	3e 04 	> . 
 	add a,(iy+00dh)		;6cae	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6cb1	fd 77 0d 	. w . 
-	ld (ix+005h),002h		;6cb4	dd 36 05 02 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_ENLARGING		;6cb4	dd 36 05 02
 l6cb8h:
     ; Next enlarging step
 	inc (ix+VAUS_TABLE_IDX_SIZING_STEP)		;6cb8	dd 34 01
@@ -8504,7 +8510,7 @@ l6cceh:
 	ld a,0fch		;6cf2	3e fc 	> . 
 	add a,(iy+00dh)		;6cf4	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6cf7	fd 77 0d 	. w . 
-	ld (ix+005h),001h		;6cfa	dd 36 05 01 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_KEEP		;6cfa	dd 36 05 01
 	inc (ix+007h)		;6cfe	dd 34 07 	. 4 . 
 	ld a,(ix+007h)		;6d01	dd 7e 07 	. ~ . 
 	cp 002h		;6d04	fe 02 	. . 
@@ -8537,7 +8543,7 @@ l6d42h:
 	ld a,018h		;6d52	3e 18 	> . 
 	add a,(iy+00dh)		;6d54	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6d57	fd 77 0d 	. w . 
-	ld (ix+005h),000h		;6d5a	dd 36 05 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_WAIT_READY		;6d5a	dd 36 05 00
 	ld (ix+006h),000h		;6d5e	dd 36 06 00 	. 6 . . 
 	ld (ix+007h),000h		;6d62	dd 36 07 00 	. 6 . . 
 	ld a,(ix+000h)		;6d66	dd 7e 00 	. ~ . 
@@ -8569,7 +8575,7 @@ l6d78h:
 	ld a,0fch		;6da7	3e fc 	> . 
 	add a,(iy+00dh)		;6da9	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6dac	fd 77 0d 	. w . 
-	ld (ix+005h),001h		;6daf	dd 36 05 01 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_KEEP		;6daf	dd 36 05 01
 	jp l6de1h		;6db3	c3 e1 6d 	. . m 
 l6db6h:
 	ld (iy+00ah),00ch		;6db6	fd 36 0a 0c 	. 6 . . 
@@ -8585,7 +8591,7 @@ l6db6h:
 	ld (iy+009h),a		;6dd5	fd 77 09 	. w . 
 	add a,004h		;6dd8	c6 04 	. . 
 	ld (iy+00dh),a		;6dda	fd 77 0d 	. w . 
-	ld (ix+005h),000h		;6ddd	dd 36 05 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_WAIT_READY		;6ddd	dd 36 05 00
 l6de1h:
     ; Vaus shrinking
 	inc (ix+VAUS_TABLE_IDX_SIZING_STEP)		;6de1	dd 34 01
@@ -8607,16 +8613,21 @@ l6dffh:
 	jp l690fh		;6e0b	c3 0f 69 	. . i 
 l6e0eh:
     ; VAUS_ACTION_STATE_EXPLODING
-	ld (ix+006h),000h		;6e0e	dd 36 06 00 	. 6 . . 
-	inc (ix+003h)		;6e12	dd 34 03 	. 4 . 
-	ld a,(ix+003h)		;6e15	dd 7e 03 	. ~ . 
-	cp 00ch		;6e18	fe 0c 	. . 
-	ret nz			;6e1a	c0 	. 
-	ld (ix+003h),000h		;6e1b	dd 36 03 00 	. 6 . . 
-	inc (ix+004h)		;6e1f	dd 34 04 	. 4 . 
-	ld a,(ix+004h)		;6e22	dd 7e 04 	. ~ . 
-	cp 001h		;6e25	fe 01 	. . 
-	jp nz,l6e64h		;6e27	c2 64 6e 	. d n 
+	ld (ix+006h), 0		        ;6e0e	dd 36 06 00 	. 6 . . 
+    
+    ; It uses two variables VAUS_TABLE_IDX_DESTRUCTION_STEP1 and
+    ; VAUS_TABLE_IDX_DESTRUCTION_STEP2 to control the animation steps.
+	inc (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP1)		;6e12	dd 34 03
+	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP1)		;6e15	dd 7e 03
+	cp 12		                                    ;6e18	fe 0c
+	ret nz			                                ;6e1a	c0
+	
+    ld (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP1), 0		;6e1b	dd 36 03 00
+	inc (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6e1f	dd 34 04
+	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6e22	dd 7e 04
+	cp 1		                                    ;6e25	fe 01
+	jp nz,l6e64h		                            ;6e27	c2 64 6e
+
 	ld a,(iy+005h)		;6e2a	fd 7e 05 	. ~ . 
 	add a,010h		;6e2d	c6 10 	. . 
 	ld (iy+009h),a		;6e2f	fd 77 09 	. w . 
@@ -8754,7 +8765,7 @@ l6f31h:
 	add a,(iy+00dh)		;6f70	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6f73	fd 77 0d 	. w . 
 	inc (ix+007h)		;6f76	dd 34 07 	. 4 . 
-	ld (ix+005h),001h		;6f79	dd 36 05 01 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING),VAUS_ACTION_STATE_KEEP		;6f79	dd 36 05 01
 	jp l690fh		;6f7d	c3 0f 69 	. . i 
 l6f80h:
 	ld a,004h		;6f80	3e 04 	> . 
@@ -8784,7 +8795,7 @@ l6fb6h:
 	ld a,(ix+007h)		;6fc9	dd 7e 07 	. ~ . 
 	cp 004h		;6fcc	fe 04 	. . 
 	jp nz,l690fh		;6fce	c2 0f 69 	. . i 
-	ld (ix+005h),000h		;6fd1	dd 36 05 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING),VAUS_ACTION_STATE_WAIT_READY		;6fd1	dd 36 05 00 	. 6 . . 
 	ld (ix+007h),000h		;6fd5	dd 36 07 00 	. 6 . . 
 	ld (ix+000h),001h		;6fd9	dd 36 00 01 	. 6 . . 
 	jp l690fh		;6fdd	c3 0f 69 	. . i 
@@ -11711,7 +11722,7 @@ CHECK_UPDATE_BALL_GLUE_AND_SKEWNESS:
 	ld c, 7 		;9bbf	0e 07
 	ld b, 41		;9bc1	06 29
 
-	ld a,(VAUS_SIZING_STATE)		    ;9bc3	3a 50 e5
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)		    ;9bc3	3a 50 e5
 	cp VAUS_ACTION_STATE_ENLARGING		;9bc6	fe 02
 	jp nz,l9bcfh		                ;9bc8	c2 cf 9b
     ; If Vaus is enlarged, set C=10, B=57
@@ -15051,7 +15062,7 @@ lb292h:
 
 ; SEGUIR
 sub_b2a7h:
-	ld a,(VAUS_SIZING_STATE)		    ;b2a7	3a 50 e5
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)		    ;b2a7	3a 50 e5
 
 	cp VAUS_ACTION_STATE_ENLARGING		;b2aa	fe 02
 	jr nz,lb2b2h		                ;b2ac	20 04
