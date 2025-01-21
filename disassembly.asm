@@ -159,6 +159,8 @@ VAUS_TABLE_IDX_SIZING: equ 5
 
 VAUS_TABLE_IDX_HAS_LASER: equ 6
 
+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP: equ 7
+
 
 
 
@@ -8508,11 +8510,12 @@ l6cceh:
 	ld a,0fch		;6cf2	3e fc 	> . 
 	add a,(iy+00dh)		;6cf4	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6cf7	fd 77 0d 	. w . 
-	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_KEEP		;6cfa	dd 36 05 01
-	inc (ix+007h)		;6cfe	dd 34 07 	. 4 . 
-	ld a,(ix+007h)		;6d01	dd 7e 07 	. ~ . 
-	cp 002h		;6d04	fe 02 	. . 
-	jp nz,l690fh		;6d06	c2 0f 69 	. . i 
+	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_KEEP	;6cfa	dd 36 05 01
+	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6cfe	dd 34 07
+	ld a,(ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6d01	dd 7e 07
+	cp 2		                                            ;6d04	fe 02
+	jp nz,l690fh		                                    ;6d06	c2 0f 69
+
 	ld (iy+003h),008h		;6d09	fd 36 03 08 	. 6 . . 
 	ld (iy+007h),00eh		;6d0d	fd 36 07 0e 	. 6 . . 
 	ld (iy+00bh),008h		;6d11	fd 36 0b 08 	. 6 . . 
@@ -8529,7 +8532,7 @@ l6d2ch:
 	ld a,00ch		;6d34	3e 0c 	> . 
 	add a,(iy+009h)		;6d36	fd 86 09 	. . . 
 	ld (iy+009h),a		;6d39	fd 77 09 	. w . 
-	inc (ix+007h)		;6d3c	dd 34 07 	. 4 . 
+	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6d3c	dd 34 07
 	jp l690fh		;6d3f	c3 0f 69 	. . i 
 l6d42h:
 	ld a,0fch		;6d42	3e fc 	> . 
@@ -8543,7 +8546,7 @@ l6d42h:
 	ld (iy+00dh),a		;6d57	fd 77 0d 	. w . 
 	ld (ix+VAUS_TABLE_IDX_SIZING), VAUS_ACTION_STATE_WAIT_READY		;6d5a	dd 36 05 00
 	ld (ix+006h),000h		;6d5e	dd 36 06 00 	. 6 . . 
-	ld (ix+007h),000h		;6d62	dd 36 07 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP), 0		;6d62	dd 36 07 00
 	ld a,(ix+000h)		;6d66	dd 7e 00 	. ~ . 
 	cp 002h		;6d69	fe 02 	. . 
 	jp nz,l6d71h		;6d6b	c2 71 6d 	. q m 
@@ -8762,8 +8765,8 @@ l6f31h:
 	ld a,0e8h		;6f6e	3e e8 	> . 
 	add a,(iy+00dh)		;6f70	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6f73	fd 77 0d 	. w . 
-	inc (ix+007h)		;6f76	dd 34 07 	. 4 . 
-	ld (ix+VAUS_TABLE_IDX_SIZING),VAUS_ACTION_STATE_KEEP		;6f79	dd 36 05 01
+	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6f76	dd 34 07
+	ld (ix+VAUS_TABLE_IDX_SIZING),VAUS_ACTION_STATE_KEEP	;6f79	dd 36 05 01
 	jp l690fh		;6f7d	c3 0f 69 	. . i 
 l6f80h:
 	ld a,004h		;6f80	3e 04 	> . 
@@ -8780,7 +8783,7 @@ l6f80h:
 	ld (iy+007h),00eh		;6fa4	fd 36 07 0e 	. 6 . . 
 	ld (iy+00bh),008h		;6fa8	fd 36 0b 08 	. 6 . . 
 	ld (iy+00fh),00eh		;6fac	fd 36 0f 0e 	. 6 . . 
-	inc (ix+007h)		;6fb0	dd 34 07 	. 4 . 
+	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fb0	dd 34 07
 	jp l690fh		;6fb3	c3 0f 69 	. . i 
 l6fb6h:
 	ld a,0fch		;6fb6	3e fc 	> . 
@@ -8789,12 +8792,12 @@ l6fb6h:
 	ld a,004h		;6fbe	3e 04 	> . 
 	add a,(iy+00dh)		;6fc0	fd 86 0d 	. . . 
 	ld (iy+00dh),a		;6fc3	fd 77 0d 	. w . 
-	inc (ix+007h)		;6fc6	dd 34 07 	. 4 . 
-	ld a,(ix+007h)		;6fc9	dd 7e 07 	. ~ . 
-	cp 004h		;6fcc	fe 04 	. . 
+	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fc6	dd 34 07
+	ld a,(ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fc9	dd 7e 07
+	cp 4		                                            ;6fcc	fe 04
 	jp nz,l690fh		;6fce	c2 0f 69 	. . i 
-	ld (ix+VAUS_TABLE_IDX_SIZING),VAUS_ACTION_STATE_WAIT_READY		;6fd1	dd 36 05 00 	. 6 . . 
-	ld (ix+007h),000h		;6fd5	dd 36 07 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_SIZING),VAUS_ACTION_STATE_WAIT_READY		;6fd1	dd 36 05 00
+	ld (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP), 0		        ;6fd5	dd 36 07 00
 	ld (ix+000h),001h		;6fd9	dd 36 00 01 	. 6 . . 
 	jp l690fh		;6fdd	c3 0f 69 	. . i 
 l6fe0h:
