@@ -161,6 +161,10 @@ VAUS_TABLE_IDX_HAS_LASER: equ 6
 
 VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP: equ 7
 
+; This two variables control Vaus entering the portal
+VAUS_TABLE_IDX_VAUS_PORTALING_STEP1: equ 8
+VAUS_TABLE_IDX_VAUS_PORTALING_STEP2: equ 9
+
 
 
 
@@ -8161,13 +8165,14 @@ l6ac7h:
 	ret			;6ada	c9 	. 
 l6adbh:
     ; VAUS_ACTION_STATE_THROUGH_PORTAL
-	ld ix,0e553h		;6adb	dd 21 53 e5 	. ! S . 
-	inc (ix+000h)		;6adf	dd 34 00 	. 4 . 
-	ld a,(ix+000h)		;6ae2	dd 7e 00 	. ~ . 
-	cp 00ah		;6ae5	fe 0a 	. . 
+	ld ix,VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1		;6adb	dd 21 53 e5
+	inc (ix+000h)		;6adf	dd 34 00
+	ld a,(ix+000h)		;6ae2	dd 7e 00
+	cp 10		        ;6ae5	fe 0a
 	ret nz			;6ae7	c0 	. 
-	ld (ix+000h),000h		;6ae8	dd 36 00 00 	. 6 . . 
-	ld e,(ix+001h)		;6aec	dd 5e 01 	. ^ . 
+	ld (ix+000h), 0		;6ae8	dd 36 00 00 Reset VAUS_TABLE_IDX_VAUS_PORTALING_STEP1
+
+	ld e,(ix+001h)		;6aec	dd 5e 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
 	sla e		;6aef	cb 23 	. # 
 	ld d,000h		;6af1	16 00 	. . 
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)		;6af3	3a 51 e5 	: Q . 
@@ -8185,10 +8190,10 @@ l6adbh:
 	ld de,SPR_PARAMS_BASE		;6b0b	11 cd e0 	. . . 
 	ld bc,0000ch		;6b0e	01 0c 00 	. . . 
 	ldir		;6b11	ed b0 	. . 
-	inc (ix+001h)		;6b13	dd 34 01 	. 4 . 
-	ld a,(ix+001h)		;6b16	dd 7e 01 	. ~ . 
-	cp 004h		;6b19	fe 04 	. . 
-	ret nz			;6b1b	c0 	. 
+	inc (ix+001h)		;6b13	dd 34 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	ld a,(ix+001h)		;6b16	dd 7e 01 	VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	cp 4		        ;6b19	fe 04
+	ret nz			    ;6b1b	c0
 
 l6b1ch:
 	ld a,VAUS_ACTION_STATE_WAIT_READY		;6b1c	3e 00
