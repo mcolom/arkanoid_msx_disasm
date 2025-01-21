@@ -154,12 +154,10 @@ VAUS_TABLE_IDX_LASERING_STEP: equ 2
 VAUS_TABLE_IDX_DESTRUCTION_STEP1: equ 3
 VAUS_TABLE_IDX_DESTRUCTION_STEP2: equ 4
 
-
 VAUS_TABLE_IDX_SIZING: equ 5
 ; It can be VAUS_ACTION_STATE_ENLARGING or VAUS_ACTION_STATE_SHRINKING
-; The shape of Vaus
-; 0, 1: normal
-; 2: enlarged
+
+VAUS_TABLE_IDX_HAS_LASER: equ 6
 
 
 
@@ -8170,8 +8168,8 @@ l6adbh:
 	ld e,(ix+001h)		;6aec	dd 5e 01 	. ^ . 
 	sla e		;6aef	cb 23 	. # 
 	ld d,000h		;6af1	16 00 	. . 
-	ld a,(0e551h)		;6af3	3a 51 e5 	: Q . 
-	cp 001h		;6af6	fe 01 	. . 
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)		;6af3	3a 51 e5 	: Q . 
+	cp 1		;6af6	fe 01 	. . 
 	jp z,l6b48h		;6af8	ca 48 6b 	. H k 
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)		;6afb	3a 50 e5 	: P . 
 	cp 000h		;6afe	fe 00 	. . 
@@ -8613,7 +8611,7 @@ l6dffh:
 	jp l690fh		;6e0b	c3 0f 69 	. . i 
 l6e0eh:
     ; VAUS_ACTION_STATE_EXPLODING
-	ld (ix+006h), 0		        ;6e0e	dd 36 06 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_HAS_LASER), 0		        ;6e0e	dd 36 06 00
     
     ; It uses two variables VAUS_TABLE_IDX_DESTRUCTION_STEP1 and
     ; VAUS_TABLE_IDX_DESTRUCTION_STEP2 to control the animation steps.
@@ -8734,7 +8732,7 @@ l6f12h:
 
 l6f31h:
     ; VAUS_ACTION_STATE_LASER
-	ld (ix+006h),001h		;6f31	dd 36 06 01 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_HAS_LASER), 1		;6f31	dd 36 06 01
 	ld a,(ix+005h)		;6f35	dd 7e 05 	. ~ . 
 	cp 002h		;6f38	fe 02 	. . 
 	jp z,l6fe0h		;6f3a	ca e0 6f 	. . o 
@@ -15075,11 +15073,11 @@ lb2b2h:
 	jr nz,lb2c0h		;b2b3	20 0b 	  . 
     
     ; Vaus is at normal size
-	
-    ld a,(0e551h)		            ;b2b5	3a 51 e5
-	or a			                ;b2b8	b7
-	jr z,lb2c0h		                ;b2b9	28 05
-	ld a,VAUS_ACTION_STATE_UNLASER	;b2bb	3e 05
+
+    ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)    ;b2b5	3a 51 e5
+	or a			                                ;b2b8	b7
+	jr z,lb2c0h		                                ;b2b9	28 05
+	ld a,VAUS_ACTION_STATE_UNLASER	                ;b2bb	3e 05
 lb2bdh:
     ; Set Vaus action state
 	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;b2bd	32 4b e5
