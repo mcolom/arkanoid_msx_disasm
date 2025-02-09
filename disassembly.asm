@@ -438,7 +438,7 @@ CLEAR_SCREEN:
 	call FILVRM		                ;4239	cd 56 00
 
     ; Clear memory
-	ld hl,FALLING_CAPSULE_SPR_PARAMS		;423c	21 c9 e0
+	ld hl,SPR_PARAMS_BASE - SPR_PARAMS_LEN	;423c	21 c9 e0
 	ld de,0e0cah		;423f	11 ca e0
 	ld bc,128		    ;4242	01 80 00
 	ld (hl),192		    ;4245	36 c0
