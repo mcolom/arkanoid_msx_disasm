@@ -2366,7 +2366,7 @@ l4e22h:
 l4e65h:
 	call sub_5c15h		;4e65	cd 15 5c 	. . \ 
 	call sub_5d79h		;4e68	cd 79 5d 	. y ] 
-	call sub_5165h		;4e6b	cd 65 51 	. e Q 
+	call UPDATE_SPRITE_PATTERNS_ON_LEVEL		;4e6b	cd 65 51 	. e Q 
 	jp l4e74h		;4e6e	c3 74 4e 	. t N 
 l4e71h:
 	call sub_5180h		;4e71	cd 80 51 	. . Q 
@@ -2700,8 +2700,8 @@ VAUS_AND_READY_SPRITE_TABLE:
     db 0x80, 0x64, 0x68, 0x0f; "AD"
     db 0x80, 0x74, 0x6c, 0x0f; "Y "
 
-; SEGUIR    
-sub_5165h:
+; Update the sprite patterns according to the current level
+UPDATE_SPRITE_PATTERNS_ON_LEVEL:
 	; HL = LEVEL & 3
     ld a,(LEVEL)	;5165	3a 1b e0
 	and 3		    ;5168	e6 03
@@ -2711,15 +2711,15 @@ sub_5165h:
 	; HL = 2 * (LEVEL & 3)
     add hl,hl			;516d	29
     
-    ; HL = SPRITE_DATA_POINTERS + 2 * (LEVEL & 3)
-	ld de,SPRITE_DATA_POINTERS	;516e	11 15 58
+    ; HL = SPRITE_PATTERN_POINTERS + 2 * (LEVEL & 3)
+	ld de,SPRITE_PATTERN_POINTERS	;516e	11 15 58
 	add hl,de			;5171	19
 
-    ; E = SPRITE_DATA_POINTERS[2 * (LEVEL & 3)]
+    ; E = SPRITE_PATTERN_POINTERS[2 * (LEVEL & 3)]
 	ld e,(hl)			;5172	5e
 	inc hl			    ;5173	23
     
-    ; D = SPRITE_DATA_POINTERS[2 * (LEVEL & 3) + 1]
+    ; D = SPRITE_PATTERN_POINTERS[2 * (LEVEL & 3) + 1]
 	ld d,(hl)			;5174	56
 
     ; HL points to the sprite pattern data pointer
@@ -4032,19 +4032,19 @@ l57dbh:
 	ld a,(hl)			;5813	7e 	~ 
 	ld a,a			;5814	7f 	 
 
-SPRITE_DATA_POINTERS:
-    dw SPRITE_DATA1
-    dw SPRITE_DATA2
-    dw SPRITE_DATA3    
-    dw SPRITE_DATA4
-SPRITE_DATA1:
-include 'sprite_data1.asm'
-SPRITE_DATA2:
-include 'sprite_data2.asm'
-SPRITE_DATA3:
-include 'sprite_data3.asm'
-SPRITE_DATA4:
-include 'sprite_data4.asm'
+SPRITE_PATTERN_POINTERS:
+    dw SPRITE_PATTERN1
+    dw SPRITE_PATTERN2
+    dw SPRITE_PATTERN3    
+    dw SPRITE_PATTERN4
+SPRITE_PATTERN1:
+include 'sprite_pattern1.asm'
+SPRITE_PATTERN2:
+include 'sprite_pattern2.asm'
+SPRITE_PATTERN3:
+include 'sprite_pattern3.asm'
+SPRITE_PATTERN4:
+include 'sprite_pattern4.asm'
 
 
 ; Draw the background
