@@ -2616,7 +2616,7 @@ l50f0h:
 	jr 0x5075		;50f0	18 83 	. . 
 	jr 0x50d7		;50f2	18 e3 	. . 
 l50f4h:
-	jr l5119h		;50f4	18 23 	. # 
+	jr 0x5119		;50f4	18 23 	. # 
 	add hl,de			;50f6	19 	. 
 	ld h,e			;50f7	63 	c 
 	add hl,de			;50f8	19 	. 
@@ -2631,7 +2631,6 @@ l50ffh:
 	ld a,(de)			;5100	1a 	. 
 
 ; Draws the "ROUND x" message
-; Seguir
 DRAW_ROUND_MESSAGE:
     ; Write "ROUND "
 	ld hl,ROUND_STR		;5101	21 44 51
@@ -2639,38 +2638,48 @@ DRAW_ROUND_MESSAGE:
 	ld bc,5		        ;5107	01 05 00
 	call LDIRVM		    ;510a	cd 5c 00
 l510dh:
-    ;ToDo: complete with comments the level's increment
+    ; A = LEVEL_DISP + 1
 	ld a,(LEVEL_DISP)		;510d	3a 1c e0
 	add a,001h		        ;5110	c6 01
 	daa			            ;5112	27
+    
+    ; E = LEVEL_DISP + 1
 	ld e,a			        ;5113	5f
 	push de			        ;5114	d5
+    
+    ; A = A >> 4
+    ; This is to only consider the high nibble and put it in the
+    ; low part of the byte
 	srl a		            ;5115	cb 3f
-	srl a		;5117	cb 3f 	. ? 
-l5119h:
-	srl a		;5119	cb 3f 	. ? 
-	srl a		;511b	cb 3f 	. ? 
-	add a,030h		;511d	c6 30 	. 0 
-	cp 030h		;511f	fe 30 	. 0 
-	jp nz,l5131h		;5121	c2 31 51 	. 1 Q 
-l5124h:
-	pop de			;5124	d1 	. 
-	ld a,e			;5125	7b 	{ 
-	and 00fh		;5126	e6 0f 	. . 
-	add a,030h		;5128	c6 30 	. 0 
-	ld hl,01952h		;512a	21 52 19 	! R . 
-	call WRTVRM		;512d	cd 4d 00 	. M . 
-	ret			;5130	c9 	. 
-l5131h:
-	ld hl,01952h		;5131	21 52 19 	! R . 
-	call WRTVRM		;5134	cd 4d 00 	. M . 
-	pop de			;5137	d1 	. 
-	ld a,e			;5138	7b 	{ 
-	and 00fh		;5139	e6 0f 	. . 
-	add a,030h		;513b	c6 30 	. 0 
-	ld hl,01953h		;513d	21 53 19 	! S . 
-	call WRTVRM		;5140	cd 4d 00 	. M . 
-	ret			;5143	c9 	. 
+	srl a		            ;5117	cb 3f
+	srl a		            ;5119	cb 3f
+	srl a		            ;511b	cb 3f
+	
+    ; Convert to an ASCII character
+    add a,030h		        ;511d	c6 30
+
+    ; Check if it's a heading zero
+	cp 030h		        ;511f	fe 30
+	jp nz,l5131h		;5121	c2 31 51
+l5124h: ; It's a zero: just write the non-zero number
+	pop de			;5124	d1  E = LEVEL_DISP + 1
+	ld a,e			;5125	7b  A = LEVEL_DISP + 1
+    ; A = (LEVEL_DISP + 1) & 00001111b + 0x30
+	and 00fh		;5126	e6 0f
+	add a,030h		;5128	c6 30
+	ld hl,0x1800 + 18 + 10*32	;512a	21 52 19    Locate at [18, 10]
+	call WRTVRM		;512d	cd 4d 00
+	ret			    ;5130	c9
+l5131h: ; It isn't a zero: write both numbers
+	ld hl,0x1800 + 18 + 10*32	;5131	21 52 19    Locate at [18, 10]
+	call WRTVRM		;5134	cd 4d 00
+	pop de			;5137	d1
+	ld a,e			;5138	7b
+	and 00fh		;5139	e6 0f
+	add a,030h		;513b	c6 30
+	ld hl,0x1800 + 19 + 10*32	;513d	21 53 19    Locate at [19, 10]
+	call WRTVRM		;5140	cd 4d 00
+	ret			    ;5143	c9
 
 ROUND_STR:
     db "ROUND"
