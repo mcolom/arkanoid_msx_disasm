@@ -183,11 +183,11 @@ ROM_START:
     ; Fill title's screen pattern table
 	call FILL_COLORS_ALL_SCREEN		;40b1	cd ff 41
 
-    ; Fill sprite table
-	ld hl,SPRITE_DEFINITIONS		;40b4	21 84 86 	! . . 
-	ld de,03800h		;40b7	11 00 38 	. . 8 
-	ld bc,00800h		;40ba	01 00 08 	. . . 
-	call LDIRVM		;40bd	cd 5c 00 	. \ . 
+    ; Fill sprite pattern table
+	ld hl,SPRITE_DEFINITIONS		    ;40b4	21 84 86
+	ld de,VRAM_SPRITES_PATTERN_TABLE	;40b7	11 00 38
+	ld bc, 0x800		                ;40ba	01 00 08
+	call LDIRVM		                    ;40bd	cd 5c 00
 
     ; ToDo: what is this function?
     ; Without it, it hangs when the ball hits a brick
@@ -658,7 +658,7 @@ VDP_BASE_POINTERS:
     dw 0x2000 ; Color table
     dw 0x0000 ; Pattern table
     dw 0x1b00 ; Sprite attribute table
-    dw 0x3800 ; Sprite pattern table
+    dw VRAM_SPRITES_PATTERN_TABLE ; Sprite pattern table
 
 ; Wait HL ints
 DELAY_HL_TICKS:
@@ -2702,21 +2702,35 @@ VAUS_AND_READY_SPRITE_TABLE:
 
 ; SEGUIR    
 sub_5165h:
-	ld a,(LEVEL)		;5165	3a 1b e0 	: . . 
-	and 003h		;5168	e6 03 	. . 
-	ld l,a			;516a	6f 	o 
-	ld h,000h		;516b	26 00 	& . 
-	add hl,hl			;516d	29 	) 
-	ld de,l5815h		;516e	11 15 58 	. . X 
-	add hl,de			;5171	19 	. 
-	ld e,(hl)			;5172	5e 	^ 
-	inc hl			;5173	23 	# 
-	ld d,(hl)			;5174	56 	V 
-	ex de,hl			;5175	eb 	. 
-	ld de,03e00h		;5176	11 00 3e 	. . > 
-	ld bc,00100h		;5179	01 00 01 	. . . 
-	call LDIRVM		;517c	cd 5c 00 	. \ . 
-	ret			;517f	c9 	. 
+	; HL = LEVEL & 3
+    ld a,(LEVEL)	;5165	3a 1b e0
+	and 3		    ;5168	e6 03
+	ld l,a			;516a	6f
+	ld h, 0		    ;516b	26 00
+    
+	; HL = 2 * (LEVEL & 3)
+    add hl,hl			;516d	29
+    
+    ; HL = SPRITE_DATA_POINTERS + 2 * (LEVEL & 3)
+	ld de,SPRITE_DATA_POINTERS	;516e	11 15 58
+	add hl,de			;5171	19
+
+    ; E = SPRITE_DATA_POINTERS[2 * (LEVEL & 3)]
+	ld e,(hl)			;5172	5e
+	inc hl			    ;5173	23
+    
+    ; D = SPRITE_DATA_POINTERS[2 * (LEVEL & 3) + 1]
+	ld d,(hl)			;5174	56
+
+    ; HL points to the sprite pattern data pointer
+	ex de,hl			;5175	eb
+
+    ; Copy 4 sprite's pattern data to VRAM
+    ; We copy a total of 4 sprites * 64 bytes = 256 bytes
+	ld de,VRAM_SPRITES_PATTERN_TABLE + 24 * LEN_SPRITE_PATTERN    ;5176	11 00 3e
+	ld bc, 4 * LEN_SPRITE_PATTERN		                          ;5179	01 00 01
+	call LDIRVM		                                              ;517c	cd 5c 00
+	ret			                                                  ;517f	c9
 
 ; SEGUIR
 sub_5180h:
@@ -4017,14 +4031,16 @@ l57dbh:
 	ld a,l			;5812	7d 	} 
 	ld a,(hl)			;5813	7e 	~ 
 	ld a,a			;5814	7f 	 
-l5815h:
-	dec e			;5815	1d 	. 
-	ld e,b			;5816	58 	X 
-	dec e			;5817	1d 	. 
-	ld e,c			;5818	59 	Y 
-	defb 0fdh,059h,0bdh	;illegal sequence		;5819	fd 59 bd 	. Y . 
-	ld e,d			;581c	5a 	Z 
-	ld bc,00303h		;581d	01 03 03 	. . . 
+
+SPRITE_DATA_POINTERS:
+    dw SPRITE_DATA1
+    dw SPRITE_DATA2
+    dw SPRITE_DATA3    
+    dw SPRITE_DATA4
+
+
+SPRITE_DATA1:
+	ld bc,00303h	;581d	01 03 03 	. . . 
 	rlca			;5820	07 	. 
 	rlca			;5821	07 	. 
 	rrca			;5822	0f 	. 
@@ -4240,6 +4256,8 @@ l5913h:
 	cp 03ch		;5917	fe 3c 	. < 
 	jp nz,0fcfeh		;5919	c2 fe fc 	. . . 
 	nop			;591c	00 	. 
+
+SPRITE_DATA2:
 	ld bc,00301h		;591d	01 01 03 	. . . 
 	ld (bc),a			;5920	02 	. 
 	ld b,004h		;5921	06 04 	. . 
@@ -4432,6 +4450,8 @@ l59d6h:
 	nop			;59fa	00 	. 
 	nop			;59fb	00 	. 
 	nop			;59fc	00 	. 
+
+SPRITE_DATA3:
 	nop			;59fd	00 	. 
 	inc bc			;59fe	03 	. 
 	rlca			;59ff	07 	. 
@@ -4601,6 +4621,8 @@ l5a91h:
 	nop			;5aba	00 	. 
 	nop			;5abb	00 	. 
 	nop			;5abc	00 	. 
+
+SPRITE_DATA4:
 	ld (bc),a			;5abd	02 	. 
 	rlca			;5abe	07 	. 
 	rrca			;5abf	0f 	. 
