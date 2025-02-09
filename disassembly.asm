@@ -13940,7 +13940,7 @@ lb1cah:
 lb1e6h:
 	ld a,001h		;b1e6	3e 01 	> . 
 	ld (0e320h),a		;b1e8	32 20 e3 	2   . 
-	call sub_b2a7h		;b1eb	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b1eb	cd a7 b2 	. . . 
     
     ; Loop over 3 balls
 	ld b,3		                ;b1ee	06 03
@@ -13972,7 +13972,7 @@ lb203h:
     ; Dead code?
 	ld a,GLUING_STATE_STICKY	;b215	3e 01
 	ld (GLUING_STATUS),a		;b217	32 24 e3
-	call sub_b2a7h		    ;b21a	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		    ;b21a	cd a7 b2 	. . . 
 	ret			;b21d	c9 	. 
 
     ; Dead code?
@@ -13985,7 +13985,7 @@ lb203h:
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b225	3e 02
 	ld (GLUING_STATUS),a		            ;b227	32 24 e3
 lb22ah:
-	call sub_b2a7h		;b22a	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b22a	cd a7 b2 	. . . 
     
     ; Set Vaus is enlarging
 	ld a,VAUS_ACTION_STATE_ENLARGING	;b22d	3e 02
@@ -14007,7 +14007,7 @@ lb22ah:
 lb247h:
 	ld a,002h		;b247	3e 02 	> . 
 	ld (EXTRA_BALLS),a		;b249	32 25 e3 	2 % . 
-	call sub_b2a7h		;b24c	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b24c	cd a7 b2 	. . . 
 	call sub_b2c1h		;b24f	cd c1 b2 	. . . 
 	ret			;b252	c9 	. 
     
@@ -14019,7 +14019,7 @@ lb247h:
 	ld a,GLUING_STATE_NO_LONGER_STICKY  ;b25a	3e 02
 	ld (GLUING_STATUS),a		        ;b25c	32 24 e3
 lb25fh:
-	call sub_b2a7h		;b25f	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b25f	cd a7 b2 	. . . 
     
     ; Set Vaus is obtaining lasers
 	ld a,VAUS_ACTION_STATE_LASER	;b262	3e 04
@@ -14041,7 +14041,7 @@ lb25fh:
 lb27dh:
 	ld a,001h		;b27d	3e 01 	> . 
 	ld (PORTAL_OPEN),a		;b27f	32 26 e3 	2 & . 
-	call sub_b2a7h		;b282	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b282	cd a7 b2 	. . . 
 	ret			;b285	c9 	. 
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b286	3a 24 e3
@@ -14051,7 +14051,7 @@ lb27dh:
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b28d	3e 02
 	ld (GLUING_STATUS),a		            ;b28f	32 24 e3
 lb292h:
-	call sub_b2a7h		;b292	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b292	cd a7 b2 	. . . 
 	ld a,001h		;b295	3e 01 	> . 
 	ld (0e327h),a		;b297	32 27 e3 	2 ' . 
 	ld hl,LIVES		;b29a	21 1d e0 	! . . 
@@ -14062,31 +14062,34 @@ lb292h:
 	call ADD_SOUND		;b2a3	cd ef 5b
 	ret			        ;b2a6	c9
 
-; SEGUIR
-sub_b2a7h:
+; Get Vaus back to normal state: no enlarged, no lasers
+VAUS_GET_NORMAL_STATE:
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)		    ;b2a7	3a 50 e5
 
 	cp VAUS_ACTION_STATE_ENLARGING		;b2aa	fe 02
 	jr nz,lb2b2h		                ;b2ac	20 04
+    ; Vaus is enlarged, so make it normal size
 	ld a,VAUS_ACTION_STATE_SHRINKING	;b2ae	3e 03
 	jr lb2bdh		                    ;b2b0	18 0b
 lb2b2h:
     ; Vaus is not large
     
-	or a			;b2b2	b7 	. 
-	jr nz,lb2c0h		;b2b3	20 0b 	  . 
+    ; Is is enlarging? Is so, just exit
+	or a			;b2b2	b7
+	jr nz,lb2c0h	;b2b3	20 0b
     
-    ; Vaus is at normal size
-
-    ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)    ;b2b5	3a 51 e5
-	or a			                                ;b2b8	b7
-	jr z,lb2c0h		                                ;b2b9	28 05
-	ld a,VAUS_ACTION_STATE_UNLASER	                ;b2bb	3e 05
+    ; Vaus is at normal size. Check if it's got lasers
+    ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)        ;b2b5	3a 51 e5
+	or a			                                    ;b2b8	b7
+	jr z,lb2c0h		                                    ;b2b9	28 05   No lasers, just exit
+    
+    ; It's got lasers: remove them
+	ld a,VAUS_ACTION_STATE_UNLASER	                    ;b2bb	3e 05
 lb2bdh:
     ; Set Vaus action state
 	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;b2bd	32 4b e5
 lb2c0h:
-	ret			                    ;b2c0	c9
+	ret			                                        ;b2c0	c9
 
 ; SEGUIR
 sub_b2c1h:
