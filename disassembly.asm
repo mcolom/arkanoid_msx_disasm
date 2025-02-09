@@ -314,11 +314,12 @@ l4158h:
 	ld bc,00004h		;4189	01 04 00 	. . . 
 	ldir		;418c	ed b0 	. . 
 l418eh:
-	ld hl,VRAM_SPRITES_ATTRIB_TABLE		;418e	21 00 1b 	! . . 
-	call SETWRT		;4191	cd 53 00 	. S . 
-	ld hl,SPRITE_ATTRIBS_AREA		;4194	21 8d e1 	! . . 
-	ld a,(VDP_WRITE)		;4197	3a 07 00 	: . . 
-	ld c,a			;419a	4f 	O 
+    ; Write sprite attribs in RAM to the VDP
+	ld hl,VRAM_SPRITES_ATTRIB_TABLE		    ;418e	21 00 1b
+	call SETWRT		                        ;4191	cd 53 00
+	ld hl,SPRITE_ATTRIBS_AREA		        ;4194	21 8d e1
+	ld a,(VDP_WRITE)		                ;4197	3a 07 00
+	ld c,a			                        ;419a	4f
 	ld b,TOTAL_SPRITES * SPR_PARAMS_LEN 	;419b	06 80   32 sprites, each entry 4 bytes
 l419dh:
 	outi		;419d	ed a3 	. . 
