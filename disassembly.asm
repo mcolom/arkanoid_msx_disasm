@@ -448,6 +448,9 @@ CLEAR_SCREEN:
 VDP_HOOK_HANDLER:
 	call RDVDP		;424a	cd 3e 01 	. > . 
 	call sub_b594h		;424d	cd 94 b5 	. . . 
+    
+    ; ToDo: read keyboard matrix
+    
 	ld a,006h		;4250	3e 06 	> . 
 	call SNSMAT		;4252	cd 41 01 	. A . 
 	and 004h		;4255	e6 04 	. . 
@@ -510,7 +513,7 @@ l427ch:
 	bit 1,b		;42a2	cb 48
 	jp z,l42bbh		;42a4	ca bb 42
     ; Check if GRAPH key is pressed...
-	bit 5,b		;42a7	cb 68
+	bit 5,b		    ;42a7	cb 68
 	jp z,l42bbh		;42a9	ca bb 42
     
     ; Increment the number of key presses, for the cheat
@@ -562,14 +565,15 @@ l42d9h:
 	xor a			;42e5	af 	. 
 	ld (GAME_TRANSITION_ACTION),a		;42e6	32 0a e0 	2 . . 
 
-	ld hl,TITLE_SCREEN_ACTION		;42e9	21 3c e5 	! < . 
-	ld de,0e53dh		;42ec	11 3d e5 	. = . 
-	ld (hl),000h		;42ef	36 00 	6 . 
-	ld bc,00007h		;42f1	01 07 00 	. . . 
-	ldir		;42f4	ed b0 	. . 
+    ; Clear memory
+	ld hl,TITLE_SCREEN_ACTION		;42e9	21 3c e5
+	ld de,TITLE_SCREEN_ACTION+1		;42ec	11 3d e5
+	ld (hl),000h		            ;42ef	36 00
+	ld bc,7		                    ;42f1	01 07 00
+	ldir		                    ;42f4	ed b0
 l42f6h:
 	ld a,000h		;42f6	3e 00 	> . 
-	ld (0e00ch),a		;42f8	32 0c e0 	2 . . 
+	ld (0e00ch),a		;42f8	32 0c e0 	2 . .    ToDo: what is this var?
 	ret			;42fb	c9 	. 
 
 l42fch:
@@ -1924,12 +1928,12 @@ DRAW_TITLE_SCREEN:
     
 	jp z,l4ca2h		                            ;4ba7	ca a2 4c
     
-    ; ToDo: what is this var?
-    ld a, 0		;4baa	3e 00 	> . 
-	ld (0f3ebh),a		;4bac	32 eb f3 	2 . . 
-    
-	call CHGCLR		;4baf	cd 62 00 	. b . 
-	call CLEAR_SCREEN		;4bb2	cd 27 42 	. ' B 
+    ; Set border color to black and clear the screen
+    ld a, 0		        ;4baa	3e 00
+	ld (BDRCLR),a		;4bac	32 eb f3
+
+	call CHGCLR		    ;4baf	cd 62 00
+	call CLEAR_SCREEN	;4bb2	cd 27 42
 
     ; Draw the title's screen
 
@@ -1960,7 +1964,7 @@ DRAW_TITLE_SCREEN:
     call DRAW_UP_SCORES		;4bde	cd e0 4f
 
     ; Draw Arkanoid logo
-	ld hl,l543eh		;4be1	21 3e 54
+	ld hl,ARKANOID_LOGO_CHARS		;4be1	21 3e 54
 	ld de,018c0h		;4be4	11 c0 18
 	ld bc,00060h		;4be7	01 60 00
 	call LDIRVM		    ;4bea	cd 5c 00
@@ -1994,8 +1998,8 @@ DRAW_TITLE_SCREEN:
 	call LDIRVM		                    ;4c27	cd 5c 00
 
     ; Draw upper half of Taito's logo
-    ; ToDo: give l5509h a name
-	ld hl,l5509h		;4c2a	21 09 55
+    ; ToDo: give TAITO_HALF1_LOGO_CHARS a name
+	ld hl,TAITO_HALF1_LOGO_CHARS		;4c2a	21 09 55
 	ld de,01a2bh		;4c2d	11 2b 1a
 	ld bc,0000bh		;4c30	01 0b 00
 	call LDIRVM		    ;4c33	cd 5c 00
@@ -2046,7 +2050,7 @@ l4c73h:
 
     ; Print "GAME START"
 	ld hl,GAME_START_STR	;4c78	21 cc 54
-	ld de,019a8h		    ;4c7b	11 a8 19
+	ld de,019a8h		    ;4c7b	11 a8 19 ToDo: write this as a locate
 	ld bc,00011h		    ;4c7e	01 11 00
 	call LDIRVM		        ;4c81	cd 5c 00
 
@@ -2627,6 +2631,7 @@ l50ffh:
 	ld a,(de)			;5100	1a 	. 
 
 ; Draws the "ROUND x" message
+; Seguir
 DRAW_ROUND_MESSAGE:
     ; Write "ROUND "
 	ld hl,ROUND_STR		;5101	21 44 51
@@ -2634,6 +2639,7 @@ DRAW_ROUND_MESSAGE:
 	ld bc,5		        ;5107	01 05 00
 	call LDIRVM		    ;510a	cd 5c 00
 l510dh:
+    ;ToDo: complete with comments the level's increment
 	ld a,(LEVEL_DISP)		;510d	3a 1c e0
 	add a,001h		        ;5110	c6 01
 	daa			            ;5112	27
@@ -2684,7 +2690,8 @@ VAUS_AND_READY_SPRITE_TABLE:
     db 0x80, 0x54, 0x64, 0x0f; "RE"
     db 0x80, 0x64, 0x68, 0x0f; "AD"
     db 0x80, 0x74, 0x6c, 0x0f; "Y "
-    
+
+; SEGUIR    
 sub_5165h:
 	ld a,(LEVEL)		;5165	3a 1b e0 	: . . 
 	and 003h		;5168	e6 03 	. . 
@@ -2701,6 +2708,8 @@ sub_5165h:
 	ld bc,00100h		;5179	01 00 01 	. . . 
 	call LDIRVM		;517c	cd 5c 00 	. \ . 
 	ret			;517f	c9 	. 
+
+; SEGUIR
 sub_5180h:
 	ld a,000h		;5180	3e 00 	> . 
 	ld (0e56fh),a		;5182	32 6f e5 	2 o . 
@@ -2733,6 +2742,7 @@ l51ach:
 	pop bc			;51b4	c1 	. 
 	djnz l518bh		;51b5	10 d4 	. . 
 	ret			;51b7	c9 	. 
+
 l51b8h:
 	ret nc			;51b8	d0 	. 
 	ld d,c			;51b9	51 	Q 
@@ -2844,7 +2854,7 @@ DRAW_FRAME:
 	ld de,00020h		;523e	11 20 00 	.   . 
     ; Draw left frame
 l5241h:
-	ld hl,01821h		;5241	21 21 18 	! ! . 
+	ld hl,01821h		;5241	21 21 18 	ToDo: write this as a locate
 	ld ix,FRAME_LATERAL_CHARS		;5244	dd 21 89 52 	. ! . R 
 	ld a,(ix+000h)		;5248	dd 7e 00 	. ~ . 
 l524bh:
@@ -2857,7 +2867,7 @@ l524bh:
     ; Draw right frame
 	ld b,017h		;5256	06 17 	. . 
 	ld de,00020h		;5258	11 20 00 	.   . 
-	ld hl,01838h		;525b	21 38 18 	! 8 . 
+	ld hl,01838h		;525b	21 38 18 	ToDo: write this as a locate
 	ld ix,FRAME_LATERAL_CHARS		;525e	dd 21 89 52 	. ! . R 
 	ld a,(ix+000h)		;5262	dd 7e 00 	. ~ . 
 l5265h:
@@ -3179,7 +3189,8 @@ l5433h:
 	djnz l5433h		    ;543b	10 f6
 	ret			        ;543d	c9
 
-l543eh:
+; ToDo: write the log with DBs
+ARKANOID_LOGO_CHARS:
 	nop			;543e	00 	. 
 	nop			;543f	00 	. 
 	nop			;5440	00 	. 
@@ -3290,8 +3301,8 @@ TAITO_CORP_STR:
 ALL_RIGHTS_RESERVED_STR:
     db "ALL RIGHTS RESERVED"
 
-; ToDo: give a name. This is one half of Taito's logo
-l5509h:
+; ToDo: write this with DBs
+TAITO_HALF1_LOGO_CHARS:
 	ld h,e			;5509	63 	c 
 	ld h,l			;550a	65 	e 
 	ld h,a			;550b	67 	g 
