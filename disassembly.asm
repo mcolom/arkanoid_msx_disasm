@@ -253,31 +253,41 @@ l4116h:
 	ld (hl), 192		        ;4116	36 c0
 	add hl,de			        ;4118	19
 	djnz l4116h		            ;4119	10 fb
-
-	ld b, TOTAL_SPRITES		    ;411b	06 20               32 sprites
-	ld ix,FALLING_CAPSULE_SPR_PARAMS		;411d	dd 21 c9 e0
+    
+    ; Update active sprites
+	ld b, TOTAL_SPRITES		    ;411b	06 20            32 sprites
+	ld ix, SPR_PARAMS_BASE - SPR_PARAMS_LEN		        ;411d	dd 21 c9 e0
 l4121h:
 	ld iy,SPRITE_ATTRIBS_AREA		;4121	fd 21 8d e1
 	ld de, SPR_PARAMS_LEN           ;4125	11 04 00
 l4128h:
-	ld a,(ix+002h)		;4128	dd 7e 02 	. ~ . 
-	or a			;412b	b7 	. 
-	jp z,l4158h		;412c	ca 58 41 	. X A 
-	ld a,(ix+000h)		;412f	dd 7e 00 	. ~ . 
-	cp 192		        ;4132	fe c0 	. . 
-	jp z,l4158h		;4134	ca 58 41 	. X A 
-	ld a,(ix+003h)		;4137	dd 7e 03 	. ~ . 
-	or a			;413a	b7 	. 
-	jp z,l4158h		;413b	ca 58 41 	. X A 
-	ld a,(ix+000h)		;413e	dd 7e 00 	. ~ . 
-	ld (iy+000h),a		;4141	fd 77 00 	. w . 
-	ld a,(ix+001h)		;4144	dd 7e 01 	. ~ . 
-	ld (iy+001h),a		;4147	fd 77 01 	. w . 
+    ; Exit if empty entry
+	ld a,(ix+SPR_PARAMS_IDX_PATTERN_NUM)		;4128	dd 7e 02
+	or a			                            ;412b	b7
+	jp z,l4158h		                            ;412c	ca 58 41
+    ; X
+	ld a,(ix+SPR_PARAMS_IDX_Y)		            ;412f	dd 7e 00
+	cp 192		                                ;4132	fe c0
+	jp z,l4158h		                            ;4134	ca 58 41
+    ; Color
+	ld a,(ix+SPR_PARAMS_IDX_COLOR)		        ;4137	dd 7e 03
+	or a			                            ;413a	b7
+	jp z,l4158h		                            ;413b	ca 58 41
+    ; Y
+	ld a,(ix+SPR_PARAMS_IDX_Y)		            ;413e	dd 7e 00
+	ld (iy+SPR_PARAMS_IDX_Y),a		            ;4141	fd 77 00
+    ; X
+	ld a,(ix+SPR_PARAMS_IDX_X)		            ;4144	dd 7e 01
+	ld (iy+SPR_PARAMS_IDX_X),a		            ;4147	fd 77 01
 l414ah:
-	ld a,(ix+002h)		;414a	dd 7e 02 	. ~ . 
-	ld (iy+002h),a		;414d	fd 77 02 	. w . 
-	ld a,(ix+003h)		;4150	dd 7e 03 	. ~ . 
-	ld (iy+003h),a		;4153	fd 77 03 	. w . 
+    ; Pattern num.
+	ld a,(ix+SPR_PARAMS_IDX_PATTERN_NUM)		;414a	dd 7e 02
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a		;414d	fd 77 02
+    ; Color
+	ld a,(ix+SPR_PARAMS_IDX_COLOR)		        ;4150	dd 7e 03
+	ld (iy+SPR_PARAMS_IDX_COLOR),a		        ;4153	fd 77 03
+
+    ; Next...
 	add iy,de		;4156	fd 19 	. . 
 l4158h:
 	add ix,de		;4158	dd 19 	. . 
