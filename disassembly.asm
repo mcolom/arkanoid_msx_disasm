@@ -5,282 +5,28 @@
 ; 2183f07fa3ba87360100b2fa21fda0f55c0f8814  a.bin
 
 include 'headers/bios.asm'
+
 include 'sounds.asm'
-
-VRAM_SPRITES_ATTRIB_TABLE: equ 0x1b00
-
-DEMO_LEVEL: equ 0xe000
-
-
-; The two cheats :)
-CHEAT1_ACTIVATED: equ 0xe001
-CHEAT1_KEY_COUNTER: equ 0xe002
-;
-CHEAT2_ACTIVATED: equ 0xe003
-CHEAT2_KEY_COUNTER: equ 0xe004
-CHEAT2_LEVEL: equ 0xe005
-
-GAME_TRANSITION_ACTION: equ 0xe00a
-GAME_TRANSITION_ACTION_START_LEVEL: equ 0 ; start level
-GAME_TRANSITION_ACTION_PLAY_LEVEL: equ  1 ; normal play
-GAME_TRANSITION_ACTION_NEXT_LEVEL: equ  2 ; pause and go to the next level
-
-IN_DEMO: equ 0xe00d
-
-SPR_PARAMS_LEN: equ 4
-
-SPR_PARAMS_BASE: equ 0xe0cd
-
-
-; Sprite parameter tables: (Y, X) position, sprite pattern number, and color
-
-; Indices
-SPR_PARAMS_IDX_Y: equ 0
-SPR_PARAMS_IDX_X: equ 1
-SPR_PARAMS_IDX_PATTERN_NUM: equ 2
-SPR_PARAMS_IDX_COLOR: equ 3
-
-; Laser sprites
-LASER1_SPR_PARAMS: equ SPR_PARAMS_BASE + 7*SPR_PARAMS_LEN
-LASER2_SPR_PARAMS: equ SPR_PARAMS_BASE + 8*SPR_PARAMS_LEN
-LASER3_SPR_PARAMS: equ SPR_PARAMS_BASE + 9*SPR_PARAMS_LEN
-
-SPR_16_SPR_PARAMS: equ SPR_PARAMS_BASE + 16*SPR_PARAMS_LEN
-
-
-SPR_13_SPR_PARAMS: equ SPR_PARAMS_BASE + 13*SPR_PARAMS_LEN ; 0xe101
-
-
-
-; Ball sprite parameters
-BALL1_SPR_PARAMS: equ SPR_PARAMS_BASE + 10*SPR_PARAMS_LEN; 0xe0f5
-BALL2_SPR_PARAMS: equ SPR_PARAMS_BASE + 11*SPR_PARAMS_LEN
-BALL3_SPR_PARAMS: equ SPR_PARAMS_BASE + 12*SPR_PARAMS_LEN
-
-
-
-
-
-
-
-; Game state
-; 0: in title screen
-; 1: normal play
-; 2: normal play, but without score updates
-; 3: demo
-GAME_STATE: equ 0xe00b
-
-; Pause in bit 6 and start in bit 4
-PAUSE_B6_AND_START_B4: equ 0xe0bf
-
-; The game reads the keyboard and writes a mask of bits of the
-; relevant keys here
-KEYBOARD_INPUT: equ 0xe0c0
-
-; Actions for the title's screen
-TITLE_SCREEN_ACTION: equ 0xe53c
-TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN: equ 0
-TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN: equ 1
-TITLE_SCREEN_ACTION_START_GAME: equ 2
-TITLE_SCREEN_ACTION_DEMO: equ 5
-
-
-
-VAUS_X:  equ 0xe0ce
-VAUS_X2: equ 0xe53e
-
-
-
-; ToDo: this table is related to sounds, but how?
-SOUND_RELATED_TABLE: equ 0xe520
-
-LASER1_ACTIVE: equ 0xe557
-LASER2_ACTIVE: equ 0xe55b
-LASER3_ACTIVE: equ 0xe55f
-
-; The code for the SOUND being played
-SOUND_NUMBER: equ 0xe5c0
-
-BRICK_ROW: equ 0xe2aa
-BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
-
-; Simply an index to iterate through the 3 balls
-BALL_LOOP_INDEX: equ 0xe2ac
-
-
-; BCD-encoded scores and heading
-SCORE_BCD: equ 0xe015
-HIGH_SCORE_BCD: equ 0xe007
-
-; Target score to get a life
-SCORE_LIFE_BCD: equ 0xe01e
-
-SCORE_BCD_BUFFER: equ 0xe5a0
-ZEROS_BCD_BUFFER: equ 0xe018
-
-; Decoded scores and zeros
-DECODED_ASCII_SCORE: equ 0xe58e
-DECODED_ASCII_HIGH_SCORE: equ 0xe59a
-DECODED_ZEROS: equ 0xe594
-
-
-
-; Where to write the scores
-; 0: up, 1: on the right
-SCORE_POSITION: equ 0xe544
-
-;VAUS_TABLE_ACTION_STATE: equ 0xe54b
-VAUS_TABLE: equ 0xe54b
-
-; State of wait (waiting to be ready, doing nothing, enlarging, exploding, ...)
-VAUS_TABLE_IDX_ACTION_STATE: equ 0
-;
-VAUS_ACTION_STATE_WAIT_READY: equ 0
-VAUS_ACTION_STATE_KEEP: equ 1
-VAUS_ACTION_STATE_ENLARGING: equ 2
-VAUS_ACTION_STATE_SHRINKING: equ 3
-VAUS_ACTION_STATE_LASER: equ 4
-VAUS_ACTION_STATE_UNLASER: equ 5
-VAUS_ACTION_STATE_EXPLODING: equ 6
-VAUS_ACTION_STATE_THROUGH_PORTAL: equ 7
-
-; Vaus changes its size in 3 steps
-VAUS_TABLE_IDX_SIZING_STEP: equ 1
-
-; Vaus changes to laser in 10 steps
-VAUS_TABLE_IDX_LASERING_STEP: equ 2
-
-; Vaus destruction steps are controled by these two counters
-VAUS_TABLE_IDX_DESTRUCTION_STEP1: equ 3
-VAUS_TABLE_IDX_DESTRUCTION_STEP2: equ 4
-
-VAUS_TABLE_IDX_SIZING: equ 5
-; It can be VAUS_ACTION_STATE_ENLARGING or VAUS_ACTION_STATE_SHRINKING
-
-VAUS_TABLE_IDX_HAS_LASER: equ 6
-
-VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP: equ 7
-
-; This two variables control Vaus entering the portal
-VAUS_TABLE_IDX_VAUS_PORTALING_STEP1: equ 8
-VAUS_TABLE_IDX_VAUS_PORTALING_STEP2: equ 9
-
-
-
-
-
-
-; Counts how many ticks the title screen is displayed
-TITLE_TICKS: equ 0xe53f
-
-TICKS_240: equ 0xe515
-
-; Lasers are being fired
-LASERS_FIRING: equ 0xe519
-
-DOH_HITS: equ 0xe5b3
-
-; How many sounds are being played
-SOUNDS_COUNT: equ 0xe51e
-
-; Vaus is enlarged, because of the blue capsule
-VAUS_IS_ENLARGED: equ 0xe321
-
-; 0: ball does not stick to Vaus
-; 1: ball sticks to Vaus
-; 2: ball sticks but is not glue anymore when released
-GLUING_STATUS: equ 0xe324
-GLUING_STATE_NOT_STICKY: equ 0
-GLUING_STATE_STICKY: equ 1
-GLUING_STATE_NO_LONGER_STICKY: equ 2
-
-; Extra balls, apart from the current.
-; For example, after getting the cyan brick, there are
-; 3 balls = 2 EXTRA_BALLS.
-EXTRA_BALLS: equ 0xe325
-PORTAL_OPEN: equ 0xe326 ; The portal to the next level is open (1) or closed (0)
-
-SPEEDUP_ALL_BALLS_COUNTER: equ 0xe529
-
-; First level is zero
-LEVEL: equ 0xe01b
-LEVEL_DISP: equ 0xe01c ; Displayed level, in the texts
-
-LIVES: equ 0xe01d
-BRICKS_LEFT: equ 0xe038
-
-; This controls how the screen is repainted with bricks
-BRICK_REPAINT_TYPE: equ 0xe022
-BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks of the level
-BRICK_REPAINT_UNKNOWN: equ 1   ; ???
-BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
-
-
-CAPSULES_LEFT: equ 0xe023
-CAPSULES_RANDOM_NUM: equ 0xe024
-FINAL_LEVEL: equ 32
-
-TOTAL_SPRITES: equ 32
-; Sprite attributes
-; This is written to VRAM continuosly
-SPRITE_ATTRIBS_AREA: equ 0xe18d
-
-
-
-
-
-; Alien table
-; Each entry is 20 positions
-ALIEN_TABLE: equ 0xe4c7
-ALIEN_TABLE_LEN: equ 20
-;
-ALIEN_TABLE_IDX_COLOR: equ 0
-ALIEN_TABLE_IDX_ACTIVE: equ 1
-; [ToDo] Incomplete table
-
-; <UNKNOWN>
-; <Active>
-; <ACTION>: 0=not exploding, 1=exploding
-
-;This table controls the doors
-DOOR_TABLE: equ 0xe570
-DOOR_TABLE_LEN: equ 6
-;
-DOOR_TABLE_IDX_ACTIVE: equ 0
-DOOR_TABLE_IDX_DOOR: equ 1
-DOOR_TABLE_IDX_COUNTER: equ 3
-DOOR_TABLE_IDX_DOOR_OPEN_COUNTER: equ 4
-
-BALL_TABLE_LEN: equ 20
-BALL_TABLE1: equ 0xe24e + 0*BALL_TABLE_LEN
-BALL_TABLE2: equ 0xe24e + 1*BALL_TABLE_LEN
-BALL_TABLE3: equ 0xe24e + 2*BALL_TABLE_LEN
-;
-BALL_TABLE_IDX_ACTIVE: equ 0
-;
-; 0: ball is glued and moved to Vaus
-; 1: ball is glued
-; 2: ball moves normally
-BALL_TABLE_IDX_GLUE: equ 1
-;
-; 01, 02: ball going down
-; FF, FE: ball going up
-BALL_TABLE_IDX_VERT:  equ 2
-
-;BALL_TABLE_: equ 3
-; 01, 02: ball going right
-; FF, FE: ball going left
-BALL_TABLE_IDX_HORIZ: equ 3
-
-BALL_TABLE_IDX_SKEWNESS: equ 6
-
-
-;
-BALL_TABLE_IDX_SPEED_POS: equ 7
-BALL_TABLE_IDX_SPEED_COUNTER: equ 13
-BALL_TABLE_IDX_GLUE_COUNTER: equ 14
-BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
-
+include 'spr_params.asm'
+include 'doors.asm'
+include 'scores.asm'
+include 'vaus.asm'
+include 'cheats.asm'
+include 'game_state.asm'
+include 'level.asm'
+include 'balls.asm'
+include 'lasers.asm'
+include 'aliens.asm'
+include 'sound.asm'
+include 'ticks.asm'
+include 'glue.asm'
+include 'sprites.asm'
+include 'keyboard.asm'
+include 'bricks.asm'
+include 'capsules.asm'
+include 'doh.asm'
+include 'portal.asm'
+include 'lives.asm'
 
 
 
@@ -509,7 +255,7 @@ l4116h:
 	djnz l4116h		            ;4119	10 fb
 
 	ld b, TOTAL_SPRITES		    ;411b	06 20               32 sprites
-	ld ix,0e0c9h		;411d	dd 21 c9 e0
+	ld ix,FALLING_CAPSULE_SPR_PARAMS		;411d	dd 21 c9 e0
 l4121h:
 	ld iy,SPRITE_ATTRIBS_AREA		;4121	fd 21 8d e1
 	ld de, SPR_PARAMS_LEN           ;4125	11 04 00
@@ -666,7 +412,7 @@ LDIRVM_32x24_THIRD:
 	call LDIRVM		    ;4223	cd 5c 00
 	ret			        ;4226	c9
 
-; Clear the screen and the area in 0e0c9h
+; Clear the screen and the area in FALLING_CAPSULE_SPR_PARAMS
 CLEAR_SCREEN:
     ; Clear name table
 	ld hl,01800h		;4227	21 00 18
@@ -681,7 +427,7 @@ CLEAR_SCREEN:
 	call FILVRM		                ;4239	cd 56 00
 
     ; Clear memory
-	ld hl,0e0c9h		;423c	21 c9 e0
+	ld hl,FALLING_CAPSULE_SPR_PARAMS		;423c	21 c9 e0
 	ld de,0e0cah		;423f	11 ca e0
 	ld bc,128		    ;4242	01 80 00
 	ld (hl),192		    ;4245	36 c0
@@ -14662,7 +14408,7 @@ sub_b028h:
 	cp 4		            ;b02b	fe 04
 	ret c			        ;b02d	d8
 	ld ix,0e317h		;b02e	dd 21 17 e3 	. ! . . 
-	ld iy,0e0c9h		;b032	fd 21 c9 e0 	. ! . . 
+	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b032	fd 21 c9 e0 	. ! . . 
 	ld a,(0e317h)		;b036	3a 17 e3 	: . . 
 	or a			;b039	b7 	. 
 	ret nz			;b03a	c0 	. 
@@ -14847,7 +14593,7 @@ sub_b137h:
 	cp FINAL_LEVEL		;b13a	fe 20
 	ret z			;b13c	c8 	. 
 	ld ix,0e317h		;b13d	dd 21 17 e3 	. ! . . 
-	ld iy,0e0c9h		;b141	fd 21 c9 e0 	. ! . . 
+	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b141	fd 21 c9 e0 	. ! . . 
 	ld a,(ix+000h)		;b145	dd 7e 00 	. ~ . 
 	or a			;b148	b7 	. 
 	ret z			;b149	c8 	. 
@@ -14870,7 +14616,7 @@ sub_b15ch:
 	cp VAUS_ACTION_STATE_EXPLODING	;b165	fe 06
 	ret z			                ;b167	c8
 	
-    ld ix,0e0c9h		;b168	dd 21 c9 e0 	. ! . . 
+    ld ix,FALLING_CAPSULE_SPR_PARAMS		;b168	dd 21 c9 e0 	. ! . . 
 	ld iy,SPR_PARAMS_BASE		;b16c	fd 21 cd e0 	. ! . . 
 	ld a,(ix+000h)		;b170	dd 7e 00 	. ~ . 
 	cp 0a8h		;b173	fe a8 	. . 
