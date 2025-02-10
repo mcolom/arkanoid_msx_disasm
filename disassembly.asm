@@ -10808,7 +10808,7 @@ l9c05h:
 	ld (iy+BALL_TABLE_IDX_SKEWNESS),a	;9c23	fd 77 06
 	ret			                        ;9c26	c9
 
-BALL_SKEWNESS_TABLE:
+BALL_SKEWNESS_TABLE:                    ;9c27
     ; 7: most skewed, moving left
     ; 6: a little bit skewed, moving left
     ; 5: less skewed, moving left
@@ -14093,71 +14093,80 @@ lb2c0h:
 
 ; SEGUIR
 sub_b2c1h:
-	push ix		;b2c1	dd e5 	. . 
-	pop iy		;b2c3	fd e1 	. . 
+    ; This push/pop pair seems to be useless since ix and iy are
+    ; set right after.
+	push ix		;b2c1	dd e5
+	pop iy		;b2c3	fd e1
 
-	ld b, 3 		        ;b2c5	06 03       3 balls to check
+	; Loop over B=3 balls
+    ld b, 3 		        ;b2c5	06 03
 	ld iy,BALL_TABLE1		;b2c7	fd 21 4e e2
-	ld ix,BALL1_SPR_PARAMS		    ;b2cb	dd 21 f5 e0
+	ld ix,BALL1_SPR_PARAMS  ;b2cb	dd 21 f5 e0
 lb2cfh:
+    ; Skip if the ball is not active
 	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;b2cf	fd 7e 00
 	or a			                    ;b2d2	b7
-	jp nz,lb2e5h		                ;b2d3	c2 e5 b2 Process if ball active
+	jp nz,lb2e5h		                ;b2d3	c2 e5 b2
     
-    ; Point to the next ball's table
+    ; Nont active: point to the next ball's table
 	ld de,BALL_TABLE_LEN		        ;b2d6	11 14 00
 	add iy,de		                    ;b2d9	fd 19
     
-	; BALL1_SPR_PARAMS, BALL2_SPR_PARAMS, and BALL3_SPR_PARAMS are space by 4 bytes
-    ; Increment also the pointer to BALL(i)_Y
-    ld de, 4		                    ;b2db	11 04 00
+    ; SEt pointers to the next ball
+    ld de, SPR_PARAMS_LEN		                    ;b2db	11 04 00
         
 	add ix,de		;b2de	dd 19
 	djnz lb2cfh		;b2e0	10 ed
     ; All balls checked, get out
 	jp lb34dh		                    ;b2e2	c3 4d b3
 
+; Ball is active, process it
 lb2e5h:
-	ld hl,lb352h		;b2e5	21 52 b3 	! R . 
-	ld a,(iy+006h)		;b2e8	fd 7e 06 	. ~ . 
-	bit 7,a		;b2eb	cb 7f 	.  
-	jp z,lb2f5h		;b2ed	ca f5 b2 	. . . 
-	neg		;b2f0	ed 44 	. D 
-	ld hl,lb376h		;b2f2	21 76 b3 	! v . 
+    ; Check skewness and point to the corresponding table
+	ld hl,NEW_SKEWNESS_POS_TABLE		    ;b2e5	21 52 b3
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;b2e8	fd 7e 06
+	bit 7,a		                            ;b2eb	cb 7f
+	jp z,lb2f5h		                        ;b2ed	ca f5 b2
+	neg		                                ;b2f0	ed 44
+	ld hl,NEW_SKEWNESS_NEG_TABLE		    ;b2f2	21 76 b3
 lb2f5h:
-	ld e,a			;b2f5	5f 	_ 
-	sla e		;b2f6	cb 23 	. # 
-	sla e		;b2f8	cb 23 	. # 
-	ld d,000h		;b2fa	16 00 	. . 
-	add hl,de			;b2fc	19 	. 
+    ; E = (negated) skewness << 2 = skewness \ 4
+	ld e,a		;b2f5	5f
+	sla e		;b2f6	cb 23
+	sla e		;b2f8	cb 23
+
+    ; HL += skewness \ 4
+	ld d, 0		;b2fa	16 00
+	add hl,de	;b2fc	19
+
 	ld c,(iy+BALL_TABLE_IDX_SPEED_POS)		;b2fd	fd 4e 07
-
 	ld a,(iy+BALL_TABLE_IDX_SPEED_COUNTER)	;b300	fd 7e 0d
-	ld (TITLE_SCREEN_ACTION),a		;b303	32 3c e5 	2 < . 
+	ld (TITLE_SCREEN_ACTION),a		        ;b303	32 3c e5
 
-	ld b, 3		            ;b306	06 03   Therea are 3 balls to loop over
+    ; Loop over B=3 balls
+	ld b, 3		            ;b306	06 03
 	ld iy,BALL_TABLE1		;b308	fd 21 4e e2
 	ld de,BALL_TABLE_LEN	;b30c	11 14 00
 lb30fh:
-    ; Ball is active
+    ; Set this ball is active
 	ld (iy+BALL_TABLE_IDX_ACTIVE), 1	;b30f	fd 36 00 01
     
-    ; Ball is moving normally, not glued
+    ; Set ball is moving normally, not glued
 	ld (iy+BALL_TABLE_IDX_GLUE), 2		;b313	fd 36 01 02
 
-    ; ToDo
-	ld a,(hl)			;b317	7e 	~ 
-	ld (iy+006h),a		;b318	fd 77 06 	. w . 
+    ; Update skewness
+	ld a,(hl)			                    ;b317	7e
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;b318	fd 77 06
 
-	ld a,(TITLE_SCREEN_ACTION)		;b31b	3a 3c e5 	: < . 
+    ; Update speed and its counter
+	ld a,(TITLE_SCREEN_ACTION)		            ;b31b	3a 3c e5
 	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a		;b31e	fd 77 0d
-
 	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		    ;b321	fd 71 07
     
     ; Next ball
-	inc hl			;b324	23 	# 
-	add iy,de		;b325	fd 19 	. . 
-	djnz lb30fh		;b327	10 e6 	. . 
+	inc hl			;b324	23
+	add iy,de		;b325	fd 19
+	djnz lb30fh		;b327	10 e6
 
     ; Position of the ball's sprite
 	ld l,(ix+SPR_PARAMS_IDX_Y)		;b329	dd 6e 00
@@ -14170,20 +14179,20 @@ lb338h:
     ; Set ball's sprite parameters
 	ld (ix+SPR_PARAMS_IDX_Y),l		            ;b338	dd 75 00        Y
 	ld (ix+SPR_PARAMS_IDX_X),h		            ;b33b	dd 74 01        X
-	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM), 128	;b33e	dd 36 02 80     Pattern of the ball
+	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM), 128	    ;b33e	dd 36 02 80     Pattern of the ball
 	ld (ix+SPR_PARAMS_IDX_COLOR),  15	        ;b342	dd 36 03 0f     White color
 
     ; Next ball
-	ld de, 4		    ;b346	11 04 00    Useless, it was already initialized @b335
-	add ix,de		    ;b349	dd 19
-	djnz lb338h		    ;b34b	10 eb
+	ld de, SPR_PARAMS_LEN	;b346	11 04 00    Useless, it was already initialized @b335
+	add ix,de		        ;b349	dd 19
+	djnz lb338h		        ;b34b	10 eb
 lb34dh:
     ; Return
 	pop iy		;b34d	fd e1
 	pop ix		;b34f	dd e1
 	ret			;b351	c9
 
-lb352h:
+NEW_SKEWNESS_POS_TABLE:
 	nop			;b352	00 	. 
 	nop			;b353	00 	. 
 	nop			;b354	00 	. 
@@ -14216,7 +14225,8 @@ lb352h:
 	dec b			;b372	05 	. 
 	ld b,007h		;b373	06 07 	. . 
 	dec b			;b375	05 	. 
-lb376h:
+
+NEW_SKEWNESS_NEG_TABLE:
 	nop			;b376	00 	. 
 	nop			;b377	00 	. 
 	nop			;b378	00 	. 
