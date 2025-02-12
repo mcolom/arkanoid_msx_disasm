@@ -14237,7 +14237,7 @@ NEW_SKEWNESS_POS_TABLE:
     db 0x5, 0x6, 0x7, 0x5                     ; 0xb372 - 0xb375
 
 NEW_SKEWNESS_NEG_TABLE:
-    db 0x0, 0x0, 0x0, 0x0, 0xfe, 0xfd, 0xfc, 0xfe ; 0xb376 - 0xb37d
+    db 0x0, 0x0, 0x0, 0x0, 0xfe, 0xfd, 0xfc, 0xfe     ; 0xb376 - 0xb37d
     db 0xfe, 0xfd, 0xfc, 0xfe, 0xfe, 0xfd, 0xfc, 0xfe ; 0xb37e - 0xb385
     db 0xfe, 0xfd, 0xfc, 0xfe, 0xfc, 0xfb, 0xfa, 0xfc ; 0xb386 - 0xb38d
     db 0xfb, 0xfa, 0xf9, 0xfa, 0xfb, 0xfa, 0xf9, 0xfa ; 0xb38e - 0xb395
@@ -14726,29 +14726,39 @@ lb583h:
 	inc de			;b583	13 	. 
 	ld (de),a			;b584	12 	. 
 	ret			;b585	c9 	. 
-sub_b586h:
-	inc a			;b586	3c 	< 
-	inc hl			;b587	23 	# 
-	rrc c		;b588	cb 09 	. . 
-	ret nc			;b58a	d0 	. 
-	ld e,(hl)			;b58b	5e 	^ 
+
+; Write the next value from (HL) to the next PSG register in A
+WRITE_NEXT_REG_PSG:
+    ; Point to the next PSG register and next position in the HL buffer
+	inc a			;b586	3c
+	inc hl			;b587	23
+
+    ; Exit if bit 0 of C is not 0
+	rrc c		     ;b588	cb 09
+	ret nc			 ;b58a	d0
+
+    ; Read value from (HL) into E
+	ld e,(hl)			;b58b
 lb58ch:
     ; Write value E to PSG register A
 
     ; Selected PSG register <-- A
-	out (0a0h),a		;b58c	d3 a0 	. . 
+	out (0a0h),a		;b58c	d3 a0
 	
-    ; Register A <-- E
-    push af			;b58e	f5 	. 
-	ld a,e			;b58f	7b 	{ 
-	out (0a1h),a		;b590	d3 a1 	. . 
-	pop af			;b592	f1 	. 
-	ret			;b593	c9 	. 
+    ; Write value E in register A of the PSG
+    push af			;b58e	f5
+	ld a,e			;b58f	7b
+	out (0a1h),a	;b590	d3 a1
+	pop af			;b592	f1
+	ret			    ;b593	c9
 
 sub_b594h:
-	ld a,(0e5c1h)		;b594	3a c1 e5 	: . . 
-	and a			;b597	a7 	. 
-	ret nz			;b598	c0 	. 
+    ; Is the variable at 0e5c1h useless?
+    ; It seems it's only checked here, but never written
+	ld a,(0e5c1h)	;b594	3a c1 e5
+	and a			;b597	a7
+	ret nz			;b598	c0
+    
 	ld hl,0e5c3h		;b599	21 c3 e5 	! . . 
 	ld c,(hl)			;b59c	4e 	N 
 	sub a			;b59d	97 	. 
@@ -14757,21 +14767,21 @@ sub_b594h:
 	ld d,003h		;b5a0	16 03 	. . 
 	ld b,d			;b5a2	42 	B 
 lb5a3h:
-	call sub_b586h		;b5a3	cd 86 b5 	. . . 
+	call WRITE_NEXT_REG_PSG		;b5a3	cd 86 b5 	. . . 
 	rlc c		;b5a6	cb 01 	. . 
-	call sub_b586h		;b5a8	cd 86 b5 	. . . 
+	call WRITE_NEXT_REG_PSG		;b5a8	cd 86 b5 	. . . 
 	djnz lb5a3h		;b5ab	10 f6 	. . 
-	call sub_b586h		;b5ad	cd 86 b5 	. . . 
+	call WRITE_NEXT_REG_PSG		;b5ad	cd 86 b5 	. . . 
 	inc hl			;b5b0	23 	# 
 	ld e,(hl)			;b5b1	5e 	^ 
 	call sub_b570h		;b5b2	cd 70 b5 	. p . 
 	ld b,d			;b5b5	42 	B 
 lb5b6h:
-	call sub_b586h		;b5b6	cd 86 b5 	. . . 
+	call WRITE_NEXT_REG_PSG		;b5b6	cd 86 b5 	. . . 
 	djnz lb5b6h		;b5b9	10 fb 	. . 
 	ld b,d			;b5bb	42 	B 
 lb5bch:
-	call sub_b586h		;b5bc	cd 86 b5 	. . . 
+	call WRITE_NEXT_REG_PSG		;b5bc	cd 86 b5 	. . . 
 	rlc c		;b5bf	cb 01 	. . 
 	djnz lb5bch		;b5c1	10 f9 	. . 
 	ld e,(hl)			;b5c3	5e 	^ 
@@ -14781,8 +14791,11 @@ lb5bch:
 	res 3,(hl)		;b5ca	cb 9e 	. . 
 	inc hl			;b5cc	23 	# 
 	ld bc,(0e5dah)		;b5cd	ed 4b da e5 	. K . . 
+    
+    ; ToDO: decompile again, we can't see the code of b4b5 since of the offset
 	call 0b4b5h		;b5d1	cd b5 b4 	. . . 
-	jr nc,lb5e3h		;b5d4	30 0d 	0 . 
+	
+    jr nc,lb5e3h		;b5d4	30 0d 	0 . 
 	ld (0e5dch),a		;b5d6	32 dc e5 	2 . . 
 lb5d9h:
 	call sub_b63eh		;b5d9	cd 3e b6 	. > . 
