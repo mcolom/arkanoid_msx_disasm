@@ -3214,91 +3214,18 @@ l5433h:
 
 ; ToDo: write the log with DBs
 ARKANOID_LOGO_CHARS:
-	nop			;543e	00 	. 
-	nop			;543f	00 	. 
-	nop			;5440	00 	. 
-	nop			;5441	00 	. 
-	nop			;5442	00 	. 
-	nop			;5443	00 	. 
-	nop			;5444	00 	. 
-	nop			;5445	00 	. 
-	nop			;5446	00 	. 
-	inc b			;5447	04 	. 
-	rlca			;5448	07 	. 
-	ld a,(bc)			;5449	0a 	. 
-	dec c			;544a	0d 	. 
-	djnz l5460h		;544b	10 13 	. . 
-	ld d,019h		;544d	16 19 	. . 
-	inc e			;544f	1c 	. 
-	rra			;5450	1f 	. 
-	inc hl			;5451	23 	# 
-	ld h,029h		;5452	26 29 	& ) 
-	ld e,h			;5454	5c 	\ 
-	ld h,b			;5455	60 	` 
-	nop			;5456	00 	. 
-	nop			;5457	00 	. 
-	nop			;5458	00 	. 
-	nop			;5459	00 	. 
-	nop			;545a	00 	. 
-	nop			;545b	00 	. 
-	nop			;545c	00 	. 
-	nop			;545d	00 	. 
-	nop			;545e	00 	. 
-	nop			;545f	00 	. 
-l5460h:
-	nop			;5460	00 	. 
-	nop			;5461	00 	. 
-	nop			;5462	00 	. 
-	nop			;5463	00 	. 
-	nop			;5464	00 	. 
-	nop			;5465	00 	. 
-	ld (bc),a			;5466	02 	. 
-	dec b			;5467	05 	. 
-	ex af,af'			;5468	08 	. 
-	dec bc			;5469	0b 	. 
-	ld c,011h		;546a	0e 11 	. . 
-	inc d			;546c	14 	. 
-	rla			;546d	17 	. 
-	ld a,(de)			;546e	1a 	. 
-	dec e			;546f	1d 	. 
-	ld bc,02724h		;5470	01 24 27 	. $ ' 
-	ld hl,(l615dh)		;5473	2a 5d 61 	* ] a 
-	nop			;5476	00 	. 
-	nop			;5477	00 	. 
-	nop			;5478	00 	. 
-	nop			;5479	00 	. 
-	nop			;547a	00 	. 
-	nop			;547b	00 	. 
-	nop			;547c	00 	. 
-	nop			;547d	00 	. 
-	nop			;547e	00 	. 
-	nop			;547f	00 	. 
-	nop			;5480	00 	. 
-	nop			;5481	00 	. 
-	nop			;5482	00 	. 
-	nop			;5483	00 	. 
-	nop			;5484	00 	. 
-	nop			;5485	00 	. 
-	inc bc			;5486	03 	. 
-	ld b,009h		;5487	06 09 	. . 
-	inc c			;5489	0c 	. 
-	rrca			;548a	0f 	. 
-	ld (de),a			;548b	12 	. 
-	dec d			;548c	15 	. 
-	jr 0x54aa		;548d	18 1b 	. . 
-	ld e,021h		;548f	1e 21 	. ! 
-	dec h			;5491	25 	% 
-	jr z,0x54ef		;5492	28 5b 	( [ 
-	ld e,(hl)			;5494	5e 	^ 
-	ld h,d			;5495	62 	b 
-	nop			;5496	00 	. 
-	nop			;5497	00 	. 
-	nop			;5498	00 	. 
-	nop			;5499	00 	. 
-	nop			;549a	00 	. 
-	nop			;549b	00 	. 
-	nop			;549c	00 	. 
-	nop			;549d	00 	. 
+db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x543e - 0x5445
+db 0x0, 0x4, 0x7, 0xa, 0xd, 0x10, 0x13, 0x16 ; 0x5446 - 0x544d
+db 0x19, 0x1c, 0x1f, 0x23, 0x26, 0x29, 0x5c, 0x60 ; 0x544e - 0x5455
+db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5456 - 0x545d
+db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x545e - 0x5465
+db 0x2, 0x5, 0x8, 0xb, 0xe, 0x11, 0x14, 0x17 ; 0x5466 - 0x546d
+db 0x1a, 0x1d, 0x1, 0x24, 0x27, 0x2a, 0x5d, 0x61 ; 0x546e - 0x5475
+db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5476 - 0x547d
+db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x547e - 0x5485
+db 0x3, 0x6, 0x9, 0xc, 0xf, 0x12, 0x15, 0x18 ; 0x5486 - 0x548d
+db 0x1b, 0x1e, 0x21, 0x25, 0x28, 0x5b, 0x5e, 0x62 ; 0x548e - 0x5495
+db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5496 - 0x549d
 
 
 
