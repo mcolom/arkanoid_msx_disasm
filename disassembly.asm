@@ -1998,15 +1998,13 @@ DRAW_TITLE_SCREEN:
 	call LDIRVM		                    ;4c27	cd 5c 00
 
     ; Draw upper half of Taito's logo
-    ; ToDo: give TAITO_HALF1_LOGO_CHARS a name
 	ld hl,TAITO_HALF1_LOGO_CHARS		;4c2a	21 09 55
 	ld de,01a2bh		;4c2d	11 2b 1a
 	ld bc,0000bh		;4c30	01 0b 00
 	call LDIRVM		    ;4c33	cd 5c 00
 
     ; Draw lower half of Taito's logo
-    ; ToDo: give l5514h a name
-	ld hl,l5514h		;4c36	21 14 55
+	ld hl,TAITO_HALF2_LOGO_CHARS		;4c36	21 14 55
 	ld de,01a4bh		;4c39	11 4b 1a
 	ld bc,0000bh		;4c3c	01 0b 00
 	call LDIRVM		    ;4c3f	cd 5c 00
@@ -3251,33 +3249,15 @@ TAITO_CORP_STR:
 ALL_RIGHTS_RESERVED_STR:
     db "ALL RIGHTS RESERVED"
 
-; ToDo: write this with DBs
+; First half parts of the chars of the TAITO logo
 TAITO_HALF1_LOGO_CHARS:
-	ld h,e			;5509	63 	c 
-	ld h,l			;550a	65 	e 
-	ld h,a			;550b	67 	g 
-l550ch:
-	ld l,c			;550c	69 	i 
-	ld l,e			;550d	6b 	k 
-	ld l,l			;550e	6d 	m 
-	ld l,a			;550f	6f 	o 
-	ld (hl),c			;5510	71 	q 
-	ld (hl),e			;5511	73 	s 
-	ld (hl),l			;5512	75 	u 
-	ld (hl),a			;5513	77 	w 
-l5514h:
-	ld h,h			;5514	64 	d 
-	ld h,(hl)			;5515	66 	f 
-	ld l,b			;5516	68 	h 
-l5517h:
-	ld l,d			;5517	6a 	j 
-	ld l,h			;5518	6c 	l 
-	ld l,(hl)			;5519	6e 	n 
-	ld (hl),b			;551a	70 	p 
-	ld (hl),d			;551b	72 	r 
-	ld (hl),h			;551c	74 	t 
-	halt			;551d	76 	v 
-	ld a,b			;551e	78 	x 
+db 0x63, 0x65, 0x67, 0x69, 0x6b, 0x6d, 0x6f, 0x71 ; 0x5509 - 0x5510
+db 0x73, 0x75, 0x77                               ; 0x5511 - 0x5513
+
+; Second half parts of the chars of the TAITO logo
+TAITO_HALF2_LOGO_CHARS:
+db 0x64, 0x66, 0x68, 0x6a, 0x6c, 0x6e, 0x70, 0x72 ; 0x5514 - 0x551b
+db 0x74, 0x76, 0x78                               ; 0x551c - 0x551e
 
 ; Red characters for "HIGH" and "SCORE"
 HIGH_LETTERS:
