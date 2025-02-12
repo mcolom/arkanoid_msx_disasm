@@ -13908,26 +13908,25 @@ sub_b1a8h:
 	rlca			;b1bd	07 	. 
 	ld e,a			;b1be	5f 	_ 
 	ld d,000h		;b1bf	16 00 	. . 
-	ld hl,lb1cah		;b1c1	21 ca b1 	! . . 
+    
+	ld hl,BRICK_ACTION_TABLE		;b1c1	21 ca b1 	! . . 
 	add hl,de			;b1c4	19 	. 
 	ld e,(hl)			;b1c5	5e 	^ 
 	inc hl			;b1c6	23 	# 
 	ld d,(hl)			;b1c7	56 	V 
 	ex de,hl			;b1c8	eb 	. 
 	jp (hl)			;b1c9	e9 	. 
-lb1cah:
-	jp c,015b1h		;b1ca	da b1 15 	. . . 
-	or d			;b1cd	b2 	. 
-	ld e,0b2h		;b1ce	1e b2 	. . 
-	dec sp			;b1d0	3b 	; 
-	or d			;b1d1	b2 	. 
-	ld d,e			;b1d2	53 	S 
-	or d			;b1d3	b2 	. 
-	ld (hl),c			;b1d4	71 	q 
-	or d			;b1d5	b2 	. 
-	add a,(hl)			;b1d6	86 	. 
-	or d			;b1d7	b2 	. 
-	ld e,0b2h		;b1d8	1e b2 	. . 
+    
+BRICK_ACTION_TABLE:
+    dw 0xb1da
+    dw 0xb215
+    dw 0xb21e
+    dw 0xb23b
+    dw 0xb253
+    dw 0xb271
+    dw 0xb286    
+    dw 0xb21e
+
 
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
@@ -14005,11 +14004,14 @@ lb22ah:
 	ld a,GLUING_STATE_NO_LONGER_STICKY	;b242	3e 02
 	ld (GLUING_STATUS),a		        ;b244	32 24 e3
 lb247h:
-	ld a,002h		;b247	3e 02 	> . 
-	ld (EXTRA_BALLS),a		;b249	32 25 e3 	2 % . 
-	call VAUS_GET_NORMAL_STATE		;b24c	cd a7 b2 	. . . 
-	call sub_b2c1h		;b24f	cd c1 b2 	. . . 
-	ret			;b252	c9 	. 
+    ; We have catched the blue (3 balls) capsule.
+    ; Set we have two extra balls now, get back to the normal size, and
+    ; set the skewness for each of the three balls.
+	ld a, 2		                ;b247	3e 02
+	ld (EXTRA_BALLS),a		    ;b249	32 25 e3
+	call VAUS_GET_NORMAL_STATE	;b24c	cd a7 b2
+	call sub_b2c1h		        ;b24f	cd c1 b2
+	ret			                ;b252	c9
     
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b253	3a 24 e3
@@ -14039,10 +14041,13 @@ lb25fh:
 	ld a,GLUING_STATE_NO_LONGER_STICKY  ;b278	3e 02
 	ld (GLUING_STATUS),a		        ;b27a	32 24 e3
 lb27dh:
-	ld a,001h		;b27d	3e 01 	> . 
+    ; We have catched the magenta capsule.
+    ; Open the portal and get back to the normal size state.
+	ld a, 1		;b27d	3e 01 	> . 
 	ld (PORTAL_OPEN),a		;b27f	32 26 e3 	2 & . 
 	call VAUS_GET_NORMAL_STATE		;b282	cd a7 b2 	. . . 
 	ret			;b285	c9 	. 
+
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b286	3a 24 e3
 	or a			            ;b289	b7
@@ -14112,7 +14117,7 @@ lb2cfh:
 	ld de,BALL_TABLE_LEN		        ;b2d6	11 14 00
 	add iy,de		                    ;b2d9	fd 19
     
-    ; SEt pointers to the next ball
+    ; Set pointers to the next ball
     ld de, SPR_PARAMS_LEN		                    ;b2db	11 04 00
         
 	add ix,de		;b2de	dd 19
@@ -14122,7 +14127,8 @@ lb2cfh:
 
 ; Ball is active, process it
 lb2e5h:
-    ; Check skewness and point to the corresponding table
+    ; Check skewness and point to the corresponding depending on
+    ; its sign (positive or negative skewness).
 	ld hl,NEW_SKEWNESS_POS_TABLE		    ;b2e5	21 52 b3
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;b2e8	fd 7e 06
 	bit 7,a		                            ;b2eb	cb 7f
