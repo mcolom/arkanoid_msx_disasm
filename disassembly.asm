@@ -13652,6 +13652,7 @@ lb020h:
 	pop iy		;b023	fd e1 	. . 
 	pop ix		;b025	dd e1 	. . 
 	ret			;b027	c9 	. 
+
 sub_b028h:
     ; Capsules won't fall if there are less than 4 bricks remaining
 	ld a,(BRICKS_LEFT)		;b028	3a 38 e0
@@ -13675,9 +13676,11 @@ sub_b028h:
 	ld a,(VAUS_IS_ENLARGED)		;b052	3a 21 e3 	: ! . 
 	or a			;b055	b7 	. 
 	jr nz,lb068h		;b056	20 10 	  . 
-	ld a,(0e322h)		;b058	3a 22 e3 	: " . 
+
+	ld a,(VAUS_HAS_LASERS)		;b058	3a 22 e3 	: " . 
 	or a			;b05b	b7 	. 
 	jr nz,lb06dh		;b05c	20 0f 	  . 
+
 	ld hl,lb0bdh		;b05e	21 bd b0 	! . . 
 	jr lb070h		;b061	18 0d 	. . 
 lb063h:
@@ -13809,7 +13812,7 @@ lb102h:
     
 
 sub_b10ah:
-	ld a,(0e327h)		;b10a	3a 27 e3 	: ' . 
+	ld a,(LIFE_OBTAINED_FLAG)		;b10a	3a 27 e3 	: ' . 
 	or a			;b10d	b7 	. 
 	ret nz			;b10e	c0 	. 
 	ld hl,0e025h		;b10f	21 25 e0 	! % . 
@@ -13899,11 +13902,14 @@ sub_b1a8h:
 	ld a,(0e317h)		;b1a8	3a 17 e3 	: . . 
 	or a			;b1ab	b7 	. 
 	ret z			;b1ac	c8 	. 
+    
+    ; Clear memory (3 bytes)
 	ld hl,0e320h		;b1ad	21 20 e3 	!   . 
 	ld de,VAUS_IS_ENLARGED		;b1b0	11 21 e3 	. ! . 
 	ld (hl),000h		;b1b3	36 00 	6 . 
 	ld bc,00003h		;b1b5	01 03 00 	. . . 
 	ldir		;b1b8	ed b0 	. . 
+
 	ld a,(0e318h)		;b1ba	3a 18 e3 	: . . 
 	rlca			;b1bd	07 	. 
 	ld e,a			;b1be	5f 	_ 
@@ -13925,10 +13931,10 @@ BRICK_ACTION_TABLE:
     dw BRICK_ACTION_LIGHT_BLUE      ; 0xb23b
     dw BRICK_ACTION_LIGHT_RED       ; 0xb253
     dw BRICK_ACTION_LIGHT_MAGENTA   ; 0xb271
-    dw BRICK_ACTION_LIGHT_GRAY      ; 0xb286    
+    dw BRICK_ACTION_GRAY      ; 0xb286    
     dw BRICK_ACTION_BLUE            ; 0xb21e
 
-
+; Decrement the speed of all balls
 BRICK_ACTION_YELLOW:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
@@ -13939,9 +13945,11 @@ BRICK_ACTION_YELLOW:
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b1e1	3e 02
 	ld (GLUING_STATUS),a		            ;b1e3	32 24 e3
 lb1e6h:
-	ld a, 1		;b1e6	3e 01 	> . 
-	ld (0e320h),a		;b1e8	32 20 e3 	2   . 
-	call VAUS_GET_NORMAL_STATE		;b1eb	cd a7 b2 	. . . 
+	; The variable at 0e320h seems to be useless since it's only reset
+    ld a, 1		                    ;b1e6	3e 01
+	ld (0e320h),a		            ;b1e8	32 20 e3
+    
+	call VAUS_GET_NORMAL_STATE		;b1eb	cd a7 b2
     
     ; Loop over 3 balls
 	ld b,3		                ;b1ee	06 03
@@ -13950,8 +13958,8 @@ lb1e6h:
 lb1f7h:
     ; Process if the ball is active
 	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;b1f7	fd 7e 00
-	or a			;b1fa	b7
-	jp nz,lb203h	;b1fb	c2 03 b2
+	or a			                    ;b1fa	b7
+	jp nz,lb203h	                    ;b1fb	c2 03 b2
     
     ; Next ball
 	add iy,de		;b1fe	fd 19
@@ -13970,33 +13978,37 @@ lb203h:
 	ld (iy+BALL_TABLE_IDX_SPEED_POS), 0 		;b210	fd 36 07 00
 	ret			                                ;b214	c9
 
+; Set Vaus sticky
 BRICK_ACTION_GREEN:
-	ld a,GLUING_STATE_STICKY	;b215	3e 01
-	ld (GLUING_STATUS),a		;b217	32 24 e3
-	call VAUS_GET_NORMAL_STATE		    ;b21a	cd a7 b2 	. . . 
-	ret			;b21d	c9 	. 
+	ld a,GLUING_STATE_STICKY	    ;b215	3e 01
+	ld (GLUING_STATUS),a		    ;b217	32 24 e3
+	call VAUS_GET_NORMAL_STATE		;b21a	cd a7 b2
+	ret			                    ;b21d	c9
 
+; Enlarge Vaus
 BRICK_ACTION_BLUE:
     ; Skip if Vaus is not sticky
-	ld a,(GLUING_STATUS)		;b21e	3a 24 e3 	: $ . 
-	or a			;b221	b7 	. 
-	jp z,lb22ah		;b222	ca 2a b2 	. * . 
+	ld a,(GLUING_STATUS)		;b21e	3a 24 e3
+	or a			            ;b221	b7
+	jp z,lb22ah		            ;b222	ca 2a b2
     
     ; Set GLUING_STATE_NO_LONGER_STICKY
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b225	3e 02
 	ld (GLUING_STATUS),a		            ;b227	32 24 e3
 lb22ah:
-	call VAUS_GET_NORMAL_STATE		;b22a	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		        ;b22a	cd a7 b2
     
     ; Set Vaus is enlarging
-	ld a,VAUS_ACTION_STATE_ENLARGING	;b22d	3e 02
-	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		    ;b22f	32 4b e5
-	ld (VAUS_IS_ENLARGED),a		        ;b232	32 21 e3
+	ld a,VAUS_ACTION_STATE_ENLARGING	                ;b22d	3e 02
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;b22f	32 4b e5
+	ld (VAUS_IS_ENLARGED),a		                        ;b232	32 21 e3
 
+    ; Play enlarging sound
 	ld a,SOUND_VAUS_INCREASES_SIZE_H	;b235	3e c0
 	call ADD_SOUND		                ;b237	cd ef 5b
 	ret			                        ;b23a	c9
 
+; Play with 3 balls
 BRICK_ACTION_LIGHT_BLUE:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		        ;b23b	3a 24 e3
@@ -14013,9 +14025,10 @@ lb247h:
 	ld a, 2		                ;b247	3e 02
 	ld (EXTRA_BALLS),a		    ;b249	32 25 e3
 	call VAUS_GET_NORMAL_STATE	;b24c	cd a7 b2
-	call sub_b2c1h		        ;b24f	cd c1 b2
+	call SET_THREE_BALLS_SKEWNESS		        ;b24f	cd c1 b2
 	ret			                ;b252	c9
     
+; Obtain lasers
 BRICK_ACTION_LIGHT_RED:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b253	3a 24 e3
@@ -14025,35 +14038,39 @@ BRICK_ACTION_LIGHT_RED:
 	ld a,GLUING_STATE_NO_LONGER_STICKY  ;b25a	3e 02
 	ld (GLUING_STATUS),a		        ;b25c	32 24 e3
 lb25fh:
-	call VAUS_GET_NORMAL_STATE		;b25f	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		    ;b25f	cd a7 b2
     
     ; Set Vaus is obtaining lasers
-	ld a,VAUS_ACTION_STATE_LASER	;b262	3e 04
+	ld a,VAUS_ACTION_STATE_LASER	                    ;b262	3e 04
 	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;b264	32 4b e5
 
-	ld a,001h		;b267	3e 01 	> . 
-	ld (0e322h),a		;b269	32 22 e3 	2 " . 
-	xor a			;b26c	af 	. 
-	ld (SPEEDUP_ALL_BALLS_COUNTER),a		;b26d	32 29 e5 	2 ) . 
-	ret			;b270	c9 	. 
+	ld a, 1		                ;b267	3e 01
+	ld (VAUS_HAS_LASERS),a		;b269	32 22 e3
 
+	xor a			                    ;b26c	af
+	ld (SPEEDUP_ALL_BALLS_COUNTER),a	;b26d	32 29 e5
+	ret			                        ;b270	c9
+
+; Open the portal
 BRICK_ACTION_LIGHT_MAGENTA:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b271	3a 24 e3
 	or a			            ;b274	b7
 	jp z,lb27dh		            ;b275	ca 7d b2
-    ; Set GLUING_STATE_NO_LONGER_STICKY
+    ; Set not sticky
 	ld a,GLUING_STATE_NO_LONGER_STICKY  ;b278	3e 02
 	ld (GLUING_STATUS),a		        ;b27a	32 24 e3
 lb27dh:
     ; We have catched the magenta capsule.
     ; Open the portal and get back to the normal size state.
-	ld a, 1		;b27d	3e 01 	> . 
-	ld (PORTAL_OPEN),a		;b27f	32 26 e3 	2 & . 
-	call VAUS_GET_NORMAL_STATE		;b282	cd a7 b2 	. . . 
-	ret			;b285	c9 	. 
+	ld a, 1		            ;b27d	3e 01
+	ld (PORTAL_OPEN),a		;b27f	32 26 e3
+    
+	call VAUS_GET_NORMAL_STATE  ;b282	cd a7 b2
+	ret			                ;b285	c9 	. 
 
-BRICK_ACTION_LIGHT_GRAY:
+; Get a life!
+BRICK_ACTION_GRAY:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b286	3a 24 e3
 	or a			            ;b289	b7
@@ -14063,8 +14080,9 @@ BRICK_ACTION_LIGHT_GRAY:
 	ld (GLUING_STATUS),a		            ;b28f	32 24 e3
 lb292h:
 	call VAUS_GET_NORMAL_STATE		;b292	cd a7 b2
-	ld a,001h		;b295	3e 01 	> . 
-	ld (0e327h),a		;b297	32 27 e3 	2 ' . 
+
+	ld a,1		                    ;b295	3e 01
+	ld (LIFE_OBTAINED_FLAG),a		;b297	32 27 e3
     
     ; Increment number of lives and draw them
 	ld hl,LIVES		    ;b29a	21 1d e0
@@ -14076,9 +14094,9 @@ lb292h:
 	call ADD_SOUND		;b2a3	cd ef 5b
 	ret			        ;b2a6	c9
 
-; Get Vaus back to normal state: no enlarged, no lasers
+; Get Vaus back to normal state: not enlarged, no lasers
 VAUS_GET_NORMAL_STATE:
-	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)		    ;b2a7	3a 50 e5
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_SIZING)   ;b2a7	3a 50 e5
 
 	cp VAUS_ACTION_STATE_ENLARGING		;b2aa	fe 02
 	jr nz,lb2b2h		                ;b2ac	20 04
@@ -14105,8 +14123,12 @@ lb2bdh:
 lb2c0h:
 	ret			                                        ;b2c0	c9
 
-; SEGUIR
-sub_b2c1h:
+; This is called when you get the light blue capsule, to set the
+; skewness of all three balls.
+;
+; It uses the NEW_SKEWNESS_POS_TABLE and NEW_SKEWNESS_NEG_TABLE to
+; set the values.
+SET_THREE_BALLS_SKEWNESS:
     ; This push/pop pair seems to be useless since ix and iy are
     ; set right after.
 	push ix		;b2c1	dd e5

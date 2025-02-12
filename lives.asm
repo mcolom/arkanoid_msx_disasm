@@ -1,1 +1,2 @@
 LIVES: equ 0xe01d
+LIFE_OBTAINED_FLAG: equ 0xe327
