@@ -13916,18 +13916,20 @@ sub_b1a8h:
 	ld d,(hl)			;b1c7	56 	V 
 	ex de,hl			;b1c8	eb 	. 
 	jp (hl)			;b1c9	e9 	. 
-    
+
+; Jump table for the actions of each of the bricks you get
 BRICK_ACTION_TABLE:
-    dw 0xb1da
-    dw 0xb215
-    dw 0xb21e
-    dw 0xb23b
-    dw 0xb253
-    dw 0xb271
-    dw 0xb286    
-    dw 0xb21e
+    dw BRICK_ACTION_YELLOW          ; 0xb1da
+    dw BRICK_ACTION_GREEN           ; 0xb215
+    dw BRICK_ACTION_BLUE            ; 0xb21e
+    dw BRICK_ACTION_LIGHT_BLUE      ; 0xb23b
+    dw BRICK_ACTION_LIGHT_RED       ; 0xb253
+    dw BRICK_ACTION_LIGHT_MAGENTA   ; 0xb271
+    dw BRICK_ACTION_LIGHT_GRAY      ; 0xb286    
+    dw BRICK_ACTION_BLUE            ; 0xb21e
 
 
+BRICK_ACTION_YELLOW:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
 	or a			;b1dd	b7 	. 
@@ -13937,7 +13939,7 @@ BRICK_ACTION_TABLE:
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b1e1	3e 02
 	ld (GLUING_STATUS),a		            ;b1e3	32 24 e3
 lb1e6h:
-	ld a,001h		;b1e6	3e 01 	> . 
+	ld a, 1		;b1e6	3e 01 	> . 
 	ld (0e320h),a		;b1e8	32 20 e3 	2   . 
 	call VAUS_GET_NORMAL_STATE		;b1eb	cd a7 b2 	. . . 
     
@@ -13948,13 +13950,13 @@ lb1e6h:
 lb1f7h:
     ; Process if the ball is active
 	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;b1f7	fd 7e 00
-	or a			;b1fa	b7 	. 
-	jp nz,lb203h		;b1fb	c2 03 b2 	. . . 
+	or a			;b1fa	b7
+	jp nz,lb203h	;b1fb	c2 03 b2
     
     ; Next ball
 	add iy,de		;b1fe	fd 19
 	djnz lb1f7h		;b200	10 f5
-	ret			;b202	c9 	. 
+	ret			    ;b202	c9
 lb203h:
 	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER), 0		;b203	fd 36 0d 00
     
@@ -13965,16 +13967,16 @@ lb203h:
 
 	ret nc			                            ;b20f	d0
     ; Reset the speed pos if speed below zero
-	ld (iy+BALL_TABLE_IDX_SPEED_POS),000h		;b210	fd 36 07 00
+	ld (iy+BALL_TABLE_IDX_SPEED_POS), 0 		;b210	fd 36 07 00
 	ret			                                ;b214	c9
 
-    ; Dead code?
+BRICK_ACTION_GREEN:
 	ld a,GLUING_STATE_STICKY	;b215	3e 01
 	ld (GLUING_STATUS),a		;b217	32 24 e3
 	call VAUS_GET_NORMAL_STATE		    ;b21a	cd a7 b2 	. . . 
 	ret			;b21d	c9 	. 
 
-    ; Dead code?
+BRICK_ACTION_BLUE:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b21e	3a 24 e3 	: $ . 
 	or a			;b221	b7 	. 
@@ -13995,6 +13997,7 @@ lb22ah:
 	call ADD_SOUND		                ;b237	cd ef 5b
 	ret			                        ;b23a	c9
 
+BRICK_ACTION_LIGHT_BLUE:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		        ;b23b	3a 24 e3
 	or a			                    ;b23e	b7
@@ -14013,6 +14016,7 @@ lb247h:
 	call sub_b2c1h		        ;b24f	cd c1 b2
 	ret			                ;b252	c9
     
+BRICK_ACTION_LIGHT_RED:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b253	3a 24 e3
 	or a			            ;b256	b7
@@ -14032,7 +14036,8 @@ lb25fh:
 	xor a			;b26c	af 	. 
 	ld (SPEEDUP_ALL_BALLS_COUNTER),a		;b26d	32 29 e5 	2 ) . 
 	ret			;b270	c9 	. 
-    
+
+BRICK_ACTION_LIGHT_MAGENTA:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b271	3a 24 e3
 	or a			            ;b274	b7
@@ -14048,6 +14053,7 @@ lb27dh:
 	call VAUS_GET_NORMAL_STATE		;b282	cd a7 b2 	. . . 
 	ret			;b285	c9 	. 
 
+BRICK_ACTION_LIGHT_GRAY:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b286	3a 24 e3
 	or a			            ;b289	b7
@@ -14056,13 +14062,16 @@ lb27dh:
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b28d	3e 02
 	ld (GLUING_STATUS),a		            ;b28f	32 24 e3
 lb292h:
-	call VAUS_GET_NORMAL_STATE		;b292	cd a7 b2 	. . . 
+	call VAUS_GET_NORMAL_STATE		;b292	cd a7 b2
 	ld a,001h		;b295	3e 01 	> . 
 	ld (0e327h),a		;b297	32 27 e3 	2 ' . 
-	ld hl,LIVES		;b29a	21 1d e0 	! . . 
-	inc (hl)			;b29d	34 	4 
-	call DRAW_LIVES		;b29e	cd b9 71 	. . q 
+    
+    ; Increment number of lives and draw them
+	ld hl,LIVES		    ;b29a	21 1d e0
+	inc (hl)			;b29d	34
+	call DRAW_LIVES		;b29e	cd b9 71
 
+    ; Play live sound
 	ld a,SOUND_LIFE		;b2a1	3e c5
 	call ADD_SOUND		;b2a3	cd ef 5b
 	ret			        ;b2a6	c9
