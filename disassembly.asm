@@ -14193,58 +14193,18 @@ lb34dh:
 	ret			;b351	c9
 
 NEW_SKEWNESS_POS_TABLE:
-	nop			;b352	00 	. 
-	nop			;b353	00 	. 
-	nop			;b354	00 	. 
-	nop			;b355	00 	. 
-	ld (bc),a			;b356	02 	. 
-	inc bc			;b357	03 	. 
-	inc b			;b358	04 	. 
-	ld (bc),a			;b359	02 	. 
-	ld (bc),a			;b35a	02 	. 
-	inc bc			;b35b	03 	. 
-	inc b			;b35c	04 	. 
-	ld (bc),a			;b35d	02 	. 
-	ld (bc),a			;b35e	02 	. 
-	inc bc			;b35f	03 	. 
-	inc b			;b360	04 	. 
-	ld (bc),a			;b361	02 	. 
-	ld (bc),a			;b362	02 	. 
-	inc bc			;b363	03 	. 
-	inc b			;b364	04 	. 
-	ld (bc),a			;b365	02 	. 
-	inc b			;b366	04 	. 
-	dec b			;b367	05 	. 
-	ld b,004h		;b368	06 04 	. . 
-	dec b			;b36a	05 	. 
-	ld b,007h		;b36b	06 07 	. . 
-	dec b			;b36d	05 	. 
-	dec b			;b36e	05 	. 
-	ld b,007h		;b36f	06 07 	. . 
-	dec b			;b371	05 	. 
-	dec b			;b372	05 	. 
-	ld b,007h		;b373	06 07 	. . 
-	dec b			;b375	05 	. 
+    db 0x0, 0x0, 0x0, 0x0, 0x2, 0x3, 0x4, 0x2 ; 0xb352 - 0xb359
+    db 0x2, 0x3, 0x4, 0x2, 0x2, 0x3, 0x4, 0x2 ; 0xb35a - 0xb361
+    db 0x2, 0x3, 0x4, 0x2, 0x4, 0x5, 0x6, 0x4 ; 0xb362 - 0xb369
+    db 0x5, 0x6, 0x7, 0x5, 0x5, 0x6, 0x7, 0x5 ; 0xb36a - 0xb371
+    db 0x5, 0x6, 0x7, 0x5                     ; 0xb372 - 0xb375
 
 NEW_SKEWNESS_NEG_TABLE:
-	nop			;b376	00 	. 
-	nop			;b377	00 	. 
-	nop			;b378	00 	. 
-	nop			;b379	00 	. 
-	cp 0fdh		;b37a	fe fd 	. . 
-	call m,0fefeh		;b37c	fc fe fe 	. . . 
-	defb 0fdh,0fch,0feh	;illegal sequence		;b37f	fd fc fe 	. . . 
-	cp 0fdh		;b382	fe fd 	. . 
-	call m,0fefeh		;b384	fc fe fe 	. . . 
-	defb 0fdh,0fch,0feh	;illegal sequence		;b387	fd fc fe 	. . . 
-	call m,0fafbh		;b38a	fc fb fa 	. . . 
-	call m,0fafbh		;b38d	fc fb fa 	. . . 
-	ld sp,hl			;b390	f9 	. 
-	jp m,0fafbh		;b391	fa fb fa 	. . . 
-	ld sp,hl			;b394	f9 	. 
-	jp m,0fafbh		;b395	fa fb fa 	. . . 
-	ld sp,hl			;b398	f9 	. 
-    db 0xfa
+    db 0x0, 0x0, 0x0, 0x0, 0xfe, 0xfd, 0xfc, 0xfe ; 0xb376 - 0xb37d
+    db 0xfe, 0xfd, 0xfc, 0xfe, 0xfe, 0xfd, 0xfc, 0xfe ; 0xb37e - 0xb385
+    db 0xfe, 0xfd, 0xfc, 0xfe, 0xfc, 0xfb, 0xfa, 0xfc ; 0xb386 - 0xb38d
+    db 0xfb, 0xfa, 0xf9, 0xfa, 0xfb, 0xfa, 0xf9, 0xfa ; 0xb38e - 0xb395
+    db 0xfb, 0xfa, 0xf9, 0xfa                         ; 0xb396 - 0xb399
 
 ; 16/8 division
 ; Divides HL by C.
