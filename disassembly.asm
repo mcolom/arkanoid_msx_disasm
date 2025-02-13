@@ -7230,10 +7230,12 @@ l7019h:
 	ld c,b			;7036	48 	H 
 	ld c,h			;7037	4c 	L 
 	ld d,b			;7038	50 	P 
+
 sub_7039h:
 	call sub_7040h		;7039	cd 40 70 	. @ p 
 	call sub_70b0h		;703c	cd b0 70 	. . p 
 	ret			;703f	c9 	. 
+
 sub_7040h:
 	ld ix,VAUS_TABLE		;7040	dd 21 4b e5 	. ! K . 
 	ld a,(ix+006h)		;7044	dd 7e 06 	. ~ . 
@@ -13876,9 +13878,13 @@ lb4aeh:
 	or b			;b4af	b0 	. 
 	call z,02890h		;b4b0	cc 90 28 	. . ( 
 	adc a,c			;b4b3	89 	. 
-	jr z,lb534h		;b4b4	28 7e 	( ~ 
-	and a			;b4b6	a7 	. 
-	ret z			;b4b7	c8 	. 
+	db 0x28         ;b4b4   28
+    
+sub_b4b5:
+	ld a, (hl)		;b4b5	7e
+	and a		    ;b4b6	a7
+	ret z			;b4b7	c8
+
 	push hl			;b4b8	e5 	. 
 	pop ix		;b4b9	dd e1 	. . 
 	dec (ix+009h)		;b4bb	dd 35 09 	. 5 . 
@@ -14110,47 +14116,67 @@ lb58ch:
 	ret			    ;b593	c9
 
 sub_b594h:
-    ; Is the variable at 0e5c1h useless?
+    ; Is the variable at SOUND_NUMBER+1 useless?
     ; It seems it's only checked here, but never written
-	ld a,(0e5c1h)	;b594	3a c1 e5
+	ld a,(SOUND_NUMBER + 1)	;b594	3a c1 e5
 	and a			;b597	a7
 	ret nz			;b598	c0
     
-	ld hl,0e5c3h		;b599	21 c3 e5 	! . . 
+    ; C = V
+	ld hl,SOUND_NUMBER + 3		;b599	21 c3 e5 	! . . 
 	ld c,(hl)			;b59c	4e 	N 
+    
+    ; C = V - A
 	sub a			;b59d	97 	. 
+    
+    ; V = V - A
 	ld (hl),a			;b59e	77 	w 
+    
+    ; A--
 	dec a			;b59f	3d 	= 
-	ld d,003h		;b5a0	16 03 	. . 
-	ld b,d			;b5a2	42 	B 
+    
+    ; B = D = 3
+	ld d, 3		    ;b5a0	16 03
+	ld b,d			;b5a2	42
+
+; Write 3 PSG registers
 lb5a3h:
 	call WRITE_NEXT_REG_PSG		;b5a3	cd 86 b5 	. . . 
 	rlc c		;b5a6	cb 01 	. . 
 	call WRITE_NEXT_REG_PSG		;b5a8	cd 86 b5 	. . . 
 	djnz lb5a3h		;b5ab	10 f6 	. . 
+
+    ; Another PSG write
 	call WRITE_NEXT_REG_PSG		;b5ad	cd 86 b5 	. . . 
+
 	inc hl			;b5b0	23 	# 
 	ld e,(hl)			;b5b1	5e 	^ 
 	call sub_b570h		;b5b2	cd 70 b5 	. p . 
+    
+; Write 3 more PSG registers
 	ld b,d			;b5b5	42 	B 
 lb5b6h:
 	call WRITE_NEXT_REG_PSG		;b5b6	cd 86 b5 	. . . 
 	djnz lb5b6h		;b5b9	10 fb 	. . 
+
+; Write 3 more PSG registers
 	ld b,d			;b5bb	42 	B 
 lb5bch:
 	call WRITE_NEXT_REG_PSG		;b5bc	cd 86 b5 	. . . 
 	rlc c		;b5bf	cb 01 	. . 
 	djnz lb5bch		;b5c1	10 f9 	. . 
+
 	ld e,(hl)			;b5c3	5e 	^ 
 	inc hl			;b5c4	23 	# 
+
 	bit 3,(hl)		;b5c5	cb 5e 	. ^ 
 	call nz,lb58ch		;b5c7	c4 8c b5 	. . . 
+
 	res 3,(hl)		;b5ca	cb 9e 	. . 
 	inc hl			;b5cc	23 	# 
 	ld bc,(0e5dah)		;b5cd	ed 4b da e5 	. K . . 
-    
-    ; ToDO: decompile again, we can't see the code of b4b5 since of the offset
-	call 0b4b5h		;b5d1	cd b5 b4 	. . . 
+
+	call sub_b4b5		;b5d1	cd b5 b4 	. . . 
 	
     jr nc,lb5e3h		;b5d4	30 0d 	0 . 
 	ld (0e5dch),a		;b5d6	32 dc e5 	2 . . 
