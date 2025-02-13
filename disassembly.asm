@@ -6162,7 +6162,7 @@ l6814h:
 	ret nz			;6834	c0 	. 
 
 sub_6835h:
-	call 068c4h		;6835	cd c4 68 	. . h 
+	call sub_68c4h		;6835	cd c4 68 	. . h 
 	call sub_7039h		;6838	cd 39 70 	. 9 p 
 	call sub_683fh		;683b	cd 3f 68 	. ? h 
 	ret			;683e	c9 	. 
@@ -6256,9 +6256,11 @@ l68bch:
 	dec e			;68bf	1d 	. 
 	ld e,01fh		;68c0	1e 1f 	. . 
 	ld l,l			;68c2	6d 	m 
-	ld hl,la93ah		;68c3	21 3a a9 	! : . 
-	push hl			;68c6	e5 	. 
-	cp 001h		;68c7	fe 01 	. . 
+    db 0x21         ;68c3   21
+
+sub_68c4h:
+    ld a, (0xe5a9)  ;68c4   3a a9 e5
+    cp 1            ;68c7   fe 01
 	jp z,l68dch		;68c9	ca dc 68 	. . h 
 
 	ld hl,l6fe7h		;68cc	21 e7 6f 	! . o 
