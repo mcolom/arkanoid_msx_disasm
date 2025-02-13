@@ -9,3 +9,4 @@ BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks o
 BRICK_REPAINT_UNKNOWN: equ 1   ; ???
 BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
 
+BRICK_IS_FALLING: equ 0xe317

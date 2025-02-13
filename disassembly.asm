@@ -293,7 +293,7 @@ l4158h:
 	add ix,de		;4158	dd 19 	. . 
 	djnz l4128h		;415a	10 cc 	. . 
 
-	ld a,(0e317h)		;415c	3a 17 e3 	: . . 
+	ld a,(BRICK_IS_FALLING)		;415c	3a 17 e3 	: . . 
 	or a			;415f	b7 	. 
 	jp z,l418eh		;4160	ca 8e 41 	. . A 
 	ld hl,0e545h		;4163	21 45 e5 	! E . 
@@ -13017,9 +13017,9 @@ sub_b028h:
 	ld a,(BRICKS_LEFT)		;b028	3a 38 e0
 	cp 4		            ;b02b	fe 04
 	ret c			        ;b02d	d8
-	ld ix,0e317h		;b02e	dd 21 17 e3 	. ! . . 
+	ld ix,BRICK_IS_FALLING		;b02e	dd 21 17 e3 	. ! . . 
 	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b032	fd 21 c9 e0 	. ! . . 
-	ld a,(0e317h)		;b036	3a 17 e3 	: . . 
+	ld a,(BRICK_IS_FALLING)		;b036	3a 17 e3 	: . . 
 	or a			;b039	b7 	. 
 	ret nz			;b03a	c0 	. 
 	ld (ix+000h),001h		;b03b	dd 36 00 01 	. 6 . . 
@@ -13201,10 +13201,12 @@ lb12fh:
 	ret			;b136	c9 	. 
 
 sub_b137h:
+    ; Skup if we're at the final level
 	ld a,(LEVEL)		;b137	3a 1b e0
 	cp FINAL_LEVEL		;b13a	fe 20
-	ret z			;b13c	c8 	. 
-	ld ix,0e317h		;b13d	dd 21 17 e3 	. ! . . 
+	ret z			    ;b13c	c8
+
+	ld ix,BRICK_IS_FALLING		;b13d	dd 21 17 e3 	. ! . . 
 	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b141	fd 21 c9 e0 	. ! . . 
 	ld a,(ix+000h)		;b145	dd 7e 00 	. ~ . 
 	or a			;b148	b7 	. 
@@ -13254,11 +13256,11 @@ lb18bh:
 	call ADD_POINTS_AND_UPDATE_SCORES		;b19d	cd a0 52 	. . R 
 	call sub_b1a8h		;b1a0	cd a8 b1 	. . . 
 	xor a			;b1a3	af 	. 
-	ld (0e317h),a		;b1a4	32 17 e3 	2 . . 
+	ld (BRICK_IS_FALLING),a		;b1a4	32 17 e3 	2 . . 
 	ret			;b1a7	c9 	. 
 
 sub_b1a8h:
-	ld a,(0e317h)		;b1a8	3a 17 e3 	: . . 
+	ld a,(BRICK_IS_FALLING)		;b1a8	3a 17 e3 	: . . 
 	or a			;b1ab	b7 	. 
 	ret z			;b1ac	c8 	. 
     
