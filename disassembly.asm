@@ -293,7 +293,7 @@ l4158h:
 	add ix,de		;4158	dd 19 	. . 
 	djnz l4128h		;415a	10 cc 	. . 
 
-	ld a,(BRICK_IS_FALLING)		;415c	3a 17 e3 	: . . 
+	ld a,(CAPSULE_IS_FALLING)		;415c	3a 17 e3 	: . . 
 	or a			;415f	b7 	. 
 	jp z,l418eh		;4160	ca 8e 41 	. . A 
 	ld hl,0e545h		;4163	21 45 e5 	! E . 
@@ -9177,7 +9177,7 @@ db 0, 0, 0, 0, 0, 0, 0, 0, 0
 db 0xb7, 0
 
 sub_95f4h:
-	call sub_b137h		;95f4	cd 37 b1 	. 7 . 
+	call CAPSULE_MOVE_DOWN_STEP		;95f4	cd 37 b1 	. 7 . 
 	call sub_b15ch		;95f7	cd 5c b1 	. \ . 
 	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
 	call sub_97eah		;95fd	cd ea 97 	. . . 
@@ -13017,9 +13017,9 @@ sub_b028h:
 	ld a,(BRICKS_LEFT)		;b028	3a 38 e0
 	cp 4		            ;b02b	fe 04
 	ret c			        ;b02d	d8
-	ld ix,BRICK_IS_FALLING		;b02e	dd 21 17 e3 	. ! . . 
+	ld ix,CAPSULE_IS_FALLING		;b02e	dd 21 17 e3 	. ! . . 
 	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b032	fd 21 c9 e0 	. ! . . 
-	ld a,(BRICK_IS_FALLING)		;b036	3a 17 e3 	: . . 
+	ld a,(CAPSULE_IS_FALLING)		;b036	3a 17 e3 	: . . 
 	or a			;b039	b7 	. 
 	ret nz			;b03a	c0 	. 
 	ld (ix+000h),001h		;b03b	dd 36 00 01 	. 6 . . 
@@ -13200,24 +13200,34 @@ lb12fh:
 	scf			;b135	37 	7 
 	ret			;b136	c9 	. 
 
-sub_b137h:
-    ; Skup if we're at the final level
+; Move the falling capsule one step down
+CAPSULE_MOVE_DOWN_STEP:
+    ; Skip if we're at the final level
 	ld a,(LEVEL)		;b137	3a 1b e0
 	cp FINAL_LEVEL		;b13a	fe 20
 	ret z			    ;b13c	c8
 
-	ld ix,BRICK_IS_FALLING		;b13d	dd 21 17 e3 	. ! . . 
-	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b141	fd 21 c9 e0 	. ! . . 
-	ld a,(ix+000h)		;b145	dd 7e 00 	. ~ . 
-	or a			;b148	b7 	. 
-	ret z			;b149	c8 	. 
-	inc (iy+000h)		;b14a	fd 34 00 	. 4 . 
-	ld a,(iy+000h)		;b14d	fd 7e 00 	. ~ . 
-	cp 0bch		;b150	fe bc 	. . 
-	ret c			;b152	d8 	. 
-	ld (ix+000h),000h		;b153	dd 36 00 00 	. 6 . . 
-	ld (iy+000h),0c0h		;b157	fd 36 00 c0 	. 6 . . 
-	ret			;b15b	c9 	. 
+    ; Skip if there's no capsule falling
+	ld ix,CAPSULE_IS_FALLING	        ;b13d	dd 21 17 e3
+	ld iy,FALLING_CAPSULE_SPR_PARAMS	;b141	fd 21 c9 e0
+	ld a,(ix+000h)		                ;b145	dd 7e 00
+	or a			                    ;b148	b7
+	ret z			                    ;b149	c8
+
+    ; Move capsule one step down
+	inc (iy+SPR_PARAMS_IDX_Y)		;b14a	fd 34 00
+    
+    ; Exit if it's less than 188
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;b14d	fd 7e 00
+	cp 188		                    ;b150	fe bc
+	ret c			                ;b152	d8
+    
+    ; It's more than 188: make it disappear
+
+    ; No capsule falling
+	ld (ix+0), 0		            ;b153	dd 36 00 00
+	ld (iy+SPR_PARAMS_IDX_Y), 192	;b157	fd 36 00 c0
+	ret			                    ;b15b	c9
 
 sub_b15ch:
     ; Skip if we're in the final level
@@ -13256,11 +13266,11 @@ lb18bh:
 	call ADD_POINTS_AND_UPDATE_SCORES		;b19d	cd a0 52 	. . R 
 	call sub_b1a8h		;b1a0	cd a8 b1 	. . . 
 	xor a			;b1a3	af 	. 
-	ld (BRICK_IS_FALLING),a		;b1a4	32 17 e3 	2 . . 
+	ld (CAPSULE_IS_FALLING),a		;b1a4	32 17 e3 	2 . . 
 	ret			;b1a7	c9 	. 
 
 sub_b1a8h:
-	ld a,(BRICK_IS_FALLING)		;b1a8	3a 17 e3 	: . . 
+	ld a,(CAPSULE_IS_FALLING)		;b1a8	3a 17 e3 	: . . 
 	or a			;b1ab	b7 	. 
 	ret z			;b1ac	c8 	. 
     
