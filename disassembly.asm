@@ -9178,11 +9178,12 @@ db 0xb7, 0
 
 sub_95f4h:
 	call CAPSULE_MOVE_DOWN_STEP		;95f4	cd 37 b1 	. 7 . 
-	call sub_b15ch		;95f7	cd 5c b1 	. \ . 
+	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION		;95f7	cd 5c b1 	. \ . 
 	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
 	call sub_97eah		;95fd	cd ea 97 	. . . 
 	call sub_9726h		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
+
 	ld hl,0e36eh		;9604	21 6e e3 	! n . 
 	ld a,(BRICK_ROW)		;9607	3a aa e2 	: . . 
 	or a			;960a	b7 	. 
@@ -13229,7 +13230,9 @@ CAPSULE_MOVE_DOWN_STEP:
 	ld (iy+SPR_PARAMS_IDX_Y), 192	;b157	fd 36 00 c0
 	ret			                    ;b15b	c9
 
-sub_b15ch:
+; Check if Vaus has captured a falling capsule, and execute the
+; corresponding action in that case.
+CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION:
     ; Skip if we're in the final level
 	ld a,(LEVEL)		;b15c	3a 1b e0
 	cp FINAL_LEVEL		;b15f	fe 20
@@ -13237,76 +13240,106 @@ sub_b15ch:
     
     ; Skip if Vaus is exploding
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		;b162	3a 4b e5
-	cp VAUS_ACTION_STATE_EXPLODING	;b165	fe 06
-	ret z			                ;b167	c8
-	
-    ld ix,FALLING_CAPSULE_SPR_PARAMS		;b168	dd 21 c9 e0 	. ! . . 
-	ld iy,SPR_PARAMS_BASE		;b16c	fd 21 cd e0 	. ! . . 
-	ld a,(ix+000h)		;b170	dd 7e 00 	. ~ . 
-	cp 0a8h		;b173	fe a8 	. . 
-	ret c			;b175	d8 	. 
-	cp 0b8h		;b176	fe b8 	. . 
-	ret nc			;b178	d0 	. 
-	ld a,(iy+001h)		;b179	fd 7e 01 	. ~ . 
-	cp (ix+001h)		;b17c	dd be 01 	. . . 
-	ret nc			;b17f	d0 	. 
-	ld c,020h		;b180	0e 20 	.   
-	ld a,(VAUS_IS_ENLARGED)		;b182	3a 21 e3 	: ! . 
-	or a			;b185	b7 	. 
-	jp z,lb18bh		;b186	ca 8b b1 	. . . 
-	ld c,030h		;b189	0e 30 	. 0 
-lb18bh:
-	ld a,(iy+001h)		;b18b	fd 7e 01 	. ~ . 
-	add a,c			;b18e	81 	. 
-	cp (ix+001h)		;b18f	dd be 01 	. . . 
-	ret c			;b192	d8 	. 
-	ld (ix+000h),0c0h		;b193	dd 36 00 c0 	. 6 . . 
-	ld (ix+002h),000h		;b197	dd 36 02 00 	. 6 . . 
-	ld a,00bh		;b19b	3e 0b 	> . 
-	call ADD_POINTS_AND_UPDATE_SCORES		;b19d	cd a0 52 	. . R 
-	call sub_b1a8h		;b1a0	cd a8 b1 	. . . 
-	xor a			;b1a3	af 	. 
-	ld (CAPSULE_IS_FALLING),a		;b1a4	32 17 e3 	2 . . 
-	ret			;b1a7	c9 	. 
+	cp VAUS_ACTION_STATE_EXPLODING	                    ;b165	fe 06
+	ret z			                                    ;b167	c8
 
-sub_b1a8h:
-	ld a,(CAPSULE_IS_FALLING)		;b1a8	3a 17 e3 	: . . 
-	or a			;b1ab	b7 	. 
-	ret z			;b1ac	c8 	. 
+    ; Point to the falling capsule and to Vaus spr. params.
+    ld ix,FALLING_CAPSULE_SPR_PARAMS		;b168	dd 21 c9 e0
+	ld iy,SPR_PARAMS_BASE		            ;b16c	fd 21 cd e0
+
+    ; Exit if the falling capsule height's is less than 168
+	ld a,(ix+SPR_PARAMS_IDX_Y)		        ;b170	dd 7e 00
+	cp 168		                            ;b173	fe a8
+	ret c			                        ;b175	d8
+
+    ; Exit if the falling capsule height's is more than 184
+	cp 184		    ;b176	fe b8
+	ret nc			;b178	d0
+    
+    ; The capsule's height is between 168 and 184    
+    
+    ; Exit if the capsule's X is smaller than Vaus' X
+	ld a,(iy+SPR_PARAMS_IDX_X)		;b179	fd 7e 01
+	cp (ix+SPR_PARAMS_IDX_X)		;b17c	dd be 01
+	ret nc			                ;b17f	d0
+    
+    ; Depending on whether Vaus is enlarged or not, set C=48 or C=32.
+	ld c, 32		            ;b180	0e 20
+	ld a,(VAUS_IS_ENLARGED)		;b182	3a 21 e3
+	or a			            ;b185	b7
+	jp z,lb18bh		            ;b186	ca 8b b1
+	ld c, 48		            ;b189	0e 30
+
+lb18bh:
+    ;  Exit if the capsule's X is larger than Vaus' X
+	ld a,(iy+SPR_PARAMS_IDX_X)		;b18b	fd 7e 01
+	add a,c			                ;b18e	81
+	cp (ix+SPR_PARAMS_IDX_X)		;b18f	dd be 01
+	ret c			                ;b192	d8
+    
+    ; At this point Vaus is touching the capsule
+    
+	; Remove the capsule, which has been catched
+    ld (ix+SPR_PARAMS_IDX_Y), 192	        ;b193	dd 36 00 c0
+    ld (ix+SPR_PARAMS_IDX_PATTERN_NUM),0	;b197	dd 36 02 00
+
+    ; Add points
+	ld a, 11		                        ;b19b	3e 0b    
+	call ADD_POINTS_AND_UPDATE_SCORES		;b19d	cd a0 52
+
+    ; Execute the corresponding action
+	call EXECUTE_CAPSULE_ACTION		;b1a0	cd a8 b1 	. . . 
+    
+    ; No capsule falling
+	xor a			                ;b1a3	af
+	ld (CAPSULE_IS_FALLING),a		;b1a4	32 17 e3
+	ret			                    ;b1a7	c9
+
+; Execute the corresponding action when catching a falling capsule
+EXECUTE_CAPSULE_ACTION:
+    ; Skip if the capsule is not falling
+	ld a,(CAPSULE_IS_FALLING)		;b1a8	3a 17 e3
+	or a			                ;b1ab	b7
+	ret z			                ;b1ac	c8
     
     ; Clear memory (3 bytes)
-	ld hl,0e320h		;b1ad	21 20 e3 	!   . 
-	ld de,VAUS_IS_ENLARGED		;b1b0	11 21 e3 	. ! . 
-	ld (hl),000h		;b1b3	36 00 	6 . 
-	ld bc,00003h		;b1b5	01 03 00 	. . . 
-	ldir		;b1b8	ed b0 	. . 
+	ld hl,0e320h		        ;b1ad	21 20 e3
+	ld de,VAUS_IS_ENLARGED		;b1b0	11 21 e3
+	ld (hl),000h		        ;b1b3	36 00
+	ld bc, 3		            ;b1b5	01 03 00
+	ldir		                ;b1b8	ed b0
 
-	ld a,(0e318h)		;b1ba	3a 18 e3 	: . . 
-	rlca			;b1bd	07 	. 
-	ld e,a			;b1be	5f 	_ 
-	ld d,000h		;b1bf	16 00 	. . 
+    ; Obtain the pointer to the capsule action table
+	ld a,(CAPSULE_TYPE)		;b1ba	3a 18 e3
+	rlca			        ;b1bd	07
+	ld e,a			        ;b1be	5f
+	ld d, 0		            ;b1bf	16 00
     
-	ld hl,BRICK_ACTION_TABLE		;b1c1	21 ca b1 	! . . 
-	add hl,de			;b1c4	19 	. 
-	ld e,(hl)			;b1c5	5e 	^ 
-	inc hl			;b1c6	23 	# 
-	ld d,(hl)			;b1c7	56 	V 
-	ex de,hl			;b1c8	eb 	. 
+	ld hl,CAPSULE_ACTION_TABLE		;b1c1	21 ca b1
+	add hl,de			            ;b1c4	19
+
+    ; DE = CAPSULE_ACTION_TABLE[2*CAPSULE_TYPE]
+	ld e,(hl)			;b1c5	5e
+	inc hl			    ;b1c6	23
+	ld d,(hl)			;b1c7	56
+	ex de,hl			;b1c8	eb
+    
+    ; Execute the action
 	jp (hl)			;b1c9	e9 	. 
 
 ; Jump table for the actions of each of the bricks you get
-BRICK_ACTION_TABLE:
-    dw BRICK_ACTION_YELLOW          ; 0xb1da
-    dw BRICK_ACTION_GREEN           ; 0xb215
-    dw BRICK_ACTION_BLUE            ; 0xb21e
-    dw BRICK_ACTION_LIGHT_BLUE      ; 0xb23b
-    dw BRICK_ACTION_LIGHT_RED       ; 0xb253
-    dw BRICK_ACTION_LIGHT_MAGENTA   ; 0xb271
-    dw BRICK_ACTION_GRAY      ; 0xb286    
-    dw BRICK_ACTION_BLUE            ; 0xb21e
+CAPSULE_ACTION_TABLE:
+    dw CAPSULE_ACTION_YELLOW          ; 0xb1da
+    dw CAPSULE_ACTION_GREEN           ; 0xb215
+    dw CAPSULE_ACTION_BLUE            ; 0xb21e
+    dw CAPSULE_ACTION_LIGHT_BLUE      ; 0xb23b
+    dw CAPSULE_ACTION_LIGHT_RED       ; 0xb253
+    dw CAPSULE_ACTION_LIGHT_MAGENTA   ; 0xb271
+    dw CAPSULE_ACTION_GRAY            ; 0xb286    
+    dw CAPSULE_ACTION_BLUE            ; 0xb21e
 
 ; Decrement the speed of all balls
-BRICK_ACTION_YELLOW:
+CAPSULE_ACTION_YELLOW:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
 	or a			;b1dd	b7 	. 
@@ -13350,14 +13383,14 @@ lb203h:
 	ret			                                ;b214	c9
 
 ; Set Vaus sticky
-BRICK_ACTION_GREEN:
+CAPSULE_ACTION_GREEN:
 	ld a,GLUING_STATE_STICKY	    ;b215	3e 01
 	ld (GLUING_STATUS),a		    ;b217	32 24 e3
 	call VAUS_GET_NORMAL_STATE		;b21a	cd a7 b2
 	ret			                    ;b21d	c9
 
 ; Enlarge Vaus
-BRICK_ACTION_BLUE:
+CAPSULE_ACTION_BLUE:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b21e	3a 24 e3
 	or a			            ;b221	b7
@@ -13380,7 +13413,7 @@ lb22ah:
 	ret			                        ;b23a	c9
 
 ; Play with 3 balls
-BRICK_ACTION_LIGHT_BLUE:
+CAPSULE_ACTION_LIGHT_BLUE:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		        ;b23b	3a 24 e3
 	or a			                    ;b23e	b7
@@ -13400,7 +13433,7 @@ lb247h:
 	ret			                ;b252	c9
     
 ; Obtain lasers
-BRICK_ACTION_LIGHT_RED:
+CAPSULE_ACTION_LIGHT_RED:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b253	3a 24 e3
 	or a			            ;b256	b7
@@ -13423,7 +13456,7 @@ lb25fh:
 	ret			                        ;b270	c9
 
 ; Open the portal
-BRICK_ACTION_LIGHT_MAGENTA:
+CAPSULE_ACTION_LIGHT_MAGENTA:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b271	3a 24 e3
 	or a			            ;b274	b7
@@ -13441,7 +13474,7 @@ lb27dh:
 	ret			                ;b285	c9 	. 
 
 ; Get a life!
-BRICK_ACTION_GRAY:
+CAPSULE_ACTION_GRAY:
     ; Skip if Vaus is not sticky
 	ld a,(GLUING_STATUS)		;b286	3a 24 e3
 	or a			            ;b289	b7
