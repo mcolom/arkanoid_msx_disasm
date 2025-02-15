@@ -566,8 +566,8 @@ l42d9h:
 	ld (GAME_TRANSITION_ACTION),a		;42e6	32 0a e0 	2 . . 
 
     ; Clear memory
-	ld hl,TITLE_SCREEN_ACTION		;42e9	21 3c e5
-	ld de,TITLE_SCREEN_ACTION+1		;42ec	11 3d e5
+	ld hl,BRICK_HIT_ROW		;42e9	21 3c e5
+	ld de,BRICK_HIT_ROW+1		;42ec	11 3d e5
 	ld (hl),000h		            ;42ef	36 00
 	ld bc,7		                    ;42f1	01 07 00
 	ldir		                    ;42f4	ed b0
@@ -641,8 +641,8 @@ l4322h:
 	xor a			;435f	af 	. 
 	ld (GAME_TRANSITION_ACTION),a		;4360	32 0a e0 	2 . . 
 
-	ld hl,TITLE_SCREEN_ACTION		;4363	21 3c e5 	! < . 
-	ld de,0e53dh		;4366	11 3d e5 	. = . 
+	ld hl,BRICK_HIT_ROW		;4363	21 3c e5 	! < . 
+	ld de,BRICK_HIT_COL		;4366	11 3d e5 	. = . 
 	ld (hl),000h		;4369	36 00 	6 . 
 	ld bc,00007h		;436b	01 07 00 	. . . 
 	ldir		;436e	ed b0 	. . 
@@ -857,12 +857,12 @@ l442bh:
 	ld a,(hl)			;4430	7e 	~ 
 	cp 0ffh		;4431	fe ff 	. . 
 	jp nz,l441ch		;4433	c2 1c 44 	. . D 
-	ld hl,TITLE_SCREEN_ACTION		;4436	21 3c e5 	! < . 
+	ld hl,BRICK_HIT_ROW		;4436	21 3c e5 	! < . 
 
-    ; ToDo: what is this var in TITLE_SCREEN_ACTION+1?
+    ; Point to the COL
 	inc (hl)			;4439	34 	4 
 	ld a,(hl)			;443a	7e 	~ 
-	cp 020h		;443b	fe 20 	.   
+	cp 32		        ;443b	fe 20 	.   
 	jp nz,l4403h		;443d	c2 03 44 	. . D 
 
     ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
@@ -1917,8 +1917,8 @@ DRAW_TITLE_SCREEN:
 	or a			    ;4b94	b7
 	jp nz,l4eddh		;4b95	c2 dd 4e
 
-    ; Switch according to TITLE_SCREEN_ACTION
-	ld a,(TITLE_SCREEN_ACTION)		            ;4b98	3a 3c e5
+    ; Switch according to BRICK_HIT_ROW
+	ld a,(BRICK_HIT_ROW)		            ;4b98	3a 3c e5
 	cp TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN	;4b9b	fe 01
 	jp z,l4c48h		                            ;4b9d	ca 48 4c
     
@@ -1977,7 +1977,7 @@ DRAW_TITLE_SCREEN:
 	ld (ix+003h),10		        ;4bfd	dd 36 03 0a
 
 	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN		;4c01	3e 01
-	ld (TITLE_SCREEN_ACTION),a		                    ;4c03	32 3c e5
+	ld (BRICK_HIT_ROW),a		                    ;4c03	32 3c e5
 
     ; Write "PRESS START BUTTON"
 	ld hl,PUSH_START_BUTTON_STR		;4c06	21 b3 54
@@ -2044,7 +2044,7 @@ l4c62h:
 
 l4c73h:
 	ld a,TITLE_SCREEN_ACTION_START_GAME		;4c73	3e 02
-	ld (TITLE_SCREEN_ACTION),a		        ;4c75	32 3c e5
+	ld (BRICK_HIT_ROW),a		        ;4c75	32 3c e5
 
     ; Print "GAME START"
 	ld hl,GAME_START_STR	;4c78	21 cc 54
@@ -2064,7 +2064,7 @@ l4c73h:
 
 l4c94h:
 	ld a,TITLE_SCREEN_ACTION_DEMO		;4c94	3e 05 	> . 
-	ld (TITLE_SCREEN_ACTION),a		;4c96	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;4c96	32 3c e5 	2 < . 
 
 	; Set we're in the demo
     ld a, 1		        ;4c99	3e 01
@@ -2514,7 +2514,7 @@ l4f60h:
 	jp l4f7ah		;4f68	c3 7a 4f 	. z O 
 l4f6bh:
 	ld hl,00000h		;4f6b	21 00 00 	! . . 
-	ld (TITLE_SCREEN_ACTION),hl		;4f6e	22 3c e5 	" < . 
+	ld (BRICK_HIT_ROW),hl		;4f6e	22 3c e5 	" < . 
 	ld (VAUS_X2),hl		;4f71	22 3e e5 	" > . 
 	ld (0e540h),hl		;4f74	22 40 e5 	" @ . 
 	ld (0e542h),hl		;4f77	22 42 e5 	" B . 
@@ -2532,12 +2532,12 @@ ENDING_TEXT_ANIMATION:
     
     ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
 	xor a			            ;4f8d	af
-	ld (TITLE_SCREEN_ACTION),a	;4f8e	32 3c e5
+	ld (BRICK_HIT_ROW),a	;4f8e	32 3c e5
 l4f91h:
 	push ix		;4f91	dd e5 	. . 
 	xor a			;4f93	af 	. 
-	ld (0e53dh),a		;4f94	32 3d e5 	2 = . 
-	ld a,(TITLE_SCREEN_ACTION)		;4f97	3a 3c e5 	: < . 
+	ld (BRICK_HIT_COL),a		;4f94	32 3d e5 	2 = . 
+	ld a,(BRICK_HIT_ROW)		;4f97	3a 3c e5 	: < . 
 	ld e,a			;4f9a	5f 	_ 
 	sla e		;4f9b	cb 23 	. # 
 	ld d,000h		;4f9d	16 00 	. . 
@@ -2560,16 +2560,16 @@ l4fa8h:
 l4fbbh:
 	inc hl			;4fbb	23 	# 
 	inc iy		;4fbc	fd 23 	. # 
-	ld a,(0e53dh)		;4fbe	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;4fbe	3a 3d e5 	: = . 
 	inc a			;4fc1	3c 	< 
 	cp 01ah		;4fc2	fe 1a 	. . 
-	ld (0e53dh),a		;4fc4	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;4fc4	32 3d e5 	2 = . 
 	jp nz,l4fa8h		;4fc7	c2 a8 4f 	. . O 
 	pop ix		;4fca	dd e1 	. . 
     
-    ; Here it's not TITLE_SCREEN_ACTION, but most probably
+    ; Here it's not BRICK_HIT_ROW, but most probably
     ; it's reusing the var for something else
-	ld hl,TITLE_SCREEN_ACTION		;4fcc	21 3c e5 	! < . 
+	ld hl,BRICK_HIT_ROW		;4fcc	21 3c e5 	! < . 
 	inc (hl)			;4fcf	34 	4 
 	ld a,(hl)			;4fd0	7e 	~ 
 	cp 009h		;4fd1	fe 09 	. . 
@@ -3701,14 +3701,14 @@ l5d82h:
 sub_5d9dh:
     ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
 	xor a			;5d9d	af 	. 
-	ld (TITLE_SCREEN_ACTION),a		;5d9e	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;5d9e	32 3c e5 	2 < . 
 
 	ld ix,0e36eh		;5da1	dd 21 6e e3 	. ! n . 
 l5da5h:
 	xor a			;5da5	af 	. 
-	ld (0e53dh),a		;5da6	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;5da6	32 3d e5 	2 = . 
 l5da9h:
-	ld a,(TITLE_SCREEN_ACTION)		;5da9	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;5da9	3a 3c e5 	: < . 
 	and 003h		;5dac	e6 03 	. . 
 	ld l,a			;5dae	6f 	o 
 	ld h,000h		;5daf	26 00 	& . 
@@ -3716,7 +3716,7 @@ l5da9h:
 	add hl,hl			;5db2	29 	) 
 	ld de,lad98h		;5db3	11 98 ad 	. . . 
 	add hl,de			;5db6	19 	. 
-	ld a,(0e53dh)		;5db7	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;5db7	3a 3d e5 	: = . 
 	and 003h		;5dba	e6 03 	. . 
 	ld e,a			;5dbc	5f 	_ 
 	ld d,000h		;5dbd	16 00 	. . 
@@ -3724,12 +3724,12 @@ l5da9h:
 	ld a,(hl)			;5dc0	7e 	~ 
 	ld (ix+000h),a		;5dc1	dd 77 00 	. w . 
 	inc ix		;5dc4	dd 23 	. # 
-	ld hl,0e53dh		;5dc6	21 3d e5 	! = . 
+	ld hl,BRICK_HIT_COL		;5dc6	21 3d e5 	! = . 
 	inc (hl)			;5dc9	34 	4 
 	ld a,(hl)			;5dca	7e 	~ 
 	cp 016h		;5dcb	fe 16 	. . 
 	jp nz,l5da9h		;5dcd	c2 a9 5d 	. . ] 
-	ld hl,TITLE_SCREEN_ACTION		;5dd0	21 3c e5 	! < . 
+	ld hl,BRICK_HIT_ROW		;5dd0	21 3c e5 	! < . 
 	inc (hl)			;5dd3	34 	4 
 	ld a,(hl)			;5dd4	7e 	~ 
 	cp 00ch		;5dd5	fe 0c 	. . 
@@ -7249,7 +7249,7 @@ sub_70b0h:
 l70bfh:
 	push bc			;70bf	c5 	. 
 	xor a			;70c0	af 	. 
-	ld (TITLE_SCREEN_ACTION),a		;70c1	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;70c1	32 3c e5 	2 < . 
 	ld a,(iy+000h)		;70c4	fd 7e 00 	. ~ . 
 	or a			;70c7	b7 	. 
 	jp z,l715dh		;70c8	ca 5d 71 	. ] q 
@@ -7283,7 +7283,7 @@ l70bfh:
 	jp nc,l7118h		;710d	d2 18 71 	. . q 
 
 	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN		;7110	3e 01
-	ld (TITLE_SCREEN_ACTION),a		                    ;7112	32 3c e5
+	ld (BRICK_HIT_ROW),a		                    ;7112	32 3c e5
 
 	call sub_aa05h		;7115	cd 05 aa 	. . . 
 l7118h:
@@ -7303,11 +7303,11 @@ l7118h:
 	jp nc,l7142h		;7137	d2 42 71 	. B q 
 
 	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN	;713a	3e 01
-	ld (TITLE_SCREEN_ACTION),a		                ;713c	32 3c e5
+	ld (BRICK_HIT_ROW),a		                ;713c	32 3c e5
 
 	call sub_aa05h		;713f	cd 05 aa 	. . . 
 l7142h:
-	ld a,(TITLE_SCREEN_ACTION)		;7142	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5 	: < . 
 	or a			;7145	b7 	. 
 	jp z,l715dh		;7146	ca 5d 71 	. ] q 
 	ld (ix+000h),0c0h		;7149	dd 36 00 c0 	. 6 . . 
@@ -7402,12 +7402,12 @@ l71c1h:
 	jp c,l71c8h		;71c3	da c8 71
 	ld a, 6		    ;71c6	3e 06
 l71c8h:
-	ld (TITLE_SCREEN_ACTION),a		;71c8	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;71c8	32 3c e5 	2 < . 
 	xor a			;71cb	af 	. 
-	ld (0e53dh),a		;71cc	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;71cc	32 3d e5 	2 = . 
 	ld iy,0197ah		;71cf	fd 21 7a 19 	. ! z . 
 l71d3h:
-	ld a,(0e53dh)		;71d3	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;71d3	3a 3d e5 	: = . 
 	ld l,a			;71d6	6f 	o 
 	ld h,000h		;71d7	26 00 	& . 
 	add hl,hl			;71d9	29 	) 
@@ -7420,9 +7420,9 @@ l71d3h:
 	ld bc,00002h		;71e4	01 02 00 	. . . 
 l71e7h:
 	call LDIRVM		;71e7	cd 5c 00 	. \ . 
-	ld hl,0e53dh		;71ea	21 3d e5 	! = . 
+	ld hl,BRICK_HIT_COL		;71ea	21 3d e5 	! = . 
 	inc (hl)			;71ed	34 	4 
-	ld hl,TITLE_SCREEN_ACTION		;71ee	21 3c e5 	! < . 
+	ld hl,BRICK_HIT_ROW		;71ee	21 3c e5 	! < . 
 	dec (hl)			;71f1	35 	5 
 	jp nz,l71d3h		;71f2	c2 d3 71 	. . q 
 	ret			;71f5	c9 	. 
@@ -7500,8 +7500,8 @@ sub_7241h:
 	ld a,000h		;725b	3e 00 	> . 
 	ld (GAME_TRANSITION_ACTION),a		;725d	32 0a e0 	2 . . 
 
-	ld hl,TITLE_SCREEN_ACTION		;7260	21 3c e5 	! < . 
-	ld de,0e53dh		;7263	11 3d e5 	. = . 
+	ld hl,BRICK_HIT_ROW		;7260	21 3c e5 	! < . 
+	ld de,BRICK_HIT_COL		;7263	11 3d e5 	. = . 
 	ld bc,00007h		;7266	01 07 00 	. . . 
 	ld (hl),000h		;7269	36 00 	6 . 
 	ldir		;726b	ed b0 	. . 
@@ -9300,7 +9300,7 @@ sub_9726h:
 	cp FINAL_LEVEL		;9729	fe 20
 	ret z			    ;972b	c8
 	xor a			;972c	af 	. 
-	ld (TITLE_SCREEN_ACTION),a		;972d	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;972d	32 3c e5 	2 < . 
 	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4 	. ! . . 
 	ld ix,SPR_13_SPR_PARAMS		;9734	dd 21 01 e1 	. ! . . 
 l9738h:
@@ -9354,84 +9354,109 @@ l979bh:
 	add iy,de		;979e	fd 19 	. . 
 	ld de,00004h		;97a0	11 04 00 	. . . 
 	add ix,de		;97a3	dd 19 	. . 
-	ld hl,TITLE_SCREEN_ACTION		;97a5	21 3c e5 	! < . 
+	ld hl,BRICK_HIT_ROW		;97a5	21 3c e5 	! < . 
 	inc (hl)			;97a8	34 	4 
 	ld a,(hl)			;97a9	7e 	~ 
 	cp 003h		;97aa	fe 03 	. . 
 	jr nz,l9738h		;97ac	20 8a 	  . 
 	ret			;97ae	c9 	. 
-sub_97afh:
-	push ix		;97af	dd e5 	. . 
-	ld b,008h		;97b1	06 08 	. . 
-	ld de,00008h		;97b3	11 08 00 	. . . 
-	ld ix,0e20dh		;97b6	dd 21 0d e2 	. ! . . 
+
+; Fills the HARD_BRICK_TABLE with the current information on the bricks
+FILL_HARD_BRICK_TABLE:
+	push ix		    ;97af	dd e5
+	ld b, 8		    ;97b1	06 08
+	ld de, 8		;97b3	11 08 00
+	ld ix,HARD_BRICK_TABLE	;97b6	dd 21 0d e2
 l97bah:
-	ld a,(ix+000h)		;97ba	dd 7e 00 	. ~ . 
-	or a			;97bd	b7 	. 
-	jr z,l97c6h		;97be	28 06 	( . 
-	add ix,de		;97c0	dd 19 	. . 
-	djnz l97bah		;97c2	10 f6 	. . 
-	jr l97e7h		;97c4	18 21 	. ! 
+	ld a,(ix+HARD_BRICK_TABLE_IDX_ALREADY_HIT)		;97ba	dd 7e 00
+	or a			;97bd	b7
+	jr z,l97c6h		;97be	28 06
+	add ix,de		;97c0	dd 19
+	djnz l97bah		;97c2	10 f6
+	jr l97e7h		;97c4	18 21
 l97c6h:
-	ld (ix+000h),001h		;97c6	dd 36 00 01 	. 6 . . 
-	ld (ix+001h),c		;97ca	dd 71 01 	. q . 
-	ld (ix+002h),l		;97cd	dd 75 02 	. u . 
-	ld (ix+003h),h		;97d0	dd 74 03 	. t . 
-	ld (ix+004h),000h		;97d3	dd 36 04 00 	. 6 . . 
-	ld (ix+005h),000h		;97d7	dd 36 05 00 	. 6 . . 
+	ld (ix+HARD_BRICK_TABLE_IDX_ALREADY_HIT), 1		;97c6	dd 36 00 01
+	ld (ix+HARD_OR_UNBREAKABLE_BRICK),c		        ;97ca	dd 71 01
+	ld (ix+HARD_BRICK_TABLE_IDX_VRAM1),l		    ;97cd	dd 75 02
+	ld (ix+HARD_BRICK_TABLE_IDX_VRAM2),h		    ;97d0	dd 74 03
+	ld (ix+HARD_BRICK_TABLE_IDX_TICKS1), 0		    ;97d3	dd 36 04 00
+	ld (ix+HARD_BRICK_TABLE_IDX_ANIM_STEP), 0		;97d7	dd 36 05 00
     
-    ; ToDo: it's reusing TITLE_SCREEN_ACTION for something else.
-    ; What is it?
-	ld a,(TITLE_SCREEN_ACTION)		;97db	3a 3c e5 	: < . 
-	ld (ix+006h),a		;97de	dd 77 06 	. w . 
+    ; Store row
+	ld a,(BRICK_HIT_ROW)		            ;97db	3a 3c e5
+	ld (ix+HARD_BRICK_TABLE_IDX_ROW),a		;97de	dd 77 06
 
-	ld a,(0e53dh)		;97e1	3a 3d e5 	: = . 
-	ld (ix+007h),a		;97e4	dd 77 07 	. w . 
+    ; Store col
+	ld a,(BRICK_HIT_COL)		            ;97e1	3a 3d e5
+	ld (ix+HARD_BRICK_TABLE_IDX_COL),a		;97e4	dd 77 07
 l97e7h:
-	pop ix		;97e7	dd e1 	. . 
-	ret			;97e9	c9 	. 
+	pop ix		;97e7	dd e1
+	ret			;97e9	c9
 
+; SEGUIR
 sub_97eah:
-	ld a,(LEVEL)		;97ea	3a 1b e0
+    ; Skip if we're at DOh's level
+    ld a,(LEVEL)		;97ea	3a 1b e0
 	cp FINAL_LEVEL		;97ed	fe 20
-	ret z			;97ef	c8 	. 
-	ld b,008h		;97f0	06 08 	. . 
-	ld de,00008h		;97f2	11 08 00 	. . . 
-	ld ix,0e20dh		;97f5	dd 21 0d e2 	. ! . . 
+	ret z			    ;97ef	c8
+    
+	ld b, HARD_BRICK_TABLE_NUM_ENTRIES		        ;97f0	06 08
+	ld de, HARD_BRICK_TABLE_ENTRY_LEN		        ;97f2	11 08 00
+	ld ix,HARD_BRICK_TABLE		;97f5	dd 21 0d e2
 l97f9h:
-	push bc			;97f9	c5 	. 
-	ld a,(ix+000h)		;97fa	dd 7e 00 	. ~ . 
-	or a			;97fd	b7 	. 
-	jr z,l9859h		;97fe	28 59 	( Y 
-	inc (ix+004h)		;9800	dd 34 04 	. 4 . 
-	ld a,(ix+004h)		;9803	dd 7e 04 	. ~ . 
-	cp 002h		;9806	fe 02 	. . 
-	jr nz,l9859h		;9808	20 4f 	  O 
-	ld (ix+004h),000h		;980a	dd 36 04 00 	. 6 . . 
-	ld de,l986ah		;980e	11 6a 98 	. j . 
-	bit 0,(ix+001h)		;9811	dd cb 01 46 	. . . F 
-	jr nz,l981ah		;9815	20 03 	  . 
-	ld de,l9862h		;9817	11 62 98 	. b . 
+	push bc			                                ;97f9	c5
+
+    ; Skip and move to the next entry if the brick was already hit
+	ld a,(ix+HARD_BRICK_TABLE_IDX_ALREADY_HIT)		;97fa	dd 7e 00
+	or a			                                ;97fd	b7
+	jr z,l9859h		                                ;97fe	28 59
+
+    ; No, it wasn't hit already
+    ; Skip if the ticks are not 2
+	inc (ix+HARD_BRICK_TABLE_IDX_TICKS1)	;9800	dd 34 04
+	ld a,(ix+HARD_BRICK_TABLE_IDX_TICKS1)	;9803	dd 7e 04
+	cp 2		                            ;9806	fe 02
+	jr nz,l9859h		                    ;9808	20 4f
+
+	ld (ix+HARD_BRICK_TABLE_IDX_TICKS1), 0	;980a	dd 36 04 00
+
+	ld de,UNBREAKABLE_BRICK_ANIM_CHARS		;980e	11 6a 98
+	bit 0,(ix+HARD_OR_UNBREAKABLE_BRICK)	;9811	dd cb 01 46
+	jr nz,l981ah		                    ;9815	20 03
+	ld de,HARD_BRICK_ANIM_CHARS		        ;9817	11 62 98
 l981ah:
-	ld l,(ix+005h)		;981a	dd 6e 05 	. n . 
-	ld h,000h		;981d	26 00 	& . 
-	add hl,hl			;981f	29 	) 
-	add hl,de			;9820	19 	. 
-	ld e,(ix+002h)		;9821	dd 5e 02 	. ^ . 
-	ld d,(ix+003h)		;9824	dd 56 03 	. V . 
-	ld bc,00002h		;9827	01 02 00 	. . . 
-	call LDIRVM		;982a	cd 5c 00 	. \ . 
-	inc (ix+005h)		;982d	dd 34 05 	. 4 . 
-	ld a,(ix+005h)		;9830	dd 7e 05 	. ~ . 
-	cp 004h		;9833	fe 04 	. . 
-	jr nz,l9859h		;9835	20 22 	  " 
-	ld a,(ix+006h)		;9837	dd 7e 06 	. ~ . 
-	ld (BRICK_ROW),a		;983a	32 aa e2 	2 . . 
-	ld a,(ix+007h)		;983d	dd 7e 07 	. ~ . 
-	ld (BRICK_COL),a		;9840	32 ab e2 	2 . . 
+    ; HL = 2*ANIM_STEP + ANIM_CHARS, RAM origin
+	ld l,(ix+HARD_BRICK_TABLE_IDX_ANIM_STEP)		;981a	dd 6e 05
+	ld h, 0		                                    ;981d	26 00
+	add hl,hl			                            ;981f	29
+	add hl,de			                            ;9820	19
+    
+    ; DE = IDX2, VRAM destination
+	ld e,(ix+HARD_BRICK_TABLE_IDX_VRAM1)		;9821	dd 5e 02
+	ld d,(ix+HARD_BRICK_TABLE_IDX_VRAM2)		;9824	dd 56 03
+
+    ; Write 2 chars
+	ld bc, 2		    ;9827	01 02 00
+	call LDIRVM		    ;982a	cd 5c 00
+
+    ; Skip if the animation is not finished
+	inc (ix+HARD_BRICK_TABLE_IDX_ANIM_STEP)		;982d	dd 34 05
+	ld a,(ix+HARD_BRICK_TABLE_IDX_ANIM_STEP)	;9830	dd 7e 05
+	cp 4		                                ;9833	fe 04
+	jr nz,l9859h		                        ;9835	20 22
+
+    ; Store brick row and col
+	ld a,(ix+HARD_BRICK_TABLE_IDX_ROW)		;9837	dd 7e 06
+	ld (BRICK_ROW),a		                ;983a	32 aa e2
+	ld a,(ix+HARD_BRICK_TABLE_IDX_COL)		;983d	dd 7e 07
+	ld (BRICK_COL),a		                ;9840	32 ab e2
+    
+    ; ToDo
 	call sub_ada8h		;9843	cd a8 ad 	. . . 
 	jr c,l984bh		;9846	38 03 	8 . 
-	call ERASE_BRICK		;9848	cd 8f ab 	. . . 
+    
+    ; Erase that brick
+	call ERASE_BRICK		;9848	cd 8f ab
 l984bh:
 	push ix		;984b	dd e5 	. . 
 	push ix		;984d	dd e5 	. . 
@@ -9442,30 +9467,16 @@ l984bh:
 	ld (hl),000h		;9855	36 00 	6 . 
 	ldir		;9857	ed b0 	. . 
 l9859h:
-	pop bc			;9859	c1 	. 
-	ld de,00008h		;985a	11 08 00 	. . . 
-	add ix,de		;985d	dd 19 	. . 
-	djnz l97f9h		;985f	10 98 	. . 
-	ret			;9861	c9 	. 
+	pop bc			                        ;9859	c1
+	ld de, HARD_BRICK_TABLE_ENTRY_LEN		;985a	11 08 00
+	add ix,de		                        ;985d	dd 19
+	djnz l97f9h		                        ;985f	10 98
+	ret			                            ;9861	c9
 
-l9862h:
-	ld h,l			;9862	65 	e 
-	ld l,h			;9863	6c 	l 
-	ld l,e			;9864	6b 	k 
-	ld l,h			;9865	6c 	l 
-	ld l,e			;9866	6b 	k 
-	ld h,(hl)			;9867	66 	f 
-	ld h,l			;9868	65 	e 
-	ld h,(hl)			;9869	66 	f 
-l986ah:
-	ld h,a			;986a	67 	g 
-	ld l,h			;986b	6c 	l 
-	ld l,e			;986c	6b 	k 
-	ld l,h			;986d	6c 	l 
-	ld l,e			;986e	6b 	k 
-	ld l,b			;986f	68 	h 
-	ld h,a			;9870	67 	g 
-	ld l,b			;9871	68 	h
+HARD_BRICK_ANIM_CHARS:
+    db 0x65, 0x6c, 0x6b, 0x6c, 0x6b, 0x66, 0x65, 0x66
+UNBREAKABLE_BRICK_ANIM_CHARS:
+    db 0x67, 0x6c, 0x6b, 0x6c, 0x6b, 0x68, 0x67, 0x68
 
 ; Perform one step of the ball movement
 BALL_MOVEMENT_STEP:
@@ -10257,9 +10268,9 @@ l9d54h:
 	jp nc,l9d99h		;9d63	d2 99 9d 	. . . 
 	call sub_ada8h		;9d66	cd a8 ad 	. . . 
 	jp nc,l9d81h		;9d69	d2 81 9d 	. . . 
-	ld a,(TITLE_SCREEN_ACTION)		;9d6c	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;9d6c	3a 3c e5 	: < . 
 	ld (ix+000h),a		;9d6f	dd 77 00 	. w . 
-	ld a,(0e53dh)		;9d72	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;9d72	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9d75	dd 77 01 	. w . 
 	call sub_9b5bh		;9d78	cd 5b 9b 	. [ . 
 	call sub_aa05h		;9d7b	cd 05 aa 	. . . 
@@ -10421,9 +10432,9 @@ l9ef0h:
 	jp nc,l9f35h		;9eff	d2 35 9f 	. 5 . 
 	call sub_ada8h		;9f02	cd a8 ad 	. . . 
 	jp nc,l9f1dh		;9f05	d2 1d 9f 	. . . 
-	ld a,(TITLE_SCREEN_ACTION)		;9f08	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;9f08	3a 3c e5 	: < . 
 	ld (ix+000h),a		;9f0b	dd 77 00 	. w . 
-	ld a,(0e53dh)		;9f0e	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;9f0e	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9f11	dd 77 01 	. w . 
 	call sub_9b5bh		;9f14	cd 5b 9b 	. [ . 
 	call sub_aa05h		;9f17	cd 05 aa 	. . . 
@@ -10584,9 +10595,9 @@ la090h:
 	jp nc,la0cch		;a096	d2 cc a0 	. . . 
 	call sub_ada8h		;a099	cd a8 ad 	. . . 
 	jp nc,la0b4h		;a09c	d2 b4 a0 	. . . 
-	ld a,(TITLE_SCREEN_ACTION)		;a09f	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;a09f	3a 3c e5 	: < . 
 	ld (ix+000h),a		;a0a2	dd 77 00 	. w . 
-	ld a,(0e53dh)		;a0a5	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;a0a5	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a0a8	dd 77 01 	. w . 
 	call sub_9b5bh		;a0ab	cd 5b 9b 	. [ . 
 	call sub_aa05h		;a0ae	cd 05 aa 	. . . 
@@ -10747,9 +10758,9 @@ la21eh:
 	jp nc,la263h		;a22d	d2 63 a2 	. c . 
 	call sub_ada8h		;a230	cd a8 ad 	. . . 
 	jp nc,la24bh		;a233	d2 4b a2 	. K . 
-	ld a,(TITLE_SCREEN_ACTION)		;a236	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;a236	3a 3c e5 	: < . 
 	ld (ix+000h),a		;a239	dd 77 00 	. w . 
-	ld a,(0e53dh)		;a23c	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;a23c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a23f	dd 77 01 	. w . 
 	call sub_9b5bh		;a242	cd 5b 9b 	. [ . 
 	call sub_aa05h		;a245	cd 05 aa 	. . . 
@@ -10832,9 +10843,9 @@ la2eeh:
 	ld (BRICK_COL),a		;a2fd	32 ab e2 	2 . . 
 	call sub_ada8h		;a300	cd a8 ad 	. . . 
 	jp nc,la31bh		;a303	d2 1b a3 	. . . 
-	ld a,(TITLE_SCREEN_ACTION)		;a306	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_ROW)		;a306	3a 3c e5 	: < . 
 	ld (ix+000h),a		;a309	dd 77 00 	. w . 
-	ld a,(0e53dh)		;a30c	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_COL)		;a30c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a30f	dd 77 01 	. w . 
 	call sub_9b5bh		;a312	cd 5b 9b 	. [ . 
 	call sub_aa05h		;a315	cd 05 aa 	. . . 
@@ -11048,7 +11059,7 @@ la4bbh:
 	jp z,la4cch		;a4c6	ca cc a4 	. . . 
 	ld a,(0e2c6h)		;a4c9	3a c6 e2 	: . . 
 la4cch:
-	ld (0e53dh),a		;a4cc	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;a4cc	32 3d e5 	2 = . 
 	ld hl,0e541h		;a4cf	21 41 e5 	! A . 
 	ld (hl),000h		;a4d2	36 00 	6 . 
 	ld de,0e542h		;a4d4	11 42 e5 	. B . 
@@ -11134,7 +11145,7 @@ la56ah:
 	ld b,a			;a56d	47 	G 
 	ld a,(0e587h)		;a56e	3a 87 e5 	: . . 
 	add a,b			;a571	80 	. 
-	ld (TITLE_SCREEN_ACTION),a		;a572	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;a572	32 3c e5 	2 < . 
 	ld b,a			;a575	47 	G 
 	ld a,0bch		;a576	3e bc 	> . 
 	bit 7,(iy+003h)		;a578	fd cb 03 7e 	. . . ~ 
@@ -11265,13 +11276,13 @@ la656h:
 	jp la65bh		;a658	c3 5b a6 	. [ . 
 la65bh:
 	ld a,b			;a65b	78 	x 
-	ld (0e53dh),a		;a65c	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;a65c	32 3d e5 	2 = . 
 	ld a,(0e2c4h)		;a65f	3a c4 e2 	: . . 
 	bit 7,(iy+002h)		;a662	fd cb 02 7e 	. . . ~ 
 	jp z,la66ch		;a666	ca 6c a6 	. l . 
 	ld a,(0e2c5h)		;a669	3a c5 e2 	: . . 
 la66ch:
-	ld (TITLE_SCREEN_ACTION),a		;a66c	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;a66c	32 3c e5 	2 < . 
 	ret			;a66f	c9 	. 
 
 sub_a670h:
@@ -11395,9 +11406,9 @@ la750h:
 la751h:
 	push af			;a751	f5 	. 
 	ld a,(0e2c4h)		;a752	3a c4 e2 	: . . 
-	ld (TITLE_SCREEN_ACTION),a		;a755	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;a755	32 3c e5 	2 < . 
 	ld a,b			;a758	78 	x 
-	ld (0e53dh),a		;a759	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;a759	32 3d e5 	2 = . 
 	pop af			;a75c	f1 	. 
 	ret			;a75d	c9 	. 
 
@@ -11431,9 +11442,9 @@ la789h:
 la78ah:
 	push af			;a78a	f5 	. 
 	ld a,(0e2c4h)		;a78b	3a c4 e2 	: . . 
-	ld (TITLE_SCREEN_ACTION),a		;a78e	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;a78e	32 3c e5 	2 < . 
 	ld a,b			;a791	78 	x 
-	ld (0e53dh),a		;a792	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;a792	32 3d e5 	2 = . 
 	pop af			;a795	f1 	. 
 	ret			;a796	c9 	. 
 la797h:
@@ -11468,9 +11479,9 @@ la7c9h:
 la7cah:
 	push af			;a7ca	f5 	. 
 	ld a,(0e2c5h)		;a7cb	3a c5 e2 	: . . 
-	ld (TITLE_SCREEN_ACTION),a		;a7ce	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;a7ce	32 3c e5 	2 < . 
 	ld a,b			;a7d1	78 	x 
-	ld (0e53dh),a		;a7d2	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;a7d2	32 3d e5 	2 = . 
 	pop af			;a7d5	f1 	. 
 	ret			;a7d6	c9 	. 
 la7d7h:
@@ -11503,9 +11514,9 @@ la802h:
 la803h:
 	push af			;a803	f5 	. 
 	ld a,(0e2c5h)		;a804	3a c5 e2 	: . . 
-	ld (TITLE_SCREEN_ACTION),a		;a807	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;a807	32 3c e5 	2 < . 
 	ld a,b			;a80a	78 	x 
-	ld (0e53dh),a		;a80b	32 3d e5 	2 = . 
+	ld (BRICK_HIT_COL),a		;a80b	32 3d e5 	2 = . 
 	pop af			;a80e	f1 	. 
 	ret			;a80f	c9 	. 
 sub_a810h:
@@ -11951,10 +11962,10 @@ lab10h:
 	ld d,000h		;ab1f	16 00 	. . 
 	add hl,de			;ab21	19 	. 
 	ld a,(BRICK_ROW)		;ab22	3a aa e2 	: . . 
-	ld (TITLE_SCREEN_ACTION),a		;ab25	32 3c e5 	2 < . 
+	ld (BRICK_HIT_ROW),a		;ab25	32 3c e5 	2 < . 
 	ld a,(BRICK_COL)		;ab28	3a ab e2 	: . . 
-	ld (0e53dh),a		;ab2b	32 3d e5 	2 = . 
-	call sub_97afh		;ab2e	cd af 97 	. . . 
+	ld (BRICK_HIT_COL),a		;ab2b	32 3d e5 	2 = . 
+	call FILL_HARD_BRICK_TABLE		;ab2e	cd af 97 	. . . 
 
 	ld a,SOUND_HARD_BRICK_HIT		;ab31	3e 03
 	call ADD_SOUND		            ;ab33	cd ef 5b
@@ -13530,7 +13541,7 @@ lb2f5h:
 
 	ld c,(iy+BALL_TABLE_IDX_SPEED_POS)		;b2fd	fd 4e 07
 	ld a,(iy+BALL_TABLE_IDX_SPEED_COUNTER)	;b300	fd 7e 0d
-	ld (TITLE_SCREEN_ACTION),a		        ;b303	32 3c e5
+	ld (BRICK_HIT_ROW),a		        ;b303	32 3c e5
 
     ; Loop over B=3 balls
 	ld b, 3		            ;b306	06 03
@@ -13548,7 +13559,7 @@ lb30fh:
 	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;b318	fd 77 06
 
     ; Update speed and its counter
-	ld a,(TITLE_SCREEN_ACTION)		            ;b31b	3a 3c e5
+	ld a,(BRICK_HIT_ROW)		            ;b31b	3a 3c e5
 	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a		;b31e	fd 77 0d
 	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		    ;b321	fd 71 07
     
