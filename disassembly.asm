@@ -2277,7 +2277,7 @@ l4d46h:
 	call WRTVRM		;4dc8	cd 4d 00
 
 	ld a,000h		;4dcb	3e 00 	> . 
-	ld (0e56fh),a		;4dcd	32 6f e5 	2 o . 
+	ld (DOH_ROW_DRAW_COUNTER),a		;4dcd	32 6f e5 	2 o . 
 	ld b,017h		;4dd0	06 17 	. . 
 	ld iy,01822h		;4dd2	fd 21 22 18 	. ! " . 
 l4dd6h:
@@ -2295,13 +2295,13 @@ l4dd6h:
 	push bc			;4de6	c5 	. 
 	ld bc,00016h		;4de7	01 16 00 	. . . 
 	call LDIRVM		;4dea	cd 5c 00 	. \ . 
-	ld a,(0e56fh)		;4ded	3a 6f e5 	: o . 
+	ld a,(DOH_ROW_DRAW_COUNTER)		;4ded	3a 6f e5 	: o . 
 	inc a			;4df0	3c 	< 
 	cp 004h		;4df1	fe 04 	. . 
 	jr nz,l4df7h		;4df3	20 02 	  . 
 	ld a,000h		;4df5	3e 00 	> . 
 l4df7h:
-	ld (0e56fh),a		;4df7	32 6f e5 	2 o . 
+	ld (DOH_ROW_DRAW_COUNTER),a		;4df7	32 6f e5 	2 o . 
 	ld de,00020h		;4dfa	11 20 00 	.   . 
 	add iy,de		;4dfd	fd 19 	. . 
 	pop bc			;4dff	c1 	. 
@@ -2370,7 +2370,7 @@ l4e65h:
 	call UPDATE_SPRITE_PATTERNS_ON_LEVEL		;4e6b	cd 65 51 	. e Q 
 	jp l4e74h		;4e6e	c3 74 4e 	. t N 
 l4e71h:
-	call sub_5180h		;4e71	cd 80 51 	. . Q 
+	call DRAW_DOH		;4e71	cd 80 51 	. . Q 
 l4e74h:
     ; Full brick repaint
     ; BRICK_REPAINT_INITIAL
@@ -2733,139 +2733,84 @@ UPDATE_SPRITE_PATTERNS_ON_LEVEL:
 	call LDIRVM		                                              ;517c	cd 5c 00
 	ret			                                                  ;517f	c9
 
-; SEGUIR
-sub_5180h:
-	ld a,000h		;5180	3e 00 	> . 
-	ld (0e56fh),a		;5182	32 6f e5 	2 o . 
-	ld b,00ch		;5185	06 0c 	. . 
-	ld iy,01869h		;5187	fd 21 69 18 	. ! i . 
+; Draw Doh
+DRAW_DOH:
+	ld a, 0		            ;5180	3e 00
+	ld (DOH_ROW_DRAW_COUNTER),a		    ;5182	32 6f e5
+	ld b, DOH_NUM_ROWS		;5185	06 0c
+	ld iy,01869h		    ;5187	fd 21 69 18
 l518bh:
-	ld e,a			;518b	5f 	_ 
-	sla e		;518c	cb 23 	. # 
-	ld d,000h		;518e	16 00 	. . 
-	ld hl,l51b8h		;5190	21 b8 51 	! . Q 
-	add hl,de			;5193	19 	. 
-	ld e,(hl)			;5194	5e 	^ 
-	inc hl			;5195	23 	# 
-	ld d,(hl)			;5196	56 	V 
-	ex de,hl			;5197	eb 	. 
-	push iy		;5198	fd e5 	. . 
-	pop de			;519a	d1 	. 
-	push bc			;519b	c5 	. 
-	ld bc,00008h		;519c	01 08 00 	. . . 
-	call LDIRVM		;519f	cd 5c 00 	. \ . 
-	ld a,(0e56fh)		;51a2	3a 6f e5 	: o . 
-	inc a			;51a5	3c 	< 
-	cp 00ch		;51a6	fe 0c 	. . 
-	jr nz,l51ach		;51a8	20 02 	  . 
-	ld a,000h		;51aa	3e 00 	> . 
-l51ach:
-	ld (0e56fh),a		;51ac	32 6f e5 	2 o . 
-	ld de,00020h		;51af	11 20 00 	.   . 
-	add iy,de		;51b2	fd 19 	. . 
-	pop bc			;51b4	c1 	. 
-	djnz l518bh		;51b5	10 d4 	. . 
-	ret			;51b7	c9 	. 
+	ld e,a			        ;518b	5f      E = row
+    
+    ; DE = 2*row
+	sla e		            ;518c	cb 23 	E = 2*row
+	ld d,0		            ;518e	16 00
 
-l51b8h:
-	ret nc			;51b8	d0 	. 
-	ld d,c			;51b9	51 	Q 
-	ret c			;51ba	d8 	. 
-	ld d,c			;51bb	51 	Q 
-	ret po			;51bc	e0 	. 
-	ld d,c			;51bd	51 	Q 
-	ret pe			;51be	e8 	. 
-	ld d,c			;51bf	51 	Q 
-	ret p			;51c0	f0 	. 
-	ld d,c			;51c1	51 	Q 
-	ret m			;51c2	f8 	. 
-	ld d,c			;51c3	51 	Q 
-	nop			;51c4	00 	. 
-	ld d,d			;51c5	52 	R 
-	ex af,af'			;51c6	08 	. 
-	ld d,d			;51c7	52 	R 
-	djnz $+84		;51c8	10 52 	. R 
-	jr $+84		;51ca	18 52 	. R 
-	jr nz,l5220h		;51cc	20 52 	  R 
-	jr z,l5222h		;51ce	28 52 	( R 
-	sub b			;51d0	90 	. 
-	sub c			;51d1	91 	. 
-	sub d			;51d2	92 	. 
-	sub e			;51d3	93 	. 
-	sub h			;51d4	94 	. 
-	sub l			;51d5	95 	. 
-	sub (hl)			;51d6	96 	. 
-	sub a			;51d7	97 	. 
-	sbc a,b			;51d8	98 	. 
-	sbc a,c			;51d9	99 	. 
-	sbc a,d			;51da	9a 	. 
-	sbc a,e			;51db	9b 	. 
-	sbc a,h			;51dc	9c 	. 
-	sbc a,l			;51dd	9d 	. 
-	sbc a,(hl)			;51de	9e 	. 
-	sbc a,a			;51df	9f 	. 
-	and b			;51e0	a0 	. 
-	and c			;51e1	a1 	. 
-	and d			;51e2	a2 	. 
-	and e			;51e3	a3 	. 
-	and h			;51e4	a4 	. 
-	and l			;51e5	a5 	. 
-	and (hl)			;51e6	a6 	. 
-	and a			;51e7	a7 	. 
-	xor b			;51e8	a8 	. 
-	xor c			;51e9	a9 	. 
-	xor d			;51ea	aa 	. 
-	xor e			;51eb	ab 	. 
-	xor h			;51ec	ac 	. 
-	xor l			;51ed	ad 	. 
-	xor (hl)			;51ee	ae 	. 
-	xor a			;51ef	af 	. 
-	or b			;51f0	b0 	. 
-	or c			;51f1	b1 	. 
-	or d			;51f2	b2 	. 
-	or e			;51f3	b3 	. 
-	or h			;51f4	b4 	. 
-	or l			;51f5	b5 	. 
-	or (hl)			;51f6	b6 	. 
-	or a			;51f7	b7 	. 
-	cp b			;51f8	b8 	. 
-	cp c			;51f9	b9 	. 
-	cp d			;51fa	ba 	. 
-	cp e			;51fb	bb 	. 
-	cp h			;51fc	bc 	. 
-	cp l			;51fd	bd 	. 
-	cp (hl)			;51fe	be 	. 
-	cp a			;51ff	bf 	. 
-	ret nz			;5200	c0 	. 
-	pop bc			;5201	c1 	. 
-	jp nz,0c4c3h		;5202	c2 c3 c4 	. . . 
-	push bc			;5205	c5 	. 
-	add a,0c7h		;5206	c6 c7 	. . 
-	ret z			;5208	c8 	. 
-	ret			;5209	c9 	. 
-	jp z,0cccbh		;520a	ca cb cc 	. . . 
-	call 0cfceh		;520d	cd ce cf 	. . . 
-	ret nc			;5210	d0 	. 
-	pop de			;5211	d1 	. 
-	jp nc,0d4d3h		;5212	d2 d3 d4 	. . . 
-	push de			;5215	d5 	. 
-	sub 0d7h		;5216	d6 d7 	. . 
-	ret c			;5218	d8 	. 
-	exx			;5219	d9 	. 
-	jp c,0dcdbh		;521a	da db dc 	. . . 
-	defb 0ddh,0deh,0dfh	;illegal sequence		;521d	dd de df 	. . . 
-l5220h:
-	ret po			;5220	e0 	. 
-	pop hl			;5221	e1 	. 
-l5222h:
-	jp po,0e4e3h		;5222	e2 e3 e4 	. . . 
-	push hl			;5225	e5 	. 
-	and 0e7h		;5226	e6 e7 	. . 
-	ret pe			;5228	e8 	. 
-	jp (hl)			;5229	e9 	. 
-	jp pe,0ecebh		;522a	ea eb ec 	. . . 
-	defb 0edh;next byte illegal after ed		;522d	ed 	. 
-	xor 0efh		;522e	ee ef 	. . 
+    ; HL = DOH_ROW_POINTERS + 2*row
+	ld hl,DOH_ROW_POINTERS		;5190	21 b8 51 	! . Q 
+	add hl,de			;5193	19 	. 
+
+	; DE = DOH_ROW_POINTERS[2*row]
+    ld e,(hl)			;5194	5e
+	inc hl			    ;5195	23
+	ld d,(hl)			;5196	56
+    
+	ex de,hl			;5197	eb      HL = DOH_ROW_POINTERS[2*row]
+	push iy		        ;5198	fd e5   
+	pop de			    ;519a	d1
+	push bc			    ;519b	c5
+    
+    ; Draw a line of chars (8) of Doh
+	ld bc, DOH_NUM_COLS	;519c	01 08 00
+	call LDIRVM		    ;519f	cd 5c 00
+
+    ; Increment row count
+	ld a,(DOH_ROW_DRAW_COUNTER)		;51a2	3a 6f e5
+	inc a			                ;51a5	3c
+    
+    ; Reset row index if we've done the last char
+	cp DOH_NUM_ROWS		;51a6	fe 0c
+	jr nz,l51ach		;51a8	20 02
+	ld a, 0		        ;51aa	3e 00
+l51ach:
+	ld (DOH_ROW_DRAW_COUNTER),a		;51ac	32 6f e5
+    
+    ; Point to the next lext
+	ld de, 32		                ;51af	11 20 00
+	add iy,de		                ;51b2	fd 19
+	pop bc			                ;51b4	c1
+	djnz l518bh		                ;51b5	10 d4
+	ret			                    ;51b7	c9
+
+; Pointers to each of Doh's rows of patterns
+DOH_ROW_POINTERS:
+    dw DOH_ROW1, DOH_ROW2, DOH_ROW3, DOH_ROW4, DOH_ROW5, DOH_ROW6
+    dw DOH_ROW7, DOH_ROW8, DOH_ROW9, DOH_ROW10, DOH_ROW11, DOH_ROW12
+
+DOH_ROW1:
+    db 0x90, 0x91, 0x92, 0x93, 0x94, 0x95, 0x96, 0x97 ; 0x51d0 - 0x51d7
+DOH_ROW2:
+    db 0x98, 0x99, 0x9a, 0x9b, 0x9c, 0x9d, 0x9e, 0x9f ; 0x51d8 - 0x51df
+DOH_ROW3:
+    db 0xa0, 0xa1, 0xa2, 0xa3, 0xa4, 0xa5, 0xa6, 0xa7 ; 0x51e0 - 0x51e7
+DOH_ROW4:
+    db 0xa8, 0xa9, 0xaa, 0xab, 0xac, 0xad, 0xae, 0xaf ; 0x51e8 - 0x51ef
+DOH_ROW5:
+    db 0xb0, 0xb1, 0xb2, 0xb3, 0xb4, 0xb5, 0xb6, 0xb7 ; 0x51f0 - 0x51f7
+DOH_ROW6:
+    db 0xb8, 0xb9, 0xba, 0xbb, 0xbc, 0xbd, 0xbe, 0xbf ; 0x51f8 - 0x51ff
+DOH_ROW7:
+    db 0xc0, 0xc1, 0xc2, 0xc3, 0xc4, 0xc5, 0xc6, 0xc7 ; 0x5200 - 0x5207
+DOH_ROW8:
+    db 0xc8, 0xc9, 0xca, 0xcb, 0xcc, 0xcd, 0xce, 0xcf ; 0x5208 - 0x520f
+DOH_ROW9:
+    db 0xd0, 0xd1, 0xd2, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7 ; 0x5210 - 0x5217
+DOH_ROW10:
+    db 0xd8, 0xd9, 0xda, 0xdb, 0xdc, 0xdd, 0xde, 0xdf ; 0x5218 - 0x521f
+DOH_ROW11:
+    db 0xe0, 0xe1, 0xe2, 0xe3, 0xe4, 0xe5, 0xe6, 0xe7 ; 0x5220 - 0x5227
+DOH_ROW12:
+    db 0xe8, 0xe9, 0xea, 0xeb, 0xec, 0xed, 0xee, 0xef ; 0x5228 - 0x522f
 
 ; Draw the game's frame
 DRAW_FRAME:
@@ -9176,6 +9121,7 @@ db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 db 0, 0, 0, 0, 0, 0, 0, 0, 0
 db 0xb7, 0
 
+; SEGUIR
 sub_95f4h:
 	call CAPSULE_MOVE_DOWN_STEP		;95f4	cd 37 b1 	. 7 . 
 	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION		;95f7	cd 5c b1 	. \ . 
@@ -9444,6 +9390,7 @@ l97c6h:
 l97e7h:
 	pop ix		;97e7	dd e1 	. . 
 	ret			;97e9	c9 	. 
+
 sub_97eah:
 	ld a,(LEVEL)		;97ea	3a 1b e0
 	cp FINAL_LEVEL		;97ed	fe 20
@@ -9500,6 +9447,7 @@ l9859h:
 	add ix,de		;985d	dd 19 	. . 
 	djnz l97f9h		;985f	10 98 	. . 
 	ret			;9861	c9 	. 
+
 l9862h:
 	ld h,l			;9862	65 	e 
 	ld l,h			;9863	6c 	l 

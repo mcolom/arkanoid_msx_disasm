@@ -1,2 +1,6 @@
 DOH_HITS: equ 0xe5b3
 
+DOH_NUM_COLS: equ 8
+DOH_NUM_ROWS: equ 12
+
+DOH_ROW_DRAW_COUNTER: equ 0xe56f
