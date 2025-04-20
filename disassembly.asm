@@ -2233,11 +2233,11 @@ l4d46h:
 	ld hl,02000h + 2 * 8*32*24/3	;4d7b	21 00 30
 	call DECOMPRESS_TILE_COLORS		;4d7e	cd 89 43
 
-    ; ToDo
-	ld hl,01800h		;4d81	21 00 18 	! . . 
-	ld a,000h		;4d84	3e 00 	> . 
-	ld bc,00300h		;4d86	01 00 03 	. . . 
-	call FILVRM		;4d89	cd 56 00 	. V . 
+    ; Clear screen
+	ld hl,01800h	;4d81	21 00 18
+	ld a, 0		    ;4d84	3e 00
+	ld bc, 32*24	;4d86	01 00 03
+	call FILVRM		;4d89	cd 56 00
 
     ; Draw score numbers on the right
 	ld a, 1 		            ;4d8c	3e 01
