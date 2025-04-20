@@ -2245,36 +2245,36 @@ l4d46h:
 	call DRAW_SCORE_NUMBERS		;4d91	cd b9 53
 
     ; Write "HIGH"
-	ld hl,HIGH_LETTERS		    ;4d94	21 1f 55
-	ld de,01839h		        ;4d97	11 39 18
-	ld bc,00004h		        ;4d9a	01 04 00
+	ld hl,HIGH_LETTERS 		    ;4d94	21 1f 55
+	ld de, 0x1800 + 25 + 1*32   ;4d97	11 39 18 Locate at [25, 1]
+	ld bc,4     		        ;4d9a	01 04 00
 	call LDIRVM		            ;4d9d	cd 5c 00
 
     ; Write "SCORE"
 	ld hl,SCORE_LETTERS		    ;4da0	21 23 55
-	ld de,0185bh		        ;4da3	11 5b 18
-	ld bc,00005h		        ;4da6	01 05 00
+	ld de, 0x1800 + 27 + 2*32   ;4da3	11 5b 18 Locate at [27, 2]
+	ld bc, 5	    	        ;4da6	01 05 00
 	call LDIRVM		            ;4da9	cd 5c 00
 
     ; Write "SCORE"
     ; It uses a duplicated string: it could have used the same SCORE_LETTERS!
-	ld hl, SCORE_LETTERS_DUP		;4dac	21 28 55
-	ld de,018dbh		            ;4daf	11 db 18
-	ld bc,00005h		            ;4db2	01 05 00
+	ld hl, SCORE_LETTERS_DUP	    ;4dac	21 28 55
+	ld de, 0x1800 + 27 + 6*32       ;4daf	11 db 18 Locate at [27, 6]
+	ld bc, 5		                ;4db2	01 05 00
 	call LDIRVM		                ;4db5	cd 5c 00
 
     ; Draw the game's frame
 	call DRAW_FRAME		            ;4db8	cd 30 52
 
     ; Draw a trailing "0" in the HIGH SCORE
-	ld hl,0187fh    ;4dbb	21 7f 18
-	ld a, "0"		;4dbe	3e 30
-	call WRTVRM		;4dc0	cd 4d 00
+	ld hl, 0x1800 + 31 + 3*32    ;4dbb	21 7f 18
+	ld a, "0"		             ;4dbe	3e 30 Locate at [31, 3]
+	call WRTVRM		             ;4dc0	cd 4d 00
 
 	; Draw a trailing "0" in the SCORE
-    ld hl,018ffh	;4dc3	21 ff 18
-	ld a,030h		;4dc6	3e 30
-	call WRTVRM		;4dc8	cd 4d 00
+    ld hl,0x1800 + 31 + 7*32	;4dc3	21 ff 18 Locate at [31, 7]
+	ld a, "0"	                ;4dc6	3e 30
+	call WRTVRM		            ;4dc8	cd 4d 00
 
 	ld a,000h		;4dcb	3e 00 	> . 
 	ld (DOH_ROW_DRAW_COUNTER),a		;4dcd	32 6f e5 	2 o . 
