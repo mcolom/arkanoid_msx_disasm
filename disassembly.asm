@@ -2047,10 +2047,10 @@ l4c73h:
 	ld (BRICK_HIT_ROW),a		        ;4c75	32 3c e5
 
     ; Print "GAME START"
-	ld hl,GAME_START_STR	;4c78	21 cc 54
-	ld de,019a8h		    ;4c7b	11 a8 19 ToDo: write this as a locate
-	ld bc,00011h		    ;4c7e	01 11 00
-	call LDIRVM		        ;4c81	cd 5c 00
+	ld hl,GAME_START_STR	    ;4c78	21 cc 54
+	ld de,0x1800 + 8 + 13*32	;4c7b	11 a8 19 Locate at [8, 13]
+	ld bc, 17		            ;4c7e	01 11 00
+	call LDIRVM		            ;4c81	cd 5c 00
 
 	ld a,SOUND_GAME_START_MUSIC		;4c84	3e c3 	> . 
 	ld (SOUND_NUMBER),a		;4c86	32 c0 e5 	2 . . 
