@@ -1969,12 +1969,12 @@ DRAW_TITLE_SCREEN:
 	ld bc,00060h		;4be7	01 60 00
 	call LDIRVM		    ;4bea	cd 5c 00
 
-    ; ToDo: complete
-	ld ix,SPR_PARAMS_BASE		;4bed	dd 21 cd e0
-	ld (ix+000h),52		        ;4bf1	dd 36 00 34
-	ld (ix+001h),148	        ;4bf5	dd 36 01 94
-	ld (ix+002h),160	        ;4bf9	dd 36 02 a0
-	ld (ix+003h),10		        ;4bfd	dd 36 03 0a
+    ; Write the grid inside the "Arkanoid"'s logo
+	ld ix,SPR_PARAMS_BASE		            ;4bed	dd 21 cd e0
+	ld (ix+SPR_PARAMS_IDX_Y), 52	        ;4bf1	dd 36 00 34
+	ld (ix+SPR_PARAMS_IDX_X),148            ;4bf5	dd 36 01 94
+	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM),160	;4bf9	dd 36 02 a0
+	ld (ix+SPR_PARAMS_IDX_COLOR),10	        ;4bfd	dd 36 03 0a
 
 	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN		;4c01	3e 01
 	ld (BRICK_HIT_ROW),a		                    ;4c03	32 3c e5
