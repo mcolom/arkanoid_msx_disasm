@@ -2815,17 +2815,18 @@ DOH_ROW12:
 ; Draw the game's frame
 DRAW_FRAME:
     ; Draw up frame
-	ld hl,FRAME_UP_CHARS		;5230	21 71 52 	! q R 
-	ld bc,00018h		;5233	01 18 00 	. . . 
-	ld de,01801h		;5236	11 01 18 	. . . 
-	call LDIRVM		;5239	cd 5c 00 	. \ . 
-	ld b,017h		;523c	06 17 	. . 
-	ld de,00020h		;523e	11 20 00 	.   . 
+	ld hl,FRAME_UP_CHARS		;5230	21 71 52
+	ld bc, 24		            ;5233	01 18 00
+	ld de,0x1800 + 1 + 0*32		;5236	11 01 18    Locate at [1, 0]
+	call LDIRVM		            ;5239	cd 5c 00
+
+	ld b, 23		            ;523c	06 17
+	ld de, 32		        ;   523e	11 20 00
     ; Draw left frame
 l5241h:
-	ld hl,01821h		;5241	21 21 18 	ToDo: write this as a locate
-	ld ix,FRAME_LATERAL_CHARS		;5244	dd 21 89 52 	. ! . R 
-	ld a,(ix+000h)		;5248	dd 7e 00 	. ~ . 
+	ld hl,0x1800 + 1 + 1*32		;5241	21 21 18    Locate at [1, 1]
+	ld ix,FRAME_LATERAL_CHARS	;5244	dd 21 89 52
+	ld a,(ix+000h)		        ;5248	dd 7e 00
 l524bh:
 	call WRTVRM		;524b	cd 4d 00 	. M . 
 	add hl,de			;524e	19 	. 
@@ -2834,18 +2835,18 @@ l524bh:
 	djnz l524bh		;5254	10 f5 	. . 
 
     ; Draw right frame
-	ld b,017h		;5256	06 17 	. . 
-	ld de,00020h		;5258	11 20 00 	.   . 
-	ld hl,01838h		;525b	21 38 18 	ToDo: write this as a locate
-	ld ix,FRAME_LATERAL_CHARS		;525e	dd 21 89 52 	. ! . R 
-	ld a,(ix+000h)		;5262	dd 7e 00 	. ~ . 
+	ld b, 23		            ;5256	06 17
+	ld de, 32		            ;5258	11 20 00
+	ld hl,0x1800 + 24 + 1*32	;525b	21 38 18    Locate at [24, 1]
+	ld ix,FRAME_LATERAL_CHARS	;525e	dd 21 89 52
+	ld a,(ix+000h)		        ;5262	dd 7e 00
 l5265h:
-	call WRTVRM		;5265	cd 4d 00 	. M . 
-	add hl,de			;5268	19 	. 
-	inc ix		;5269	dd 23 	. # 
-	ld a,(ix+000h)		;526b	dd 7e 00 	. ~ . 
-	djnz l5265h		;526e	10 f5 	. . 
-	ret			;5270	c9 	. 
+	call WRTVRM		    ;5265	cd 4d 00
+	add hl,de			;5268	19
+	inc ix		        ;5269	dd 23
+	ld a,(ix+000h)		;526b	dd 7e 00
+	djnz l5265h		    ;526e	10 f5
+	ret			        ;5270	c9
 
 FRAME_UP_CHARS:
     db 2, 12, 12, 12, 8, 9, 10, 11, 12, 12, 12, 12, 12, 12, 12, 12, 8, 9, 10, 11, 12, 12, 12, 13
