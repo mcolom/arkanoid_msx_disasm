@@ -12513,6 +12513,7 @@ lada0h:
 lada4h:
     db 0x76, 0x77, 0x74, 0x75
 
+; ToDo: this function is called a lot of times!
 sub_ada8h:
 	push iy		;ada8	fd e5 	. . 
 	ld a,000h		;adaa	3e 00 	> . 
@@ -12570,324 +12571,35 @@ ladf4h:
 	ex de,hl			;adfd	eb 	. 
 	ld a,001h		;adfe	3e 01 	> . 
 	jp (hl)			;ae00	e9 	. 
+
+; ToDo: what is this table?
+; scripts$ ./dw_block.py ../arkanoid.rom --start 44545 --end 44950 --offset 16384
 lae01h:
-	add a,c			;ae01	81 	. 
-	xor a			;ae02	af 	. 
-	sub d			;ae03	92 	. 
-	xor a			;ae04	af 	. 
-	and d			;ae05	a2 	. 
-	xor a			;ae06	af 	. 
-	or d			;ae07	b2 	. 
-	xor a			;ae08	af 	. 
-	jp nz,0d2afh		;ae09	c2 af d2 	. . . 
-	xor a			;ae0c	af 	. 
-	jp po,0f2afh		;ae0d	e2 af f2 	. . . 
-	xor a			;ae10	af 	. 
-	add a,c			;ae11	81 	. 
-	xor a			;ae12	af 	. 
-	sub d			;ae13	92 	. 
-	xor a			;ae14	af 	. 
-	and d			;ae15	a2 	. 
-	xor a			;ae16	af 	. 
-	add a,c			;ae17	81 	. 
-	xor a			;ae18	af 	. 
-	add a,c			;ae19	81 	. 
-	xor a			;ae1a	af 	. 
-	add a,c			;ae1b	81 	. 
-	xor a			;ae1c	af 	. 
-	add a,c			;ae1d	81 	. 
-	xor a			;ae1e	af 	. 
-	add a,c			;ae1f	81 	. 
-	xor a			;ae20	af 	. 
-	or d			;ae21	b2 	. 
-	xor a			;ae22	af 	. 
-	jp nz,0d2afh		;ae23	c2 af d2 	. . . 
-	xor a			;ae26	af 	. 
-	jp po,0f2afh		;ae27	e2 af f2 	. . . 
-	xor a			;ae2a	af 	. 
-	add a,c			;ae2b	81 	. 
-	xor a			;ae2c	af 	. 
-	sub d			;ae2d	92 	. 
-	xor a			;ae2e	af 	. 
-	and d			;ae2f	a2 	. 
-	xor a			;ae30	af 	. 
-	or d			;ae31	b2 	. 
-	xor a			;ae32	af 	. 
-	jp nz,0d2afh		;ae33	c2 af d2 	. . . 
-	xor a			;ae36	af 	. 
-	add a,c			;ae37	81 	. 
-	xor a			;ae38	af 	. 
-	add a,c			;ae39	81 	. 
-	xor a			;ae3a	af 	. 
-	add a,c			;ae3b	81 	. 
-	xor a			;ae3c	af 	. 
-	add a,c			;ae3d	81 	. 
-	xor a			;ae3e	af 	. 
-	add a,c			;ae3f	81 	. 
-	xor a			;ae40	af 	. 
-	jp po,0f2afh		;ae41	e2 af f2 	. . . 
-	xor a			;ae44	af 	. 
-	add a,c			;ae45	81 	. 
-	xor a			;ae46	af 	. 
-	sub d			;ae47	92 	. 
-	xor a			;ae48	af 	. 
-	and d			;ae49	a2 	. 
-	xor a			;ae4a	af 	. 
-	or d			;ae4b	b2 	. 
-	xor a			;ae4c	af 	. 
-	jp nz,0d2afh		;ae4d	c2 af d2 	. . . 
-	xor a			;ae50	af 	. 
-	jp po,0f2afh		;ae51	e2 af f2 	. . . 
-	xor a			;ae54	af 	. 
-	add a,c			;ae55	81 	. 
-	xor a			;ae56	af 	. 
-	add a,c			;ae57	81 	. 
-	xor a			;ae58	af 	. 
-	add a,c			;ae59	81 	. 
-	xor a			;ae5a	af 	. 
-	add a,c			;ae5b	81 	. 
-	xor a			;ae5c	af 	. 
-	add a,c			;ae5d	81 	. 
-	xor a			;ae5e	af 	. 
-	add a,c			;ae5f	81 	. 
-	xor a			;ae60	af 	. 
-	sub d			;ae61	92 	. 
-	xor a			;ae62	af 	. 
-	and d			;ae63	a2 	. 
-	xor a			;ae64	af 	. 
-	or d			;ae65	b2 	. 
-	xor a			;ae66	af 	. 
-	jp nz,0d2afh		;ae67	c2 af d2 	. . . 
-	xor a			;ae6a	af 	. 
-	jp po,0f2afh		;ae6b	e2 af f2 	. . . 
-	xor a			;ae6e	af 	. 
-	add a,c			;ae6f	81 	. 
-	xor a			;ae70	af 	. 
-	sub d			;ae71	92 	. 
-	xor a			;ae72	af 	. 
-	and d			;ae73	a2 	. 
-	xor a			;ae74	af 	. 
-	or d			;ae75	b2 	. 
-	xor a			;ae76	af 	. 
-	add a,c			;ae77	81 	. 
-	xor a			;ae78	af 	. 
-	add a,c			;ae79	81 	. 
-	xor a			;ae7a	af 	. 
-	add a,c			;ae7b	81 	. 
-	xor a			;ae7c	af 	. 
-	add a,c			;ae7d	81 	. 
-	xor a			;ae7e	af 	. 
-	add a,c			;ae7f	81 	. 
-	xor a			;ae80	af 	. 
-	jp nz,0d2afh		;ae81	c2 af d2 	. . . 
-	xor a			;ae84	af 	. 
-	jp po,0f2afh		;ae85	e2 af f2 	. . . 
-	xor a			;ae88	af 	. 
-	add a,c			;ae89	81 	. 
-	xor a			;ae8a	af 	. 
-	sub d			;ae8b	92 	. 
-	xor a			;ae8c	af 	. 
-	and d			;ae8d	a2 	. 
-	xor a			;ae8e	af 	. 
-	or d			;ae8f	b2 	. 
-	xor a			;ae90	af 	. 
-	jp nz,0d2afh		;ae91	c2 af d2 	. . . 
-	xor a			;ae94	af 	. 
-	jp po,0x81af		;ae95	e2 af 81 	. . . 
-	xor a			;ae98	af 	. 
-	add a,c			;ae99	81 	. 
-	xor a			;ae9a	af 	. 
-	add a,c			;ae9b	81 	. 
-	xor a			;ae9c	af 	. 
-	add a,c			;ae9d	81 	. 
-	xor a			;ae9e	af 	. 
-	add a,c			;ae9f	81 	. 
-	xor a			;aea0	af 	. 
-	jp p,0x81af		;aea1	f2 af 81 	. . . 
-	xor a			;aea4	af 	. 
-	sub d			;aea5	92 	. 
-	xor a			;aea6	af 	. 
-	and d			;aea7	a2 	. 
-	xor a			;aea8	af 	. 
-	or d			;aea9	b2 	. 
-	xor a			;aeaa	af 	. 
-	jp nz,0d2afh		;aeab	c2 af d2 	. . . 
-	xor a			;aeae	af 	. 
-	jp po,0f2afh		;aeaf	e2 af f2 	. . . 
-	xor a			;aeb2	af 	. 
-	add a,c			;aeb3	81 	. 
-	xor a			;aeb4	af 	. 
-	sub d			;aeb5	92 	. 
-	xor a			;aeb6	af 	. 
-	add a,c			;aeb7	81 	. 
-	xor a			;aeb8	af 	. 
-	add a,c			;aeb9	81 	. 
-	xor a			;aeba	af 	. 
-	add a,c			;aebb	81 	. 
-	xor a			;aebc	af 	. 
-	add a,c			;aebd	81 	. 
-	xor a			;aebe	af 	. 
-	add a,c			;aebf	81 	. 
-	xor a			;aec0	af 	. 
-	and d			;aec1	a2 	. 
-	xor a			;aec2	af 	. 
-	or d			;aec3	b2 	. 
-	xor a			;aec4	af 	. 
-	jp nz,0d2afh		;aec5	c2 af d2 	. . . 
-	xor a			;aec8	af 	. 
-	jp po,0f2afh		;aec9	e2 af f2 	. . . 
-	xor a			;aecc	af 	. 
-	add a,c			;aecd	81 	. 
-	xor a			;aece	af 	. 
-	sub d			;aecf	92 	. 
-	xor a			;aed0	af 	. 
-	and d			;aed1	a2 	. 
-	xor a			;aed2	af 	. 
-	or d			;aed3	b2 	. 
-	xor a			;aed4	af 	. 
-	jp nz,0x81af		;aed5	c2 af 81 	. . . 
-	xor a			;aed8	af 	. 
-	add a,c			;aed9	81 	. 
-	xor a			;aeda	af 	. 
-	add a,c			;aedb	81 	. 
-laedch:
-	xor a			;aedc	af 	. 
-	add a,c			;aedd	81 	. 
-	xor a			;aede	af 	. 
-	add a,c			;aedf	81 	. 
-	xor a			;aee0	af 	. 
-	jp nc,0e2afh		;aee1	d2 af e2 	. . . 
-	xor a			;aee4	af 	. 
-	jp p,0x81af		;aee5	f2 af 81 	. . . 
-	xor a			;aee8	af 	. 
-	sub d			;aee9	92 	. 
-	xor a			;aeea	af 	. 
-	and d			;aeeb	a2 	. 
-	xor a			;aeec	af 	. 
-	or d			;aeed	b2 	. 
-	xor a			;aeee	af 	. 
-	jp nz,0d2afh		;aeef	c2 af d2 	. . . 
-	xor a			;aef2	af 	. 
-	jp po,0f2afh		;aef3	e2 af f2 	. . . 
-	xor a			;aef6	af 	. 
-	add a,c			;aef7	81 	. 
-	xor a			;aef8	af 	. 
-	add a,c			;aef9	81 	. 
-	xor a			;aefa	af 	. 
-	add a,c			;aefb	81 	. 
-	xor a			;aefc	af 	. 
-	add a,c			;aefd	81 	. 
-	xor a			;aefe	af 	. 
-	add a,c			;aeff	81 	. 
-	xor a			;af00	af 	. 
-	add a,c			;af01	81 	. 
-	xor a			;af02	af 	. 
-	sub d			;af03	92 	. 
-	xor a			;af04	af 	. 
-	and d			;af05	a2 	. 
-	xor a			;af06	af 	. 
-	or d			;af07	b2 	. 
-	xor a			;af08	af 	. 
-	jp nz,0d2afh		;af09	c2 af d2 	. . . 
-	xor a			;af0c	af 	. 
-	jp po,0f2afh		;af0d	e2 af f2 	. . . 
-	xor a			;af10	af 	. 
-	add a,c			;af11	81 	. 
-	xor a			;af12	af 	. 
-	sub d			;af13	92 	. 
-	xor a			;af14	af 	. 
-	and d			;af15	a2 	. 
-	xor a			;af16	af 	. 
-	add a,c			;af17	81 	. 
-	xor a			;af18	af 	. 
-	add a,c			;af19	81 	. 
-	xor a			;af1a	af 	. 
-	add a,c			;af1b	81 	. 
-	xor a			;af1c	af 	. 
-	add a,c			;af1d	81 	. 
-	xor a			;af1e	af 	. 
-	add a,c			;af1f	81 	. 
-	xor a			;af20	af 	. 
-	or d			;af21	b2 	. 
-	xor a			;af22	af 	. 
-	jp nz,0d2afh		;af23	c2 af d2 	. . . 
-	xor a			;af26	af 	. 
-	jp po,0f2afh		;af27	e2 af f2 	. . . 
-	xor a			;af2a	af 	. 
-	add a,c			;af2b	81 	. 
-	xor a			;af2c	af 	. 
-	sub d			;af2d	92 	. 
-	xor a			;af2e	af 	. 
-	and d			;af2f	a2 	. 
-	xor a			;af30	af 	. 
-	or d			;af31	b2 	. 
-	xor a			;af32	af 	. 
-	jp nz,0d2afh		;af33	c2 af d2 	. . . 
-	xor a			;af36	af 	. 
-	add a,c			;af37	81 	. 
-	xor a			;af38	af 	. 
-	add a,c			;af39	81 	. 
-	xor a			;af3a	af 	. 
-	add a,c			;af3b	81 	. 
-	xor a			;af3c	af 	. 
-	add a,c			;af3d	81 	. 
-	xor a			;af3e	af 	. 
-	add a,c			;af3f	81 	. 
-	xor a			;af40	af 	. 
-	jp po,0f2afh		;af41	e2 af f2 	. . . 
-	xor a			;af44	af 	. 
-	add a,c			;af45	81 	. 
-	xor a			;af46	af 	. 
-	sub d			;af47	92 	. 
-	xor a			;af48	af 	. 
-	and d			;af49	a2 	. 
-	xor a			;af4a	af 	. 
-	or d			;af4b	b2 	. 
-	xor a			;af4c	af 	. 
-	jp nz,0d2afh		;af4d	c2 af d2 	. . . 
-	xor a			;af50	af 	. 
-	jp po,0f2afh		;af51	e2 af f2 	. . . 
-	xor a			;af54	af 	. 
-	add a,c			;af55	81 	. 
-	xor a			;af56	af 	. 
-	add a,c			;af57	81 	. 
-	xor a			;af58	af 	. 
-	add a,c			;af59	81 	. 
-	xor a			;af5a	af 	. 
-	add a,c			;af5b	81 	. 
-	xor a			;af5c	af 	. 
-	add a,c			;af5d	81 	. 
-	xor a			;af5e	af 	. 
-	add a,c			;af5f	81 	. 
-	xor a			;af60	af 	. 
-	sub d			;af61	92 	. 
-	xor a			;af62	af 	. 
-	and d			;af63	a2 	. 
-	xor a			;af64	af 	. 
-	or d			;af65	b2 	. 
-	xor a			;af66	af 	. 
-	jp nz,0d2afh		;af67	c2 af d2 	. . . 
-	xor a			;af6a	af 	. 
-	jp po,0f2afh		;af6b	e2 af f2 	. . . 
-	xor a			;af6e	af 	. 
-	add a,c			;af6f	81 	. 
-	xor a			;af70	af 	. 
-	sub d			;af71	92 	. 
-	xor a			;af72	af 	. 
-	and d			;af73	a2 	. 
-	xor a			;af74	af 	. 
-	or d			;af75	b2 	. 
-	xor a			;af76	af 	. 
-	add a,c			;af77	81 	. 
-	xor a			;af78	af 	. 
-	add a,c			;af79	81 	. 
-	xor a			;af7a	af 	. 
-	add a,c			;af7b	81 	. 
-	xor a			;af7c	af 	. 
-	add a,c			;af7d	81 	. 
-	xor a			;af7e	af 	. 
-	add a,c			;af7f	81 	. 
-	xor a			;af80	af 	. 
+    dw 0xaf81, 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2; 0xae01 - 0xae10
+    dw 0xaf81, 0xaf92, 0xafa2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xae11 - 0xae20
+    dw 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2, 0xaf81, 0xaf92, 0xafa2; 0xae21 - 0xae30
+    dw 0xafb2, 0xafc2, 0xafd2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xae31 - 0xae40
+    dw 0xafe2, 0xaff2, 0xaf81, 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2; 0xae41 - 0xae50
+    dw 0xafe2, 0xaff2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xae51 - 0xae60
+    dw 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2, 0xaf81; 0xae61 - 0xae70
+    dw 0xaf92, 0xafa2, 0xafb2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xae71 - 0xae80
+    dw 0xafc2, 0xafd2, 0xafe2, 0xaff2, 0xaf81, 0xaf92, 0xafa2, 0xafb2; 0xae81 - 0xae90
+    dw 0xafc2, 0xafd2, 0xafe2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xae91 - 0xaea0
+    dw 0xaff2, 0xaf81, 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2, 0xafe2; 0xaea1 - 0xaeb0
+    dw 0xaff2, 0xaf81, 0xaf92, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaeb1 - 0xaec0
+    dw 0xafa2, 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2, 0xaf81, 0xaf92; 0xaec1 - 0xaed0
+    dw 0xafa2, 0xafb2, 0xafc2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaed1 - 0xaee0
+    dw 0xafd2, 0xafe2, 0xaff2, 0xaf81, 0xaf92, 0xafa2, 0xafb2, 0xafc2; 0xaee1 - 0xaef0
+    dw 0xafd2, 0xafe2, 0xaff2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaef1 - 0xaf00
+    dw 0xaf81, 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2; 0xaf01 - 0xaf10
+    dw 0xaf81, 0xaf92, 0xafa2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaf11 - 0xaf20
+    dw 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2, 0xaf81, 0xaf92, 0xafa2; 0xaf21 - 0xaf30
+    dw 0xafb2, 0xafc2, 0xafd2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaf31 - 0xaf40
+    dw 0xafe2, 0xaff2, 0xaf81, 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2; 0xaf41 - 0xaf50
+    dw 0xafe2, 0xaff2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaf51 - 0xaf60
+    dw 0xaf92, 0xafa2, 0xafb2, 0xafc2, 0xafd2, 0xafe2, 0xaff2, 0xaf81; 0xaf61 - 0xaf70
+    dw 0xaf92, 0xafa2, 0xafb2, 0xaf81, 0xaf81, 0xaf81, 0xaf81, 0xaf81; 0xaf71 - 0xaf80
+
 	cp 001h		;af81	fe 01 	. . 
 	jp z,laf8bh		;af83	ca 8b af 	. . . 
 	res 7,(iy+000h)		;af86	fd cb 00 be 	. . . . 
@@ -12954,6 +12666,7 @@ lb000h:
 lb00dh:
 	xor a			;b00d	af 	. 
 	ret			;b00e	c9 	. 
+
 sub_b00fh:
 	push ix		;b00f	dd e5 	. . 
 	push iy		;b011	fd e5 	. . 
