@@ -8093,33 +8093,42 @@ l760fh:
 
     ; Check if the alien is in the door
 	ld a,(ix+ALIEN_TABLE_IDX_IN_DOOR)		;762e	dd 7e 07
-	cp 0		                            ;7631	fe 00
+	cp 0x00		                            ;7631	fe 00
 	jp nz,l7695h		                    ;7633	c2 95 76 Jump is he's in the door
     ; Set the alien is in the door
 	ld (ix+ALIEN_TABLE_IDX_IN_DOOR), 1		;7636	dd 36 07 01
 
     ; Set the params of the alien (i.e. the position) according to the
     ; door he exits from.
-    ; ToDo: decode tables l7b64h and l7b7ch
-	ld de,l7b64h		;763a	11 64 7b 	. d { 
-	ld a,(DOOR_TABLE + DOOR_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
-	or a			;7640	b7 	. 
-	jp z,l7647h		;7641	ca 47 76 	. G v 
-	ld de,l7b7ch		;7644	11 7c 7b 	. | { 
+	ld de,SPR_DOOR_1_TABLE		                ;763a	11 64 7b
+	ld a,(DOOR_TABLE + DOOR_TABLE_IDX_DOOR)		;763d	3a 71 e5
+	or a			                            ;7640	b7
+	jp z,l7647h		                            ;7641	ca 47 76
+	ld de,SPR_DOOR_2_TABLE		                ;7644	11 7c 7b
 l7647h:
-	ld a,(ix+000h)		;7647	dd 7e 00 	. ~ . 
-	ld l,a			;764a	6f 	o 
-	ld h,000h		;764b	26 00 	& . 
-	add hl,hl			;764d	29 	) 
-	add hl,de			;764e	19 	. 
-	ld e,(hl)			;764f	5e 	^ 
-	inc hl			;7650	23 	# 
-	ld d,(hl)			;7651	56 	V 
-	ex de,hl			;7652	eb 	. 
-	push iy		;7653	fd e5 	. . 
-	pop de			;7655	d1 	. 
-	ld bc,00004h		;7656	01 04 00 	. . . 
-	ldir		;7659	ed b0 	. . 
+	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		        ;7647	dd 7e 00
+
+	ld l,a			;764a	6f
+	ld h, 0		    ;764b	26 00   HL = color
+	add hl,hl		;764d	29      HL = 2*color
+	add hl,de		;764e	19      HL = 2*color + table
+    
+    ; DE = table[2*color]
+	ld e,(hl)			;764f	5e
+	inc hl			    ;7650	23
+	ld d,(hl)			;7651	56
+	
+    ; HL = table[2*color]
+    ex de,hl			;7652	eb
+	
+    ; DE = SPR_13_SPR_PARAMS
+    push iy		;7653	fd e5
+	pop de		;7655	d1
+
+    ; Copy sprite parameters SPR_13_SPR_PARAMS from table[2*color]
+	ld bc,SPR_PARAMS_LEN	;7656	01 04 00
+	ldir		            ;7659	ed b0
+
 	ld a,(VAUS_X)		;765b	3a ce e0 	: . . 
 	sub 008h		;765e	d6 08 	. . 
 	and 0f0h		;7660	e6 f0 	. . 
@@ -8852,52 +8861,39 @@ l7b53h:
 l7b60h:
 	ld bc,01802h		;7b60	01 02 18 	. . . 
 	nop			;7b63	00 	. 
-l7b64h:
-	ld l,h			;7b64	6c 	l 
-	ld a,e			;7b65	7b 	{ 
-	ld (hl),b			;7b66	70 	p 
-	ld a,e			;7b67	7b 	{ 
-	ld (hl),h			;7b68	74 	t 
-	ld a,e			;7b69	7b 	{ 
-	ld a,b			;7b6a	78 	x 
-	ld a,e			;7b6b	7b 	{ 
-	ex af,af'			;7b6c	08 	. 
-	adc a,b			;7b6d	88 	. 
-	ret nz			;7b6e	c0 	. 
-	dec b			;7b6f	05 	. 
-	ex af,af'			;7b70	08 	. 
-	adc a,b			;7b71	88 	. 
-	ret nz			;7b72	c0 	. 
-	inc bc			;7b73	03 	. 
-	ex af,af'			;7b74	08 	. 
-	adc a,b			;7b75	88 	. 
-	ret nz			;7b76	c0 	. 
-	rlca			;7b77	07 	. 
-	ex af,af'			;7b78	08 	. 
-	adc a,b			;7b79	88 	. 
-	ret nz			;7b7a	c0 	. 
-	ex af,af'			;7b7b	08 	. 
-l7b7ch:
-	add a,h			;7b7c	84 	. 
-	ld a,e			;7b7d	7b 	{ 
-	adc a,b			;7b7e	88 	. 
-	ld a,e			;7b7f	7b 	{ 
-	adc a,h			;7b80	8c 	. 
-	ld a,e			;7b81	7b 	{ 
-	sub b			;7b82	90 	. 
-	ld a,e			;7b83	7b 	{ 
-	ex af,af'			;7b84	08 	. 
-	jr z,l7b47h		;7b85	28 c0 	( . 
-	dec b			;7b87	05 	. 
-	ex af,af'			;7b88	08 	. 
-	jr z,$-62		;7b89	28 c0 	( . 
-	inc bc			;7b8b	03 	. 
-	ex af,af'			;7b8c	08 	. 
-	jr z,l7b4fh		;7b8d	28 c0 	( . 
-	rlca			;7b8f	07 	. 
-	ex af,af'			;7b90	08 	. 
-	jr z,l7b53h		;7b91	28 c0 	( . 
-	ex af,af'			;7b93	08 	. 
+
+; This are lookup tables for the parameters of the sprite of the
+; alien exiting the door
+SPR_DOOR_1_TABLE:
+    dw SPR_DOOR_1_TABLE_params1
+    dw SPR_DOOR_1_TABLE_params2
+    dw SPR_DOOR_1_TABLE_params3
+    dw SPR_DOOR_1_TABLE_params4
+;
+SPR_DOOR_1_TABLE_params1:
+    db 8, 136, 0xc0, 5
+SPR_DOOR_1_TABLE_params2:
+    db 8, 136, 0xc0, 3
+SPR_DOOR_1_TABLE_params3:
+    db 8, 136, 0xc0, 7
+SPR_DOOR_1_TABLE_params4:
+    db 8, 136, 0xc0, 8
+
+; And the other door
+SPR_DOOR_2_TABLE:
+    dw SPR_DOOR_2_TABLE_params1
+    dw SPR_DOOR_2_TABLE_params2
+    dw SPR_DOOR_2_TABLE_params3
+    dw SPR_DOOR_2_TABLE_params4
+;
+SPR_DOOR_2_TABLE_params1:
+    db 8, 40, 192, 5
+SPR_DOOR_2_TABLE_params2:
+    db 8, 40, 192, 3
+SPR_DOOR_2_TABLE_params3:
+    db 8, 40, 192, 7
+SPR_DOOR_2_TABLE_params4:
+    db 8, 40, 192, 8
 
 ; This is called when the level is finished, or when a life is lost
 NEXT_OR_SAME_LEVEL:
