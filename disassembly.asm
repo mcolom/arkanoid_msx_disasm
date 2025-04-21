@@ -8654,9 +8654,13 @@ l7a06h:
 	jp c,l7a5bh		;7a4c	da 5b 7a 	. [ z 
 	ld a,005h		;7a4f	3e 05 	> . 
 	call ADD_POINTS_AND_UPDATE_SCORES		;7a51	cd a0 52 	. . R 
-	ld (hl),002h		;7a54	36 02 	6 . 
-	inc hl			;7a56	23 	# 
-	ld (hl),001h		;7a57	36 01 	6 . 
+    
+    ; Set ALIEN_EXPLODING in ALIEN_TABLE_IDX_ACTIVE
+	ld (hl),ALIEN_ACTIVE_EXPLODING		;7a54	36 02
+	inc hl			            ;7a56	23
+
+    ; Set 
+    ld (hl),ALIEN_EXPLODING_FLAG		;7a57	36 01 	6 . 
 	xor a			;7a59	af 	. 
 	ret			;7a5a	c9 	. 
 
