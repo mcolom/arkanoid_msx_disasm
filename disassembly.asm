@@ -8098,6 +8098,9 @@ l760fh:
     ; Set the alien is in the door
 	ld (ix+ALIEN_TABLE_IDX_IN_DOOR), 1		;7636	dd 36 07 01
 
+    ; Set the params of the alien (i.e. the position) according to the
+    ; door he exits from.
+    ; ToDo: decode tables l7b64h and l7b7ch
 	ld de,l7b64h		;763a	11 64 7b 	. d { 
 	ld a,(DOOR_TABLE + DOOR_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
 	or a			;7640	b7 	. 
