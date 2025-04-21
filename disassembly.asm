@@ -7188,66 +7188,88 @@ l7019h:
 	ld d,b			;7038	50 	P 
 
 sub_7039h:
-	call sub_7040h		;7039	cd 40 70 	. @ p 
+	call CHECK_START_LASERS		;7039	cd 40 70 	. @ p 
 	call sub_70b0h		;703c	cd b0 70 	. . p 
 	ret			;703f	c9 	. 
 
-sub_7040h:
-	ld ix,VAUS_TABLE		;7040	dd 21 4b e5 	. ! K . 
-	ld a,(ix+006h)		;7044	dd 7e 06 	. ~ . 
-	or a			;7047	b7 	. 
-	ret z			;7048	c8 	. 
-	ld a,(ix+000h)		;7049	dd 7e 00 	. ~ . 
-	cp 007h		;704c	fe 07 	. . 
-	ret z			;704e	c8 	. 
-	ld b,001h		;704f	06 01 	. . 
+; Check if we've pressed the fire button, and start lasers
+CHECK_START_LASERS:
+	ld ix,VAUS_TABLE		            ;7040	dd 21 4b e5
+
+    ; If Vaus doesn't have the lasers, exit
+	ld a,(ix+VAUS_TABLE_IDX_HAS_LASER)	;7044	dd 7e 06
+	or a			                    ;7047	b7
+	ret z			                    ;7048	c8    
+    ; We've got the lasers
+
+    ; If we've going through the portal, exit
+	ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)	;7049	dd 7e 00
+	cp VAUS_ACTION_STATE_THROUGH_PORTAL		;704c	fe 07
+	ret z			                        ;704e	c8
+
+    ld b, 1		        ;704f	06 01
     
-    ; Skip the following if we're at the title screen
+    ; If we're in the demo, skip the following
 	ld a,(GAME_STATE)		;7051	3a 0b e0
 	or a			        ;7054	b7
 	jp z,l7074h		        ;7055	ca 74 70
 	
+    ; ToDo: what is this var?
     ld a,(0e00ch)		;7058	3a 0c e0 	: . . 
 	or a			;705b	b7 	. 
 	jp z,l706ah		;705c	ca 6a 70 	. j p 
 
+    ; ToDo: what is this var?
 	ld a,(0e0c5h)		;705f	3a c5 e0 	: . . 
 	bit 1,a		;7062	cb 4f 	. O 
 	jp z,l70afh		;7064	ca af 70 	. . p 
 	jp l7072h		;7067	c3 72 70 	. r p 
 l706ah:
-	ld a,(PAUSE_B6_AND_START_B4)		;706a	3a bf e0 	: . . 
-	bit 4,a		;706d	cb 67 	. g 
-	jp z,l70afh		;706f	ca af 70 	. . p 
+    ; Check if the fire button has been pressed
+    ; If not, just exit
+	ld a,(PAUSE_B6_AND_START_B4)	;706a	3a bf e0
+	bit 4,a		                    ;706d	cb 67
+	jp z,l70afh		                ;706f	ca af 70
 l7072h:
-	ld b,002h		;7072	06 02 	. . 
+    ; We've pressed fire!
+    ; Loop over 2 lasers
+	ld b, 2		            ;7072	06 02
 l7074h:
-	ld ix,LASER1_ACTIVE		;7074	dd 21 57 e5 	. ! W . 
-	ld iy,LASER1_SPR_PARAMS		;7078	fd 21 e9 e0 	. ! . . 
+	ld ix,LASER1_ACTIVE		    ;7074	dd 21 57 e5
+	ld iy,LASER1_SPR_PARAMS		;7078	fd 21 e9 e0
 l707ch:
-	ld a,(ix+000h)		;707c	dd 7e 00 	. ~ . 
+	; If Vaus is not in normal state, move to the next laser
+    ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)		;707c	dd 7e 00 	. ~ . 
 	or a			;707f	b7 	. 
 	jp nz,l70a6h		;7080	c2 a6 70 	. . p 
-	ld (ix+000h),001h		;7083	dd 36 00 01 	. 6 . . 
-	ld a,(VAUS_X)		;7087	3a ce e0 	: . . 
-	add a,010h		;708a	c6 10 	. . 
-	ld (iy+000h),0aeh		;708c	fd 36 00 ae 	. 6 . . 
-	ld (iy+001h),a		;7090	fd 77 01 	. w . 
-	ld (iy+002h),084h		;7093	fd 36 02 84 	. 6 . . 
-	ld (iy+003h),005h		;7097	fd 36 03 05 	. 6 . . 
+    
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_KEEP		;7083	dd 36 00 01
+    ; Set laser's X to Vaus' X + 16 (a little bit upper)
+	ld a,(VAUS_X)		                        ;7087	3a ce e0
+	add a, 16		                            ;708a	c6 10
+    ; Configure laser sprite
+	ld (iy+SPR_PARAMS_IDX_Y), 174		        ;708c	fd 36 00 ae
+	ld (iy+SPR_PARAMS_IDX_X)   ,a		        ;7090	fd 77 01
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM), 132		;7093	fd 36 02 84
+	ld (iy+SPR_PARAMS_IDX_COLOR), 5		        ;7097	fd 36 03 05
 
+    ; Play laser sound
 	ld a,SOUND_VAUS_FIRING_X3	;709b	3e 06
 	call ADD_SOUND		        ;709d	cd ef 5b
 
-	call UPDATE_SPEED_ALL_BALLS		;70a0	cd 6e 71 	. n q 
-	jp l70afh		;70a3	c3 af 70 	. . p 
+    ; Update ball's speed
+	call UPDATE_SPEED_ALL_BALLS		;70a0	cd 6e 71
+    
+    ; And exit
+	jp l70afh		                ;70a3	c3 af 70
 l70a6h:
-	ld de,00004h		;70a6	11 04 00 	. . . 
-	add iy,de		;70a9	fd 19 	. . 
-	add ix,de		;70ab	dd 19 	. . 
-	djnz l707ch		;70ad	10 cd 	. . 
+    ; Next laser sprite
+	ld de,SPR_PARAMS_LEN	;70a6	11 04 00
+	add iy,de		        ;70a9	fd 19
+	add ix,de		        ;70ab	dd 19
+	djnz l707ch		        ;70ad	10 cd
 l70afh:
-	ret			;70af	c9 	. 
+	ret			            ;70af	c9
 
 sub_70b0h:
 	; Set lasers are being fired
