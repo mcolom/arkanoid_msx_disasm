@@ -370,7 +370,7 @@ TRANSITION_PLAY_LEVEL:
     ;ToDo: figure out what are these
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
 	call sub_95f4h		;41c3	cd f4 95 	. . . 
-	call sub_7241h		;41c6	cd 41 72 	. A r 
+	call sub_7241h		;41c6	cd 41 72 	. A r ToDo: move aliens
 	
     ; Scores of the right
     ld a, 1 		            ;41c9	3e 01
@@ -7493,41 +7493,51 @@ l723ch:
 	ld b,h			;7240	44 	D 
 
 sub_7241h:
-    ; Skip the following and jump if we're not at the title screen
+    ; Skip if we're not in the demo
 	ld a,(GAME_STATE)		;7241	3a 0b e0
 	or a			        ;7244	b7
 	jp nz,l726eh		    ;7245	c2 6e 72
+
+    ; We're in the demo
     
-	ld hl,(0e5adh)		;7248	2a ad e5 	* . . 
-	inc hl			;724b	23 	# 
-	ld (0e5adh),hl		;724c	22 ad e5 	" . . 
-	ld a,l			;724f	7d 	} 
-	cp 040h		;7250	fe 40 	. @ 
-	jp nz,l726eh		;7252	c2 6e 72 	. n r 
-	ld a,h			;7255	7c 	| 
-	cp 00bh		;7256	fe 0b 	. . 
-	jp nz,l726eh		;7258	c2 6e 72 	. n r 
+    ; Increment demo timeout counter
+    ; The demo timeout after 2880 (0xb40) counts 
+	ld hl,(DEMO_TIMEOUT)		;7248	2a ad e5
+	inc hl			            ;724b	23
+	ld (DEMO_TIMEOUT),hl		;724c	22 ad e5
+	ld a,l			            ;724f	7d
+	cp 040h		                ;7250	fe 40
+	jp nz,l726eh		        ;7252	c2 6e 72
+	ld a,h			            ;7255	7c
+	cp 00bh		                ;7256	fe 0b
+	jp nz,l726eh		        ;7258	c2 6e 72
 
-	ld a,000h		;725b	3e 00 	> . 
-	ld (GAME_TRANSITION_ACTION),a		;725d	32 0a e0 	2 . . 
+    ; Timeout: go to title's screen
+    ; It uses the code to start a level, but actually here it will
+    ; go to the title's screen
+	ld a, GAME_TRANSITION_ACTION_START_LEVEL	;725b	3e 00
+	ld (GAME_TRANSITION_ACTION),a		        ;725d	32 0a e0
 
-	ld hl,BRICK_HIT_ROW		;7260	21 3c e5 	! < . 
-	ld de,BRICK_HIT_COL		;7263	11 3d e5 	. = . 
-	ld bc,00007h		;7266	01 07 00 	. . . 
-	ld (hl),000h		;7269	36 00 	6 . 
-	ldir		;726b	ed b0 	. . 
-	ret			;726d	c9 	. 
+    ; Clear variables
+	ld hl,BRICK_HIT_ROW		;7260	21 3c e5
+	ld de,BRICK_HIT_COL		;7263	11 3d e5
+	ld bc, 7		        ;7266	01 07 00
+	ld (hl),0		        ;7269	36 00
+	ldir		            ;726b	ed b0
+	ret			            ;726d	c9
 
 l726eh:
 	ld a,(LEVEL)		;726e	3a 1b e0
 	cp FINAL_LEVEL		;7271	fe 20
 	jp z,l7286h		;7273	ca 86 72 	. . r 
-	call sub_7605h		;7276	cd 05 76 	. . v 
+	call sub_7605h		;7276	cd 05 76 	. . v   ToDo
 	call CHECK_LASERS_HITS_ALIEN		;7279	cd 88 78 	. . x 
 	call CHECK_ALIEN_HIT_BY_VAUS		;727c	cd 42 79 	. B y 
 	call UPDATE_ALIEN_APPEAR_FROM_DOOR		;727f	cd 0c 73 	. . s 
 	call UPDATE_DOORS		;7282	cd a0 72 	. . r 
 	ret			;7285	c9 	. 
+
+; This is Doh's stuff...
 l7286h:
 	ld a,(0e50dh)		;7286	3a 0d e5 	: . . 
 	or a			;7289	b7 	. 
