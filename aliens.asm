@@ -3,9 +3,10 @@
 ALIEN_TABLE: equ 0xe4c7
 ALIEN_TABLE_LEN: equ 20
 ;
-ALIEN_TABLE_IDX_COLOR: equ 0    ; 0xe4c7
-ALIEN_TABLE_IDX_ACTIVE: equ 1   ; 0xe4c8
-ALIEN_TABLE_IDX_EXPLODING: equ 2   ; 0xe4c9
+ALIEN_TABLE_IDX_COLOR: equ 0        ; 0xe4c7
+ALIEN_TABLE_IDX_ACTIVE: equ 1       ; 0xe4c8
+ALIEN_TABLE_IDX_EXPLODING: equ 2    ; 0xe4c9
+ALIEN_TABLE_IDX_TICKS: equ 3        ; 0xe4ca
 ; [ToDo] Incomplete table
 
 

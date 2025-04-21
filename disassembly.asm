@@ -8072,21 +8072,30 @@ sub_7605h:
     ld b, 3
 l760fh:
 	push bc			;760f	c5 	. 
-	ld a,(ix+002h)		;7610	dd 7e 02 	. ~ . 
-	cp 001h		;7613	fe 01 	. . 
-	jp z,l7722h		;7615	ca 22 77 	. " w 
-	inc (ix+003h)		;7618	dd 34 03 	. 4 . 
-	ld a,(ix+003h)		;761b	dd 7e 03 	. ~ . 
-	cp 005h		;761e	fe 05 	. . 
-	jp nz,l786dh		;7620	c2 6d 78 	. m x 
-	ld (ix+003h),000h		;7623	dd 36 03 00 	. 6 . . 
-	ld a,(ix+001h)		;7627	dd 7e 01 	. ~ . 
-	or a			;762a	b7 	. 
-	jp z,l786dh		;762b	ca 6d 78 	. m x 
+    
+    ; Skip if the alien is exploding
+	ld a,(ix+ALIEN_TABLE_IDX_EXPLODING)		;7610	dd 7e 02
+	cp 1		                            ;7613	fe 01
+	jp z,l7722h		                        ;7615	ca 22 77
+
+    ; Check alien ticks
+    ; We only execute every 5 ticks. Otherwise, move to the next alien
+	inc (ix+ALIEN_TABLE_IDX_TICKS)		;7618	dd 34 03
+	ld a,(ix+ALIEN_TABLE_IDX_TICKS)		;761b	dd 7e 03
+	cp 5		                        ;761e	fe 05       Already in the 5th tick?
+	jp nz,l786dh		                ;7620	c2 6d 78    No, next alien
+	ld (ix+ALIEN_TABLE_IDX_TICKS),0	    ;7623	dd 36 03 00
+
+    ; If the alien is not active, move to the next
+	ld a,(ix+ALIEN_TABLE_IDX_ACTIVE)	;7627	dd 7e 01
+	or a			                    ;762a	b7
+	jp z,l786dh		                    ;762b	ca 6d 78
+
 	ld a,(ix+007h)		;762e	dd 7e 07 	. ~ . 
 	cp 000h		;7631	fe 00 	. . 
 	jp nz,l7695h		;7633	c2 95 76 	. . v 
 	ld (ix+007h),001h		;7636	dd 36 07 01 	. 6 . . 
+
 	ld de,l7b64h		;763a	11 64 7b 	. d { 
 	ld a,(DOOR_TABLE + DOOR_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
 	or a			;7640	b7 	. 
@@ -8345,7 +8354,7 @@ l785bh:
 	ldir		;786b	ed b0 	. . 
 l786dh:
 	pop bc			;786d	c1 	. 
-	ld de,00014h		;786e	11 14 00 	. . . 
+	ld de,ALIEN_TABLE_LEN		;786e	11 14 00 	. . . 
 	add ix,de		;7871	dd 19 	. . 
 	ld de,00004h		;7873	11 04 00 	. . . 
 	add iy,de		;7876	fd 19 	. . 
