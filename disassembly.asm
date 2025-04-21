@@ -293,26 +293,35 @@ l4158h:
 	add ix,de		;4158	dd 19 	. . 
 	djnz l4128h		;415a	10 cc 	. . 
 
-	ld a,(CAPSULE_IS_FALLING)		;415c	3a 17 e3 	: . . 
-	or a			;415f	b7 	. 
-	jp z,l418eh		;4160	ca 8e 41 	. . A 
-	ld hl,0e545h		;4163	21 45 e5 	! E . 
-	inc (hl)			;4166	34 	4 
-	ld a,(hl)			;4167	7e 	~ 
-	and 001h		;4168	e6 01 	. . 
-	jp z,l418eh		;416a	ca 8e 41 	. . A 
-	ld hl,SPRITE_ATTRIBS_AREA		;416d	21 8d e1 	! . . 
-	ld de,0e546h		;4170	11 46 e5 	. F . 
-	ld bc,00004h		;4173	01 04 00 	. . . 
-	ldir		;4176	ed b0 	. . 
-	ld hl,0e19dh		;4178	21 9d e1 	! . . 
-	ld de,SPRITE_ATTRIBS_AREA		;417b	11 8d e1 	. . . 
-	ld bc,00004h		;417e	01 04 00 	. . . 
-	ldir		;4181	ed b0 	. . 
-	ld hl,0e546h		;4183	21 46 e5 	! F . 
-	ld de,0e19dh		;4186	11 9d e1 	. . . 
-	ld bc,00004h		;4189	01 04 00 	. . . 
-	ldir		;418c	ed b0 	. . 
+    ; If no capsule is falling, skip sprite switching
+	ld a,(CAPSULE_IS_FALLING)		;415c	3a 17 e3
+	or a			                ;415f	b7
+	jp z,l418eh		                ;4160	ca 8e 41    Skip switching
+
+    ; Toggle the sprite switching flag
+	ld hl,SPRITE_SWITCH_FLAG	;4163	21 45 e5
+	inc (hl)			        ;4166	34
+	ld a,(hl)			        ;4167	7e
+	and 1   		            ;4168	e6 01
+	jp z,l418eh		            ;416a	ca 8e 41    Skip sprite switching
+
+    ; Exchange sprites 0 and 4
+    ;
+    ; Put sprite 0 into the scratch area
+	ld hl, SPRITE_ATTRIBS_AREA + 0*SPR_PARAMS_LEN	;416d	21 8d e1
+	ld de, SPRITE_SWITCH_SCRATCH		            ;4170	11 46 e5
+	ld bc, SPR_PARAMS_LEN		                    ;4173	01 04 00
+	ldir		                                    ;4176	ed b0
+    ; Put sprite 4 into sprite 1
+	ld hl, SPRITE_ATTRIBS_AREA + 4*SPR_PARAMS_LEN	;4178	21 9d e1
+	ld de, SPRITE_ATTRIBS_AREA		                ;417b	11 8d e1
+	ld bc, SPR_PARAMS_LEN		                    ;417e	01 04 00
+	ldir		                                    ;4181	ed b0
+    ; Put scratch area into sprite 4
+	ld hl, SPRITE_SWITCH_SCRATCH		            ;4183	21 46 e5
+	ld de, SPRITE_ATTRIBS_AREA + 4*SPR_PARAMS_LEN	;4186	11 9d e1
+	ld bc,SPR_PARAMS_LEN		                    ;4189	01 04 00
+	ldir		                                    ;418c	ed b0
 l418eh:
     ; Write sprite attribs in RAM to the VDP
 	ld hl,VRAM_SPRITES_ATTRIB_TABLE		    ;418e	21 00 1b
@@ -322,8 +331,8 @@ l418eh:
 	ld c,a			                        ;419a	4f
 	ld b,TOTAL_SPRITES * SPR_PARAMS_LEN 	;419b	06 80   32 sprites, each entry 4 bytes
 l419dh:
-	outi		;419d	ed a3 	. . 
-	jr nz,l419dh		;419f	20 fc 	  . 
+	outi		        ;419d	ed a3
+	jr nz,l419dh		;419f	20 fc
 
     ; Jump to the right transition
 	ld a,(GAME_TRANSITION_ACTION)		;41a1	3a 0a e0
@@ -358,6 +367,7 @@ TRANSITION_START_LEVEL:
 	jp go_on_after_transition	;41bd	c3 da 41
     
 TRANSITION_PLAY_LEVEL:
+    ;ToDo: figure out what are these
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
 	call sub_95f4h		;41c3	cd f4 95 	. . . 
 	call sub_7241h		;41c6	cd 41 72 	. A r 
