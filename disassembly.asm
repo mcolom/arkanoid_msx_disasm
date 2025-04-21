@@ -8091,10 +8091,12 @@ l760fh:
 	or a			                    ;762a	b7
 	jp z,l786dh		                    ;762b	ca 6d 78
 
-	ld a,(ix+007h)		;762e	dd 7e 07 	. ~ . 
-	cp 000h		;7631	fe 00 	. . 
-	jp nz,l7695h		;7633	c2 95 76 	. . v 
-	ld (ix+007h),001h		;7636	dd 36 07 01 	. 6 . . 
+    ; Check if the alien is in the door
+	ld a,(ix+ALIEN_TABLE_IDX_IN_DOOR)		;762e	dd 7e 07
+	cp 0		                            ;7631	fe 00
+	jp nz,l7695h		                    ;7633	c2 95 76 Jump is he's in the door
+    ; Set the alien is in the door
+	ld (ix+ALIEN_TABLE_IDX_IN_DOOR), 1		;7636	dd 36 07 01
 
 	ld de,l7b64h		;763a	11 64 7b 	. d { 
 	ld a,(DOOR_TABLE + DOOR_TABLE_IDX_DOOR)		;763d	3a 71 e5 	: q . 
