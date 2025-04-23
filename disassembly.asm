@@ -2355,24 +2355,33 @@ l4e22h:
 	ld a,(LEVEL)		;4e3d	3a 1b e0 	: . . 
 	cp FINAL_LEVEL		;4e40	fe 20
 	jp z,l4e71h		;4e42	ca 71 4e 	. q N 
-	ld hl,l5defh		;4e45	21 ef 5d 	! . ] 
+	ld hl,LEVELS_PTR_TABLE		;4e45	21 ef 5d 	! . ] 
 
     ; Skip the following if we're not doing a full brick repaint
 	ld a,(BRICK_REPAINT_TYPE)	;4e48	3a 22 e0
 	cp BRICK_REPAINT_REMAINING  ;4e4b	fe 02
 	jp z,l4e65h		            ;4e4d	ca 65 4e
     
-	ld a,(LEVEL)		;4e50	3a 1b e0 	: . . 
-	ld e,a			;4e53	5f 	_ 
-	sla e		;4e54	cb 23 	. # 
-	ld d,000h		;4e56	16 00 	. . 
-	add hl,de			;4e58	19 	. 
-	ld e,(hl)			;4e59	5e 	^ 
-	inc hl			;4e5a	23 	# 
-	ld d,(hl)			;4e5b	56 	V 
-	ex de,hl			;4e5c	eb 	. 
-	ld de,BRICK_MAP		;4e5d	11 27 e0 	. ' . 
-	ld bc,BRICK_MAP_LEN		;4e60	01 11 00 	. . . 
+    ; Copy current level to RAM
+    
+    ; DE = 2*LEVEL
+	ld a,(LEVEL)	;4e50	3a 1b e0
+	ld e,a			;4e53	5f
+	sla e		    ;4e54	cb 23
+	ld d, 0		    ;4e56	16 00
+    
+    ; HL = LEVELS_PTR_TABLE + 2*LEVEL
+	add hl,de		;4e58	19
+
+	; DE = LEVELS_PTR_TABLE[2*LEVEL]
+    ld e,(hl)		;4e59	5e
+	inc hl			;4e5a	23
+	ld d,(hl)		;4e5b	56
+    
+    ; Copy level to RAM
+	ex de,hl			;4e5c	eb  HL = LEVELS_PTR_TABLE[2*LEVEL]
+	ld de,BRICK_MAP		;4e5d	11 27 e0
+	ld bc,BRICK_MAP_LEN	;4e60	01 11 00
 	ldir		;4e63	ed b0 	. . 
 l4e65h:
 	call sub_5c15h		;4e65	cd 15 5c 	. . \ 
@@ -3495,7 +3504,7 @@ l5c45h:
 	push de			    ;5c57	d5
 	pop iy		        ;5c58	fd e1
 
-	ld de,l5defh		;5c5a	11 ef 5d 	. . ] 
+	ld de,LEVELS_PTR_TABLE		;5c5a	11 ef 5d 	. . ] 
     
     ; HL = LEVEL
 	ld a,(LEVEL)		;5c5d	3a 1b e0 	: . . 
@@ -3505,15 +3514,15 @@ l5c45h:
     ; HL = 2*LEVEL
 	add hl,hl			;5c63	29 	) 
     
-    ; HL = 2*LEVEL + l5defh
+    ; HL = 2*LEVEL + LEVELS_PTR_TABLE
 	add hl,de			;5c64	19 	. 
     
-    ; DE = l5defh[2*LEVEL]
+    ; DE = LEVELS_PTR_TABLE[2*LEVEL]
 	ld e,(hl)			;5c65	5e 	^ 
 	inc hl			;5c66	23 	# 
 	ld d,(hl)			;5c67	56 	V 
 	
-    ; HL = l5defh[2*LEVEL]
+    ; HL = LEVELS_PTR_TABLE[2*LEVEL]
     ex de,hl			;5c68	eb 	. 
 
     ; Set HL=BRICK_MAP if we're not doing a full brick repaint
@@ -3545,8 +3554,8 @@ l5c8dh:
 	push ix		;5c91	dd e5 	. . 
 	push de			;5c93	d5 	. 
 
-    ; DE = l5defh[2*LEVEL]
-	ld de,l5defh		;5c94	11 ef 5d 	. . ] 
+    ; DE = LEVELS_PTR_TABLE[2*LEVEL]
+	ld de,LEVELS_PTR_TABLE		;5c94	11 ef 5d 	. . ] 
 	ld a,(LEVEL)		;5c97	3a 1b e0 	: . . 
 	ld l,a			;5c9a	6f 	o 
 	ld h,000h		;5c9b	26 00 	& . 
@@ -3772,7 +3781,8 @@ l5ddbh:
 	ld h,(hl)			;5dec	66 	f 
 	ld h,a			;5ded	67 	g 
 	ld l,b			;5dee	68 	h 
-l5defh:
+
+LEVELS_PTR_TABLE:
 	dec d			;5def	15 	. 
 	ld h,(hl)			;5df0	66 	f 
 	ld h,066h		;5df1	26 66 	& f 
@@ -3833,6 +3843,7 @@ l5defh:
 	ld l,b			;5e2c	68 	h 
 	inc h			;5e2d	24 	$ 
 	ld l,b			;5e2e	68 	h 
+
 l5e2fh:
 	ld l,a			;5e2f	6f 	o 
 	ld e,(hl)			;5e30	5e 	^ 
