@@ -4,17 +4,19 @@ BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 BRICK_HIT_ROW: equ 0xe53c
 BRICK_HIT_COL: equ 0xe53d
 
-BRICKS_LEFT: equ 0xe038
-
-
-
 ; This controls how the screen is repainted with bricks
 BRICK_REPAINT_TYPE: equ 0xe022
 BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks of the level
 BRICK_REPAINT_UNKNOWN: equ 1   ; ???
 BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
 
-BRICK_MAP: equ 0xe027 ; Start of the brick map in RAM
+; The brick map in RAM, from 0xe027 to 0xe037 ==> 17 bytes
+; Each byte encodes 8 bits in a row. A total of 17*8 = 136 bricks.
+; However, the map is 12 cols. x 11 rows = 132 bricks total
+BRICK_MAP: equ 0xe027
+
+; Number of bricks to break
+BRICKS_LEFT: equ 0xe038
 
 HARD_BRICK_TABLE: equ 0xe20d
 HARD_BRICK_TABLE_ENTRY_LEN: equ 8
