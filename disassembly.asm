@@ -3567,7 +3567,7 @@ l5c8dh:
 	rlca			;5cb0	07 	. 
 	ld e,a			;5cb1	5f 	_ 
 	ld d,000h		;5cb2	16 00 	. . 
-	ld hl,l5cf0h		;5cb4	21 f0 5c 	! . \ 
+	ld hl,tbl_5cf0		;5cb4	21 f0 5c 	! . \ 
 	add hl,de			;5cb7	19 	. 
 	ld e,(hl)			;5cb8	5e 	^ 
 	inc hl			;5cb9	23 	# 
@@ -3606,21 +3606,15 @@ l5cc6h:
 	ld (0e486h),de		;5ceb	ed 53 86 e4 	. S . . 
 	ret			;5cef	c9 	. 
 
-l5cf0h:
-	jr nz,$+95		;5cf0	20 5d 	  ] 
-	daa			;5cf2	27 	' 
-	ld e,l			;5cf3	5d 	] 
-	ld l,05dh		;5cf4	2e 5d 	. ] 
-	dec (hl)			;5cf6	35 	5 
-	ld e,l			;5cf7	5d 	] 
-	inc a			;5cf8	3c 	< 
-	ld e,l			;5cf9	5d 	] 
-	ld b,e			;5cfa	43 	C 
-	ld e,l			;5cfb	5d 	] 
-	ld c,d			;5cfc	4a 	J 
-	ld e,l			;5cfd	5d 	] 
-	ld d,c			;5cfe	51 	Q 
-	ld e,l			;5cff	5d 	] 
+tbl_5cf0:
+    dw 0x5d20
+    dw 0x5d27
+    dw 0x5d2e
+    dw 0x5d35
+    dw 0x5d3c
+    dw 0x5d43
+    dw 0x5d4a
+    dw 0x5d51
 
 BRICKS_PER_LEVEL:
     ;  L1  L2  L3  L4  L5  L6  L7 L8  L9  L10
