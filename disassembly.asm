@@ -3465,7 +3465,7 @@ sub_5c15h:
 	ld de,0e03ah		;5c31	11 3a e0 	. : . 
     
     ; A = LEVEL/8 + 2
-    ; Fill 0e039h with 131 values of A = LEVEL/8 + 2
+    ; Fill 0e039h with BRICK_COLS*BRICK_ROWS values of A = LEVEL/8 + 2
 	ld a,(LEVEL)		;5c34	3a 1b e0 	: . . 
 	srl a		;5c37	cb 3f 	. ? 
 	srl a		;5c39	cb 3f 	. ? 
@@ -3475,7 +3475,7 @@ sub_5c15h:
     
 	ld (hl),a			;5c3f	77 	w 
 
-	ld bc, 131		;5c40	01 83 00 	. . . 
+	ld bc, BRICK_COLS*BRICK_ROWS-1  ;5c40	01 83 00 	. . . 
 	ldir		;5c43	ed b0 	. . 
 
 l5c45h:
