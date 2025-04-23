@@ -6,11 +6,15 @@ BRICK_HIT_COL: equ 0xe53d
 
 BRICKS_LEFT: equ 0xe038
 
+
+
 ; This controls how the screen is repainted with bricks
 BRICK_REPAINT_TYPE: equ 0xe022
 BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks of the level
 BRICK_REPAINT_UNKNOWN: equ 1   ; ???
 BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
+
+BRICK_MAP: equ 0xe027 ; Start of the brick map in RAM
 
 HARD_BRICK_TABLE: equ 0xe20d
 HARD_BRICK_TABLE_ENTRY_LEN: equ 8
