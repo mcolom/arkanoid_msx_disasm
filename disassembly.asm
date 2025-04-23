@@ -3573,7 +3573,9 @@ l5c8dh:
 	inc hl			;5cb9	23 	# 
 	ld d,(hl)			;5cba	56 	V 
 	ex de,hl			;5cbb	eb 	. 
-	jp (hl)			;5cbc	e9 	. 
+    ; Check bit
+    ; We'll go on in the next instruction, l5cbdh
+	jp (hl)			;5cbc	e9
 l5cbdh:
 	jr z,l5cc1h		;5cbd	28 02 	( . 
 	inc iy		;5cbf	fd 23 	. # 
@@ -3606,15 +3608,17 @@ l5cc6h:
 	ld (0e486h),de		;5ceb	ed 53 86 e4 	. S . . 
 	ret			;5cef	c9 	. 
 
+; ToDo: what is this jump table?
+; It checks bits
 tbl_5cf0:
-    dw 0x5d20
-    dw 0x5d27
-    dw 0x5d2e
-    dw 0x5d35
-    dw 0x5d3c
-    dw 0x5d43
-    dw 0x5d4a
-    dw 0x5d51
+    dw check_b7
+    dw check_b6
+    dw check_b5
+    dw check_b4
+    dw check_b3
+    dw check_b2
+    dw check_b1
+    dw check_b0
 
 BRICKS_PER_LEVEL:
     ;  L1  L2  L3  L4  L5  L6  L7 L8  L9  L10
@@ -3624,20 +3628,28 @@ BRICKS_PER_LEVEL:
     ; L21 L22 L23 L24 L25 L26 L27 L28 L29 L30 L31 L32
     db 12, 64, 47, 53, 36, 10, 66, 45, 76, 55, 56, 26
 
+check_b7:
 	bit 7,(ix+000h)		;5d20	dd cb 00 7e 	. . . ~ 
 	jp l5cbdh		;5d24	c3 bd 5c 	. . \ 
+check_b6:
 	bit 6,(ix+000h)		;5d27	dd cb 00 76 	. . . v 
 	jp l5cbdh		;5d2b	c3 bd 5c 	. . \ 
+check_b5:
 	bit 5,(ix+000h)		;5d2e	dd cb 00 6e 	. . . n 
 	jp l5cbdh		;5d32	c3 bd 5c 	. . \ 
+check_b4:
 	bit 4,(ix+000h)		;5d35	dd cb 00 66 	. . . f 
 	jp l5cbdh		;5d39	c3 bd 5c 	. . \ 
+check_b3:
 	bit 3,(ix+000h)		;5d3c	dd cb 00 5e 	. . . ^ 
 	jp l5cbdh		;5d40	c3 bd 5c 	. . \ 
+check_b2:
 	bit 2,(ix+000h)		;5d43	dd cb 00 56 	. . . V 
 	jp l5cbdh		;5d47	c3 bd 5c 	. . \ 
+check_b1:
 	bit 1,(ix+000h)		;5d4a	dd cb 00 4e 	. . . N 
 	jp l5cbdh		;5d4e	c3 bd 5c 	. . \ 
+check_b0:
 	bit 0,(ix+000h)		;5d51	dd cb 00 46 	. . . F 
 	jp l5cbdh		;5d55	c3 bd 5c 	. . \ 
 
