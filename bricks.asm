@@ -14,6 +14,7 @@ BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
 ; Each byte encodes 8 bits in a row. A total of 17*8 = 136 bricks.
 ; However, the map is 12 cols. x 11 rows = 132 bricks total
 BRICK_MAP: equ 0xe027
+BRICK_MAP_LEN: equ 17
 
 ; Number of bricks to break
 BRICKS_LEFT: equ 0xe038

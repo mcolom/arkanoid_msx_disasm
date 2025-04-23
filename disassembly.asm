@@ -2372,7 +2372,7 @@ l4e22h:
 	ld d,(hl)			;4e5b	56 	V 
 	ex de,hl			;4e5c	eb 	. 
 	ld de,BRICK_MAP		;4e5d	11 27 e0 	. ' . 
-	ld bc,00011h		;4e60	01 11 00 	. . . 
+	ld bc,BRICK_MAP_LEN		;4e60	01 11 00 	. . . 
 	ldir		;4e63	ed b0 	. . 
 l4e65h:
 	call sub_5c15h		;4e65	cd 15 5c 	. . \ 
@@ -3523,7 +3523,7 @@ l5c45h:
 
 	ld hl,BRICK_MAP		            ;5c71	21 27 e0
 l5c74h:
-	ld b, 17		;5c74	06 11 	. . 
+	ld b, BRICK_MAP_LEN		;5c74	06 11 	. . 
 	xor a			;5c76	af 	. 
 	ld (0e489h),a		;5c77	32 89 e4 	2 . . 
 	xor a			;5c7a	af 	. 
