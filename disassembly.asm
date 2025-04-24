@@ -7169,8 +7169,7 @@ l979bh:
 	jr nz,l9738h		;97ac	20 8a 	  . 
 	ret			;97ae	c9 	. 
 
-; Check if any of the hard bricks was hit, perform any animations, and
-; remove it from the table if it's a destroyed hard brick.
+; Fills the HARD_BRICK_TABLE with the current information on the bricks
 FILL_HARD_BRICK_TABLE:
 	push ix		    ;97af	dd e5
 	ld b, 8		    ;97b1	06 08
@@ -7202,7 +7201,8 @@ l97e7h:
 	pop ix		;97e7	dd e1
 	ret			;97e9	c9
 
-; SEGUIR
+; Check if any of the hard bricks was hit, perform any animations, and
+; remove it from the table if it's a destroyed hard brick.
 CHECK_HARD_BRICKS_HIT:
     ; Skip if we're at DOh's level
     ld a,(LEVEL)		;97ea	3a 1b e0
