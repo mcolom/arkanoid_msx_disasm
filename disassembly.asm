@@ -3369,35 +3369,44 @@ include 'sprite_pattern4.asm'
 
 ; Draw the background
 DRAW_BACKGROUND:
-	ld b,003h		;5bbd	06 03 	. . 
-	ld iy,02380h		;5bbf	fd 21 80 23 	. ! . # 
+	ld b, 3		    ;5bbd	06 03          3 blocks
+	ld iy,02380h	;5bbf	fd 21 80 23    VDP color table
 l5bc3h:
-	ld c,081h		;5bc3	0e 81 	. . 
+	ld c, 16*8+1		;5bc3	0e 81
 	ld a,(LEVEL)		;5bc5	3a 1b e0
 l5bc8h:
 	cp FINAL_LEVEL		;5bc8	fe 20
 	jp z,l5bd7h		;5bca	ca d7 5b 	. . [ 
-	and 003h		;5bcd	e6 03 	. . 
-	ld e,a			;5bcf	5f 	_ 
-	ld d,000h		;5bd0	16 00 	. . 
-	ld hl,l5bebh		;5bd2	21 eb 5b 	! . [ 
-	add hl,de			;5bd5	19 	. 
-	ld c,(hl)			;5bd6	4e 	N 
+	and 3h		;   5bcd	e6 03
+    
+	; HL = BACKGROUND_COLORS_TABLE + LEVEL & 3
+    ld e,a			        ;5bcf	5f
+	ld d,0  		        ;5bd0	16 00   ; DE = LEVEL & 3
+	ld hl,BACKGROUND_COLORS_TABLE		;5bd2	21 eb 5b
+	add hl,de			    ;5bd5	19
+    
+    ; C = BACKGROUND_COLORS_TABLE[LEVEL & 3]
+	ld c,(hl)			    ;5bd6	4e
 l5bd7h:
-	ld a,c			;5bd7	79 	y 
-	push iy		;5bd8	fd e5 	. . 
-	pop hl			;5bda	e1 	. 
-	push bc			;5bdb	c5 	. 
-	ld bc,00080h		;5bdc	01 80 00 	. . . 
-	call FILVRM		;5bdf	cd 56 00 	. V . 
-	pop bc			;5be2	c1 	. 
-	ld de,00800h		;5be3	11 00 08 	. . . 
-	add iy,de		;5be6	fd 19 	. . 
-	djnz l5bc3h		;5be8	10 d9 	. . 
-	ret			;5bea	c9 	. 
-l5bebh:
-	ld b,c			;5beb	41 	A 
-	jp nz,0x8141		;5bec	c2 41 81 	. A . 
+	ld a,c			;5bd7	79  Byte to write to VRAM
+
+    ; HL = 02380h, VRAM address
+	push iy		    ;5bd8	fd e5
+	pop hl			;5bda	e1
+
+    ; Fill VRAM with 16*8 (16 characters) bytes of value A
+	push bc			;5bdb	c5
+	ld bc, 16*8	    ;5bdc	01 80 00
+	call FILVRM		;5bdf	cd 56 00
+	pop bc			;5be2	c1
+
+    ; Next block
+	ld de, 2048		;5be3	11 00 08
+	add iy,de		;5be6	fd 19
+	djnz l5bc3h		;5be8	10 d9
+	ret			    ;5bea	c9
+BACKGROUND_COLORS_TABLE:
+    db 0x41, 0xc2, 0x41, 0x81
 
 ; Add a sound to the queue
 ; Param A: sound code
@@ -3473,30 +3482,25 @@ sub_5c15h:
 	inc a			;5c3d	3c
 	inc a			;5c3e	3c
 
-    ; ESTO ESTÁ RELACIONADO CON LOS LADRILLOS DUROS
-    ; Set [HARD_BRICKS_REMAINING_HITS] <-- BRICKS_LEFT/8 + 2
+    ; Set [HARD_BRICKS_REMAINING_HITS] <-- BRICKS_LEFT/8 + 2 for all of
+    ; them in this level.
 	ld (hl),a		;5c3f	77
-
 	ld bc, BRICK_COLS*BRICK_ROWS-1  ;5c40	01 83 00
 	ldir		                    ;5c43	ed b0
-
 l5c45h:
+    ; Do a partial repaint
 	ld ix,0e36eh		;5c45	dd 21 6e e3 	. ! n . 
 
-	ld de,LEVEL_COLORS_PTR_TABLE		;5c49	11 2f 5e 	. / ^ 
+	ld de,LEVEL_COLORS_PTR_TABLE		;5c49	11 2f 5e
 
-    ; HL = LEVEL
+    ; HL = 2*LEVEL + LEVEL_COLORS_PTR_TABLE
 	ld a,(LEVEL)		;5c4c	3a 1b e0
 	ld l,a			    ;5c4f	6f
 	ld h, 0 		    ;5c50	26 00
-
-    ; HL = 2*LEVEL
 	add hl,hl			;5c52	29
-    
-    ; HL = 2*LEVEL + LEVEL_COLORS_PTR_TABLE
 	add hl,de			;5c53	19
 
-    ; Point to the start of the level (the bricks)
+    ; Get a pointer to the colors of the bricks in the level
     ; DE = LEVEL_COLORS_PTR_TABLE[2*LEVEL]
 	ld e,(hl)			;5c54	5e
 	inc hl			    ;5c55	23
@@ -3508,15 +3512,11 @@ l5c45h:
 
 	ld de,LEVELS_PTR_TABLE		;5c5a	11 ef 5d
     
-    ; HL = LEVEL
+    ; HL = 2*LEVEL + LEVELS_PTR_TABLE
 	ld a,(LEVEL)	;5c5d	3a 1b e0
 	ld l,a			;5c60	6f
-	ld h, 0		    ;5c61	26 00
-    
-    ; HL = 2*LEVEL
+	ld h, 0		    ;5c61	26 00    
 	add hl,hl		;5c63	29
-    
-    ; HL = 2*LEVEL + LEVELS_PTR_TABLE
 	add hl,de		;5c64	19
     
     ; DE = LEVELS_PTR_TABLE[2*LEVEL]
@@ -3536,7 +3536,7 @@ l5c45h:
 l5c74h:
 	ld b, BRICK_MAP_LEN		;5c74	06 11 	. . 
     
-    ; ToDo: what are these two variables?
+    ; Counter
 	xor a			        ;5c76	af 	. 
 	ld (0e489h),a	        ;5c77	32 89 e4 	2 . . 
 	xor a			        ;5c7a	af 	. 
@@ -3603,12 +3603,14 @@ l5cc6h:
 	ld (0e486h),de		;5cc8	ed 53 86 e4 	. S . . 
 	inc ix		;5ccc	dd 23 	. # 
 	dec c			;5cce	0d 	. 
+
 	push af			;5ccf	f5 	. 
 	ld a,(0e489h)		;5cd0	3a 89 e4 	: . . 
 	inc a			;5cd3	3c 	< 
 	and 007h		;5cd4	e6 07 	. . 
 	ld (0e489h),a		;5cd6	32 89 e4 	2 . . 
 	pop af			;5cd9	f1 	. 
+
 	jr nz,l5c81h		;5cda	20 a5 	  . 
 	inc hl			;5cdc	23 	# 
 	push af			;5cdd	f5 	. 
@@ -3728,7 +3730,7 @@ l5d82h:
 	ret			;5d9c	c9 	. 
 
 sub_5d9dh:
-    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
+    ; Set BRICK_HIT_ROW = 0
 	xor a			;5d9d	af 	. 
 	ld (BRICK_HIT_ROW),a		;5d9e	32 3c e5 	2 < . 
 
