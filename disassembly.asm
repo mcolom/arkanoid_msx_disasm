@@ -583,9 +583,10 @@ l42d9h:
 	ld bc,7		                    ;42f1	01 07 00
 	ldir		                    ;42f4	ed b0
 l42f6h:
-	ld a,000h		;42f6	3e 00 	> . 
-	ld (0e00ch),a		;42f8	32 0c e0 	2 . .    ToDo: what is this var?
-	ret			;42fb	c9 	. 
+    ; Use cursors, not the paddle
+	ld a, 0		                 ;42f6	3e 00
+	ld (USE_VAUS_PADDLE),a		;42f8	32 0c e0
+	ret			                ;42fb	c9
 
 l42fch:
 	ld a,00eh		;42fc	3e 0e 	> . 
@@ -658,9 +659,10 @@ l4322h:
 	ld bc,00007h		;436b	01 07 00 	. . . 
 	ldir		;436e	ed b0 	. . 
 l4370h:
-	ld a,001h		;4370	3e 01 	> . 
-	ld (0e00ch),a		;4372	32 0c e0 	2 . . 
-	ret			;4375	c9 	. 
+    ; Use the paddle, not cursors
+	ld a, 1		            ;4370	3e 01
+	ld (USE_VAUS_PADDLE),a	;4372	32 0c e0
+	ret			            ;4375	c9
 
 ; VDP base pointers
 ; See https://www.msx.org/wiki/System_variables_and_work_area
@@ -2027,9 +2029,9 @@ DRAW_TITLE_SCREEN:
 
 l4c48h:
     ; TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN
-	ld a,(0e00ch)		;4c48	3a 0c e0 	: . . 
-	or a			;4c4b	b7 	. 
-	jp z,l4c5ah		;4c4c	ca 5a 4c 	. Z L 
+	ld a,(USE_VAUS_PADDLE)		;4c48	3a 0c e0
+	or a			            ;4c4b	b7
+	jp z,l4c5ah		            ;4c4c	ca 5a 4c    Jump if we're using the paddle
 
 	ld a,(0e0c5h)		;4c4f	3a c5 e0 	: . . 
 	bit 1,a		;4c52	cb 4f 	. O 
@@ -2461,7 +2463,7 @@ l4eddh:
     ; In demo
 	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
 	ld ix,l50efh		;4ee1	dd 21 ef 50 	. ! . P 
-	ld a,(0e00ch)		;4ee5	3a 0c e0 	: . . 
+	ld a,(USE_VAUS_PADDLE)		;4ee5	3a 0c e0 	: . . 
 	or a			;4ee8	b7 	. 
 	jp z,l4ef7h		;4ee9	ca f7 4e 	. . N 
 	ld a,(0e0c5h)		;4eec	3a c5 e0 	: . . 
@@ -3961,7 +3963,7 @@ l690fh:
 	ld (VAUS_X2),a		;691e	32 3e e5 	2 > . 
 	jp l6972h		;6921	c3 72 69 	. r i 
 l6924h:
-	ld a,(0e00ch)		;6924	3a 0c e0 	: . . 
+	ld a,(USE_VAUS_PADDLE)		;6924	3a 0c e0 	: . . 
 	or a			;6927	b7 	. 
 	jp nz,l6946h		;6928	c2 46 69 	. F i 
 	ld a,(PAUSE_B6_AND_START_B4)		;692b	3a bf e0 	: . . 
@@ -4827,8 +4829,12 @@ l6fe7h:
 	ex af,af'			;6ff2	08 	. 
 	xor (hl)			;6ff3	ae 	. 
 	add a,b			;6ff4	80 	. 
-	ld bc,00000h		;6ff5	01 00 00 	. . . 
-	nop			;6ff8	00 	. 
+    
+    
+	db 1, 0         ;6ff5	01 00
+TBL_6ff7:
+    db 0        ;6ff7   00	
+    nop			;6ff8	00 	. 
 	nop			;6ff9	00 	. 
 	nop			;6ffa	00 	. 
 	nop			;6ffb	00 	. 
@@ -4911,7 +4917,7 @@ CHECK_START_LASERS:
 	jp z,l7074h		        ;7055	ca 74 70
 	
     ; ToDo: what is this var?
-    ld a,(0e00ch)		;7058	3a 0c e0 	: . . 
+    ld a,(USE_VAUS_PADDLE)		;7058	3a 0c e0 	: . . 
 	or a			;705b	b7 	. 
 	jp z,l706ah		;705c	ca 6a 70 	. j p 
 
@@ -7403,8 +7409,7 @@ ACTION_BALL_FOLLOWS_VAUS_IF_STICKY:
 	or a			        ;98fb	b7
 	jp z,l9935h		        ;98fc	ca 35 99
 
-    ; ToDo: what is this var?
-	ld a,(0e00ch)		;98ff	3a 0c e0 	: . . 
+	ld a,(USE_VAUS_PADDLE)		;98ff	3a 0c e0 	: . . 
 	or a			;9902	b7 	. 
 	jp z,l9910h		;9903	ca 10 99 	. . . 
 
