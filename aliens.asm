@@ -9,6 +9,7 @@ ALIEN_TABLE_IDX_EXPLODING: equ 2    ; 0xe4c9
 ALIEN_TABLE_IDX_TICKS: equ 3        ; 0xe4ca
 
 ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield from the door
+ALIEN_TABLE_IDX_GO_DOWN: equ 8      ; 0xe4cf Bit 7; 0 ==> go down, 1==> go up
 
 ALIEN_TABLE_IDX_CAN_CROSS_BRICKS: equ 19      ; 0xe4da The alien can travel through the bricks
 ; [ToDo] Incomplete table

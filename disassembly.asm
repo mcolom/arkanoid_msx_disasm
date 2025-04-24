@@ -6935,7 +6935,7 @@ sub_95f4h:
 	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION		;95f7	cd 5c b1 	. \ . 
 	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
 	call CHECK_HARD_BRICKS_HIT		;95fd	cd ea 97 	. . . 
-	call sub_9726h		;9600	cd 26 97 	. & . 
+	call UPDATE_ALIEN_VERT_DIR_WHEN_BRICK		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
 
 	ld hl,BACKGROUND_TILEMAP		;9604	21 6e e3 	! n . 
@@ -7103,8 +7103,8 @@ DEACTIVE_ALL_BALLS:
 	ld (BALL3_SPR_PARAMS),a		;9722	32 fd e0
 	ret			        ;9725	c9
 
-; SEGUIR
-sub_9726h:
+; Update the alien's vertical direction when he reaches a brick
+UPDATE_ALIEN_VERT_DIR_WHEN_BRICK:
     ; Skip if we're at Doh's level
 	ld a,(LEVEL)		;9726	3a 1b e0
 	cp FINAL_LEVEL		;9729	fe 20
@@ -7127,52 +7127,72 @@ l9738h:
 	cp 1		                        ;9741	fe 01
 	jr z,l979bh		                    ;9743	28 56
     
-    ; Skip if the alien can travel through the bricks.
-    ; I think however this is never set.
+    ; Skip if the alien can travel through the bricks
 	ld a,(iy+ALIEN_TABLE_IDX_CAN_CROSS_BRICKS)	;9745	fd 7e 13
 	cp 1		                                ;9748	fe 01
 	jr z,l979bh		                            ;974a	28 4f
 
-	ld e, 8		;974c	1e 08 	. . 
-	bit 7,(iy+008h)		;974e	fd cb 08 7e 	. . . ~ 
-	jr z,l9756h		;9752	28 02 	( . 
-	ld e, 32		;9754	1e 20 	.   
+    ; Set E=8 if the alien goes down.
+    ; Set E=32 if the alien goes up.
+    ; This is because if the alien goes up, it'll reach the
+    ; brick with his head, but with his feet if he goes down.
+	ld e, 8		                                ;974c	1e 08
+	bit 7,(iy+ALIEN_TABLE_IDX_GO_DOWN)		    ;974e	fd cb 08 7e
+	jr z,l9756h		                            ;9752	28 02
+	ld e, 32		                            ;9754	1e 20
 l9756h:
-	ld a,(ix+SPR_PARAMS_IDX_Y)		;9756	dd 7e 00 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		            ;9756	dd 7e 00
 
-	sub e			;9759	93 	. 
-	srl a		;975a	cb 3f 	. ? 
-	srl a		;975c	cb 3f 	. ? 
-	srl a		;975e	cb 3f 	. ? 
-	cp 12		;9760	fe 0c 	. . 
-	jr nc,l979bh		;9762	30 37 	0 7 
-
-	ld (BRICK_ROW),a		;9764	32 aa e2 	2 . . 
-	ld a,(ix+SPR_PARAMS_IDX_X)		;9767	dd 7e 01 	. ~ . 
-	sub 16		;976a	d6 10 	. . 
-	srl a		;976c	cb 3f 	. ? 
-	srl a		;976e	cb 3f 	. ? 
-	srl a		;9770	cb 3f 	. ? 
-	srl a		;9772	cb 3f 	. ? 
-	cp 11		;9774	fe 0b 	. . 
-	jr nc,l979bh		;9776	30 23 	0 # 
-	ld (BRICK_COL),a		;9778	32 ab e2 	2 . . 
-	ld a,(ix+SPR_PARAMS_IDX_Y)		;977b	dd 7e 00 	. ~ . 
-	cp 100		;977e	fe 64 	. d 
-	jr c,l9786h		;9780	38 04 	8 . 
-	ld (iy+19),1		;9782	fd 36 13 01 	. 6 . . 
-l9786h:
-	push iy		;9786	fd e5 	. . 
-	push ix		;9788	dd e5 	. . 
-	call THERE_IS_A_BRICK		;978a	cd a8 ad 	. . . 
-	pop ix		;978d	dd e1 	. . 
-	pop iy		;978f	fd e1 	. . 
-	jr nc,l979bh		;9791	30 08 	0 . 
+	; A = (ALIEN_Y - E) / 8
+    sub e		;9759	93
+	srl a		;975a	cb 3f
+	srl a		;975c	cb 3f
+	srl a		;975e	cb 3f
     
-    ; If the alien it a brick, then... [ToDo]
-	ld a,(iy+008h)		;9793	fd 7e 08 	. ~ . 
-	neg		;9796	ed 44 	. D 
-	ld (iy+008h),a		;9798	fd 77 08 	. w . 
+    ; Skip if if (ALIEN_Y - E) / 8 >= 12
+	cp 12		        ;9760	fe 0c
+	jr nc,l979bh		;9762	30 37
+    
+    ; (ALIEN_Y - E) / 8 < 12
+
+    ; BRICK_ROW = (ALIEN_Y - E) / 8
+	ld (BRICK_ROW),a	;9764	32 aa e2
+
+	; A = (ALIEN_X - 16) / 32
+    ld a,(ix+SPR_PARAMS_IDX_X)		;9767	dd 7e 01
+	sub 16		                    ;976a	d6 10
+	srl a		                    ;976c	cb 3f
+	srl a		                    ;976e	cb 3f
+	srl a		                    ;9770	cb 3f
+	srl a		                    ;9772	cb 3f
+    
+	; Skip if (ALIEN_X - 16) / 32 >= 11
+    cp 11		    ;9774	fe 0b
+	jr nc,l979bh	;9776	30 23
+    
+    ; (ALIEN_X - 16) / 32 < 11
+    
+	; BRICK_COL = (ALIEN_X - 16) / 32
+    ld (BRICK_COL),a		    ;9778	32 ab e2
+    
+    ; If ALIEN_Y <= 100, then allow him to cross bricks
+	ld a,(ix+SPR_PARAMS_IDX_Y)	                ;977b	dd 7e 00
+	cp 100		                                ;977e	fe 64
+	jr c,l9786h		                            ;9780	38 04
+	ld (iy+ALIEN_TABLE_IDX_CAN_CROSS_BRICKS),1	;9782	fd 36 13 01
+l9786h:
+    ; Skip if there's no brick for the alien to touch
+	push iy		            ;9786	fd e5
+	push ix		            ;9788	dd e5
+	call THERE_IS_A_BRICK	;978a	cd a8 ad
+	pop ix		            ;978d	dd e1
+	pop iy		            ;978f	fd e1
+	jr nc,l979bh		    ;9791	30 08
+    
+    ; If the alien it a brick, then change its vertical direction
+	ld a,(iy+ALIEN_TABLE_IDX_GO_DOWN)		;9793	fd 7e 08
+	neg		                                ;9796	ed 44
+	ld (iy+ALIEN_TABLE_IDX_GO_DOWN),a		;9798	fd 77 08
 l979bh:
     ; Next alien
 	ld de,ALIEN_TABLE_LEN	;979b	11 14 00
