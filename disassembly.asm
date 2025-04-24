@@ -2349,7 +2349,7 @@ l4e22h:
 	djnz l4e08h		;4e32	10 d4 	. . 
     
     ; Draw the background
-	call DRAW_BACKGROUND		;4e34	cd bd 5b
+	call COLORIZE_BACKGROUND		;4e34	cd bd 5b
 
     call WRITE_ROUND_MSG		;4e37	cd 04 72 	. . r 
 	call DRAW_LIVES		;4e3a	cd b9 71 	. . q 
@@ -2386,7 +2386,7 @@ l4e22h:
 	ldir		;4e63	ed b0 	. . 
 l4e65h:
 	call sub_5c15h		;4e65	cd 15 5c 	. . \ 
-	call sub_5d79h		;4e68	cd 79 5d 	. y ] 
+	call DRAW_BACKGROUND_TILEMAP		;4e68	cd 79 5d 	. y ] 
 	call UPDATE_SPRITE_PATTERNS_ON_LEVEL		;4e6b	cd 65 51 	. e Q 
 	jp l4e74h		;4e6e	c3 74 4e 	. t N 
 l4e71h:
@@ -3369,7 +3369,7 @@ include 'sprite_pattern4.asm'
 
 
 ; Draw the background
-DRAW_BACKGROUND:
+COLORIZE_BACKGROUND:
 	ld b, 3		    ;5bbd	06 03          3 blocks
 	ld iy,02380h	;5bbf	fd 21 80 23    VDP color table
 l5bc3h:
@@ -3708,27 +3708,32 @@ sub_5d58h:
 	pop af			;5d77	f1 	. 
 	ret			;5d78	c9 	. 
 
-sub_5d79h:
-	ld hl,BACKGROUND_TILEMAP		;5d79	21 6e e3 	! n . 
-	ld de,01862h		;5d7c	11 62 18 	. b . 
-	defb 0ddh,02eh,00ch	;ld ixl,00ch		;5d7f	dd 2e 0c 	. . . 
+; Draw the backgroud tilemap in BACKGROUND_TILEMAP to VRAM
+DRAW_BACKGROUND_TILEMAP:
+	ld hl,BACKGROUND_TILEMAP	;5d79	21 6e e3
+	ld de,01862h		        ;5d7c	11 62 18    VDP name table
+	defb 0ddh,02eh,00ch	;ld ixl, 12		;5d7f	dd 2e 0c
 l5d82h:
-	ld iy,00020h		;5d82	fd 21 20 00 	. !   . 
-	ld bc,00016h		;5d86	01 16 00 	. . . 
-	push de			;5d89	d5 	. 
-	push hl			;5d8a	e5 	. 
-	push bc			;5d8b	c5 	. 
-	call LDIRVM		;5d8c	cd 5c 00 	. \ . 
-	pop bc			;5d8f	c1 	. 
-	pop hl			;5d90	e1 	. 
-	add hl,bc			;5d91	09 	. 
-	pop de			;5d92	d1 	. 
-	add iy,de		;5d93	fd 19 	. . 
-	push iy		;5d95	fd e5 	. . 
-	pop de			;5d97	d1 	. 
-	defb 0ddh,02dh	;dec ixl		;5d98	dd 2d 	. - 
-	jr nz,l5d82h		;5d9a	20 e6 	  . 
-	ret			;5d9c	c9 	. 
+	ld iy,32		;5d82	fd 21 20 00
+	ld bc,22		;5d86	01 16 00    22 background chars per line
+
+	push de			;5d89	d5	
+    ; Copy 22 background chars to VRAM
+    push hl			;5d8a	e5
+	push bc			;5d8b	c5
+	call LDIRVM		;5d8c	cd 5c 00
+	pop bc			;5d8f	c1
+	pop hl			;5d90	e1
+    
+    ; Next line
+	add hl,bc		;5d91	09
+	pop de			;5d92	d1
+	add iy,de		;5d93	fd 19
+	push iy		    ;5d95	fd e5
+	pop de			;5d97	d1
+	defb 0ddh,02dh	;dec ixl		;5d98	dd 2d
+	jr nz,l5d82h	;5d9a	20 e6
+	ret			    ;5d9c	c9
 
 sub_5d9dh:
     ; BRICK_HIT_ROW = 0
@@ -9866,10 +9871,10 @@ lab99h:
     ; the background which will replace the erased brick.
     
     ; HL = BRICK_ROW & 3
-	ld a,(BRICK_ROW)		    ;abad	3a aa e2
-	and 003h		            ;abb0	e6 03
-	ld l,a			            ;abb2	6f
-	ld h,000h		            ;abb3	26 00
+	ld a,(BRICK_ROW)		;abad	3a aa e2
+	and 3		            ;abb0	e6 03
+	ld l,a			        ;abb2	6f
+	ld h, 0		            ;abb3	26 00
     
     ; HL = 2 * (BRICK_ROW & 3)
 	add hl,hl			        ;abb5	29
