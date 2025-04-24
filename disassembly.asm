@@ -6,6 +6,7 @@
 
 include 'headers/bios.asm'
 
+include 'tilemap.asm'
 include 'sounds.asm'
 include 'spr_params.asm'
 include 'doors.asm'
@@ -3489,7 +3490,7 @@ sub_5c15h:
 	ldir		                    ;5c43	ed b0
 l5c45h:
     ; Do a partial repaint
-	ld ix,0e36eh		;5c45	dd 21 6e e3 	. ! n . 
+	ld ix,BACKGROUND_TILEMAP		;5c45	dd 21 6e e3 	. ! n . 
 
 	ld de,LEVEL_COLORS_PTR_TABLE		;5c49	11 2f 5e
 
@@ -3708,7 +3709,7 @@ sub_5d58h:
 	ret			;5d78	c9 	. 
 
 sub_5d79h:
-	ld hl,0e36eh		;5d79	21 6e e3 	! n . 
+	ld hl,BACKGROUND_TILEMAP		;5d79	21 6e e3 	! n . 
 	ld de,01862h		;5d7c	11 62 18 	. b . 
 	defb 0ddh,02eh,00ch	;ld ixl,00ch		;5d7f	dd 2e 0c 	. . . 
 l5d82h:
@@ -3730,41 +3731,56 @@ l5d82h:
 	ret			;5d9c	c9 	. 
 
 sub_5d9dh:
-    ; Set BRICK_HIT_ROW = 0
-	xor a			;5d9d	af 	. 
-	ld (BRICK_HIT_ROW),a		;5d9e	32 3c e5 	2 < . 
+    ; BRICK_HIT_ROW = 0
+	xor a			        ;5d9d	af
+	ld (BRICK_HIT_ROW),a	;5d9e	32 3c e5
 
-	ld ix,0e36eh		;5da1	dd 21 6e e3 	. ! n . 
+	ld ix,BACKGROUND_TILEMAP		    ;5da1	dd 21 6e e3
 l5da5h:
-	xor a			;5da5	af 	. 
-	ld (BRICK_HIT_COL),a		;5da6	32 3d e5 	2 = . 
+    ; BRICK_HIT_COL = 0
+	xor a			        ;5da5	af
+	ld (BRICK_HIT_COL),a	;5da6	32 3d e5
 l5da9h:
-	ld a,(BRICK_HIT_ROW)		;5da9	3a 3c e5 	: < . 
-	and 003h		;5dac	e6 03 	. . 
-	ld l,a			;5dae	6f 	o 
-	ld h,000h		;5daf	26 00 	& . 
-	add hl,hl			;5db1	29 	) 
-	add hl,hl			;5db2	29 	) 
-	ld de,lad98h		;5db3	11 98 ad 	. . . 
-	add hl,de			;5db6	19 	. 
-	ld a,(BRICK_HIT_COL)		;5db7	3a 3d e5 	: = . 
-	and 003h		;5dba	e6 03 	. . 
-	ld e,a			;5dbc	5f 	_ 
-	ld d,000h		;5dbd	16 00 	. . 
-	add hl,de			;5dbf	19 	. 
-	ld a,(hl)			;5dc0	7e 	~ 
-	ld (ix+000h),a		;5dc1	dd 77 00 	. w . 
-	inc ix		;5dc4	dd 23 	. # 
-	ld hl,BRICK_HIT_COL		;5dc6	21 3d e5 	! = . 
+    ; HL = TABLE_BACKGROUND_ENTRY1 + 4*(BRICK_HIT_ROW & 3)
+	ld a,(BRICK_HIT_ROW)	;5da9	3a 3c e5
+	and 3		            ;5dac	e6 03
+	ld l,a			        ;5dae	6f
+	ld h, 0		            ;5daf	26 00
+	add hl,hl			    ;5db1	29
+	add hl,hl			    ;5db2	29
+	ld de,TABLE_BACKGROUND_ENTRY1	;5db3	11 98 ad
+	add hl,de			            ;5db6	19
+
+    ; Point to the background tile corresponding to the hit brick
+    ; HL = TABLE_BACKGROUND_ENTRY1 + 4*(BRICK_HIT_ROW & 3) + BRICK_HIT_COL & 3
+	ld a,(BRICK_HIT_COL)	;5db7	3a 3d e5
+	and 3		            ;5dba	e6 03
+	ld e,a			        ;5dbc	5f
+	ld d, 0		            ;5dbd	16 00
+	add hl,de			    ;5dbf	19
+    
+    ; Set the tile
+	ld a,(hl)			;5dc0	7e
+	ld (ix+000h),a		;5dc1	dd 77 00
+	inc ix		        ;5dc4	dd 23
+
+    ; Column on the right
+	ld hl,BRICK_HIT_COL	;5dc6	21 3d e5
 	inc (hl)			;5dc9	34 	4 
-	ld a,(hl)			;5dca	7e 	~ 
-	cp 016h		;5dcb	fe 16 	. . 
-	jp nz,l5da9h		;5dcd	c2 a9 5d 	. . ] 
-	ld hl,BRICK_HIT_ROW		;5dd0	21 3c e5 	! < . 
+	ld a,(hl)			;5dca	7e
+	
+    ; Skip if COL is out of the limits
+    cp 22		        ;5dcb	fe 16
+	jp nz,l5da9h		;5dcd	c2 a9 5d
+    
+    ; Row below
+	ld hl,BRICK_HIT_ROW	;5dd0	21 3c e5
 	inc (hl)			;5dd3	34 	4 
-	ld a,(hl)			;5dd4	7e 	~ 
-	cp 00ch		;5dd5	fe 0c 	. . 
-	jp nz,l5da5h		;5dd7	c2 a5 5d 	. . ] 
+    
+    ; Skip if ROW is out of the limits
+	ld a,(hl)			;5dd4	7e
+	cp 12		        ;5dd5	fe 0c
+	jp nz,l5da5h		;5dd7	c2 a5 5d    Next tile
 	ret			;5dda	c9 	. 
 
 l5ddbh:
@@ -6917,7 +6933,7 @@ sub_95f4h:
 	call sub_9726h		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
 
-	ld hl,0e36eh		;9604	21 6e e3 	! n . 
+	ld hl,BACKGROUND_TILEMAP		;9604	21 6e e3 	! n . 
 	ld a,(BRICK_ROW)		;9607	3a aa e2 	: . . 
 	or a			;960a	b7 	. 
 	jr z,l9622h		;960b	28 15 	( . 
@@ -6934,7 +6950,7 @@ sub_95f4h:
 	ld d,000h		;961a	16 00 	. . 
 	add hl,de			;961c	19 	. 
 	add hl,hl			;961d	29 	) 
-	ld de,0e36eh		;961e	11 6e e3 	. n . 
+	ld de,BACKGROUND_TILEMAP		;961e	11 6e e3 	. n . 
 	add hl,de			;9621	19 	. 
 l9622h:
 	ld a,(BRICK_COL)		;9622	3a ab e2 	: . . 
@@ -9999,18 +10015,18 @@ BRICK_LEVEL_BITMASK:
 ; This table has pointers to the background characters to replace a
 ; brick with the background.
 TABLE_BACKGROUND_ERASE:
-    dw lad98h
-    dw lad9ch
-    dw lada0h
-    dw lada4h
+    dw TABLE_BACKGROUND_ENTRY1
+    dw TABLE_BACKGROUND_ENTRY2
+    dw TABLE_BACKGROUND_ENTRY3
+    dw TABLE_BACKGROUND_ENTRY4
 ;
-lad98h:
+TABLE_BACKGROUND_ENTRY1:
     db 0x7a, 0x7b, 0x78, 0x79
-lad9ch:
+TABLE_BACKGROUND_ENTRY2:
     db 0x7e, 0x7f, 0x7c, 0x7d
-lada0h:
+TABLE_BACKGROUND_ENTRY3:
     db 0x72, 0x73, 0x70, 0x71
-lada4h:
+TABLE_BACKGROUND_ENTRY4:
     db 0x76, 0x77, 0x74, 0x75
 
 ; Check if there's a brick in [BRICK_COL, BRICK_ROW]
