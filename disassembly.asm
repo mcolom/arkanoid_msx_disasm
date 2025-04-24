@@ -7103,50 +7103,64 @@ DEACTIVE_ALL_BALLS:
 	ld (BALL3_SPR_PARAMS),a		;9722	32 fd e0
 	ret			        ;9725	c9
 
+; SEGUIR
 sub_9726h:
+    ; Skip if we're at Doh's level
 	ld a,(LEVEL)		;9726	3a 1b e0
 	cp FINAL_LEVEL		;9729	fe 20
 	ret z			    ;972b	c8
-	xor a			;972c	af 	. 
-	ld (BRICK_HIT_ROW),a		;972d	32 3c e5 	2 < . 
-	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4 	. ! . . 
-	ld ix,SPR_13_SPR_PARAMS		;9734	dd 21 01 e1 	. ! . . 
+    
+    ; This is used to count up to 3 aliens
+	xor a			        ;972c	af
+	ld (BRICK_HIT_ROW),a	;972d	32 3c e5
+    
+	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4
+	ld ix,SPR_13_SPR_PARAMS	;9734	dd 21 01 e1
 l9738h:
-	ld a,(iy+001h)		;9738	fd 7e 01 	. ~ . 
-	or a			;973b	b7 	. 
-	jr z,l979bh		;973c	28 5d 	( ] 
-	ld a,(iy+002h)		;973e	fd 7e 02 	. ~ . 
-	cp 001h		;9741	fe 01 	. . 
-	jr z,l979bh		;9743	28 56 	( V 
-	ld a,(iy+013h)		;9745	fd 7e 13 	. ~ . 
-	cp 001h		;9748	fe 01 	. . 
+    ; Skip if the alien isn't active
+	ld a,(iy+ALIEN_TABLE_IDX_ACTIVE)    ;9738	fd 7e 01
+	or a			                    ;973b	b7
+	jr z,l979bh		                    ;973c	28 5d
+
+    ; Skip if the alien is exploding
+	ld a,(iy+ALIEN_TABLE_IDX_EXPLODING)	;973e	fd 7e 02
+	cp 1		                        ;9741	fe 01
+	jr z,l979bh		                    ;9743	28 56
+    
+    ; Skip if the alien... [ToDo]
+	ld a,(iy+19)		;9745	fd 7e 13 	. ~ . 
+	cp 1		;9748	fe 01 	. . 
 	jr z,l979bh		;974a	28 4f 	( O 
-	ld e,008h		;974c	1e 08 	. . 
+    
+    
+	ld e, 8		;974c	1e 08 	. . 
 	bit 7,(iy+008h)		;974e	fd cb 08 7e 	. . . ~ 
 	jr z,l9756h		;9752	28 02 	( . 
-	ld e,020h		;9754	1e 20 	.   
+	ld e, 32		;9754	1e 20 	.   
 l9756h:
-	ld a,(ix+000h)		;9756	dd 7e 00 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9756	dd 7e 00 	. ~ . 
+
 	sub e			;9759	93 	. 
 	srl a		;975a	cb 3f 	. ? 
 	srl a		;975c	cb 3f 	. ? 
 	srl a		;975e	cb 3f 	. ? 
-	cp 00ch		;9760	fe 0c 	. . 
+	cp 12		;9760	fe 0c 	. . 
 	jr nc,l979bh		;9762	30 37 	0 7 
+
 	ld (BRICK_ROW),a		;9764	32 aa e2 	2 . . 
-	ld a,(ix+001h)		;9767	dd 7e 01 	. ~ . 
-	sub 010h		;976a	d6 10 	. . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9767	dd 7e 01 	. ~ . 
+	sub 16		;976a	d6 10 	. . 
 	srl a		;976c	cb 3f 	. ? 
 	srl a		;976e	cb 3f 	. ? 
 	srl a		;9770	cb 3f 	. ? 
 	srl a		;9772	cb 3f 	. ? 
-	cp 00bh		;9774	fe 0b 	. . 
+	cp 11		;9774	fe 0b 	. . 
 	jr nc,l979bh		;9776	30 23 	0 # 
 	ld (BRICK_COL),a		;9778	32 ab e2 	2 . . 
-	ld a,(ix+000h)		;977b	dd 7e 00 	. ~ . 
-	cp 064h		;977e	fe 64 	. d 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;977b	dd 7e 00 	. ~ . 
+	cp 100		;977e	fe 64 	. d 
 	jr c,l9786h		;9780	38 04 	8 . 
-	ld (iy+013h),001h		;9782	fd 36 13 01 	. 6 . . 
+	ld (iy+19),1		;9782	fd 36 13 01 	. 6 . . 
 l9786h:
 	push iy		;9786	fd e5 	. . 
 	push ix		;9788	dd e5 	. . 
@@ -7154,20 +7168,25 @@ l9786h:
 	pop ix		;978d	dd e1 	. . 
 	pop iy		;978f	fd e1 	. . 
 	jr nc,l979bh		;9791	30 08 	0 . 
+    
+    ; If the alien it a brick, then... [ToDo]
 	ld a,(iy+008h)		;9793	fd 7e 08 	. ~ . 
 	neg		;9796	ed 44 	. D 
 	ld (iy+008h),a		;9798	fd 77 08 	. w . 
 l979bh:
-	ld de,00014h		;979b	11 14 00 	. . . 
-	add iy,de		;979e	fd 19 	. . 
-	ld de,00004h		;97a0	11 04 00 	. . . 
-	add ix,de		;97a3	dd 19 	. . 
-	ld hl,BRICK_HIT_ROW		;97a5	21 3c e5 	! < . 
-	inc (hl)			;97a8	34 	4 
-	ld a,(hl)			;97a9	7e 	~ 
-	cp 003h		;97aa	fe 03 	. . 
-	jr nz,l9738h		;97ac	20 8a 	  . 
-	ret			;97ae	c9 	. 
+    ; Next alien
+	ld de,ALIEN_TABLE_LEN	;979b	11 14 00
+	add iy,de		        ;979e	fd 19
+	ld de, SPR_PARAMS_LEN	;97a0	11 04 00
+	add ix,de		        ;97a3	dd 19
+
+    ; Done if we've already checked 3 aliens
+	ld hl,BRICK_HIT_ROW	;97a5	21 3c e5
+	inc (hl)			;97a8	34
+	ld a,(hl)			;97a9	7e
+	cp 3		        ;97aa	fe 03
+	jr nz,l9738h		;97ac	20 8a
+	ret			        ;97ae	c9
 
 ; Fills the HARD_BRICK_TABLE with the current information on the bricks
 FILL_HARD_BRICK_TABLE:
