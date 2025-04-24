@@ -370,7 +370,7 @@ TRANSITION_START_LEVEL:
 TRANSITION_PLAY_LEVEL:
     ;ToDo: figure out what are these
 	call sub_6835h		;41c0	cd 35 68 	. 5 h 
-	call sub_95f4h		;41c3	cd f4 95 	. . . 
+	call UPDATE_OBJECTS		;41c3	cd f4 95 	. . . 
 	call sub_7241h		;41c6	cd 41 72 	. A r ToDo: move aliens
 	
     ; Scores of the right
@@ -6929,8 +6929,8 @@ db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 db 0, 0, 0, 0, 0, 0, 0, 0, 0
 db 0xb7, 0
 
-; SEGUIR
-sub_95f4h:
+; Update capsules, ball, hard bricks, and aliens
+UPDATE_OBJECTS:
 	call CAPSULE_MOVE_DOWN_STEP		;95f4	cd 37 b1 	. 7 . 
 	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION		;95f7	cd 5c b1 	. \ . 
 	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
