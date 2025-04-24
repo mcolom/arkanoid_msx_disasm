@@ -6938,6 +6938,7 @@ UPDATE_OBJECTS:
 	call UPDATE_ALIEN_VERT_DIR_WHEN_BRICK		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
 
+sub_9604h:
 	ld hl,BACKGROUND_TILEMAP		;9604	21 6e e3 	! n . 
 	ld a,(BRICK_ROW)		;9607	3a aa e2 	: . . 
 	or a			;960a	b7 	. 
@@ -9790,7 +9791,7 @@ laaefh:
 	push iy		;aaf6	fd e5 	. . 
 	call sub_abd3h		;aaf8	cd d3 ab 	. . . 
 	pop iy		;aafb	fd e1 	. . 
-	call 0ab7ah		;aafd	cd 7a ab 	. z . 
+	call sub_ab7ah		;aafd	cd 7a ab 	. z . 
 
 	ld a,SOUND_BRICK_DESTROYED		;ab00	3e 02
 	call ADD_SOUND		            ;ab02	cd ef 5b
@@ -9858,12 +9859,14 @@ lab6ah:
 	inc bc			;ab6d	03 	. 
 	ld b,005h		;ab6e	06 05 	. . 
 	ld b,007h		;ab70	06 07 	. . 
-	cp 0fdh		;ab72	fe fd 	. . 
+	cp 0fdh		    ;ab72	fe fd 	. . 
 	call m,0fafdh		;ab74	fc fd fa 	. . . 
-	ei			;ab77	fb 	. 
-	jp m,0cdf9h		;ab78	fa f9 cd 	. . . 
-	inc b			;ab7b	04 	. 
-	sub (hl)			;ab7c	96 	. 
+
+	ei			    ;ab77	fb
+    db 0xfa, 0xf9   ;ab78   fa f9
+
+sub_ab7ah:
+    call sub_9604h     ;ab7a   cd 04 96
 
 	ld a,(BRICKS_LEFT)		;ab7d	3a 38 e0
 	dec a			        ;ab80	3d
