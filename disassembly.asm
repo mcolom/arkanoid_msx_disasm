@@ -6934,7 +6934,7 @@ sub_95f4h:
 	call CAPSULE_MOVE_DOWN_STEP		;95f4	cd 37 b1 	. 7 . 
 	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION		;95f7	cd 5c b1 	. \ . 
 	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
-	call sub_97eah		;95fd	cd ea 97 	. . . 
+	call CHECK_HARD_BRICKS_HIT		;95fd	cd ea 97 	. . . 
 	call sub_9726h		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
 
@@ -7169,7 +7169,8 @@ l979bh:
 	jr nz,l9738h		;97ac	20 8a 	  . 
 	ret			;97ae	c9 	. 
 
-; Fills the HARD_BRICK_TABLE with the current information on the bricks
+; Check if any of the hard bricks was hit, perform any animations, and
+; remove it from the table if it's a destroyed hard brick.
 FILL_HARD_BRICK_TABLE:
 	push ix		    ;97af	dd e5
 	ld b, 8		    ;97b1	06 08
@@ -7202,7 +7203,7 @@ l97e7h:
 	ret			;97e9	c9
 
 ; SEGUIR
-sub_97eah:
+CHECK_HARD_BRICKS_HIT:
     ; Skip if we're at DOh's level
     ld a,(LEVEL)		;97ea	3a 1b e0
 	cp FINAL_LEVEL		;97ed	fe 20
@@ -7210,7 +7211,7 @@ sub_97eah:
     
 	ld b, HARD_BRICK_TABLE_NUM_ENTRIES		        ;97f0	06 08
 	ld de, HARD_BRICK_TABLE_ENTRY_LEN		        ;97f2	11 08 00
-	ld ix,HARD_BRICK_TABLE		;97f5	dd 21 0d e2
+	ld ix,HARD_BRICK_TABLE		                    ;97f5	dd 21 0d e2
 l97f9h:
 	push bc			                                ;97f9	c5
 
@@ -7239,7 +7240,7 @@ l981ah:
 	add hl,hl			                            ;981f	29
 	add hl,de			                            ;9820	19
     
-    ; DE = IDX2, VRAM destination
+    ; DE = HARD_BRICK_TABLE[HARD_BRICK_TABLE_IDX_VRAM1 -or 2], VRAM destination
 	ld e,(ix+HARD_BRICK_TABLE_IDX_VRAM1)		;9821	dd 5e 02
 	ld d,(ix+HARD_BRICK_TABLE_IDX_VRAM2)		;9824	dd 56 03
 
@@ -7259,22 +7260,24 @@ l981ah:
 	ld a,(ix+HARD_BRICK_TABLE_IDX_COL)		;983d	dd 7e 07
 	ld (BRICK_COL),a		                ;9840	32 ab e2
     
-    ; ToDo
-	call THERE_IS_A_BRICK		;9843	cd a8 ad 	. . . 
-	jr c,l984bh		;9846	38 03 	8 . 
+    ; Erase the brick if destroyed
+	call THERE_IS_A_BRICK	;9843	cd a8 ad
+	jr c,l984bh		        ;9846	38 03
     
     ; Erase that brick
 	call ERASE_BRICK		;9848	cd 8f ab
 l984bh:
-	push ix		;984b	dd e5 	. . 
-	push ix		;984d	dd e5 	. . 
-	pop hl			;984f	e1 	. 
-	pop de			;9850	d1 	. 
-	inc de			;9851	13 	. 
-	ld bc,00007h		;9852	01 07 00 	. . . 
-	ld (hl),000h		;9855	36 00 	6 . 
-	ldir		;9857	ed b0 	. . 
+    ; Remove the hard brick from the table (write 8 zeros)
+	push ix		    ;984b	dd e5
+	push ix		    ;984d	dd e5
+	pop hl			;984f	e1
+	pop de			;9850	d1
+	inc de			;9851	13
+	ld bc, 7	    ;9852	01 07 00
+	ld (hl), 0  	;9855	36 00
+	ldir		    ;9857	ed b0
 l9859h:
+    ; Next hard brick
 	pop bc			                        ;9859	c1
 	ld de, HARD_BRICK_TABLE_ENTRY_LEN		;985a	11 08 00
 	add ix,de		                        ;985d	dd 19
