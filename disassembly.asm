@@ -7489,7 +7489,7 @@ ACTION_9941:
 	ld a, 185		            ;9960	3e b9
 	ld (ix+SPR_PARAMS_IDX_X),a		;9962	dd 77 01
 
-	call sub_99d1h		;9965	cd d1 99 	. . . 
+	call CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS		;9965	cd d1 99 	. . . 
 	jp l9985h		;9968	c3 85 99 	. . . 
 
 l996bh:
@@ -7510,7 +7510,7 @@ l996bh:
 	ld a, 18		            ;997d	3e 12
 	ld (ix+SPR_PARAMS_IDX_X),a  ;997f	dd 77 01
 
-	call sub_99d1h		        ;9982	cd d1 99
+	call CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS		        ;9982	cd d1 99
 l9985h:
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;9985	dd 7e 00
 
@@ -7529,7 +7529,7 @@ l9985h:
 	ld a,9		                ;999a	3e 09
 	ld (ix+SPR_PARAMS_IDX_Y),a		;999c	dd 77 00
 
-	call sub_99d1h		                ;999f	cd d1 99
+	call CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS     ;999f	cd d1 99
 l99a2h:
 	push ix		;99a2	dd e5 	. . 
 	push iy		;99a4	fd e5 	. . 
@@ -7566,15 +7566,21 @@ l99b8h:
     ; Yes, all done
 	ret			                    ;99d0	c9
 
-sub_99d1h:
-	ld hl,0e51ch		;99d1	21 1c e5 	! . . 
-	inc (hl)			;99d4	34 	4 
-	ld a,(hl)			;99d5	7e 	~ 
-	cp 028h		;99d6	fe 28 	. ( 
-	ret nz			;99d8	c0 	. 
-	ld (hl),000h		;99d9	36 00 	6 . 
-	call sub_ab38h		;99db	cd 38 ab 	. 8 . 
-	ret			;99de	c9 	. 
+; Increment the number of bounces of the ball in the borders and
+; change the skewness of the balls when the counter reaches 40.
+CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS:
+    ; Increment the number of bounces of the ball in the borders
+	ld hl,BALL_BOUNCES_COUNTER		;99d1	21 1c e5
+	inc (hl)			            ;99d4	34
+    
+    ; If it has reached 40, change the skewness of the balls
+	ld a,(hl)			            ;99d5	7e
+	cp 40		                    ;99d6	fe 28
+	ret nz			                ;99d8	c0
+	ld (hl), 0		                ;99d9	36 00   Reset counter
+	call CHANGE_BALLS_SKEWNESS		            ;99db	cd 38 ab
+	ret			                    ;99de	c9
+
 sub_99dfh:
 	ld hl,l9a98h		;99df	21 98 9a 	! . . 
 	ld a,(iy+006h)		;99e2	fd 7e 06 	. ~ . 
@@ -9753,7 +9759,7 @@ laa5ch:
 	cp 014h		;aab2	fe 14 	. . 
 	jp nz,laabch		;aab4	c2 bc aa 	. . . 
 	ld (hl),000h		;aab7	36 00 	6 . 
-	call sub_ab38h		;aab9	cd 38 ab 	. 8 . 
+	call CHANGE_BALLS_SKEWNESS		;aab9	cd 38 ab 	. 8 . 
 laabch:
 	ld c,001h		;aabc	0e 01 	. . 
 	jp lab06h		;aabe	c3 06 ab 	. . . 
@@ -9823,38 +9829,45 @@ lab10h:
 	xor a			                ;ab36	af
 	ret			                    ;ab37	c9
 
-; Seguir
-sub_ab38h:
-	push iy		;ab38	fd e5 	. . 
-	ld iy,BALL_TABLE1		;ab3a	fd 21 4e e2 	. ! N . 
-	ld b,003h		;ab3e	06 03 	. . 
+; Change the skewness of all balls
+CHANGE_BALLS_SKEWNESS:
+	push iy		            ;ab38	fd e5
+	ld iy,BALL_TABLE1		;ab3a	fd 21 4e e2
+	ld b, 3 		        ;ab3e	06 03       Check 3 balls
 lab40h:
     ; Skip if ball is inactive
 	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;ab40	fd 7e 00
 	cp 1		                        ;ab43	fe 01
-	jp nz,lab60h		;ab45	c2 60 ab
+	jp nz,lab60h		                ;ab45	c2 60 ab
     
-	ld a,(iy+006h)		;ab48	fd 7e 06 	. ~ . 
-	bit 7,a		;ab4b	cb 7f 	.  
-	jp z,lab54h		;ab4d	ca 54 ab 	. T . 
-	neg		;ab50	ed 44 	. D 
-	add a,008h		;ab52	c6 08 	. . 
+    ; If the skewness if negative, negate it and add 8.
+    ; This is to deal with negative numbers in the skewness.
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;ab48	fd 7e 06
+	bit 7,a		                        ;ab4b	cb 7f
+	jp z,lab54h		                    ;ab4d	ca 54 ab
+	neg		                            ;ab50	ed 44
+	add a,8		                        ;ab52	c6 08
 lab54h:
-	dec a			;ab54	3d 	= 
-	ld l,a			;ab55	6f 	o 
-	ld h,000h		;ab56	26 00 	& . 
-	ld de,TBL_ab6a		;ab58	11 6a ab 	. j . 
-	add hl,de			;ab5b	19 	. 
-	ld a,(hl)			;ab5c	7e 	~ 
-	ld (iy+006h),a		;ab5d	fd 77 06 	. w . 
+    ; HL = TBL_SKEWNESS + SKEWNESS
+	dec a			;ab54	3d
+	ld l,a			;ab55	6f
+	ld h, 0		    ;ab56	26 00
+	ld de,TBL_SKEWNESS	;ab58	11 6a ab
+	add hl,de		;ab5b	19
+    
+    ; A = TBL_SKEWNESS[SKEWNESS]
+	ld a,(hl)		;ab5c	7e
+    ; Update skewness
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a	;ab5d	fd 77 06
 lab60h:
-	ld de,00014h		;ab60	11 14 00 	. . . 
-	add iy,de		;ab63	fd 19 	. . 
-	djnz lab40h		;ab65	10 d9 	. . 
-	pop iy		;ab67	fd e1 	. . 
-	ret			;ab69	c9 	. 
-TBL_ab6a:
-    db 2, 3, 4, 3, 6, 5, 6, 7, -2, -3, -4, -3, -6, -5, -6, -7
+    ; Next ball
+	ld de, BALL_TABLE_LEN		;ab60	11 14 00
+	add iy,de		            ;ab63	fd 19
+	djnz lab40h		            ;ab65	10 d9
+	pop iy		                ;ab67	fd e1
+	ret			                ;ab69	c9
+TBL_SKEWNESS:
+    db 2, 3, 4, 3, 6, 5, 6, 7, -2, -3, -4, -3, -6, -5, -6, -7   ;ab6a
 
 sub_ab7ah:
     call sub_9604h     ;ab7a   cd 04 96

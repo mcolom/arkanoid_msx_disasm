@@ -32,6 +32,9 @@ BALL_TABLE_IDX_HORIZ: equ 3
 
 BALL_TABLE_IDX_SKEWNESS: equ 6
 
+; When this counter reaches 40, the skewness of the balls change
+BALL_BOUNCES_COUNTER: equ 0xe51c
+
 
 ;
 BALL_TABLE_IDX_SPEED_POS: equ 7
