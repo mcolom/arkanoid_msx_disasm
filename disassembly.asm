@@ -3681,14 +3681,14 @@ sub_5d58h:
 	ld h,000h		;5d60	26 00 	& . 
 	add hl,hl			;5d62	29 	) 
     
-	; HL = l5ddbh + 2*IY[0]
-    ld de,l5ddbh		;5d63	11 db 5d 	. . ] 
+	; HL = TBL_5ddb + 2*IY[0]
+    ld de,TBL_5ddb		;5d63	11 db 5d 	. . ] 
 	add hl,de			;5d66	19 	. 
     ;
-	; A =  l5ddbh[2*IY[0]]
+	; A =  TBL_5ddb[2*IY[0]]
     ld a,(hl)			;5d67	7e 	~ 
     
-	; IX[0] = l5ddbh[2*IY[0]] *** WRITE ***
+	; IX[0] = TBL_5ddb[2*IY[0]] *** WRITE ***
     ld (ix+000h),a		;5d68	dd 77 00 	. w . 
     
     ; Increment pointers
@@ -3735,6 +3735,7 @@ l5d82h:
 	jr nz,l5d82h	;5d9a	20 e6
 	ret			    ;5d9c	c9
 
+;SEGUIR
 sub_5d9dh:
     ; BRICK_HIT_ROW = 0
 	xor a			        ;5d9d	af
@@ -3787,26 +3788,10 @@ l5da9h:
 	cp 12		        ;5dd5	fe 0c
 	jp nz,l5da5h		;5dd7	c2 a5 5d    Next tile
 	ret			;5dda	c9 	. 
-
-l5ddbh:
-	inc hl			;5ddb	23 	# 
-	inc h			;5ddc	24 	$ 
-	dec h			;5ddd	25 	% 
-	ld h,027h		;5dde	26 27 	& ' 
-	jr z,$+43		;5de0	28 29 	( ) 
-	ld e,e			;5de2	5b 	[ 
-	ld e,h			;5de3	5c 	\ 
-	ld e,l			;5de4	5d 	] 
-	ld e,(hl)			;5de5	5e 	^ 
-	ld h,b			;5de6	60 	` 
-	ld h,c			;5de7	61 	a 
-	ld h,d			;5de8	62 	b 
-	ld h,e			;5de9	63 	c 
-	ld h,h			;5dea	64 	d 
-	ld h,l			;5deb	65 	e 
-	ld h,(hl)			;5dec	66 	f 
-	ld h,a			;5ded	67 	g 
-	ld l,b			;5dee	68 	h 
+TBL_5ddb:
+    db 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29
+    db 0x5b, 0x5c, 0x5d, 0x5e, 0x60, 0x61, 0x62
+    db 0x63, 0x64, 0x65, 0x66, 0x67, 0x68
 
 ; Pointers to the bitmask of each level
 ; dw_block.py ../arkanoid.rom --start 24047 --end 24110 --offset 16384
