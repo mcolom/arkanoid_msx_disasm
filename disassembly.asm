@@ -9823,6 +9823,7 @@ lab10h:
 	xor a			                ;ab36	af
 	ret			                    ;ab37	c9
 
+; Seguir
 sub_ab38h:
 	push iy		;ab38	fd e5 	. . 
 	ld iy,BALL_TABLE1		;ab3a	fd 21 4e e2 	. ! N . 
@@ -9842,7 +9843,7 @@ lab54h:
 	dec a			;ab54	3d 	= 
 	ld l,a			;ab55	6f 	o 
 	ld h,000h		;ab56	26 00 	& . 
-	ld de,lab6ah		;ab58	11 6a ab 	. j . 
+	ld de,TBL_ab6a		;ab58	11 6a ab 	. j . 
 	add hl,de			;ab5b	19 	. 
 	ld a,(hl)			;ab5c	7e 	~ 
 	ld (iy+006h),a		;ab5d	fd 77 06 	. w . 
@@ -9852,18 +9853,8 @@ lab60h:
 	djnz lab40h		;ab65	10 d9 	. . 
 	pop iy		;ab67	fd e1 	. . 
 	ret			;ab69	c9 	. 
-lab6ah:
-	ld (bc),a			;ab6a	02 	. 
-	inc bc			;ab6b	03 	. 
-	inc b			;ab6c	04 	. 
-	inc bc			;ab6d	03 	. 
-	ld b,005h		;ab6e	06 05 	. . 
-	ld b,007h		;ab70	06 07 	. . 
-	cp 0fdh		    ;ab72	fe fd 	. . 
-	call m,0fafdh		;ab74	fc fd fa 	. . . 
-
-	ei			    ;ab77	fb
-    db 0xfa, 0xf9   ;ab78   fa f9
+TBL_ab6a:
+    db 2, 3, 4, 3, 6, 5, 6, 7, -2, -3, -4, -3, -6, -5, -6, -7
 
 sub_ab7ah:
     call sub_9604h     ;ab7a   cd 04 96
