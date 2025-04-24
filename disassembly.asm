@@ -3444,39 +3444,41 @@ sub_5c15h:
 	ld a,(BRICK_REPAINT_TYPE)	;5c18	3a 22 e0
 	cp BRICK_REPAINT_REMAINING  ;5c1b	fe 02
 	jp z,l5c45h		            ;5c1d	ca 45 5c
-
-	ld hl,BRICKS_PER_LEVEL		;5c20	21 00 5d 	! . ] 
     
-    ; A = LEVEL
+    ; Do a full repaint
+
+    ; HL = BRICKS_PER_LEVEL + LEVEL
+	ld hl, BRICKS_PER_LEVEL		;5c20	21 00 5d
 	ld a,(LEVEL)		;5c23	3a 1b e0
-    ; DE = LEVEL
 	ld e,a			    ;5c26	5f
 	ld d, 0 		    ;5c27	16 00
-    ; HL += LEVEL
 	add hl,de			;5c29	19
 
-    ; Read the number of bricks in this level
+    ; Set the number of bricks in this level
     ; A = BRICKS_PER_LEVEL[LEVEL]
 	ld a,(hl)			;5c2a	7e
 	ld (BRICKS_LEFT),a	;5c2b	32 38 e0
 
-
-	ld hl,0e039h		;5c2e	21 39 e0 	! 9 . 
-	ld de,0e03ah		;5c31	11 3a e0 	. : . 
+    ; Set the number of hits needed to break a hard brick
+	ld hl,HARD_BRICKS_REMAINING_HITS		;5c2e	21 39 e0
+	ld de,HARD_BRICKS_REMAINING_HITS+1		;5c31	11 3a e0
     
     ; A = LEVEL/8 + 2
-    ; Fill 0e039h with BRICK_COLS*BRICK_ROWS values of A = LEVEL/8 + 2
-	ld a,(LEVEL)		;5c34	3a 1b e0 	: . . 
-	srl a		;5c37	cb 3f 	. ? 
-	srl a		;5c39	cb 3f 	. ? 
-	srl a		;5c3b	cb 3f 	. ? 
-	inc a			;5c3d	3c 	< 
-	inc a			;5c3e	3c 	< 
-    
-	ld (hl),a			;5c3f	77 	w 
+    ; From HARD_BRICKS_REMAINING_HITS with BRICK_COLS*BRICK_ROWS values of A = LEVEL/8 + 2
+    ; The number of hits needed to break a hard brick is int((level+1) / 8) + 2.
+	ld a,(LEVEL)	;5c34	3a 1b e0
+	srl a		    ;5c37	cb 3f
+	srl a		    ;5c39	cb 3f
+	srl a		    ;5c3b	cb 3f
+	inc a			;5c3d	3c
+	inc a			;5c3e	3c
 
-	ld bc, BRICK_COLS*BRICK_ROWS-1  ;5c40	01 83 00 	. . . 
-	ldir		;5c43	ed b0 	. . 
+    ; ESTO ESTÁ RELACIONADO CON LOS LADRILLOS DUROS
+    ; Set [HARD_BRICKS_REMAINING_HITS] <-- BRICKS_LEFT/8 + 2
+	ld (hl),a		;5c3f	77
+
+	ld bc, BRICK_COLS*BRICK_ROWS-1  ;5c40	01 83 00
+	ldir		                    ;5c43	ed b0
 
 l5c45h:
 	ld ix,0e36eh		;5c45	dd 21 6e e3 	. ! n . 
@@ -3500,46 +3502,47 @@ l5c45h:
 	inc hl			    ;5c55	23
 	ld d,(hl)			;5c56	56
 
-    ; IY = start of the level
+    ; IY points to the level colors
 	push de			    ;5c57	d5
 	pop iy		        ;5c58	fd e1
 
-	ld de,LEVELS_PTR_TABLE		;5c5a	11 ef 5d 	. . ] 
+	ld de,LEVELS_PTR_TABLE		;5c5a	11 ef 5d
     
     ; HL = LEVEL
-	ld a,(LEVEL)		;5c5d	3a 1b e0 	: . . 
-	ld l,a			;5c60	6f 	o 
-	ld h,000h		;5c61	26 00 	& . 
+	ld a,(LEVEL)	;5c5d	3a 1b e0
+	ld l,a			;5c60	6f
+	ld h, 0		    ;5c61	26 00
     
     ; HL = 2*LEVEL
-	add hl,hl			;5c63	29 	) 
+	add hl,hl		;5c63	29
     
     ; HL = 2*LEVEL + LEVELS_PTR_TABLE
-	add hl,de			;5c64	19 	. 
+	add hl,de		;5c64	19
     
     ; DE = LEVELS_PTR_TABLE[2*LEVEL]
-	ld e,(hl)			;5c65	5e 	^ 
-	inc hl			;5c66	23 	# 
-	ld d,(hl)			;5c67	56 	V 
+	ld e,(hl)		;5c65	5e
+	inc hl			;5c66	23
+	ld d,(hl)		;5c67	56
 	
     ; HL = LEVELS_PTR_TABLE[2*LEVEL]
     ex de,hl			;5c68	eb 	. 
 
-    ; Set HL=BRICK_MAP if we're not doing a full brick repaint
+    ; Set HL=BRICK_MAP if we're doing a full brick repaint.
+    ; Otherwise, we'll keep HL = LEVELS_PTR_TABLE[2*LEVEL].
 	ld a,(BRICK_REPAINT_TYPE)		;5c69	3a 22 e0
 	cp BRICK_REPAINT_REMAINING      ;5c6c	fe 02
 	jp nz,l5c74h		            ;5c6e	c2 74 5c
-
 	ld hl,BRICK_MAP		            ;5c71	21 27 e0
 l5c74h:
 	ld b, BRICK_MAP_LEN		;5c74	06 11 	. . 
-	xor a			;5c76	af 	. 
-	ld (0e489h),a		;5c77	32 89 e4 	2 . . 
-	xor a			;5c7a	af 	. 
-	ld (0e48ah),a		;5c7b	32 8a e4 	2 . . 
-
+    
+    ; ToDo: what are these two variables?
+	xor a			        ;5c76	af 	. 
+	ld (0e489h),a	        ;5c77	32 89 e4 	2 . . 
+	xor a			        ;5c7a	af 	. 
+	ld (0e48ah),a	        ;5c7b	32 8a e4 	2 . . 
 l5c7eh:
-	ld c,008h		;5c7e	0e 08 	. . 
+	ld c, 8		;5c7e	0e 08 	. . 
 	ld a,(hl)			;5c80	7e 	~ 
 l5c81h:
 	rlca			;5c81	07 	. 
@@ -3555,15 +3558,15 @@ l5c8dh:
 	push de			;5c93	d5 	. 
 
     ; DE = LEVELS_PTR_TABLE[2*LEVEL]
-	ld de,LEVELS_PTR_TABLE		;5c94	11 ef 5d 	. . ] 
-	ld a,(LEVEL)		;5c97	3a 1b e0 	: . . 
-	ld l,a			;5c9a	6f 	o 
-	ld h,000h		;5c9b	26 00 	& . 
-	add hl,hl			;5c9d	29 	) 
-	add hl,de			;5c9e	19 	. 
-	ld e,(hl)			;5c9f	5e 	^ 
-	inc hl			;5ca0	23 	# 
-	ld d,(hl)			;5ca1	56 	V 
+	ld de,LEVELS_PTR_TABLE		;5c94	11 ef 5d
+	ld a,(LEVEL)		        ;5c97	3a 1b e0
+	ld l,a			            ;5c9a	6f
+	ld h, 0		                ;5c9b	26 00
+	add hl,hl			        ;5c9d	29
+	add hl,de			        ;5c9e	19
+	ld e,(hl)			        ;5c9f	5e
+	inc hl			            ;5ca0	23
+	ld d,(hl)			        ;5ca1	56
 
 
 	push de			;5ca2	d5 	. 
@@ -3576,7 +3579,8 @@ l5c8dh:
 	rlca			;5cb0	07 	. 
 	ld e,a			;5cb1	5f 	_ 
 	ld d,000h		;5cb2	16 00 	. . 
-	ld hl,tbl_5cf0		;5cb4	21 f0 5c 	! . \ 
+
+	ld hl,CHECK_BIT_JUMP_TABLE		;5cb4	21 f0 5c 	! . \ 
 	add hl,de			;5cb7	19 	. 
 	ld e,(hl)			;5cb8	5e 	^ 
 	inc hl			;5cb9	23 	# 
@@ -3617,9 +3621,8 @@ l5cc6h:
 	ld (0e486h),de		;5ceb	ed 53 86 e4 	. S . . 
 	ret			;5cef	c9 	. 
 
-; ToDo: what is this jump table?
-; It checks bits
-tbl_5cf0:
+; Check bit jump table
+CHECK_BIT_JUMP_TABLE:
     dw check_b7
     dw check_b6
     dw check_b5
@@ -9710,7 +9713,7 @@ laabch:
 	ld e,a			;aae2	5f 	_ 
 	ld d,000h		;aae3	16 00 	. . 
 	add hl,de			;aae5	19 	. 
-	ld de,0e039h		;aae6	11 39 e0 	. 9 . 
+	ld de,HARD_BRICKS_REMAINING_HITS		;aae6	11 39 e0 	. 9 . 
 	add hl,de			;aae9	19 	. 
 	dec (hl)			;aaea	35 	5 
 	ld c,000h		;aaeb	0e 00 	. . 

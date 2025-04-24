@@ -21,6 +21,11 @@ BRICK_ROWS: equ 11
 ; Number of bricks to break
 BRICKS_LEFT: equ 0xe038
 
+; This is a table that for each brick tells how many hits are
+; still needed to break a hard brick. Assuming there's a
+; hard brick in that position
+HARD_BRICKS_REMAINING_HITS: equ 0xe039
+
 HARD_BRICK_TABLE: equ 0xe20d
 HARD_BRICK_TABLE_ENTRY_LEN: equ 8
 HARD_BRICK_TABLE_NUM_ENTRIES: equ 8
