@@ -7127,12 +7127,12 @@ l9738h:
 	cp 1		                        ;9741	fe 01
 	jr z,l979bh		                    ;9743	28 56
     
-    ; Skip if the alien... [ToDo]
-	ld a,(iy+19)		;9745	fd 7e 13 	. ~ . 
-	cp 1		;9748	fe 01 	. . 
-	jr z,l979bh		;974a	28 4f 	( O 
-    
-    
+    ; Skip if the alien can travel through the bricks.
+    ; I think however this is never set.
+	ld a,(iy+ALIEN_TABLE_IDX_CAN_CROSS_BRICKS)	;9745	fd 7e 13
+	cp 1		                                ;9748	fe 01
+	jr z,l979bh		                            ;974a	28 4f
+
 	ld e, 8		;974c	1e 08 	. . 
 	bit 7,(iy+008h)		;974e	fd cb 08 7e 	. . . ~ 
 	jr z,l9756h		;9752	28 02 	( . 
