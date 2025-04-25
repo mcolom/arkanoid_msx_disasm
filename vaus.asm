@@ -1,5 +1,3 @@
-USE_VAUS_PADDLE: equ 0xe00c; 0: cursors, 1: paddle
-
 ;VAUS_TABLE_ACTION_STATE: equ 0xe54b
 VAUS_TABLE: equ 0xe54b
 

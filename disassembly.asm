@@ -23,6 +23,7 @@ include 'ticks.asm'
 include 'glue.asm'
 include 'sprites.asm'
 include 'keyboard.asm'
+include 'paddle.asm'
 include 'bricks.asm'
 include 'capsules.asm'
 include 'doh.asm'
@@ -589,34 +590,49 @@ l42f6h:
 	ret			                ;42fb	c9
 
 l42fch:
-	ld a,00eh		;42fc	3e 0e 	> . 
-	out (0a0h),a		;42fe	d3 a0 	. . 
-	in a,(0a2h)		;4300	db a2 	. . 
-	ld h,a			;4302	67 	g 
-	ld b,008h		;4303	06 08 	. . 
-	ld c,000h		;4305	0e 00 	. . 
-	ld e,000h		;4307	1e 00 	. . 
+    ; Read the joystick port
+	ld a, 14		;42fc	3e 0e   PSG joystick port
+	out (0a0h),a	;42fe	d3 a0
+	in a,(0a2h)		;4300	db a2
+    
+	ld h,a		;4302	67
+	ld b, 8		;4303	06 08   9 bits in serial
+	ld c, 0		;4305	0e 00
+	ld e, 0		;4307	1e 00
+
+; This loop reads the 9 bits in serial from the paddle
 l4309h:
-	ld a,00fh		;4309	3e 0f 	> . 
-	out (0a0h),a		;430b	d3 a0 	. . 
-	ld a,01eh		;430d	3e 1e 	> . 
-	out (0a1h),a		;430f	d3 a1 	. . 
+    ; Choose PSG register 15
+	ld a, 15		;4309	3e 0f
+	out (0a0h),a	;430b	d3 a0
+    
+    ; Write value 0x1e to register 15
+    ; 0x1e = 0001.1110
+	ld a,01eh		;430d	3e 1e
+	out (0a1h),a	;430f	d3 a1
 l4311h:
 	ld a,01fh		;4311	3e 1f 	> . 
 	out (0a1h),a		;4313	d3 a1 	. . 
-	ld a,00eh		;4315	3e 0e 	> . 
-	out (0a0h),a		;4317	d3 a0 	. . 
-	in a,(0a2h)		;4319	db a2 	. . 
-	ld e,a			;431b	5f 	_ 
+    
+    ; Read the joystick port
+	ld a, 14		;4315	3e 0e
+	out (0a0h),a	;4317	d3 a0
+	in a,(0a2h)		;4319	db a2
+	
+    ld e,a			;431b	5f 	_ 
 	srl a		;431c	cb 3f 	. ? 
 	rl c		;431e	cb 11 	. . 
+    ; Next bit
 	djnz l4309h		;4320	10 e7 	. . 
+
 l4322h:
-	ld a,c			;4322	79 	y 
-	ld (0e0c1h),a		;4323	32 c1 e0 	2 . . 
-	ld a,h			;4326	7c 	| 
-	and 001h		;4327	e6 01 	. . 
-	ld (0e0c2h),a		;4329	32 c2 e0 	2 . . 
+    ; Store paddle count (9 bits)
+	ld a,c			        ;4322	79 	y 
+	ld (PADDLE_COUNT),a		;4323	32 c1 e0
+	ld a,h			        ;4326	7c
+	and 1		            ;4327	e6 01
+	ld (PADDLE_COUNT+1),a	;4329	32 c2 e0    
+    
 	ld a,00fh		;432c	3e 0f 	> . 
 	out (0a0h),a		;432e	d3 a0 	. . 
 	ld a,01fh		;4330	3e 1f 	> . 
@@ -625,17 +641,24 @@ l4322h:
 	out (0a1h),a		;4336	d3 a1 	. . 
 	ld a,01fh		;4338	3e 1f 	> . 
 	out (0a1h),a		;433a	d3 a1 	. . 
-	ld a,00eh		;433c	3e 0e 	> . 
-	out (0a0h),a		;433e	d3 a0 	. . 
-	in a,(0a2h)		;4340	db a2 	. . 
+
+    ; Read the joystick port
+	ld a, 14		;433c	3e 0e
+	out (0a0h),a	;433e	d3 a0
+	in a,(0a2h)		;4340	db a2
+
+    ; ToDO
+    ; I think PADDLE_STATUS+1 this is used to know if it's the Vaus paddle or
+    ; a normal joystick.
+    ; And PADDLE_STATUS seems unused.
 	ld e,a			;4342	5f 	_ 
-	ld hl,0e0c4h		;4343	21 c4 e0 	! . . 
+	ld hl,PADDLE_STATUS		;4343	21 c4 e0 	! . . 
 	ld a,(hl)			;4346	7e 	~ 
 	ld (hl),e			;4347	73 	s 
 	and 00fh		;4348	e6 0f 	. . 
 	and e			;434a	a3 	. 
 	xor e			;434b	ab 	. 
-	ld (0e0c5h),a		;434c	32 c5 e0 	2 . . 
+	ld (PADDLE_STATUS+1),a		;434c	32 c5 e0 	2 . . 
 	ld b,a			;434f	47 	G 
 
     ; Exit if we're not in the title screen
@@ -2033,7 +2056,7 @@ l4c48h:
 	or a			            ;4c4b	b7
 	jp z,l4c5ah		            ;4c4c	ca 5a 4c    Jump if we're using the paddle
 
-	ld a,(0e0c5h)		;4c4f	3a c5 e0 	: . . 
+	ld a,(PADDLE_STATUS+1)		;4c4f	3a c5 e0 	: . . 
 	bit 1,a		;4c52	cb 4f 	. O 
 	jp nz,l4c73h		;4c54	c2 73 4c 	. s L 
 	jp l4c62h		;4c57	c3 62 4c 	. b L 
@@ -2466,7 +2489,7 @@ l4eddh:
 	ld a,(USE_VAUS_PADDLE)		;4ee5	3a 0c e0 	: . . 
 	or a			;4ee8	b7 	. 
 	jp z,l4ef7h		;4ee9	ca f7 4e 	. . N 
-	ld a,(0e0c5h)		;4eec	3a c5 e0 	: . . 
+	ld a,(PADDLE_STATUS+1)		;4eec	3a c5 e0 	: . . 
 	bit 1,a		;4eef	cb 4f 	. O 
 	jp nz,l4f6bh		;4ef1	c2 6b 4f 	. k O 
 	jp l4effh		;4ef4	c3 ff 4e 	. . N 
@@ -3966,12 +3989,13 @@ l6924h:
 	ld a,(USE_VAUS_PADDLE)		;6924	3a 0c e0 	: . . 
 	or a			;6927	b7 	. 
 	jp nz,l6946h		;6928	c2 46 69 	. F i 
+    ; Using cursors
 	ld a,(PAUSE_B6_AND_START_B4)		;692b	3a bf e0 	: . . 
 	and 00fh		;692e	e6 0f 	. . 
 	ld l,a			;6930	6f 	o 
 	ld h,000h		;6931	26 00 	& . 
 	add hl,hl			;6933	29 	) 
-	ld de,06ff7h		;6934	11 f7 6f 	. . o 
+	ld de,TBL_6ff7		;6934	11 f7 6f 	. . o 
 	add hl,de			;6937	19 	. 
 	inc hl			;6938	23 	# 
 	ld a,(hl)			;6939	7e 	~ 
@@ -3980,8 +4004,9 @@ l6924h:
 	ld (VAUS_X2),a		;6940	32 3e e5 	2 > . 
 	jp l6972h		;6943	c3 72 69 	. r i 
 l6946h:
+    ; Using the paddle
 	ld b,008h		;6946	06 08 	. . 
-	ld hl,(0e0c1h)		;6948	2a c1 e0 	* . . 
+	ld hl,(PADDLE_COUNT)		;6948	2a c1 e0 	* . . 
 	ld de,000a0h		;694b	11 a0 00 	. . . 
 	xor a			;694e	af 	. 
 	sbc hl,de		;694f	ed 52 	. R 
@@ -4916,13 +4941,13 @@ CHECK_START_LASERS:
 	or a			        ;7054	b7
 	jp z,l7074h		        ;7055	ca 74 70
 	
-    ; ToDo: what is this var?
+    ; Skip if we're using cursors
     ld a,(USE_VAUS_PADDLE)		;7058	3a 0c e0 	: . . 
 	or a			;705b	b7 	. 
 	jp z,l706ah		;705c	ca 6a 70 	. j p 
 
     ; ToDo: what is this var?
-	ld a,(0e0c5h)		;705f	3a c5 e0 	: . . 
+	ld a,(PADDLE_STATUS+1)		;705f	3a c5 e0 	: . . 
 	bit 1,a		;7062	cb 4f 	. O 
 	jp z,l70afh		;7064	ca af 70 	. . p 
 	jp l7072h		;7067	c3 72 70 	. r p 
@@ -7413,7 +7438,7 @@ ACTION_BALL_FOLLOWS_VAUS_IF_STICKY:
 	or a			;9902	b7 	. 
 	jp z,l9910h		;9903	ca 10 99 	. . . 
 
-	ld a,(0e0c5h)		;9906	3a c5 e0 	: . . 
+	ld a,(PADDLE_STATUS+1)		;9906	3a c5 e0 	: . . 
 	bit 1,a		;9909	cb 4f 	. O 
 	jr nz,l9935h		;990b	20 28 	  ( 
 	jp l9917h		;990d	c3 17 99 	. . . 
@@ -11409,8 +11434,9 @@ lb56ah:
 	jr nc,lb583h		;b56b	30 16 	0 . 
 	ex de,hl			;b56d	eb 	. 
 	ld e,0bfh		;b56e	1e bf 	. . 
+
 sub_b570h:
-	ld a,007h		;b570	3e 07 	> . 
+	ld a, 7		;b570	3e 07 PSG register 7
 	bit 7,e		;b572	cb 7b 	. { 
 	ret z			;b574	c8 	. 
 	res 7,e		;b575	cb bb 	. . 
