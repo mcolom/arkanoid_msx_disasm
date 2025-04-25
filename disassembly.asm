@@ -676,11 +676,12 @@ l4322h:
 	xor a			;435f	af 	. 
 	ld (GAME_TRANSITION_ACTION),a		;4360	32 0a e0 	2 . . 
 
-	ld hl,BRICK_HIT_ROW		;4363	21 3c e5 	! < . 
-	ld de,BRICK_HIT_COL		;4366	11 3d e5 	. = . 
-	ld (hl),000h		;4369	36 00 	6 . 
-	ld bc,00007h		;436b	01 07 00 	. . . 
-	ldir		;436e	ed b0 	. . 
+    ; Reset variables
+	ld hl,BRICK_HIT_ROW		;4363	21 3c e5
+	ld de,BRICK_HIT_ROW+1	;4366	11 3d e5
+	ld (hl), 0		        ;4369	36 00
+	ld bc, 7		        ;436b	01 07 00
+	ldir		            ;436e	ed b0
 l4370h:
     ; Use the paddle, not cursors
 	ld a, 1		            ;4370	3e 01
