@@ -2411,7 +2411,7 @@ l4e22h:
 	ld bc,BRICK_MAP_LEN	;4e60	01 11 00
 	ldir		;4e63	ed b0 	. . 
 l4e65h:
-	call sub_5c15h		;4e65	cd 15 5c 	. . \ 
+	call ADD_BRICKS_TO_TILEMAP		;4e65	cd 15 5c 	. . \ 
 	call DRAW_BACKGROUND_TILEMAP		;4e68	cd 79 5d 	. y ] 
 	call UPDATE_SPRITE_PATTERNS_ON_LEVEL		;4e6b	cd 65 51 	. e Q 
 	jp l4e74h		;4e6e	c3 74 4e 	. t N 
@@ -3472,8 +3472,10 @@ l5c11h:
 	pop hl			;5c13	e1
 	ret			    ;5c14	c9
 
-; SEGUIR
-sub_5c15h:
+; Add the bricks to the tilemap
+; It can be a full repaint if it's the start of the level, or a
+; partial one if it's been modified (say, some bricks already destroyed).
+ADD_BRICKS_TO_TILEMAP:
 	call sub_5d9dh		;5c15	cd 9d 5d 	. . ] 
     
     ; Skip the following if we're not doing a full brick repaint
@@ -3491,7 +3493,7 @@ sub_5c15h:
 	add hl,de			;5c29	19
 
     ; Set the number of bricks in this level
-    ; A = BRICKS_PER_LEVEL[LEVEL]
+    ; BRICKS_LEFT <-- BRICKS_PER_LEVEL[LEVEL]
 	ld a,(hl)			;5c2a	7e
 	ld (BRICKS_LEFT),a	;5c2b	32 38 e0
 
@@ -3516,9 +3518,9 @@ sub_5c15h:
 	ldir		                    ;5c43	ed b0
 l5c45h:
     ; Do a partial repaint
-	ld ix,BACKGROUND_TILEMAP		;5c45	dd 21 6e e3 	. ! n . 
+	ld ix,BACKGROUND_TILEMAP		;5c45	dd 21 6e e3
 
-	ld de,LEVEL_COLORS_PTR_TABLE		;5c49	11 2f 5e
+	ld de,LEVEL_COLORS_PTR_TABLE	;5c49	11 2f 5e
 
     ; HL = 2*LEVEL + LEVEL_COLORS_PTR_TABLE
 	ld a,(LEVEL)		;5c4c	3a 1b e0
@@ -3552,7 +3554,12 @@ l5c45h:
 	ld d,(hl)		;5c67	56
 	
     ; HL = LEVELS_PTR_TABLE[2*LEVEL]
-    ex de,hl			;5c68	eb 	. 
+    ex de,hl		;5c68	eb
+    
+    ; So far we have:
+    ;   IX = BACKGROUND_TILEMAP
+    ;   IY = LEVEL_COLORS_PTR_TABLE[2*LEVEL]
+    ;   HL = LEVELS_PTR_TABLE[2*LEVEL]
 
     ; Set HL=BRICK_MAP if we're doing a full brick repaint.
     ; Otherwise, we'll keep HL = LEVELS_PTR_TABLE[2*LEVEL].
@@ -3565,24 +3572,31 @@ l5c74h:
     
     ; Counter
 	xor a			        ;5c76	af 	. 
-	ld (0e489h),a	        ;5c77	32 89 e4 	2 . . 
+	ld (BRICK_BIT_COUNT),a	        ;5c77	32 89 e4 	2 . . 
 	xor a			        ;5c7a	af 	. 
-	ld (0e48ah),a	        ;5c7b	32 8a e4 	2 . . 
+	ld (BRICK_BLOCK),a	        ;5c7b	32 8a e4 	2 . . 
 l5c7eh:
-	ld c, 8		;5c7e	0e 08 	. . 
-	ld a,(hl)			;5c80	7e 	~ 
+	ld c, 8		    ;5c7e	0e 08
+    ; Read a bitmask of bricks
+	ld a,(hl)	    ;5c80	7e
 l5c81h:
-	rlca			;5c81	07 	. 
-	ld de,(0e486h)		;5c82	ed 5b 86 e4 	. [ . . 
-	jr nc,l5c8dh		;5c86	30 05 	0 . 
-	call sub_5d58h		;5c88	cd 58 5d 	. X ] 
-	jr l5cc6h		;5c8b	18 39 	. 9 
+    ; Check the MSB (a 1 indicates there's a brick)
+	rlca			    ;5c81	07
+	ld de,(BRICK_TILEMAP_OFFSET)	    ;5c82	ed 5b 86 e4
+	jr nc,l5c8dh		;5c86	30 05   Skip if there's no brick to draw
+    
+    ; This adds the brick as part of the background tilemap
+    ; Reads from IY=LEVEL_COLORS_PTR_TABLE and writes to IX=BACKGROUND_TILEMAP
+	call ADD_BRICK_TO_TILEMAP		;5c88	cd 58 5d 
+	
+    jr l5cc6h		;5c8b	18 39 	. 9 
 l5c8dh:
-	push hl			;5c8d	e5 	. 
-	push af			;5c8e	f5 	. 
-	inc ix		;5c8f	dd 23 	. # 
-	push ix		;5c91	dd e5 	. . 
-	push de			;5c93	d5 	. 
+    ; No brick to draw.
+	push hl			;5c8d	e5
+	push af			;5c8e	f5
+	inc ix		    ;5c8f	dd 23
+	push ix		    ;5c91	dd e5
+	push de			;5c93	d5
 
     ; DE = LEVELS_PTR_TABLE[2*LEVEL]
 	ld de,LEVELS_PTR_TABLE		;5c94	11 ef 5d
@@ -3595,60 +3609,77 @@ l5c8dh:
 	inc hl			            ;5ca0	23
 	ld d,(hl)			        ;5ca1	56
 
+    ; IX = LEVELS_PTR_TABLE[2*LEVEL]
+	push de			;5ca2	d5
+	pop ix		    ;5ca3	dd e1
 
-	push de			;5ca2	d5 	. 
-	pop ix		;5ca3	dd e1 	. . 
-	ld a,(0e48ah)		;5ca5	3a 8a e4 	: . . 
-	ld e,a			;5ca8	5f 	_ 
-	ld d,000h		;5ca9	16 00 	. . 
-	add ix,de		;5cab	dd 19 	. . 
-	ld a,(0e489h)		;5cad	3a 89 e4 	: . . 
-	rlca			;5cb0	07 	. 
-	ld e,a			;5cb1	5f 	_ 
-	ld d,000h		;5cb2	16 00 	. . 
+    ; IX = LEVELS_PTR_TABLE[2*LEVEL] + (BRICK_BLOCK)
+    ; It points to a particular brick's bitmask
+    ;
+    ; It's addressing the brick as the brick-block at position BRICK_BIT_COUNT at index IX
+	ld a,(BRICK_BLOCK)	;5ca5	3a 8a e4
+	ld e,a			;5ca8	5f
+	ld d, 0 		;5ca9	16 00
+	add ix,de		;5cab	dd 19
+    
+    ; DE = 2*(BRICK_BIT_COUNT) 
+	ld a,(BRICK_BIT_COUNT)	;5cad	3a 89 e4
+	rlca			        ;5cb0	07
+	ld e,a			        ;5cb1	5f
+	ld d, 0	            	;5cb2	16 00
 
-	ld hl,CHECK_BIT_JUMP_TABLE		;5cb4	21 f0 5c 	! . \ 
-	add hl,de			;5cb7	19 	. 
-	ld e,(hl)			;5cb8	5e 	^ 
-	inc hl			;5cb9	23 	# 
-	ld d,(hl)			;5cba	56 	V 
-	ex de,hl			;5cbb	eb 	. 
+    ; HL = CHECK_BIT_JUMP_TABLE[2*(BRICK_BIT_COUNT)]
+	ld hl,CHECK_BIT_JUMP_TABLE		;5cb4	21 f0 5c
+	add hl,de			            ;5cb7	19
+	ld e,(hl)			            ;5cb8	5e
+	inc hl			                ;5cb9	23
+	ld d,(hl)			            ;5cba	56
+	ex de,hl			            ;5cbb	eb
+
     ; Check bit
     ; We'll go on in the next instruction, l5cbdh
+    ; We'll do a bit x,(ix+000h)
 	jp (hl)			;5cbc	e9
 l5cbdh:
-	jr z,l5cc1h		;5cbd	28 02 	( . 
-	inc iy		;5cbf	fd 23 	. # 
+	jr z,l5cc1h		;5cbd	28 02
+	inc iy		    ;5cbf	fd 23
 l5cc1h:
-	pop de			;5cc1	d1 	. 
-	pop ix		;5cc2	dd e1 	. . 
-	pop af			;5cc4	f1 	. 
-	pop hl			;5cc5	e1 	. 
+	pop de			;5cc1	d1
+	pop ix		    ;5cc2	dd e1
+	pop af			;5cc4	f1
+	pop hl			;5cc5	e1
 l5cc6h:
-	inc de			;5cc6	13 	. 
-	inc de			;5cc7	13 	. 
-	ld (0e486h),de		;5cc8	ed 53 86 e4 	. S . . 
-	inc ix		;5ccc	dd 23 	. # 
-	dec c			;5cce	0d 	. 
+    ; Next tilemap offset
+	inc de			                ;5cc6	13
+	inc de			                ;5cc7	13
+	ld (BRICK_TILEMAP_OFFSET),de	;5cc8	ed 53 86 e4
+    ; Next brick block
+	inc ix		                    ;5ccc	dd 23
+    ; Next bit
+	dec c			                ;5cce	0d
 
-	push af			;5ccf	f5 	. 
-	ld a,(0e489h)		;5cd0	3a 89 e4 	: . . 
-	inc a			;5cd3	3c 	< 
-	and 007h		;5cd4	e6 07 	. . 
-	ld (0e489h),a		;5cd6	32 89 e4 	2 . . 
-	pop af			;5cd9	f1 	. 
+    ; Next bit in the block
+	push af			        ;5ccf	f5
+	ld a,(BRICK_BIT_COUNT)	;5cd0	3a 89 e4
+	inc a			        ;5cd3	3c
+	and 007h		        ;5cd4	e6 07
+	ld (BRICK_BIT_COUNT),a	;5cd6	32 89 e4
+	pop af			        ;5cd9	f1
+	jr nz,l5c81h		    ;5cda	20 a5 Keep iterating bits in the block...
 
-	jr nz,l5c81h		;5cda	20 a5 	  . 
-	inc hl			;5cdc	23 	# 
-	push af			;5cdd	f5 	. 
-	ld a,(0e48ah)		;5cde	3a 8a e4 	: . . 
-	inc a			;5ce1	3c 	< 
-	ld (0e48ah),a		;5ce2	32 8a e4 	2 . . 
-	pop af			;5ce5	f1 	. 
-	djnz l5c7eh		;5ce6	10 96 	. . 
-	ld de,00000h		;5ce8	11 00 00 	. . . 
-	ld (0e486h),de		;5ceb	ed 53 86 e4 	. S . . 
-	ret			;5cef	c9 	. 
+	; Next brick block
+    inc hl			        ;5cdc	23
+	push af			        ;5cdd	f5
+	ld a,(BRICK_BLOCK)		;5cde	3a 8a e4
+	inc a			        ;5ce1	3c
+	ld (BRICK_BLOCK),a		;5ce2	32 8a e4
+	pop af			        ;5ce5	f1
+	djnz l5c7eh		        ;5ce6	10 96
+    
+    ; Reset tilemap offset and exit
+	ld de, 0    		            ;5ce8	11 00 00
+	ld (BRICK_TILEMAP_OFFSET),de	;5ceb	ed 53 86 e4
+	ret			                    ;5cef	c9
 
 ; Check bit jump table
 CHECK_BIT_JUMP_TABLE:
@@ -3694,45 +3725,49 @@ check_b0:
 	bit 0,(ix+000h)		;5d51	dd cb 00 46 	. . . F 
 	jp l5cbdh		;5d55	c3 bd 5c 	. . \ 
 
-; ToDo
-sub_5d58h:
-	push af			;5d58	f5 	. 
-	push bc			;5d59	c5 	. 
-	push de			;5d5a	d5 	. 
-	push hl			;5d5b	e5 	. 
+; Add a brick as part of the background tilemap
+;
+; Input IY=LEVEL_COLORS_PTR_TABLE
+; Input IX=BACKGROUND_TILEMAP
+; It reads from IY=LEVEL_COLORS_PTR_TABLE and writes to IX=BACKGROUND_TILEMAP
+ADD_BRICK_TO_TILEMAP:
+	push af			;5d58	f5
+	push bc			;5d59	c5  Useless?
+	push de			;5d5a	d5
+	push hl			;5d5b	e5
 	
-    ; HL = 2*IY[0]
-    ld a,(iy+000h)		;5d5c	fd 7e 00 	. ~ . 
-	ld l,a			;5d5f	6f 	o 
-	ld h,000h		;5d60	26 00 	& . 
-	add hl,hl			;5d62	29 	) 
+    ; Translate the given color into an VDP pattern code
+    ; HL = TBL_COLOR_TO_PATTERN + 2*IY[0]
+    ld a,(iy+000h)	;5d5c	fd 7e 00
+	ld l,a			;5d5f	6f
+	ld h,000h		;5d60	26 00
+	add hl,hl		;5d62	29
+    ld de,TBL_COLOR_TO_PATTERN	;5d63	11 db 5d
+	add hl,de		;5d66	19
+
+    ; Read a pattern and...
+	; A =  TBL_COLOR_TO_PATTERN[2*IY[0]]
+    ld a,(hl)		;5d67	7e
     
-	; HL = TBL_5ddb + 2*IY[0]
-    ld de,TBL_5ddb		;5d63	11 db 5d 	. . ] 
-	add hl,de			;5d66	19 	. 
-    ;
-	; A =  TBL_5ddb[2*IY[0]]
-    ld a,(hl)			;5d67	7e 	~ 
+	; ...write to the tilemap, IX[0] <-- TBL_COLOR_TO_PATTERN[2*IY[0]]
+    ld (ix+000h),a	;5d68	dd 77 00
     
-	; IX[0] = TBL_5ddb[2*IY[0]] *** WRITE ***
-    ld (ix+000h),a		;5d68	dd 77 00 	. w . 
-    
-    ; Increment pointers
-	inc hl			;5d6b	23 	# 
-	inc ix		;5d6c	dd 23 	. # 
+    ; Next
+	inc hl			;5d6b	23
+	inc ix		    ;5d6c	dd 23
 	
     ; Write again, after incrementing the pointers
-    ld a,(hl)			;5d6e	7e 	~ 
-	ld (ix+000h),a		;5d6f	dd 77 00 	. w . 
+    ld a,(hl)		;5d6e	7e
+	ld (ix+000h),a	;5d6f	dd 77 00
     
-    ; IY++
-	inc iy		;5d72	fd 23 	. # 
+    ; Next color
+	inc iy		    ;5d72	fd 23
 
-	pop hl			;5d74	e1 	. 
-	pop de			;5d75	d1 	. 
-	pop bc			;5d76	c1 	. 
-	pop af			;5d77	f1 	. 
-	ret			;5d78	c9 	. 
+	pop hl			;5d74	e1
+	pop de			;5d75	d1
+	pop bc			;5d76	c1
+	pop af			;5d77	f1
+	ret			    ;5d78	c9
 
 ; Draw the backgroud tilemap in BACKGROUND_TILEMAP to VRAM
 DRAW_BACKGROUND_TILEMAP:
@@ -3814,7 +3849,9 @@ l5da9h:
 	cp 12		        ;5dd5	fe 0c
 	jp nz,l5da5h		;5dd7	c2 a5 5d    Next tile
 	ret			;5dda	c9 	. 
-TBL_5ddb:
+
+; This table gives the pattern number of the brick in the VDP's patterns table 
+TBL_COLOR_TO_PATTERN:
     db 0x23, 0x24, 0x25, 0x26, 0x27, 0x28, 0x29
     db 0x5b, 0x5c, 0x5d, 0x5e, 0x60, 0x61, 0x62
     db 0x63, 0x64, 0x65, 0x66, 0x67, 0x68
@@ -5856,6 +5893,8 @@ l75edh:
 	jp z,0cccbh		;7601	ca cb cc 	. . . 
     db 0xcd          ;7604
 
+; ToDo
+; This is quite a long function!
 sub_7605h:
     ld ix, ALIEN_TABLE
     ld iy, SPR_13_SPR_PARAMS
@@ -9982,6 +10021,7 @@ labceh:
 	jr nz,labceh		    ;abd0	20 fc
 	ret			            ;abd2	c9
 
+; ToDo
 sub_abd3h:
     ; HL = 32*BRICK_ROW
 	ld a,(BRICK_ROW)	;abd3	3a aa e2

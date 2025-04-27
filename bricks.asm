@@ -4,6 +4,11 @@ BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 BRICK_HIT_ROW: equ 0xe53c
 BRICK_HIT_COL: equ 0xe53d
 
+
+BRICK_TILEMAP_OFFSET: equ 0xe486 ; Where to write in the tilemap 
+BRICK_BIT_COUNT: equ 0xe489 ; This tracks which bit of the brick tilemap we're considering
+BRICK_BLOCK: equ 0xe48a ; This tracks which 8-bit block of bricks (the bitmask) we're considering
+
 ; This controls how the screen is repainted with bricks
 BRICK_REPAINT_TYPE: equ 0xe022
 BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks of the level
@@ -20,6 +25,8 @@ BRICK_ROWS: equ 11
 
 ; Number of bricks to break
 BRICKS_LEFT: equ 0xe038
+
+
 
 ; This is a table that for each brick tells how many hits are
 ; still needed to break a hard brick. Assuming there's a
