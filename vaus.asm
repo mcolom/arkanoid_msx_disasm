@@ -40,3 +40,6 @@ VAUS_X2: equ 0xe53e
 
 ; Vaus is enlarged, because of the blue capsule
 VAUS_IS_ENLARGED: equ 0xe321
+
+; Flag to reset the sprite of Vaus to the center initial position
+RESET_VAUS_SPR_POSITION: equ 0xe5a9

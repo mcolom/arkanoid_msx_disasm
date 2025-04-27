@@ -2214,13 +2214,13 @@ l4d09h:
 
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
-    ; ToDo: what is this structure?
-	ld hl,PAUSE_B6_AND_START_B4		;4d22	21 bf e0 	! . . 
-	ld de,KEYBOARD_INPUT		;4d25	11 c0 e0 	. . . 
-	ld bc,004f5h		;4d28	01 f5 04 	. . . 
-	dec bc			;4d2b	0b 	. 
-	ld (hl),000h		;4d2c	36 00 	6 . 
-	ldir		;4d2e	ed b0 	. . 
+    ; Clear variables
+	ld hl,PAUSE_B6_AND_START_B4		;4d22	21 bf e0
+	ld de,KEYBOARD_INPUT		    ;4d25	11 c0 e0
+	ld bc,004f5h		            ;4d28	01 f5 04
+	dec bc			                ;4d2b	0b
+	ld (hl),0   		            ;4d2c	36 00
+	ldir		                    ;4d2e	ed b0 	. . 
 l4d30h:
 	call CLEAR_SCREEN		;4d30	cd 27 42 	. ' B 
     
@@ -3977,18 +3977,19 @@ l68bch:
     db 0x21         ;68c3   21
 
 sub_68c4h:
-    ld a, (0xe5a9)  ;68c4   3a a9 e5
-    cp 1            ;68c7   fe 01
-	jp z,l68dch		;68c9	ca dc 68 	. . h 
+    ; Reset the position of Vaus if we're starting a level
+    ld a, (RESET_VAUS_SPR_POSITION)  ;68c4  3a a9 e5
+    cp 1                             ;68c7  fe 01
+	jp z,l68dch		                 ;68c9	ca dc 68
 
-	ld hl,l6fe7h		;68cc	21 e7 6f 	! . o 
-	ld de,SPR_PARAMS_BASE		;68cf	11 cd e0 	. . . 
-	ld bc,00010h		;68d2	01 10 00 	. . . 
+	ld hl,SPR_DATA_ARKANOID_CENTERED		    ;68cc	21 e7 6f
+	ld de,SPR_PARAMS_BASE	;68cf	11 cd e0
+	ld bc, 4*SPR_PARAMS_LEN ;68d2	01 10 00
 l68d5h:
-	ldir		;68d5	ed b0 	. . 
+	ldir		;68d5	ed b0
 
-	ld a,001h		;68d7	3e 01 	> . 
-	ld (0e5a9h),a		;68d9	32 a9 e5 	2 . . 
+	ld a, 1 	;68d7	3e 01
+	ld (RESET_VAUS_SPR_POSITION),a		;68d9	32 a9 e5
 l68dch:
 	ld ix,VAUS_TABLE		;68dc	dd 21 4b e5
 	ld iy,SPR_PARAMS_BASE		;68e0	fd 21 cd e0
@@ -4881,23 +4882,14 @@ l6fb6h:
 l6fe0h:
 	ld (ix+000h),003h		;6fe0	dd 36 00 03 	. 6 . . 
 	jp l690fh		;6fe4	c3 0f 69 	. . i 
-l6fe7h:
-	xor (hl)			;6fe7	ae 	. 
-	ld d,b			;6fe8	50 	P 
-	ex af,af'			;6fe9	08 	. 
-	ex af,af'			;6fea	08 	. 
-	xor (hl)			;6feb	ae 	. 
-	ld h,b			;6fec	60 	` 
-	inc b			;6fed	04 	. 
-	ld c,0aeh		;6fee	0e ae 	. . 
-	ld (hl),b			;6ff0	70 	p 
-	inc c			;6ff1	0c 	. 
-	ex af,af'			;6ff2	08 	. 
-	xor (hl)			;6ff3	ae 	. 
-	add a,b			;6ff4	80 	. 
-    
-    
-	db 1, 0         ;6ff5	01 00
+
+SPR_DATA_ARKANOID_CENTERED:
+    ; (Y, X) position, sprite pattern number, and color
+    db 174, 80,   8,  8
+    db 174, 96,   4, 14
+    db 174, 112, 12,  8
+    db 174, 128,  1,  0
+
 TBL_6ff7:
     db 0        ;6ff7   00	
     nop			;6ff8	00 	. 
