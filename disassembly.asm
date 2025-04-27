@@ -9945,7 +9945,7 @@ laaefh:
 	push iy		;aaf6	fd e5 	. . 
 	call CHECK_AND_REMOVE_BRICK		;aaf8	cd d3 ab 	. . . 
 	pop iy		;aafb	fd e1 	. . 
-	call sub_ab7ah		;aafd	cd 7a ab 	. z . 
+	call DEC_BRICKS_CHECK_LEVEL_DONE		;aafd	cd 7a ab 	. z . 
 
 	ld a,SOUND_BRICK_DESTROYED		;ab00	3e 02
 	call ADD_SOUND		            ;ab02	cd ef 5b
@@ -10018,7 +10018,10 @@ lab60h:
 TBL_SKEWNESS:
     db 2, 3, 4, 3, 6, 5, 6, 7, -2, -3, -4, -3, -6, -5, -6, -7   ;ab6a
 
-sub_ab7ah:
+; This is called after a brick has been hit.
+; Decrement the number of bricks left, erase the brick, and if no
+; more bricks, move to the next level
+DEC_BRICKS_CHECK_LEVEL_DONE:
     call GIVE_BRICK_HIT_POINTS     ;ab7a   cd 04 96
 
 	ld a,(BRICKS_LEFT)		;ab7d	3a 38 e0
