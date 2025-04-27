@@ -6997,7 +6997,7 @@ UPDATE_OBJECTS:
 	call UPDATE_ALIEN_VERT_DIR_WHEN_BRICK		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
     
-; SEGUIR
+; Give points according to the brick hit
 GIVE_BRICK_HIT_POINTS:
 	ld hl,BACKGROUND_TILEMAP	;9604	21 6e e3
     
