@@ -6998,73 +6998,125 @@ UPDATE_OBJECTS:
 	ret			;9603	c9 	. 
     
 ; SEGUIR
-sub_9604h:
-	ld hl,BACKGROUND_TILEMAP		;9604	21 6e e3 	! n . 
-	ld a,(BRICK_ROW)		;9607	3a aa e2 	: . . 
-	or a			;960a	b7 	. 
-	jr z,l9622h		;960b	28 15 	( . 
-	ld l,a			;960d	6f 	o 
-	ld h,000h		;960e	26 00 	& . 
-	add hl,hl			;9610	29 	) 
-	add hl,hl			;9611	29 	) 
-	add hl,hl			;9612	29 	) 
-	ld c,a			;9613	4f 	O 
-	sla c		;9614	cb 21 	. ! 
-	ld b,000h		;9616	06 00 	. . 
-	add hl,bc			;9618	09 	. 
-	ld e,a			;9619	5f 	_ 
-	ld d,000h		;961a	16 00 	. . 
-	add hl,de			;961c	19 	. 
-	add hl,hl			;961d	29 	) 
-	ld de,BACKGROUND_TILEMAP		;961e	11 6e e3 	. n . 
-	add hl,de			;9621	19 	. 
+GIVE_BRICK_HIT_POINTS:
+	ld hl,BACKGROUND_TILEMAP	;9604	21 6e e3
+    
+    ; Skip if no brick row
+	ld a,(BRICK_ROW)		    ;9607	3a aa e2
+	or a			            ;960a	b7
+	jr z,l9622h		            ;960b	28 15
+
+    ; HL = 8*BRICK_ROW
+	ld l,a		;960d	6f
+	ld h, 0		;960e	26 00
+	add hl,hl	;9610	29
+	add hl,hl	;9611	29
+	add hl,hl	;9612	29
+    
+	; C = 2*BRICK_ROW
+    ld c,a		;9613	4f
+	sla c		;9614	cb 21
+    
+    ; HL = 8*BRICK_ROW + 2*BRICK_ROW = 10*BRICK_ROW
+	ld b, 0		;9616	06 00
+	add hl,bc	;9618	09
+
+	ld e,a			;9619	5f
+	ld d, 0		    ;961a	16 00       ; DE = BRICK_ROW
+
+	add hl,de		;961c	19          ; HL = 10*BRICK_ROW + BRICK_ROW = 11*BRICK_ROW
+	add hl,hl		;961d	29          ; HL = 22*BRICK_ROW
+	ld de,BACKGROUND_TILEMAP		;961e	11 6e e3
+	add hl,de			            ;9621	19  HL = 22*BRICK_ROW + BACKGROUND_TILEMAP
 l9622h:
-	ld a,(BRICK_COL)		;9622	3a ab e2 	: . . 
-	ld e,a			;9625	5f 	_ 
-	sla e		;9626	cb 23 	. # 
-	ld d,000h		;9628	16 00 	. . 
-	add hl,de			;962a	19 	. 
-	ld a,(hl)			;962b	7e 	~ 
-	ld c,000h		;962c	0e 00 	. . 
-	cp 023h		;962e	fe 23 	. # 
-	jr z,l9672h		;9630	28 40 	( @ 
-	ld c,006h		;9632	0e 06 	. . 
-	cp 025h		;9634	fe 25 	. % 
-	jr z,l9672h		;9636	28 3a 	( : 
-	ld c,002h		;9638	0e 02 	. . 
-	cp 027h		;963a	fe 27 	. ' 
-	jr z,l9672h		;963c	28 34 	( 4 
-	ld c,003h		;963e	0e 03 	. . 
-	cp 029h		;9640	fe 29 	. ) 
-	jr z,l9672h		;9642	28 2e 	( . 
-	ld c,004h		;9644	0e 04 	. . 
-	cp 05ch		;9646	fe 5c 	. \ 
-	jr z,l9672h		;9648	28 28 	( ( 
-	ld c,005h		;964a	0e 05 	. . 
-	cp 05eh		;964c	fe 5e 	. ^ 
-	jr z,l9672h		;964e	28 22 	( " 
-	ld c,001h		;9650	0e 01 	. . 
-	cp 061h		;9652	fe 61 	. a 
-	jr z,l9672h		;9654	28 1c 	( . 
-	ld c,007h		;9656	0e 07 	. . 
-	cp 063h		;9658	fe 63 	. c 
-	jr z,l9672h		;965a	28 16 	( . 
-	cp 065h		;965c	fe 65 	. e 
-	ret nz			;965e	c0 	. 
-	ld a,(LEVEL)		;965f	3a 1b e0 	: . . 
-	and 0f8h		;9662	e6 f8 	. . 
-	srl a		;9664	cb 3f 	. ? 
-	srl a		;9666	cb 3f 	. ? 
-	srl a		;9668	cb 3f 	. ? 
-	ld l,a			;966a	6f 	o 
-	ld h,000h		;966b	26 00 	& . 
-	ld de,l9677h		;966d	11 77 96 	. w . 
-	add hl,de			;9670	19 	. 
-	ld c,(hl)			;9671	4e 	N 
+	; DE = 2*BRICK_COL
+    ld a,(BRICK_COL)	;9622	3a ab e2
+	ld e,a			    ;9625	5f
+	sla e		        ;9626	cb 23
+	ld d, 0 		    ;9628	16 00
+    
+    ; HL = 22*BRICK_ROW + BACKGROUND_TILEMAP + 2*BRICK_COL
+	add hl,de			;962a	19
+    
+    ; The tilemap has indeed 22 chars per line
+    
+    ; Let's now use the tilemap to give points according to the
+    ; brick that has been hit.
+    ; See the POINTS_TABLE
+    
+    ; A = [22*BRICK_ROW + BACKGROUND_TILEMAP + 2*BRICK_COL]
+    ; A = BACKGROUND_TILEMAP[22*BRICK_ROW + 2*BRICK_COL]
+	ld a,(hl)			;962b	7e
+
+    ; White brick: no points!
+	ld c, 0		;962c	0e 00
+	cp 023h		;962e	fe 23
+	jr z,l9672h	;9630	28 40
+
+    ; Light red brick
+	ld c,006h	;9632	0e 06
+	cp 025h		;9634	fe 25
+	jr z,l9672h	;9636	28 3a
+
+    ; Cyan brick
+	ld c,002h		;9638	0e 02
+	cp 027h		    ;963a	fe 27
+	jr z,l9672h		;963c	28 34
+
+    ; Green brick
+	ld c, 3 		;963e	0e 03
+	cp 029h		    ;9640	fe 29
+	jr z,l9672h		;9642	28 2e
+
+    ; Dark red brick
+	ld c,004h		;9644	0e 04
+	cp 05ch		    ;9646	fe 5c
+	jr z,l9672h		;9648	28 28
+
+    ; Light blue brick
+	ld c,005h		;964a	0e 05
+	cp 05eh		    ;964c	fe 5e
+	jr z,l9672h		;964e	28 22
+
+    ; Magenta brick
+	ld c,001h		;9650	0e 01
+	cp 061h		    ;9652	fe 61
+	jr z,l9672h		;9654	28 1c
+
+    ; Light yellow
+	ld c,007h		;9656	0e 07
+	cp 063h		    ;9658	fe 63
+	jr z,l9672h		;965a	28 16
+
+    ; Gray (hard) brick
+	cp 065h		    ;965c	fe 65
+	ret nz			;965e	c0      Exit if unknown color
+
+    ; Gray (hard) brick
+    ; The points of these bricks depends on the current level!
+	ld a,(LEVEL)	;965f	3a 1b e0
+	and 0f8h		;9662	e6 f8       hgfe.d000
+	srl a		    ;9664	cb 3f
+	srl a		    ;9666	cb 3f
+	srl a		    ;9668	cb 3f       000h.gfed
+    ; A = LEVEL \ 8
+
+    ; HL = LEVEL \ 8
+	ld l,a			;966a	6f
+	ld h, 0		    ;966b	26 00
+    
+    ; HL = LEVEL\8 + l9677h
+	ld de,l9677h	;966d	11 77 96
+	add hl,de		;9670	19
+    
+    ; Obtain the points for the table l9677h.
+    ; C = l9677h[LEVEL\8]
+	ld c,(hl)		;9671	4e
 l9672h:
-	ld a,c			;9672	79 	y 
-	call ADD_POINTS_AND_UPDATE_SCORES		;9673	cd a0 52 	. . R 
-	ret			;9676	c9 	. 
+    ; Add add the points
+	ld a,c			                    ;9672	79
+	call ADD_POINTS_AND_UPDATE_SCORES	;9673	cd a0 52
+	ret			                        ;9676	c9
     
 
 l9677h:
@@ -9967,7 +10019,7 @@ TBL_SKEWNESS:
     db 2, 3, 4, 3, 6, 5, 6, 7, -2, -3, -4, -3, -6, -5, -6, -7   ;ab6a
 
 sub_ab7ah:
-    call sub_9604h     ;ab7a   cd 04 96
+    call GIVE_BRICK_HIT_POINTS     ;ab7a   cd 04 96
 
 	ld a,(BRICKS_LEFT)		;ab7d	3a 38 e0
 	dec a			        ;ab80	3d
