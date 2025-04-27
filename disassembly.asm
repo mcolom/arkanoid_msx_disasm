@@ -6996,7 +6996,8 @@ UPDATE_OBJECTS:
 	call CHECK_HARD_BRICKS_HIT		;95fd	cd ea 97 	. . . 
 	call UPDATE_ALIEN_VERT_DIR_WHEN_BRICK		;9600	cd 26 97 	. & . 
 	ret			;9603	c9 	. 
-
+    
+; SEGUIR
 sub_9604h:
 	ld hl,BACKGROUND_TILEMAP		;9604	21 6e e3 	! n . 
 	ld a,(BRICK_ROW)		;9607	3a aa e2 	: . . 
@@ -7064,6 +7065,8 @@ l9672h:
 	ld a,c			;9672	79 	y 
 	call ADD_POINTS_AND_UPDATE_SCORES		;9673	cd a0 52 	. . R 
 	ret			;9676	c9 	. 
+    
+
 l9677h:
 	ex af,af'			;9677	08 	. 
 	add hl,bc			;9678	09 	. 
@@ -9701,69 +9704,91 @@ la9f1h:
 laa01h:
 	ld (ix+001h),a		;aa01	dd 77 01 	. w . 
 	ret			;aa04	c9 	. 
+
+; ToDo
+; This is called A LOT OF times
+; It's called when you hit a brick
+; Write in C000, ...
 sub_aa05h:
-	call UPDATE_BALL_SPEED		;aa05	cd f0 9a 	. . . 
-	ld a,(LEVEL)		;aa08	3a 1b e0 	: . . 
-	sla a		;aa0b	cb 27 	. ' 
-	ld e,a			;aa0d	5f 	_ 
-	ld d,000h		;aa0e	16 00 	. . 
-	ld hl,laa5ch		;aa10	21 5c aa 	! \ . 
-	add hl,de			;aa13	19 	. 
-	ld e,(hl)			;aa14	5e 	^ 
-	inc hl			;aa15	23 	# 
-	ld d,(hl)			;aa16	56 	V 
+	call UPDATE_BALL_SPEED		;aa05	cd f0 9a
+    
+    ; HL = TBL_laa5ch[2*LEVEL]
+	ld a,(LEVEL)		        ;aa08	3a 1b e0
+	sla a		                ;aa0b	cb 27
+    ld e,a			            ;aa0d	5f
+	ld d, 0		                ;aa0e	16 00    
+    ld hl,TBL_laa5ch		        ;aa10	21 5c aa
+	add hl,de			        ;aa13	19
+	ld e,(hl)			        ;aa14	5e
+	inc hl			            ;aa15	23
+	ld d,(hl)			        ;aa16	56
 	ex de,hl			;aa17	eb 	. 
-	ld (0e2bch),hl		;aa18	22 bc e2 	" . . 
-	ld a,(BRICK_ROW)		;aa1b	3a aa e2 	: . . 
-	cp 00ch		;aa1e	fe 0c 	. . 
-	jp c,laa25h		;aa20	da 25 aa 	. % . 
-	ld a,00bh		;aa23	3e 0b 	> . 
+
+    ; (0e2bch) <-- TBL_laa5ch[2*LEVEL]
+	ld (0e2bch),hl		;aa18	22 bc e2
+    
+    ; BRICK_ROW = min(BRICK_ROW, 11)
+	ld a,(BRICK_ROW)	;aa1b	3a aa e2
+	cp 12		        ;aa1e	fe 0c
+	jp c,laa25h		    ;aa20	da 25 aa
+	ld a, 11		    ;aa23	3e 0b
 laa25h:
-	ld l,a			;aa25	6f 	o 
-	ld h,000h		;aa26	26 00 	& . 
+    ; HL = BRICK_ROW
+	ld l,a			;aa25	6f
+	ld h, 0		    ;aa26	26 00
 laa28h:
-	push hl			;aa28	e5 	. 
-	pop bc			;aa29	c1 	. 
-	add hl,hl			;aa2a	29 	) 
-	push hl			;aa2b	e5 	. 
-	pop de			;aa2c	d1 	. 
-	add hl,hl			;aa2d	29 	) 
-	add hl,hl			;aa2e	29 	) 
-	add hl,bc			;aa2f	09 	. 
-	add hl,de			;aa30	19 	. 
-	ld a,(BRICK_COL)		;aa31	3a ab e2 	: . . 
-	cp 00bh		;aa34	fe 0b 	. . 
-	jp c,laa3bh		;aa36	da 3b aa 	. ; . 
-	ld a,00ah		;aa39	3e 0a 	> . 
+	push hl			;aa28	e5
+	pop bc			;aa29	c1  BC = BRICK_ROW
+	add hl,hl		;aa2a	29 	HL = 2*BRICK_ROW
+	push hl			;aa2b	e5
+	pop de			;aa2c	d1  DE = 2*BRICK_ROW
+	add hl,hl		;aa2d	29  HL = 4*BRICK_ROW
+	add hl,hl		;aa2e	29  HL = 8*BRICK_ROW
+	add hl,bc		;aa2f	09  HL = 9*BRICK_ROW
+	add hl,de		;aa30	19  HL = 11*BRICK_ROW
+
+    ; BRICK_COL = min(BRICK_COL, 10)
+	ld a,(BRICK_COL)	;aa31	3a ab e2
+	cp 11		        ;aa34	fe 0b
+	jp c,laa3bh		    ;aa36	da 3b aa
+	ld a, 10		    ;aa39	3e 0a
 laa3bh:
-	ld e,a			;aa3b	5f 	_ 
+	ld e,a			    ;aa3b	5f
 laa3ch:
-	ld d,000h		;aa3c	16 00 	. . 
-	add hl,de			;aa3e	19 	. 
-	ld de,(0e2bch)		;aa3f	ed 5b bc e2 	. [ . . 
+	ld d, 0		        ;aa3c	16 00   DE = BRICK_COL
+	add hl,de			;aa3e	19      HL = 11*BRICK_ROW + BRICK_COL
+    
+	; HL = 11*BRICK_ROW + BRICK_COL + (0e2bch)
+    ld de,(0e2bch)		;aa3f	ed 5b bc e2
 	add hl,de			;aa43	19 	. 
-	ld e,(hl)			;aa44	5e 	^ 
-	sla e		;aa45	cb 23 	. # 
-	ld d,000h		;aa47	16 00 	. . 
-	ld hl,laa52h		;aa49	21 52 aa 	! R . 
-	add hl,de			;aa4c	19 	. 
-	ld e,(hl)			;aa4d	5e 	^ 
-	inc hl			;aa4e	23 	# 
-	ld d,(hl)			;aa4f	56 	V 
-	ex de,hl			;aa50	eb 	. 
-	jp (hl)			;aa51	e9 	. 
-laa52h:
-	rst 28h			;aa52	ef 	. 
-	xor d			;aa53	aa 	. 
-	pop bc			;aa54	c1 	. 
-	xor d			;aa55	aa 	. 
-	rst 0			;aa56	c7 	. 
-	xor d			;aa57	aa 	. 
-	and h			;aa58	a4 	. 
-	xor d			;aa59	aa 	. 
-	sbc a,h			;aa5a	9c 	. 
-	xor d			;aa5b	aa 	. 
-laa5ch:
+    
+    ; DE = [11*BRICK_ROW + BRICK_COL + (0e2bch)]
+	ld e,(hl)			;aa44	5e
+    
+	sla e		        ;aa45	cb 23   DE = 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
+    
+    ; HL = TBL_JUMP_laa52h + 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
+	ld d,000h		        ;aa47	16 00
+	ld hl,TBL_JUMP_laa52h	;aa49	21 52 aa
+	add hl,de			    ;aa4c	19
+    
+    ; DE = TBL_JUMP_laa52h[2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]]
+	ld e,(hl)			    ;aa4d	5e
+	inc hl			        ;aa4e	23
+	ld d,(hl)			    ;aa4f	56
+    
+    ; Jump to the corresponding action
+	ex de,hl			    ;aa50	eb
+	jp (hl)			        ;aa51	e9
+;
+TBL_JUMP_laa52h:
+    dw laaefh
+    dw laac1h
+    dw laac7h
+    dw laaa4h
+    dw laa9ch
+
+TBL_laa5ch:
 	nop			;aa5c	00 	. 
 	ret nz			;aa5d	c0 	. 
 	add a,h			;aa5e	84 	. 
@@ -9803,10 +9828,16 @@ laa5ch:
 	adc a,0f4h		;aa95	ce f4 	. . 
 	adc a,078h		;aa97	ce 78 	. x 
 	rst 8			;aa99	cf 	. 
-	call m,lafcch+3		;aa9a	fc cf af 	. . . 
+    
+    db 0xfc, 0xcf   ;aa9a
+
+laa9ch:
+    xor a               ;aa9c
 	ld (0e2bah),a		;aa9d	32 ba e2 	2 . . 
 	ld (0e2bbh),a		;aaa0	32 bb e2 	2 . . 
-	ret			;aaa3	c9 	. 
+	ret			;aaa3	c9 	.
+
+laaa4h:
 	xor a			;aaa4	af 	. 
 	ld (0e2bbh),a		;aaa5	32 bb e2 	2 . . 
 	ld a,001h		;aaa8	3e 01 	> . 
@@ -9818,11 +9849,16 @@ laa5ch:
 	jp nz,laabch		;aab4	c2 bc aa 	. . . 
 	ld (hl),000h		;aab7	36 00 	6 . 
 	call CHANGE_BALLS_SKEWNESS		;aab9	cd 38 ab 	. 8 . 
+
 laabch:
 	ld c,001h		;aabc	0e 01 	. . 
 	jp lab06h		;aabe	c3 06 ab 	. . . 
+
+laac1h:
 	call sub_b00fh		;aac1	cd 0f b0 	. . . 
 	jp laaefh		;aac4	c3 ef aa 	. . . 
+
+laac7h:
 	xor a			;aac7	af 	. 
 	ld (0e2bah),a		;aac8	32 ba e2 	2 . . 
 	ld a,001h		;aacb	3e 01 	> . 
@@ -9848,18 +9884,21 @@ laabch:
 	dec (hl)			;aaea	35 	5 
 	ld c,000h		;aaeb	0e 00 	. . 
 	jr nz,lab06h		;aaed	20 17 	  . 
+
+
 laaefh:
 	xor a			;aaef	af 	. 
 	ld (0e2bah),a		;aaf0	32 ba e2 	2 . . 
 	ld (0e2bbh),a		;aaf3	32 bb e2 	2 . . 
 	push iy		;aaf6	fd e5 	. . 
-	call sub_abd3h		;aaf8	cd d3 ab 	. . . 
+	call CHECK_AND_REMOVE_BRICK		;aaf8	cd d3 ab 	. . . 
 	pop iy		;aafb	fd e1 	. . 
 	call sub_ab7ah		;aafd	cd 7a ab 	. z . 
 
 	ld a,SOUND_BRICK_DESTROYED		;ab00	3e 02
 	call ADD_SOUND		            ;ab02	cd ef 5b
 	ret			                    ;ab05	c9
+
 lab06h:
 	ld a,(BRICK_ROW)		;ab06	3a aa e2 	: . . 
 	inc a			;ab09	3c 	< 
@@ -10024,12 +10063,13 @@ labceh:
 	jr nz,labceh		    ;abd0	20 fc
 	ret			            ;abd2	c9
 
-; ToDo
-sub_abd3h:
+; Check if the brick at (BRICK_ROW, BRICK_COL) is present and, if so,
+; remove it.
+CHECK_AND_REMOVE_BRICK:
     ; HL = 32*BRICK_ROW
 	ld a,(BRICK_ROW)	;abd3	3a aa e2
 	ld l,a			    ;abd6	6f
-	ld h,000h		    ;abd7	26 00
+	ld h, 0		        ;abd7	26 00
 	add hl,hl			;abd9	29
 	add hl,hl			;abda	29
 	add hl,hl			;abdb	29
@@ -10044,16 +10084,15 @@ sub_abd3h:
 	ld a,(BRICK_COL)	;abe2	3a ab e2
 	sla a		        ;abe5	cb 27
 
-	
     ; HL = BRICK_LEVEL_BITMASK + 32*BRICK_ROW + 2*BRICK_COL
     ld e,a			;abe7	5f
-	ld d,000h		;abe8	16 00
+	ld d, 0		    ;abe8	16 00
 	add hl,de		;abea	19
     
 	; DE = BRICK_LEVEL_BITMASK[32*BRICK_ROW + 2*BRICK_COL]
-    ld e,(hl)			;abeb	5e 	^ 
-	inc hl			;abec	23 	# 
-	ld d,(hl)			;abed	56 	V 
+    ld e,(hl)		;abeb	5e
+	inc hl			;abec	23
+	ld d,(hl)		;abed	56
     
     ; IY = BRICK_LEVEL_BITMASK[32*BRICK_ROW + 2*BRICK_COL]
 	push de		;abee	d5
@@ -10062,7 +10101,7 @@ sub_abd3h:
     ; HL = 32*BRICK_ROW
 	ld a,(BRICK_ROW)    ;abf1	3a aa e2
 	ld l,a			    ;abf4	6f
-	ld h,000h		    ;abf5	26 00
+	ld h, 0		        ;abf5	26 00
 	add hl,hl		    ;abf7	29
 	add hl,hl		    ;abf8	29
 	add hl,hl		    ;abf9	29
@@ -10082,13 +10121,18 @@ sub_abd3h:
 	ld d, 0 		;ac06	16 00
 	add hl,de		;ac08	19
     
-    ; HL =  BRICK_BIT_CHECK_JUMP_TABLE[32*BRICK_ROW + 2*BRICK_COL]
+    ; HL = BRICK_BIT_CHECK_JUMP_TABLE[32*BRICK_ROW + 2*BRICK_COL]
 	ld e,(hl)		;ac09	5e
 	inc hl			;ac0a	23
 	ld d,(hl)		;ac0b	56
 	ex de,hl		;ac0c	eb
     
+    ; So finally we have:
+    ;   IY = BRICK_LEVEL_BITMASK       [32*BRICK_ROW + 2*BRICK_COL]
+    ;   HL = BRICK_BIT_CHECK_JUMP_TABLE[32*BRICK_ROW + 2*BRICK_COL]
+    
     ; A = 0 ==> reset bit
+    ; Jump to remove the brick from the bitmask
 	ld a, 0		;ac0d	3e 00
 	jp (hl)		;ac0f	e9
 
