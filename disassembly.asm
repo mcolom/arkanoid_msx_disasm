@@ -9834,7 +9834,7 @@ laa3ch:
 	jp (hl)			        ;aa51	e9
 ;
 TBL_JUMP_laa52h:
-    dw laaefh
+    dw action_brick_hit
     dw laac1h
     dw laac7h
     dw laaa4h
@@ -9908,7 +9908,7 @@ laabch:
 
 laac1h:
 	call sub_b00fh		;aac1	cd 0f b0 	. . . 
-	jp laaefh		;aac4	c3 ef aa 	. . . 
+	jp action_brick_hit		;aac4	c3 ef aa 	. . . 
 
 laac7h:
 	xor a			;aac7	af 	. 
@@ -9938,7 +9938,7 @@ laac7h:
 	jr nz,lab06h		;aaed	20 17 	  . 
 
 
-laaefh:
+action_brick_hit:
 	xor a			;aaef	af 	. 
 	ld (0e2bah),a		;aaf0	32 ba e2 	2 . . 
 	ld (0e2bbh),a		;aaf3	32 bb e2 	2 . . 
@@ -10511,7 +10511,7 @@ lb068h:
 lb06dh:
 	ld hl,lb0d5h		;b06d	21 d5 b0 	! . . 
 lb070h:
-	call sub_b0adh		;b070	cd ad b0 	. . . 
+	call SET_RANDOM_FALLING_CAPSULE		;b070	cd ad b0 	. . . 
 lb073h:
 	ld a,(BRICK_ROW)		;b073	3a aa e2 	: . . 
 	sla a		;b076	cb 27 	. ' 
@@ -10544,18 +10544,30 @@ lb0a5h:
 	ex af,af'			;b0a9	08 	. 
 	dec c			;b0aa	0d 	. 
 	ld c,005h		;b0ab	0e 05 	. . 
-sub_b0adh:
-	ld a,r		;b0ad	ed 5f 	. _ 
-	add a,c			;b0af	81 	. 
-	add a,b			;b0b0	80 	. 
-	add a,e			;b0b1	83 	. 
-	and 007h		;b0b2	e6 07 	. . 
-	ld e,a			;b0b4	5f 	_ 
-	ld d,000h		;b0b5	16 00 	. . 
-	add hl,de			;b0b7	19 	. 
-	ld a,(hl)			;b0b8	7e 	~ 
-	ld (ix+001h),a		;b0b9	dd 77 01 	. w . 
-	ret			;b0bc	c9 	. 
+
+; Set the falling capsule to a type between 0 and 7
+SET_RANDOM_FALLING_CAPSULE:
+	ld a,r		    ;b0ad	ed 5f
+	add a,c			;b0af	81
+	add a,b			;b0b0	80
+	add a,e			;b0b1	83
+	and 7   		;b0b2	e6 07
+    
+    ; DE = random
+	ld e,a		;b0b4	5f
+	ld d, 0		;b0b5	16 00
+	
+    ; HL = HL + random
+    add hl,de			;b0b7	19
+    
+    ; A = HL[random]
+	ld a,(hl)			;b0b8	7e
+
+    ; (ix+001h) <-- HL[random]
+    ; Set CAPSULE_TYPE to random
+	ld (ix+001h),a		;b0b9	dd 77 01; This points to CAPSULE_TYPE, at 0xe318.
+	ret			        ;b0bc	c9
+
 lb0bdh:
 	nop			;b0bd	00 	. 
 	ld bc,00302h		;b0be	01 02 03 	. . . 
