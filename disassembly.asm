@@ -3476,7 +3476,10 @@ l5c11h:
 ; It can be a full repaint if it's the start of the level, or a
 ; partial one if it's been modified (say, some bricks already destroyed).
 ADD_BRICKS_TO_TILEMAP:
-	call sub_5d9dh		;5c15	cd 9d 5d 	. . ] 
+    ; We start with add all background tiles to the tilemap
+	call ADD_BACKGROUND_TO_TILEMAP		;5c15	cd 9d 5d
+
+    ; Then, we add the bricks
     
     ; Skip the following if we're not doing a full brick repaint
 	ld a,(BRICK_REPAINT_TYPE)	;5c18	3a 22 e0
@@ -3796,8 +3799,8 @@ l5d82h:
 	jr nz,l5d82h	;5d9a	20 e6
 	ret			    ;5d9c	c9
 
-;SEGUIR
-sub_5d9dh:
+; Fill the playfield with background tiles
+ADD_BACKGROUND_TO_TILEMAP:
     ; BRICK_HIT_ROW = 0
 	xor a			        ;5d9d	af
 	ld (BRICK_HIT_ROW),a	;5d9e	32 3c e5
