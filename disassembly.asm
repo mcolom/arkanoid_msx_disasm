@@ -3976,6 +3976,7 @@ l68bch:
 	ld l,l			;68c2	6d 	m 
     db 0x21         ;68c3   21
 
+; ToDo
 sub_68c4h:
     ; Reset the position of Vaus if we're starting a level
     ld a, (RESET_VAUS_SPR_POSITION)  ;68c4  3a a9 e5
