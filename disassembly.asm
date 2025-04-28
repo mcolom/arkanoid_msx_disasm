@@ -3881,7 +3881,7 @@ include 'level_maps.asm'
 
 sub_6835h:
 	call sub_68c4h		;6835	cd c4 68 	. . h 
-	call sub_7039h		;6838	cd 39 70 	. 9 p 
+	call LASERS_STEP		;6838	cd 39 70 	. 9 p 
 	call sub_683fh		;683b	cd 3f 68 	. ? h 
 	ret			;683e	c9 	. 
 
@@ -4948,10 +4948,11 @@ l7019h:
 	ld c,h			;7037	4c 	L 
 	ld d,b			;7038	50 	P 
 
-sub_7039h:
-	call CHECK_START_LASERS		;7039	cd 40 70 	. @ p 
-	call sub_70b0h		;703c	cd b0 70 	. . p 
-	ret			;703f	c9 	. 
+; Check if the lasers are active, and update them
+LASERS_STEP:
+	call CHECK_START_LASERS		;7039	cd 40 70
+	call LASERS_FIRE_STEP		;703c	cd b0 70
+	ret			                ;703f	c9
 
 ; Check if we've pressed the fire button, and start lasers
 CHECK_START_LASERS:
@@ -5032,8 +5033,9 @@ l70a6h:
 l70afh:
 	ret			            ;70af	c9
 
-; ToDo
-sub_70b0h:
+; Perform one step of the firing lasers
+; Move them up and check if they hit a brick
+LASERS_FIRE_STEP:
 	; Set lasers are being fired
     ld a, 1		               ;70b0	3e 01
 	ld (LASERS_FIRING),a	;70b2	32 19 e5
@@ -5044,10 +5046,11 @@ sub_70b0h:
     ; Iterate through 3 lasers
 	ld b, 3		            ;70bd	06 03
 l70bfh:
-	push bc			;70bf	c5 	. 
+	push bc			        ;70bf	c5
     
-	xor a			;70c0	af 	. 
-	ld (BRICK_HIT_ROW),a		;70c1	32 3c e5 	2 < . 
+    ; Reset BRICK_HIT_ROW
+	xor a			        ;70c0	af
+	ld (BRICK_HIT_ROW),a	;70c1	32 3c e5
 
     ; Check if this laser is active
     ; Next laser if not
@@ -5055,7 +5058,7 @@ l70bfh:
 	or a			;70c7	b7
 	jp z,l715dh		;70c8	ca 5d 71
 
-    ; Move laser up 5 pixels
+    ; Move up laser 5 pixels
 	ld a, -5h		                ;70cb	3e fb
 	add a,(ix+SPR_PARAMS_IDX_Y)		;70cd	dd 86 00
 
@@ -5069,9 +5072,9 @@ l70bfh:
     ; If not, next laser
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;70d8	dd 7e 00
 	cp 23		                    ;70db	fe 17
-	jp c,l715dh		;70dd	da 5d 71 	. ] q 
-	cp 077h		;70e0	fe 77 	. w 
-	jp nc,l715dh		;70e2	d2 5d 71 	. ] q 
+	jp c,l715dh		                ;70dd	da 5d 71
+	cp 077h		                    ;70e0	fe 77
+	jp nc,l715dh		            ;70e2	d2 5d 71
 
     ; A = (Y-23) / 8. It's looking ay Y-23 because the laser hits the brick above
 	sub 23		;70e5	d6 17   Y = Y - 23
@@ -5099,14 +5102,15 @@ l70bfh:
     ; BRICK_COL <- (X-16) / 16
 	ld (BRICK_COL),a		;7107	32 ab e2
     
-    ; ToDo
+    ; Skip if there's no brick
 	call THERE_IS_A_BRICK		;710a	cd a8 ad
 	jp nc,l7118h		;710d	d2 18 71
 
+    ; BRICK_HIT_ROW <-- 1
 	ld a, 1		            ;7110	3e 01
 	ld (BRICK_HIT_ROW),a	;7112	32 3c e5
 
-    ; ToDo
+    ; Perform the corresponding brick action
 	call DO_BRICK_ACTION		;7115	cd 05 aa
 l7118h:
     ; Check if X+14 is in [16, 191]
@@ -5127,13 +5131,15 @@ l7118h:
     ; BRICK_COL <- (X-2)/16
     ld (BRICK_COL),a		;7131	32 ab e2
     
-    ; ToDo
-	call THERE_IS_A_BRICK		;7134	cd a8 ad
-	jp nc,l7142h		;7137	d2 42 71
+    ; Skip if there's no brick
+	call THERE_IS_A_BRICK	;7134	cd a8 ad
+	jp nc,l7142h		    ;7137	d2 42 71
 
+    ; BRICK_HIT_ROW <-- 1
 	ld a, 1	                ;713a	3e 01
 	ld (BRICK_HIT_ROW),a	;713c	32 3c e5
 
+    ; Perform the corresponding brick action
 	call DO_BRICK_ACTION		;713f	cd 05 aa 	. . . 
 l7142h:
 	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5 	: < . 
