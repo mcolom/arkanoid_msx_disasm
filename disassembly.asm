@@ -9830,7 +9830,7 @@ TBL_JUMP_laa52h:
     dw action_brick_hit
     dw laac1h
     dw laac7h
-    dw laaa4h
+    dw action_skewness
     dw laa9ch
 
 TBL_laa5ch:
@@ -9882,18 +9882,24 @@ laa9ch:
 	ld (0e2bbh),a		;aaa0	32 bb e2 	2 . . 
 	ret			;aaa3	c9 	.
 
-laaa4h:
-	xor a			;aaa4	af 	. 
-	ld (0e2bbh),a		;aaa5	32 bb e2 	2 . . 
-	ld a,001h		;aaa8	3e 01 	> . 
-	ld (0e2bah),a		;aaaa	32 ba e2 	2 . . 
-	ld hl,0e5ach		;aaad	21 ac e5 	! . . 
-	inc (hl)			;aab0	34 	4 
-	ld a,(hl)			;aab1	7e 	~ 
-	cp 014h		;aab2	fe 14 	. . 
-	jp nz,laabch		;aab4	c2 bc aa 	. . . 
-	ld (hl),000h		;aab7	36 00 	6 . 
-	call CHANGE_BALLS_SKEWNESS		;aab9	cd 38 ab 	. 8 . 
+action_skewness:
+    ; Set counter
+	xor a			;aaa4	af
+	ld (0e2bbh),a	;aaa5	32 bb e2
+
+	ld a,001h		;aaa8	3e 01
+	ld (0e2bah),a	;aaaa	32 ba e2
+
+    ; Increment and check skewness counter
+	ld hl,ACTION_SKEWNESS_COUNTER		;aaad	21 ac e5
+	inc (hl)			;aab0	34
+	ld a,(hl)			;aab1	7e
+	cp 20		        ;aab2	fe 14
+	jp nz,laabch		;aab4	c2 bc aa
+
+    ; Reset counter and change skewness
+	ld (hl),000h		        ;aab7	36 00
+	call CHANGE_BALLS_SKEWNESS	;aab9	cd 38 ab
 
 laabch:
 	ld c,001h		;aabc	0e 01 	. . 
