@@ -10488,7 +10488,7 @@ sub_b028h:
 	call SET_RANDOM_CAPSULE_TYPE		;b03f	cd dd b0
 	jp c,lb073h		                    ;b042	da 73 b0    Jump if magenta brick
 
-	call sub_b10ah		                ;b045	cd 0a b1
+	call DECIDE_GIVE_LIFE		                ;b045	cd 0a b1
 	jp c,lb073h		                    ;b048	da 73 b0
 
 	ld a,(GLUING_STATUS)		;b04b	3a 24 e3
@@ -10516,38 +10516,45 @@ lb06dh:
 lb070h:
 	call SET_RANDOM_FALLING_CAPSULE		;b070	cd ad b0 	. . . 
 lb073h:
-	ld a,(BRICK_ROW)		;b073	3a aa e2 	: . . 
-	sla a		;b076	cb 27 	. ' 
-	sla a		;b078	cb 27 	. ' 
-	sla a		;b07a	cb 27 	. ' 
-	add a,018h		;b07c	c6 18 	. . 
-	ld l,a			;b07e	6f 	o 
-	ld a,(BRICK_COL)		;b07f	3a ab e2 	: . . 
-	sla a		;b082	cb 27 	. ' 
-	sla a		;b084	cb 27 	. ' 
-	sla a		;b086	cb 27 	. ' 
-	sla a		;b088	cb 27 	. ' 
-	add a,010h		;b08a	c6 10 	. . 
-	ld h,a			;b08c	67 	g 
-	ld (iy+000h),l		;b08d	fd 75 00 	. u . 
-	ld (iy+001h),h		;b090	fd 74 01 	. t . 
-	ld (iy+002h),088h		;b093	fd 36 02 88 	. 6 . . 
-	ld l,(ix+001h)		;b097	dd 6e 01 	. n . 
-	ld h,000h		;b09a	26 00 	& . 
-	ld de,lb0a5h		;b09c	11 a5 b0 	. . . 
-	add hl,de			;b09f	19 	. 
-	ld a,(hl)			;b0a0	7e 	~ 
-	ld (iy+003h),a		;b0a1	fd 77 03 	. w . 
-	ret			;b0a4	c9 	. 
+    ; L = 8*BRICK_ROW + 24, Y coordinate
+	ld a,(BRICK_ROW)		;b073	3a aa e2
+	sla a		            ;b076	cb 27
+	sla a		            ;b078	cb 27
+	sla a		            ;b07a	cb 27
+	add a, 24		        ;b07c	c6 18
+	ld l,a			        ;b07e	6f
+    
+    ; H = 16*BRICK_COL + 16, X coordinate
+	ld a,(BRICK_COL)		;b07f	3a ab e2
+	sla a		            ;b082	cb 27
+	sla a		            ;b084	cb 27
+	sla a		            ;b086	cb 27
+	sla a		            ;b088	cb 27
+	add a, 16   		    ;b08a	c6 10
+	ld h,a		        	;b08c	67
+    
+    ; IY is FALLING_CAPSULE_SPR_PARAMS
+    ; IX is CAPSULE_IS_FALLING
 
-lb0a5h:
-	ld a,(bc)			;b0a5	0a 	. 
-	inc bc			;b0a6	03 	. 
-	dec b			;b0a7	05 	. 
-	rlca			;b0a8	07 	. 
-	ex af,af'			;b0a9	08 	. 
-	dec c			;b0aa	0d 	. 
-	ld c,005h		;b0ab	0e 05 	. . 
+	ld (iy+SPR_PARAMS_IDX_Y),l		        ;b08d	fd 75 00     8 * BRICK_ROW + 24
+	ld (iy+SPR_PARAMS_IDX_X),h		        ;b090	fd 74 01    16 * BRICK_COL + 16
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM), 136	;b093	fd 36 02 88 Brick
+
+	; HL = CAPSULE_TYPE
+    ld l,(ix+001h)		;b097	dd 6e 01
+	ld h, 0		        ;b09a	26 00
+    
+    ; Translate capsule type to color
+	ld de,TBL_CAPSULE_TYPE_TO_COLOR		;b09c	11 a5 b0
+	add hl,de			                ;b09f	19
+	ld a,(hl)			                ;b0a0	7e
+    
+    ; Set color of the falling brick
+	ld (iy+SPR_PARAMS_IDX_COLOR),a		;b0a1	fd 77 03
+	ret			                        ;b0a4	c9
+
+TBL_CAPSULE_TYPE_TO_COLOR:
+    db 10, 3, 5, 7, 8, 13, 14, 5
 
 ; Set the falling capsule to a type between 0 and 7
 SET_RANDOM_FALLING_CAPSULE:
@@ -10650,36 +10657,56 @@ lb102h:
 	scf			            ;b108	37
 	ret			            ;b109	c9
     
+; Check if the falling brick is a life.
+; If so, check a counter (initilized randomly) to decide if we
+; give the life or not. Lives are scarce!
+DECIDE_GIVE_LIFE:
+    ; Skip if the brick is not a life
+	ld a,(LIFE_OBTAINED_FLAG)		;b10a	3a 27 e3
+	or a			                ;b10d	b7
+	ret nz			                ;b10e	c0
 
-sub_b10ah:
-	ld a,(LIFE_OBTAINED_FLAG)		;b10a	3a 27 e3 	: ' . 
-	or a			;b10d	b7 	. 
-	ret nz			;b10e	c0 	. 
-	ld hl,0e025h		;b10f	21 25 e0 	! % . 
-	ld a,(hl)			;b112	7e 	~ 
-	or a			;b113	b7 	. 
-	jr nz,lb124h		;b114	20 0e 	  . 
-	ld a,r		;b116	ed 5f 	. _ 
-	add a,e			;b118	83 	. 
-	add a,d			;b119	82 	. 
-	and 01fh		;b11a	e6 1f 	. . 
-	ld (0e026h),a		;b11c	32 26 e0 	2 & . 
-	ld a,032h		;b11f	3e 32 	> 2 
-	ld (0e025h),a		;b121	32 25 e0 	2 % . 
+	; Skip if capsule live's counter isn't 0
+    ld hl,CAPSULE_LIVES_COUNTER_L		;b10f	21 25 e0
+	ld a,(hl)			                ;b112	7e
+	or a			                    ;b113	b7
+	jr nz,lb124h		                ;b114	20 0e
+    
+    ; A = random number between 0 and 31
+	ld a,r		    ;b116	ed 5f
+	add a,e			;b118	83
+	add a,d			;b119	82
+	and 01fh		;b11a	e6 1f
+
+    ; Write random number to the counter
+	ld (CAPSULE_LIVES_COUNTER_H),a		;b11c	32 26 e0
+    ld a, 0x32		                    ;b11f	3e 32
+	ld (CAPSULE_LIVES_COUNTER_L),a		;b121	32 25 e0
+    
 lb124h:
-	dec (hl)			;b124	35 	5 
-	ld hl,0e026h		;b125	21 26 e0 	! & . 
-	ld a,(hl)			;b128	7e 	~ 
-	or a			;b129	b7 	. 
-	jr z,lb12fh		;b12a	28 03 	( . 
-	dec (hl)			;b12c	35 	5 
-	xor a			;b12d	af 	. 
-	ret			;b12e	c9 	. 
+    ; Dec and check counter
+	dec (hl)			            ;b124	35
+    ld hl,CAPSULE_LIVES_COUNTER_H	;b125	21 26 e0
+	ld a,(hl)			            ;b128	7e
+	or a			                ;b129	b7
+	jr z,lb12fh		                ;b12a	28 03
+    
+	dec (hl)			            ;b12c	35
+    
+    ; Clear carry and exit
+    ; It won't be a life
+	xor a			                ;b12d	af
+	ret			                    ;b12e	c9
+
 lb12fh:
-	ld (ix+001h),006h		;b12f	dd 36 01 06 	. 6 . . 
-	ld (hl),0ffh		;b133	36 ff 	6 . 
-	scf			;b135	37 	7 
-	ret			;b136	c9 	. 
+    ; IX+1 points to CAPSULE_TYPE
+    ; Set it to a life!
+	ld (ix+001h), 6		    ;b12f	dd 36 01 06
+	ld (hl), 255		    ;b133	36 ff   Reset countdown
+    
+    ; Set carry and exit
+	scf			        ;b135	37
+	ret			        ;b136	c9
 
 ; Move the falling capsule one step down
 CAPSULE_MOVE_DOWN_STEP:
