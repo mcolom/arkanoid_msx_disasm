@@ -10456,7 +10456,7 @@ sub_b00fh:
 	ld a,(EXTRA_BALLS)		;b016	3a 25 e3 	: % . 
 	or a			;b019	b7 	. 
 	jp nz,lb020h		;b01a	c2 20 b0 	.   . 
-	call sub_b028h		;b01d	cd 28 b0 	. ( . 
+	call SET_PROPER_RANDOM_CAPSULE_TYPE		;b01d	cd 28 b0 	. ( . 
 lb020h:
 	pop bc			;b020	c1 	. 
 	pop de			;b021	d1 	. 
@@ -10465,8 +10465,9 @@ lb020h:
 	pop ix		;b025	dd e1 	. . 
 	ret			;b027	c9 	. 
 
-; ToDo
-sub_b028h:
+; Set a random capsule type, without choosing the type we
+; already have.
+SET_PROPER_RANDOM_CAPSULE_TYPE:
     ; Capsules won't fall if there are less than 4 bricks remaining
 	ld a,(BRICKS_LEFT)		;b028	3a 38 e0
 	cp 4		            ;b02b	fe 04
@@ -10486,35 +10487,37 @@ sub_b028h:
     ; Set a random capsule type.
     ; C if the capsule is magenta (open portal)
 	call SET_RANDOM_CAPSULE_TYPE		;b03f	cd dd b0
-	jp c,lb073h		                    ;b042	da 73 b0    Jump if magenta brick
+	jp c,lb073h		                    ;b042	da 73 b0    Done if magenta brick
 
-	call DECIDE_BRICK_IS_LIFE		        ;b045	cd 0a b1
-	jp c,lb073h		                    ;b048	da 73 b0    Jump is the live 
+	call DECIDE_BRICK_IS_LIFE		     ;b045	cd 0a b1
+	jp c,lb073h		                    ;b048	da 73 b0    Done if it's a live 
 
 	ld a,(GLUING_STATUS)		;b04b	3a 24 e3
 	cp GLUING_STATE_STICKY		;b04e	fe 01
 	jr z,lb063h		            ;b050	28 11
 
-	ld a,(VAUS_IS_ENLARGED)		;b052	3a 21 e3 	: ! . 
-	or a			;b055	b7 	. 
-	jr nz,lb068h		;b056	20 10 	  . 
+	ld a,(VAUS_IS_ENLARGED)		;b052	3a 21 e3
+	or a			            ;b055	b7
+	jr nz,lb068h		        ;b056	20 10
 
-	ld a,(VAUS_HAS_LASERS)		;b058	3a 22 e3 	: " . 
-	or a			;b05b	b7 	. 
-	jr nz,lb06dh		;b05c	20 0f 	  . 
+	ld a,(VAUS_HAS_LASERS)		;b058	3a 22 e3
+	or a			            ;b05b	b7
+	jr nz,lb06dh		        ;b05c	20 0f
 
-	ld hl,lb0bdh		;b05e	21 bd b0 	! . . 
-	jr lb070h		;b061	18 0d 	. . 
+    ; We choose a table without the type we already have, to choose a
+    ; random type from it.
+	ld hl,TBL_FALLING_CAPSULE_TYPES_1		;b05e	21 bd b0
+	jr lb070h		                        ;b061	18 0d
 lb063h:
-	ld hl,lb0c5h		;b063	21 c5 b0 	! . . 
-	jr lb070h		;b066	18 08 	. . 
+	ld hl,TBL_FALLING_CAPSULE_TYPES_2		;b063	21 c5 b0
+	jr lb070h		                        ;b066	18 08
 lb068h:
-	ld hl,lb0cdh		;b068	21 cd b0 	! . . 
-	jr lb070h		;b06b	18 03 	. . 
+	ld hl,TBL_FALLING_CAPSULE_TYPES_3		;b068	21 cd b0
+	jr lb070h		                        ;b06b	18 03
 lb06dh:
-	ld hl,lb0d5h		;b06d	21 d5 b0 	! . . 
+	ld hl,TBL_FALLING_CAPSULE_TYPES_4		;b06d	21 d5 b0
 lb070h:
-	call SET_RANDOM_FALLING_CAPSULE		;b070	cd ad b0 	. . . 
+	call SET_RANDOM_FALLING_CAPSULE		    ;b070	cd ad b0
 lb073h:
     ; L = 8*BRICK_ROW + 24, Y coordinate
 	ld a,(BRICK_ROW)		;b073	3a aa e2
@@ -10553,7 +10556,7 @@ lb073h:
 	ld (iy+SPR_PARAMS_IDX_COLOR),a		;b0a1	fd 77 03
 	ret			                        ;b0a4	c9
 
-TBL_CAPSULE_TYPE_TO_COLOR:
+TBL_CAPSULE_TYPE_TO_COLOR:              ;b0a5
     db 10, 3, 5, 7, 8, 13, 14, 5
 
 ; Set the falling capsule to a type between 0 and 7
@@ -10568,6 +10571,7 @@ SET_RANDOM_FALLING_CAPSULE:
 	ld e,a		;b0b4	5f
 	ld d, 0		;b0b5	16 00
 	
+    ; HL points to any of the TBL_FALLING_CAPSULE_TYPES_2_x
     ; HL = HL + random
     add hl,de			;b0b7	19
     
@@ -10579,30 +10583,15 @@ SET_RANDOM_FALLING_CAPSULE:
 	ld (ix+001h),a		;b0b9	dd 77 01; This points to CAPSULE_TYPE, at 0xe318.
 	ret			        ;b0bc	c9
 
-lb0bdh:
-	nop			;b0bd	00 	. 
-	ld bc,00302h		;b0be	01 02 03 	. . . 
-	inc b			;b0c1	04 	. 
-	ld bc,00203h		;b0c2	01 03 02 	. . . 
-lb0c5h:
-	nop			;b0c5	00 	. 
-	ld (bc),a			;b0c6	02 	. 
-	inc bc			;b0c7	03 	. 
-	inc b			;b0c8	04 	. 
-	ld (bc),a			;b0c9	02 	. 
-	inc b			;b0ca	04 	. 
-	nop			;b0cb	00 	. 
-	inc bc			;b0cc	03 	. 
-lb0cdh:
-	nop			;b0cd	00 	. 
-	ld bc,00403h		;b0ce	01 03 04 	. . . 
-	ld bc,00304h		;b0d1	01 04 03 	. . . 
-	nop			;b0d4	00 	. 
-lb0d5h:
-	nop			;b0d5	00 	. 
-	ld bc,00302h		;b0d6	01 02 03 	. . . 
-	ld bc,00003h		;b0d9	01 03 00 	. . . 
-	ld (bc),a			;b0dc	02 	. 
+; We choose randomly from these
+TBL_FALLING_CAPSULE_TYPES_1:
+    db 0, 1, 2, 3, 4, 1, 3, 2   ; All numbers
+TBL_FALLING_CAPSULE_TYPES_2:
+    db 0, 2, 3, 4, 2, 4, 0, 3   ; No 1
+TBL_FALLING_CAPSULE_TYPES_3:
+    db 0, 1, 3, 4, 1, 4, 3, 0   ; No 2
+TBL_FALLING_CAPSULE_TYPES_4:
+    db 0, 1, 2, 3, 1, 3, 0, 2   ; No 4
 
 ; Set a random type to the falling capsule.
 ; Return in C if it's the magenta brick.
