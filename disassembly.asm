@@ -2204,7 +2204,7 @@ l4d09h:
 	cp BRICK_REPAINT_REMAINING      ;4d0c	fe 02
 	jp z,l4d22h		                ;4d0e	ca 22 4d
 
-    ; ToDo: what is this structure?
+    ; Clear variables
 	ld hl,BRICK_MAP		;4d11	21 27 e0 	! ' . 
 	ld de,0e028h		;4d14	11 28 e0 	. ( . 
 	ld bc,0058dh		;4d17	01 8d 05 	. . . 
@@ -10446,7 +10446,7 @@ lb000h:
 lb00dh:
 	xor a			;b00d	af 	. 
 	ret			;b00e	c9 	. 
-
+; ToDo
 sub_b00fh:
 	push ix		;b00f	dd e5 	. . 
 	push iy		;b011	fd e5 	. . 
@@ -10465,21 +10465,31 @@ lb020h:
 	pop ix		;b025	dd e1 	. . 
 	ret			;b027	c9 	. 
 
+; ToDo
 sub_b028h:
     ; Capsules won't fall if there are less than 4 bricks remaining
 	ld a,(BRICKS_LEFT)		;b028	3a 38 e0
 	cp 4		            ;b02b	fe 04
 	ret c			        ;b02d	d8
-	ld ix,CAPSULE_IS_FALLING		;b02e	dd 21 17 e3 	. ! . . 
-	ld iy,FALLING_CAPSULE_SPR_PARAMS		;b032	fd 21 c9 e0 	. ! . . 
-	ld a,(CAPSULE_IS_FALLING)		;b036	3a 17 e3 	: . . 
-	or a			;b039	b7 	. 
-	ret nz			;b03a	c0 	. 
-	ld (ix+000h),001h		;b03b	dd 36 00 01 	. 6 . . 
-	call sub_b0ddh		;b03f	cd dd b0 	. . . 
-	jp c,lb073h		;b042	da 73 b0 	. s . 
-	call sub_b10ah		;b045	cd 0a b1 	. . . 
-	jp c,lb073h		;b048	da 73 b0 	. s . 
+
+	ld ix,CAPSULE_IS_FALLING		    ;b02e	dd 21 17 e3
+	ld iy,FALLING_CAPSULE_SPR_PARAMS	;b032	fd 21 c9 e0
+    
+    ; Exit if the capsule is already falling
+	ld a,(CAPSULE_IS_FALLING)		    ;b036	3a 17 e3
+	or a			                    ;b039	b7
+	ret nz			                    ;b03a	c0
+
+	; Set the capsule is falling
+    ld (ix+000h), 1		                ;b03b	dd 36 00 01
+
+    ; Set a random capsule type.
+    ; C if the capsule is magenta (open portal)
+	call SET_RANDOM_CAPSULE_TYPE		;b03f	cd dd b0
+	jp c,lb073h		                    ;b042	da 73 b0    Jump if magenta brick
+
+	call sub_b10ah		                ;b045	cd 0a b1
+	jp c,lb073h		                    ;b048	da 73 b0
 
 	ld a,(GLUING_STATUS)		;b04b	3a 24 e3
 	cp GLUING_STATE_STICKY		;b04e	fe 01
@@ -10529,6 +10539,7 @@ lb073h:
 	ld a,(hl)			;b0a0	7e 	~ 
 	ld (iy+003h),a		;b0a1	fd 77 03 	. w . 
 	ret			;b0a4	c9 	. 
+
 lb0a5h:
 	ld a,(bc)			;b0a5	0a 	. 
 	inc bc			;b0a6	03 	. 
@@ -10586,8 +10597,10 @@ lb0d5h:
 	ld bc,00003h		;b0d9	01 03 00 	. . . 
 	ld (bc),a			;b0dc	02 	. 
 
-sub_b0ddh:
-    ; Get out of the portal is open
+; Set a random type to the falling capsule.
+; Return in C if it's the magenta brick.
+SET_RANDOM_CAPSULE_TYPE:
+    ; Exit if the portal is open
 	ld a,(PORTAL_OPEN)		;b0dd	3a 26 e3
 	or a			        ;b0e0	b7
 	ret nz			        ;b0e1	c0
@@ -10596,8 +10609,7 @@ sub_b0ddh:
 	ld hl,CAPSULES_LEFT		;b0e2	21 23 e0
 	ld a,(hl)			    ;b0e5	7e
 
-    ; Skip the following if CAPSULES_LEFT was set for this level
-    ; Otherwise, choose a random number
+    ; Skip if no more capsules left
 	or a			        ;b0e6	b7
 	jr nz,lb0f7h		    ;b0e7	20 0e
 
@@ -10607,6 +10619,7 @@ sub_b0ddh:
 	add a,b			;b0ec	80
 	and 01fh		;b0ed	e6 1f
 
+    ; Set the number capsule number
 	ld (CAPSULES_RANDOM_NUM),a	;b0ef	32 24 e0
 
     ; Default value of 33 capsules available
@@ -10614,7 +10627,7 @@ sub_b0ddh:
 	ld (CAPSULES_LEFT),a		;b0f4	32 23 e0
 lb0f7h:
     ; Decrease CAPSULES_LEFT
-	dec (hl)			;b0f7	35 	5 
+	dec (hl)			        ;b0f7	35 	5 
     
     ; Jump if the random number happens to be zero
 	ld hl,CAPSULES_RANDOM_NUM		;b0f8	21 24 e0
@@ -10622,17 +10635,20 @@ lb0f7h:
 	or a			                ;b0fc	b7
 	jr z,lb102h		                ;b0fd	28 03
 	
-    ; Decrease CAPSULES_LEFT and
-    ; return 0
+    ; Decrease CAPSULES_LEFT and return NC
     dec (hl)			            ;b0ff	35
 	xor a			                ;b100	af
 	ret			                    ;b101	c9
 
 lb102h:
-	ld (ix+001h),005h		;b102	dd 36 01 05 	. 6 . . 
-	ld (hl),0ffh		    ;b106	36 ff 	6 . 
-	scf			            ;b108	37 	7 
-	ret			            ;b109	c9 	. 
+    ; IX+1 points to CAPSULE_TYPE
+    ; Set it to the magenta type
+	ld (ix+001h), 5h		;b102	dd 36 01 05
+    ; Set CAPSULES_LEFT to 255
+	ld (hl), 255		    ;b106	36 ff
+    ; Return C
+	scf			            ;b108	37
+	ret			            ;b109	c9
     
 
 sub_b10ah:
