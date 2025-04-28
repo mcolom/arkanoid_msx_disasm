@@ -7317,7 +7317,7 @@ l979bh:
 	ret			        ;97ae	c9
 
 ; Fills the HARD_BRICK_TABLE with the current information on the bricks
-FILL_HARD_BRICK_TABLE:
+UPDATE_HARD_BRICK_TABLE:
 	push ix		    ;97af	dd e5
 	ld b, 8		    ;97b1	06 08
 	ld de, 8		;97b3	11 08 00
@@ -9812,12 +9812,12 @@ laa3ch:
     
 	sla e		        ;aa45	cb 23   DE = 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
     
-    ; HL = TBL_JUMP_laa52h + 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
+    ; HL = TBL_BRICK_ACTIONS + 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
 	ld d,000h		        ;aa47	16 00
-	ld hl,TBL_JUMP_laa52h	;aa49	21 52 aa
+	ld hl,TBL_BRICK_ACTIONS	;aa49	21 52 aa
 	add hl,de			    ;aa4c	19
     
-    ; DE = TBL_JUMP_laa52h[2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]]
+    ; DE = TBL_BRICK_ACTIONS[2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]]
 	ld e,(hl)			    ;aa4d	5e
 	inc hl			        ;aa4e	23
 	ld d,(hl)			    ;aa4f	56
@@ -9826,12 +9826,12 @@ laa3ch:
 	ex de,hl			    ;aa50	eb
 	jp (hl)			        ;aa51	e9
 ;
-TBL_JUMP_laa52h:
+TBL_BRICK_ACTIONS:
     dw action_brick_hit
     dw action_brick_hit_and_capsule
-    dw laac7h
-    dw action_skewness
-    dw laa9ch
+    dw action_hard_brick_hit
+    dw action_unbreakable_brick_hit
+    dw action_reset_unused_vars
 
 TBL_laa5ch:
 	nop			;aa5c	00 	. 
@@ -9876,102 +9876,147 @@ TBL_laa5ch:
     
     db 0xfc, 0xcf   ;aa9a
 
-laa9ch:
-    xor a               ;aa9c
-	ld (0e2bah),a		;aa9d	32 ba e2 	2 . . 
-	ld (0e2bbh),a		;aaa0	32 bb e2 	2 . . 
-	ret			;aaa3	c9 	.
+; Reset two unused variables
+action_reset_unused_vars:
+    xor a                   ;aa9c
+	ld (BRICK_UNUSED_1),a	;aa9d	32 ba e2
+	ld (BRICK_UNUSED_2),a	;aaa0	32 bb e2
+	ret			            ;aaa3	c9
 
-action_skewness:
-    ; Set counter
-	xor a			;aaa4	af
-	ld (0e2bbh),a	;aaa5	32 bb e2
-
-	ld a,001h		;aaa8	3e 01
-	ld (0e2bah),a	;aaaa	32 ba e2
+; An unbreakable brick has been hit.
+; If the counter reaches 20 hits, change the ball's skewness
+action_unbreakable_brick_hit:
+    ; Set these two vars, but it seems they're never checked
+	xor a			        ;aaa4	af
+	ld (BRICK_UNUSED_2),a	;aaa5	32 bb e2
+	ld a, 1 		        ;aaa8	3e 01
+	ld (BRICK_UNUSED_1),a	;aaaa	32 ba e2
 
     ; Increment and check skewness counter
 	ld hl,ACTION_SKEWNESS_COUNTER		;aaad	21 ac e5
 	inc (hl)			;aab0	34
 	ld a,(hl)			;aab1	7e
 	cp 20		        ;aab2	fe 14
-	jp nz,laabch		;aab4	c2 bc aa
+	jp nz,action_unbreakable_brick_bounce	;aab4	c2 bc aa
 
     ; Reset counter and change skewness
-	ld (hl),000h		        ;aab7	36 00
+	ld (hl), 0		            ;aab7	36 00
 	call CHANGE_BALLS_SKEWNESS	;aab9	cd 38 ab
 
-laabch:
-	ld c,001h		;aabc	0e 01 	. . 
-	jp lab06h		;aabe	c3 06 ab 	. . . 
+; The ball bounces after hitting an unbreakable brick
+action_unbreakable_brick_bounce:
+	ld c, 1		                    ;aabc	0e 01
+	jp action_hard_brick_bounce	    ;aabe	c3 06 ab
 
+; Check if we need to make a capsule appear, only if there are no
+; extra balls.
 action_brick_hit_and_capsule:
-	call SET_RANDOM_CAPSULE_IF_NO_EXTRA_BALLS		;aac1	cd 0f b0 	. . . 
-	jp action_brick_hit		;aac4	c3 ef aa 	. . . 
+	call SET_RANDOM_CAPSULE_IF_NO_EXTRA_BALLS	;aac1	cd 0f b0
+	jp action_brick_hit		                    ;aac4	c3 ef aa
 
-laac7h:
-	xor a			;aac7	af 	. 
-	ld (0e2bah),a		;aac8	32 ba e2 	2 . . 
-	ld a,001h		;aacb	3e 01 	> . 
-	ld (0e2bbh),a		;aacd	32 bb e2 	2 . . 
-	ld a,(BRICK_ROW)		;aad0	3a aa e2 	: . . 
-	ld l,a			;aad3	6f 	o 
-	ld h,000h		;aad4	26 00 	& . 
-	push hl			;aad6	e5 	. 
-	pop bc			;aad7	c1 	. 
-	add hl,hl			;aad8	29 	) 
-	push hl			;aad9	e5 	. 
-	pop de			;aada	d1 	. 
-	add hl,hl			;aadb	29 	) 
-	add hl,hl			;aadc	29 	) 
-	add hl,bc			;aadd	09 	. 
-	add hl,de			;aade	19 	. 
-	ld a,(BRICK_COL)		;aadf	3a ab e2 	: . . 
-	ld e,a			;aae2	5f 	_ 
-	ld d,000h		;aae3	16 00 	. . 
-	add hl,de			;aae5	19 	. 
-	ld de,HARD_BRICKS_REMAINING_HITS		;aae6	11 39 e0 	. 9 . 
-	add hl,de			;aae9	19 	. 
+; We've hit a hard brick.
+; Decrease its hits counter, and destroy it if done.
+action_hard_brick_hit:
+    ; Initialize counter
+	xor a			;aac7	af
+	ld (BRICK_UNUSED_1),a	;aac8	32 ba e2
+	ld a, 1		    ;aacb	3e 01
+	ld (BRICK_UNUSED_2),a	;aacd	32 bb e2
+
+    ; HL = BRICK_ROW
+	ld a,(BRICK_ROW)	;aad0	3a aa e2
+	ld l,a			    ;aad3	6f
+	ld h, 0		        ;aad4	26 00
+
+    ; BC = BRICK_ROW
+	push hl			;aad6	e5
+	pop bc			;aad7	c1
+    
+	; DE = 2*BRICK_ROW
+    add hl,hl		;aad8	29
+	push hl			;aad9	e5
+	pop de			;aada	d1
+    
+	add hl,hl			;aadb	29  HL = 4*BRICK_ROW
+	add hl,hl			;aadc	29 	HL = 8*BRICK_ROW
+	add hl,bc			;aadd	09 	HL = 9*BRICK_ROW 
+	add hl,de			;aade	19 	HL = 11*BRICK_ROW 
+    
+    ; HL = 11*BRICK_ROW  + BRICK_COL
+	ld a,(BRICK_COL)	;aadf	3a ab e2
+	ld e,a			    ;aae2	5f
+	ld d, 0		        ;aae3	16 00   DE = BRICK_COL
+	add hl,de			;aae5	19      HL = 11*BRICK_ROW  + BRICK_COL
+     
+    ; HL = 11*BRICK_ROW  + BRICK_COL + HARD_BRICKS_REMAINING_HITS
+	ld de,HARD_BRICKS_REMAINING_HITS		;aae6	11 39 e0
+	add hl,de			                    ;aae9	19
+    
+    ; Decrement the number of hits of the hard brick
+    ; Dec HARD_BRICKS_REMAINING_HITS[BRICK_ROWS*BRICK_ROW  + BRICK_COL]
 	dec (hl)			;aaea	35 	5 
-	ld c,000h		;aaeb	0e 00 	. . 
-	jr nz,lab06h		;aaed	20 17 	  . 
 
+    ; If not destroyed, jump to action_hard_brick_bounce
+	ld c, 0		                        ;aaeb	0e 00
+	jr nz,action_hard_brick_bounce		;aaed	20 17
+    ; Otherwise, proceed to action_brick_hit and destroy it
 
+; Decrease the number of bricks left, play the brick destroyed
+; sound, and move to the next level if no more bricks.
 action_brick_hit:
-	xor a			;aaef	af 	. 
-	ld (0e2bah),a		;aaf0	32 ba e2 	2 . . 
-	ld (0e2bbh),a		;aaf3	32 bb e2 	2 . . 
-	push iy		;aaf6	fd e5 	. . 
+	xor a			        ;aaef	af
+	ld (BRICK_UNUSED_1),a	;aaf0	32 ba e2
+	ld (BRICK_UNUSED_2),a	;aaf3	32 bb e2
+	push iy		            ;aaf6	fd e5
 	call CHECK_AND_REMOVE_BRICK		;aaf8	cd d3 ab 	. . . 
-	pop iy		;aafb	fd e1 	. . 
-	call DEC_BRICKS_CHECK_LEVEL_DONE		;aafd	cd 7a ab 	. z . 
-
+	pop iy		                    ;aafb	fd e1
+	call DEC_BRICKS_CHECK_LEVEL_DONE		;aafd	cd 7a ab
 	ld a,SOUND_BRICK_DESTROYED		;ab00	3e 02
 	call ADD_SOUND		            ;ab02	cd ef 5b
 	ret			                    ;ab05	c9
 
-lab06h:
-	ld a,(BRICK_ROW)		;ab06	3a aa e2 	: . . 
-	inc a			;ab09	3c 	< 
-	ld hl,00000h		;ab0a	21 00 00 	! . . 
-	ld de,00020h		;ab0d	11 20 00 	.   . 
+action_hard_brick_bounce:
+    ; A = BRICK_ROW + 1
+	ld a,(BRICK_ROW)    ;ab06	3a aa e2
+	inc a			    ;ab09	3c
+    
+	ld hl, 0		;ab0a	21 00 00
+	ld de, 32		;ab0d	11 20 00
 lab10h:
-	add hl,de			;ab10	19 	. 
-	dec a			;ab11	3d 	= 
-	jp nz,lab10h		;ab12	c2 10 ab 	. . . 
-	ld de,01842h		;ab15	11 42 18 	. B . 
-	add hl,de			;ab18	19 	. 
-	ld a,(BRICK_COL)		;ab19	3a ab e2 	: . . 
-	ld e,a			;ab1c	5f 	_ 
-	sla e		;ab1d	cb 23 	. # 
-	ld d,000h		;ab1f	16 00 	. . 
-	add hl,de			;ab21	19 	. 
-	ld a,(BRICK_ROW)		;ab22	3a aa e2 	: . . 
-	ld (BRICK_HIT_ROW),a		;ab25	32 3c e5 	2 < . 
-	ld a,(BRICK_COL)		;ab28	3a ab e2 	: . . 
-	ld (BRICK_HIT_COL),a		;ab2b	32 3d e5 	2 = . 
-	call FILL_HARD_BRICK_TABLE		;ab2e	cd af 97 	. . . 
+    ; HL = 32*BRICK_ROW
+	add hl,de			;ab10	19
+	dec a			    ;ab11	3d
+	jp nz,lab10h		;ab12	c2 10 ab
 
+    ; HL = 32*BRICK_ROW + 0x1842
+	ld de,01842h		;ab15	11 42 18
+	add hl,de			;ab18	19
+
+    ; E = 2*BRICK_COL
+	ld a,(BRICK_COL)	;ab19	3a ab e2
+	ld e,a			    ;ab1c	5f
+	sla e		        ;ab1d	cb 23
+    
+    ; HL = 32*BRICK_ROW + 0x1842 + 2*BRICK_COL
+	ld d, 0		        ;ab1f	16 00
+	add hl,de			;ab21	19
+    
+    ; This assignment to HL needs to be done.
+    ; Otherwise the hard bricks are drawn again, in the first column.
+    ; ToDo: understand this better...
+
+    ; BRICK_HIT_ROW <-- BRICK_ROW
+	ld a,(BRICK_ROW)		;ab22	3a aa e2
+	ld (BRICK_HIT_ROW),a	;ab25	32 3c e5
+
+    ; BRICK_HIT_COL <-- BRICK_COL
+	ld a,(BRICK_COL)		;ab28	3a ab e2
+	ld (BRICK_HIT_COL),a	;ab2b	32 3d e5
+    
+    ; Update the hard-brick table
+	call UPDATE_HARD_BRICK_TABLE		;ab2e	cd af 97
+
+    ; Play a hard-brick hit sound
 	ld a,SOUND_HARD_BRICK_HIT		;ab31	3e 03
 	call ADD_SOUND		            ;ab33	cd ef 5b
 	xor a			                ;ab36	af

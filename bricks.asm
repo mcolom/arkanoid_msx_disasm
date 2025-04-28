@@ -45,3 +45,7 @@ HARD_BRICK_TABLE_IDX_TICKS1: equ 4
 HARD_BRICK_TABLE_IDX_ANIM_STEP: equ 5
 HARD_BRICK_TABLE_IDX_ROW: equ 6
 HARD_BRICK_TABLE_IDX_COL: equ 7
+
+; These variables are set, but never checked
+BRICK_UNUSED_1: equ 0xe2ba
+BRICK_UNUSED_2: equ 0xe2bb
