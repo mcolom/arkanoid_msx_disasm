@@ -9828,7 +9828,7 @@ laa3ch:
 ;
 TBL_JUMP_laa52h:
     dw action_brick_hit
-    dw laac1h
+    dw action_brick_hit_and_capsule
     dw laac7h
     dw action_skewness
     dw laa9ch
@@ -9905,7 +9905,7 @@ laabch:
 	ld c,001h		;aabc	0e 01 	. . 
 	jp lab06h		;aabe	c3 06 ab 	. . . 
 
-laac1h:
+action_brick_hit_and_capsule:
 	call SET_RANDOM_CAPSULE_IF_NO_EXTRA_BALLS		;aac1	cd 0f b0 	. . . 
 	jp action_brick_hit		;aac4	c3 ef aa 	. . . 
 
