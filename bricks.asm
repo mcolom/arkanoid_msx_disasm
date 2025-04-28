@@ -49,3 +49,7 @@ HARD_BRICK_TABLE_IDX_COL: equ 7
 ; These variables are set, but never checked
 BRICK_UNUSED_1: equ 0xe2ba
 BRICK_UNUSED_2: equ 0xe2bb
+
+BRICK_ACTION_TABLE_OFFSET: equ 0xe2bc
+
+

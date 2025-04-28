@@ -9757,21 +9757,21 @@ laa01h:
 sub_aa05h:
 	call UPDATE_BALL_SPEED		;aa05	cd f0 9a
     
-    ; HL = TBL_laa5ch[2*LEVEL]
+    ; HL = TBL_BRICK_ACTION_TABLE_OFFSETs[2*LEVEL]
 	ld a,(LEVEL)		        ;aa08	3a 1b e0
 	sla a		                ;aa0b	cb 27
     ld e,a			            ;aa0d	5f
 	ld d, 0		                ;aa0e	16 00    
-    ld hl,TBL_laa5ch		        ;aa10	21 5c aa
+    ld hl,TBL_BRICK_ACTION_TABLE_OFFSETs		    ;aa10	21 5c aa
 	add hl,de			        ;aa13	19
 	ld e,(hl)			        ;aa14	5e
 	inc hl			            ;aa15	23
 	ld d,(hl)			        ;aa16	56
-	ex de,hl			;aa17	eb 	. 
+	ex de,hl			        ;aa17	eb
 
-    ; (0e2bch) <-- TBL_laa5ch[2*LEVEL]
-	ld (0e2bch),hl		;aa18	22 bc e2
-    
+    ; (BRICK_ACTION_TABLE_OFFSET) <-- TBL_BRICK_ACTION_TABLE_OFFSETs[2*LEVEL]
+	ld (BRICK_ACTION_TABLE_OFFSET),hl		;aa18	22 bc e2
+
     ; BRICK_ROW = min(BRICK_ROW, 11)
 	ld a,(BRICK_ROW)	;aa1b	3a aa e2
 	cp 12		        ;aa1e	fe 0c
@@ -9803,21 +9803,21 @@ laa3ch:
 	ld d, 0		        ;aa3c	16 00   DE = BRICK_COL
 	add hl,de			;aa3e	19      HL = 11*BRICK_ROW + BRICK_COL
     
-	; HL = 11*BRICK_ROW + BRICK_COL + (0e2bch)
-    ld de,(0e2bch)		;aa3f	ed 5b bc e2
+	; HL = 11*BRICK_ROW + BRICK_COL + (BRICK_ACTION_TABLE_OFFSET)
+    ld de,(BRICK_ACTION_TABLE_OFFSET)		;aa3f	ed 5b bc e2
 	add hl,de			;aa43	19 	. 
     
-    ; DE = [11*BRICK_ROW + BRICK_COL + (0e2bch)]
+    ; DE = [11*BRICK_ROW + BRICK_COL + (BRICK_ACTION_TABLE_OFFSET)]
 	ld e,(hl)			;aa44	5e
     
-	sla e		        ;aa45	cb 23   DE = 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
+	sla e		        ;aa45	cb 23   DE = 2*[11*BRICK_ROW + BRICK_COL + (BRICK_ACTION_TABLE_OFFSET)]
     
-    ; HL = TBL_BRICK_ACTIONS + 2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]
+    ; HL = TBL_BRICK_ACTIONS + 2*[11*BRICK_ROW + BRICK_COL + (BRICK_ACTION_TABLE_OFFSET)]
 	ld d,000h		        ;aa47	16 00
 	ld hl,TBL_BRICK_ACTIONS	;aa49	21 52 aa
 	add hl,de			    ;aa4c	19
     
-    ; DE = TBL_BRICK_ACTIONS[2*[11*BRICK_ROW + BRICK_COL + (0e2bch)]]
+    ; DE = TBL_BRICK_ACTIONS[2*[BRICK_ROWS*BRICK_ROW + BRICK_COL + (BRICK_ACTION_TABLE_OFFSET)]]
 	ld e,(hl)			    ;aa4d	5e
 	inc hl			        ;aa4e	23
 	ld d,(hl)			    ;aa4f	56
@@ -9826,55 +9826,20 @@ laa3ch:
 	ex de,hl			    ;aa50	eb
 	jp (hl)			        ;aa51	e9
 ;
-TBL_BRICK_ACTIONS:
+TBL_BRICK_ACTIONS:          ;aa52
     dw action_brick_hit
     dw action_brick_hit_and_capsule
     dw action_hard_brick_hit
     dw action_unbreakable_brick_hit
     dw action_reset_unused_vars
 
-TBL_laa5ch:
-	nop			;aa5c	00 	. 
-	ret nz			;aa5d	c0 	. 
-	add a,h			;aa5e	84 	. 
-	ret nz			;aa5f	c0 	. 
-	ex af,af'			;aa60	08 	. 
-	pop bc			;aa61	c1 	. 
-	adc a,h			;aa62	8c 	. 
-	pop bc			;aa63	c1 	. 
-	djnz laa28h		;aa64	10 c2 	. . 
-	sub h			;aa66	94 	. 
-	jp nz,0c318h		;aa67	c2 18 c3 	. . . 
-	sbc a,h			;aa6a	9c 	. 
-	jp 0c420h		;aa6b	c3 20 c4 	.   . 
-	and h			;aa6e	a4 	. 
-	call nz,0c528h		;aa6f	c4 28 c5 	. ( . 
-	xor h			;aa72	ac 	. 
-	push bc			;aa73	c5 	. 
-	jr nc,laa3ch		;aa74	30 c6 	0 . 
-	or h			;aa76	b4 	. 
-	add a,038h		;aa77	c6 38 	. 8 
-	rst 0			;aa79	c7 	. 
-	cp h			;aa7a	bc 	. 
-	rst 0			;aa7b	c7 	. 
-	ld b,b			;aa7c	40 	@ 
-	ret z			;aa7d	c8 	. 
-	call nz,048c8h		;aa7e	c4 c8 48 	. . H 
-	ret			;aa81	c9 	. 
-	call z,0x50c9		;aa82	cc c9 50 	. . P 
-	jp z,0cad4h		;aa85	ca d4 ca 	. . . 
-	ld e,b			;aa88	58 	X 
-	set 3,h		;aa89	cb dc 	. . 
-	bit 4,b		;aa8b	cb 60 	. ` 
-	call z,0cce4h		;aa8d	cc e4 cc 	. . . 
-	ld l,b			;aa90	68 	h 
-	call 0cdech		;aa91	cd ec cd 	. . . 
-	ld (hl),b			;aa94	70 	p 
-	adc a,0f4h		;aa95	ce f4 	. . 
-	adc a,078h		;aa97	ce 78 	. x 
-	rst 8			;aa99	cf 	. 
-    
-    db 0xfc, 0xcf   ;aa9a
+; This points to tables with the bricks "unrolled".
+; This is used to identify the brick type and take the appropriate action.
+TBL_BRICK_ACTION_TABLE_OFFSETs: ;aa5c
+    dw 0xc000, 0xc084, 0xc108, 0xc18c, 0xc210, 0xc294, 0xc318, 0xc39c; 0xaa5c - 0xaa6b
+    dw 0xc420, 0xc4a4, 0xc528, 0xc5ac, 0xc630, 0xc6b4, 0xc738, 0xc7bc; 0xaa6c - 0xaa7b
+    dw 0xc840, 0xc8c4, 0xc948, 0xc9cc, 0xca50, 0xcad4, 0xcb58, 0xcbdc; 0xaa7c - 0xaa8b
+    dw 0xcc60, 0xcce4, 0xcd68, 0xcdec, 0xce70, 0xcef4, 0xcf78, 0xcffc; 0xaa8c - 0xaa9b
 
 ; Reset two unused variables
 action_reset_unused_vars:
