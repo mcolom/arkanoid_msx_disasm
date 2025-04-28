@@ -5107,7 +5107,7 @@ l70bfh:
 	ld (BRICK_HIT_ROW),a	;7112	32 3c e5
 
     ; ToDo
-	call sub_aa05h		;7115	cd 05 aa
+	call DO_BRICK_ACTION		;7115	cd 05 aa
 l7118h:
     ; Check if X+14 is in [16, 191]
 	ld a,(ix+SPR_PARAMS_IDX_X)	;7118	dd 7e 01
@@ -5134,7 +5134,7 @@ l7118h:
 	ld a, 1	                ;713a	3e 01
 	ld (BRICK_HIT_ROW),a	;713c	32 3c e5
 
-	call sub_aa05h		;713f	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;713f	cd 05 aa 	. . . 
 l7142h:
 	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5 	: < . 
 	or a			;7145	b7 	. 
@@ -8198,7 +8198,7 @@ l9cfdh:
 	call THERE_IS_A_BRICK		;9d09	cd a8 ad 	. . . 
 	jp nc,la299h		;9d0c	d2 99 a2 	. . . 
 	call sub_9b5bh		;9d0f	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9d12	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9d12	cd 05 aa 	. . . 
 	jp la299h		;9d15	c3 99 a2 	. . . 
 l9d18h:
 	ld a,(0e58ch)		;9d18	3a 8c e5 	: . . 
@@ -8209,7 +8209,7 @@ l9d18h:
 	jp nc,la299h		;9d27	d2 99 a2 	. . . 
 	call la901h		;9d2a	cd 01 a9 	. . . 
 	call sub_9b80h		;9d2d	cd 80 9b 	. . . 
-	call sub_aa05h		;9d30	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9d30	cd 05 aa 	. . . 
 	jp la299h		;9d33	c3 99 a2 	. . . 
 l9d36h:
 	ld a,(0e58ah)		;9d36	3a 8a e5 	: . . 
@@ -8220,7 +8220,7 @@ l9d36h:
 	jp nc,la299h		;9d45	d2 99 a2 	. . . 
 	call sub_a810h		;9d48	cd 10 a8 	. . . 
 	call sub_9b5bh		;9d4b	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9d4e	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9d4e	cd 05 aa 	. . . 
 	jp la299h		;9d51	c3 99 a2 	. . . 
 l9d54h:
 	ld a,(0e58ah)		;9d54	3a 8a e5 	: . . 
@@ -8236,7 +8236,7 @@ l9d54h:
 	ld a,(BRICK_HIT_COL)		;9d72	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9d75	dd 77 01 	. w . 
 	call sub_9b5bh		;9d78	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9d7b	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9d7b	cd 05 aa 	. . . 
 	jp la299h		;9d7e	c3 99 a2 	. . . 
 l9d81h:
 	ld a,(0e58bh)		;9d81	3a 8b e5 	: . . 
@@ -8245,7 +8245,7 @@ l9d81h:
 	jp nc,la299h		;9d8a	d2 99 a2 	. . . 
 	call la901h		;9d8d	cd 01 a9 	. . . 
 	call sub_9b80h		;9d90	cd 80 9b 	. . . 
-	call sub_aa05h		;9d93	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9d93	cd 05 aa 	. . . 
 	jp la299h		;9d96	c3 99 a2 	. . . 
 l9d99h:
 	ld a,(0e58ch)		;9d99	3a 8c e5 	: . . 
@@ -8256,7 +8256,7 @@ l9d99h:
 	jp nc,l9db7h		;9da8	d2 b7 9d 	. . . 
 	call la901h		;9dab	cd 01 a9 	. . . 
 	call sub_9b80h		;9dae	cd 80 9b 	. . . 
-	call sub_aa05h		;9db1	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9db1	cd 05 aa 	. . . 
 	jp la299h		;9db4	c3 99 a2 	. . . 
 l9db7h:
 	ld a,(0e58ah)		;9db7	3a 8a e5 	: . . 
@@ -8265,7 +8265,7 @@ l9db7h:
 	jp nc,la299h		;9dc0	d2 99 a2 	. . . 
 	call sub_a810h		;9dc3	cd 10 a8 	. . . 
 	call sub_9b5bh		;9dc6	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9dc9	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9dc9	cd 05 aa 	. . . 
 	jp la299h		;9dcc	c3 99 a2 	. . . 
 l9dcfh:
 	bit 7,(iy+002h)		;9dcf	fd cb 02 7e 	. . . ~ 
@@ -8362,7 +8362,7 @@ l9e99h:
 	call THERE_IS_A_BRICK		;9ea5	cd a8 ad 	. . . 
 	jp nc,la299h		;9ea8	d2 99 a2 	. . . 
 	call sub_9b5bh		;9eab	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9eae	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9eae	cd 05 aa 	. . . 
 	jp la299h		;9eb1	c3 99 a2 	. . . 
 l9eb4h:
 	ld a,(0e58ch)		;9eb4	3a 8c e5 	: . . 
@@ -8373,7 +8373,7 @@ l9eb4h:
 	jp nc,la299h		;9ec3	d2 99 a2 	. . . 
 	call la901h		;9ec6	cd 01 a9 	. . . 
 	call sub_9b80h		;9ec9	cd 80 9b 	. . . 
-	call sub_aa05h		;9ecc	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9ecc	cd 05 aa 	. . . 
 	jp la299h		;9ecf	c3 99 a2 	. . . 
 l9ed2h:
 	ld a,(0e58ah)		;9ed2	3a 8a e5 	: . . 
@@ -8384,7 +8384,7 @@ l9ed2h:
 	jp nc,la299h		;9ee1	d2 99 a2 	. . . 
 	call sub_a810h		;9ee4	cd 10 a8 	. . . 
 	call sub_9b5bh		;9ee7	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9eea	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9eea	cd 05 aa 	. . . 
 	jp la299h		;9eed	c3 99 a2 	. . . 
 l9ef0h:
 	ld a,(0e58ah)		;9ef0	3a 8a e5 	: . . 
@@ -8400,7 +8400,7 @@ l9ef0h:
 	ld a,(BRICK_HIT_COL)		;9f0e	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9f11	dd 77 01 	. w . 
 	call sub_9b5bh		;9f14	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9f17	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9f17	cd 05 aa 	. . . 
 	jp la299h		;9f1a	c3 99 a2 	. . . 
 l9f1dh:
 	ld a,(0e58bh)		;9f1d	3a 8b e5 	: . . 
@@ -8409,7 +8409,7 @@ l9f1dh:
 	jp nc,la299h		;9f26	d2 99 a2 	. . . 
 	call la901h		;9f29	cd 01 a9 	. . . 
 	call sub_9b80h		;9f2c	cd 80 9b 	. . . 
-	call sub_aa05h		;9f2f	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9f2f	cd 05 aa 	. . . 
 	jp la299h		;9f32	c3 99 a2 	. . . 
 l9f35h:
 	ld a,(0e58ch)		;9f35	3a 8c e5 	: . . 
@@ -8420,7 +8420,7 @@ l9f35h:
 	jp nc,l9f53h		;9f44	d2 53 9f 	. S . 
 	call la901h		;9f47	cd 01 a9 	. . . 
 	call sub_9b80h		;9f4a	cd 80 9b 	. . . 
-	call sub_aa05h		;9f4d	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9f4d	cd 05 aa 	. . . 
 	jp la299h		;9f50	c3 99 a2 	. . . 
 l9f53h:
 	ld a,(0e58ah)		;9f53	3a 8a e5 	: . . 
@@ -8429,7 +8429,7 @@ l9f53h:
 	jp nc,la299h		;9f5c	d2 99 a2 	. . . 
 	call sub_a810h		;9f5f	cd 10 a8 	. . . 
 	call sub_9b5bh		;9f62	cd 5b 9b 	. [ . 
-	call sub_aa05h		;9f65	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;9f65	cd 05 aa 	. . . 
 	jp la299h		;9f68	c3 99 a2 	. . . 
 l9f6bh:
 	bit 7,(iy+002h)		;9f6b	fd cb 02 7e 	. . . ~ 
@@ -8524,7 +8524,7 @@ la030h:
 	call THERE_IS_A_BRICK		;a03c	cd a8 ad 	. . . 
 	jp nc,la299h		;a03f	d2 99 a2 	. . . 
 	call sub_9b5bh		;a042	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a045	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a045	cd 05 aa 	. . . 
 	jp la299h		;a048	c3 99 a2 	. . . 
 la04bh:
 	ld a,(0e58ch)		;a04b	3a 8c e5 	: . . 
@@ -8535,7 +8535,7 @@ la04bh:
 	jp nc,la299h		;a05a	d2 99 a2 	. . . 
 	call la901h		;a05d	cd 01 a9 	. . . 
 	call sub_9b80h		;a060	cd 80 9b 	. . . 
-	call sub_aa05h		;a063	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a063	cd 05 aa 	. . . 
 	jp la299h		;a066	c3 99 a2 	. . . 
 la069h:
 	ld a,(0e58ah)		;a069	3a 8a e5 	: . . 
@@ -8546,7 +8546,7 @@ la069h:
 	jp nc,la299h		;a078	d2 99 a2 	. . . 
 	call sub_a810h		;a07b	cd 10 a8 	. . . 
 	call sub_9b5bh		;a07e	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a081	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a081	cd 05 aa 	. . . 
 	jp la299h		;a084	c3 99 a2 	. . . 
 la087h:
 	ld a,(0e58ah)		;a087	3a 8a e5 	: . . 
@@ -8563,7 +8563,7 @@ la090h:
 	ld a,(BRICK_HIT_COL)		;a0a5	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a0a8	dd 77 01 	. w . 
 	call sub_9b5bh		;a0ab	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a0ae	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a0ae	cd 05 aa 	. . . 
 	jp la299h		;a0b1	c3 99 a2 	. . . 
 la0b4h:
 	ld a,(0e58bh)		;a0b4	3a 8b e5 	: . . 
@@ -8573,7 +8573,7 @@ la0b4h:
 la0c0h:
 	call la901h		;a0c0	cd 01 a9 	. . . 
 	call sub_9b80h		;a0c3	cd 80 9b 	. . . 
-	call sub_aa05h		;a0c6	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a0c6	cd 05 aa 	. . . 
 	jp la299h		;a0c9	c3 99 a2 	. . . 
 la0cch:
 	ld a,(0e58ch)		;a0cc	3a 8c e5 	: . . 
@@ -8584,7 +8584,7 @@ la0cch:
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
 	call la901h		;a0de	cd 01 a9 	. . . 
 	call sub_9b80h		;a0e1	cd 80 9b 	. . . 
-	call sub_aa05h		;a0e4	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a0e4	cd 05 aa 	. . . 
 	jp la299h		;a0e7	c3 99 a2 	. . . 
 la0eah:
 	ld a,(0e58ah)		;a0ea	3a 8a e5 	: . . 
@@ -8593,7 +8593,7 @@ la0eah:
 	jp nc,la299h		;a0f3	d2 99 a2 	. . . 
 	call sub_a810h		;a0f6	cd 10 a8 	. . . 
 	call sub_9b5bh		;a0f9	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a0fc	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a0fc	cd 05 aa 	. . . 
 	jp la299h		;a0ff	c3 99 a2 	. . . 
 la102h:
 	bit 7,(iy+002h)		;a102	fd cb 02 7e 	. . . ~ 
@@ -8688,7 +8688,7 @@ la1c7h:
 	call THERE_IS_A_BRICK		;a1d3	cd a8 ad 	. . . 
 	jp nc,la299h		;a1d6	d2 99 a2 	. . . 
 	call sub_9b5bh		;a1d9	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a1dc	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a1dc	cd 05 aa 	. . . 
 	jp la299h		;a1df	c3 99 a2 	. . . 
 la1e2h:
 	ld a,(0e58ch)		;a1e2	3a 8c e5 	: . . 
@@ -8699,7 +8699,7 @@ la1e2h:
 	jp nc,la299h		;a1f1	d2 99 a2 	. . . 
 	call la901h		;a1f4	cd 01 a9 	. . . 
 	call sub_9b80h		;a1f7	cd 80 9b 	. . . 
-	call sub_aa05h		;a1fa	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a1fa	cd 05 aa 	. . . 
 	jp la299h		;a1fd	c3 99 a2 	. . . 
 la200h:
 	ld a,(0e58ah)		;a200	3a 8a e5 	: . . 
@@ -8710,7 +8710,7 @@ la200h:
 	jp nc,la299h		;a20f	d2 99 a2 	. . . 
 	call sub_a810h		;a212	cd 10 a8 	. . . 
 	call sub_9b5bh		;a215	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a218	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a218	cd 05 aa 	. . . 
 	jp la299h		;a21b	c3 99 a2 	. . . 
 la21eh:
 	ld a,(0e58ah)		;a21e	3a 8a e5 	: . . 
@@ -8726,7 +8726,7 @@ la21eh:
 	ld a,(BRICK_HIT_COL)		;a23c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a23f	dd 77 01 	. w . 
 	call sub_9b5bh		;a242	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a245	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a245	cd 05 aa 	. . . 
 	jp la299h		;a248	c3 99 a2 	. . . 
 la24bh:
 	ld a,(0e58bh)		;a24b	3a 8b e5 	: . . 
@@ -8735,7 +8735,7 @@ la24bh:
 	jp nc,la299h		;a254	d2 99 a2 	. . . 
 	call la901h		;a257	cd 01 a9 	. . . 
 	call sub_9b80h		;a25a	cd 80 9b 	. . . 
-	call sub_aa05h		;a25d	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a25d	cd 05 aa 	. . . 
 	jp la299h		;a260	c3 99 a2 	. . . 
 la263h:
 	ld a,(0e58ch)		;a263	3a 8c e5 	: . . 
@@ -8746,7 +8746,7 @@ la263h:
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
 	call la901h		;a275	cd 01 a9 	. . . 
 	call sub_9b80h		;a278	cd 80 9b 	. . . 
-	call sub_aa05h		;a27b	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a27b	cd 05 aa 	. . . 
 	jp la299h		;a27e	c3 99 a2 	. . . 
 la281h:
 	ld a,(0e58ah)		;a281	3a 8a e5 	: . . 
@@ -8755,7 +8755,7 @@ la281h:
 	jp nc,la299h		;a28a	d2 99 a2 	. . . 
 	call sub_a810h		;a28d	cd 10 a8 	. . . 
 	call sub_9b5bh		;a290	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a293	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a293	cd 05 aa 	. . . 
 	jp la299h		;a296	c3 99 a2 	. . . 
 la299h:
 	ret			;a299	c9 	. 
@@ -8811,7 +8811,7 @@ la2eeh:
 	ld a,(BRICK_HIT_COL)		;a30c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a30f	dd 77 01 	. w . 
 	call sub_9b5bh		;a312	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a315	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a315	cd 05 aa 	. . . 
 	jp la326h		;a318	c3 26 a3 	. & . 
 la31bh:
 	call sub_a3d1h		;a31b	cd d1 a3 	. . . 
@@ -8837,7 +8837,7 @@ sub_a328h:
 	jp nc,la351h		;a342	d2 51 a3 	. Q . 
 	call sub_a810h		;a345	cd 10 a8 	. . . 
 	call sub_9b5bh		;a348	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a34b	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a34b	cd 05 aa 	. . . 
 	jp la3d0h		;a34e	c3 d0 a3 	. . . 
 la351h:
 	jp la3d0h		;a351	c3 d0 a3 	. . . 
@@ -8860,7 +8860,7 @@ la367h:
 	jp nc,la38eh		;a37f	d2 8e a3 	. . . 
 	call sub_a810h		;a382	cd 10 a8 	. . . 
 	call sub_9b5bh		;a385	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a388	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a388	cd 05 aa 	. . . 
 	jp la3d0h		;a38b	c3 d0 a3 	. . . 
 la38eh:
 	ld a,(0e58ah)		;a38e	3a 8a e5 	: . . 
@@ -8871,7 +8871,7 @@ la38eh:
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
 	call la901h		;a3a0	cd 01 a9 	. . . 
 	call sub_9b80h		;a3a3	cd 80 9b 	. . . 
-	call sub_aa05h		;a3a6	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a3a6	cd 05 aa 	. . . 
 	jp la3d0h		;a3a9	c3 d0 a3 	. . . 
 la3ach:
 	jp la3d0h		;a3ac	c3 d0 a3 	. . . 
@@ -8884,7 +8884,7 @@ la3afh:
 	jp nc,la3cdh		;a3be	d2 cd a3 	. . . 
 	call sub_a810h		;a3c1	cd 10 a8 	. . . 
 	call sub_9b5bh		;a3c4	cd 5b 9b 	. [ . 
-	call sub_aa05h		;a3c7	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;a3c7	cd 05 aa 	. . . 
 	jp la3d0h		;a3ca	c3 d0 a3 	. . . 
 la3cdh:
 	jp la3d0h		;a3cd	c3 d0 a3 	. . . 
@@ -9750,11 +9750,9 @@ laa01h:
 	ld (ix+001h),a		;aa01	dd 77 01 	. w . 
 	ret			;aa04	c9 	. 
 
-; ToDo
-; This is called A LOT OF times
-; It's called when you hit a brick
-; Write in C000, ...
-sub_aa05h:
+
+; Take the appropriate action when a brick is hit
+DO_BRICK_ACTION:
 	call UPDATE_BALL_SPEED		;aa05	cd f0 9a
     
     ; HL = TBL_BRICK_ACTION_TABLE_OFFSETs[2*LEVEL]
