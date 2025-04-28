@@ -9900,7 +9900,7 @@ laabch:
 	jp lab06h		;aabe	c3 06 ab 	. . . 
 
 laac1h:
-	call sub_b00fh		;aac1	cd 0f b0 	. . . 
+	call SET_RANDOM_CAPSULE_IF_NO_EXTRA_BALLS		;aac1	cd 0f b0 	. . . 
 	jp action_brick_hit		;aac4	c3 ef aa 	. . . 
 
 laac7h:
@@ -10446,24 +10446,27 @@ lb000h:
 lb00dh:
 	xor a			;b00d	af 	. 
 	ret			;b00e	c9 	. 
-; ToDo
-sub_b00fh:
-	push ix		;b00f	dd e5 	. . 
-	push iy		;b011	fd e5 	. . 
-	push hl			;b013	e5 	. 
-	push de			;b014	d5 	. 
-	push bc			;b015	c5 	. 
-	ld a,(EXTRA_BALLS)		;b016	3a 25 e3 	: % . 
-	or a			;b019	b7 	. 
-	jp nz,lb020h		;b01a	c2 20 b0 	.   . 
-	call SET_PROPER_RANDOM_CAPSULE_TYPE		;b01d	cd 28 b0 	. ( . 
+
+; Set a random capsule type if there are not extra balls.
+; This is the function that prevents falling capsules when
+; you're playing with several balls.
+SET_RANDOM_CAPSULE_IF_NO_EXTRA_BALLS:
+	push ix		            ;b00f	dd e5
+	push iy		            ;b011	fd e5
+	push hl			        ;b013	e5
+	push de			        ;b014	d5
+	push bc			        ;b015	c5
+	ld a,(EXTRA_BALLS)		;b016	3a 25 e3
+	or a			        ;b019	b7
+	jp nz,lb020h		    ;b01a	c2 20 b0
+	call SET_PROPER_RANDOM_CAPSULE_TYPE		;b01d	cd 28 b0
 lb020h:
-	pop bc			;b020	c1 	. 
-	pop de			;b021	d1 	. 
-	pop hl			;b022	e1 	. 
-	pop iy		;b023	fd e1 	. . 
-	pop ix		;b025	dd e1 	. . 
-	ret			;b027	c9 	. 
+	pop bc		;b020
+	pop de		;b021
+	pop hl		;b022
+	pop iy		;b023	fd e1
+	pop ix		;b025	dd e1
+	ret			;b027	c9
 
 ; Set a random capsule type, without choosing the type we
 ; already have.
