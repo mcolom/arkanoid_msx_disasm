@@ -10488,8 +10488,8 @@ sub_b028h:
 	call SET_RANDOM_CAPSULE_TYPE		;b03f	cd dd b0
 	jp c,lb073h		                    ;b042	da 73 b0    Jump if magenta brick
 
-	call DECIDE_GIVE_LIFE		                ;b045	cd 0a b1
-	jp c,lb073h		                    ;b048	da 73 b0
+	call DECIDE_BRICK_IS_LIFE		        ;b045	cd 0a b1
+	jp c,lb073h		                    ;b048	da 73 b0    Jump is the live 
 
 	ld a,(GLUING_STATUS)		;b04b	3a 24 e3
 	cp GLUING_STATE_STICKY		;b04e	fe 01
@@ -10660,7 +10660,7 @@ lb102h:
 ; Check if the falling brick is a life.
 ; If so, check a counter (initilized randomly) to decide if we
 ; give the life or not. Lives are scarce!
-DECIDE_GIVE_LIFE:
+DECIDE_BRICK_IS_LIFE:
     ; Skip if the brick is not a life
 	ld a,(LIFE_OBTAINED_FLAG)		;b10a	3a 27 e3
 	or a			                ;b10d	b7
