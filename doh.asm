@@ -1,4 +1,4 @@
-DOH_DEFEATED: equ 0xe50d
+DOH_IS_FIRING: equ 0xe50d
 
 DOH_HIT: equ 0xe505     ; 1 when Doh is hit
 DOH_HIT_2: equ 0xe2b9   ; 1 when Doh is hit

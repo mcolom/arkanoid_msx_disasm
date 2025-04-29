@@ -5369,7 +5369,7 @@ l726eh:
 
 ; This is Doh's stuff...
 doh_level:
-	ld a,(DOH_DEFEATED)		;7286	3a 0d e5 	: . . 
+	ld a,(DOH_IS_FIRING)		;7286	3a 0d e5 	: . .   ToDo: this is not DOH_IS_FIRING, but firing!
 	or a			;7289	b7 	. 
 	jp nz,l7296h		;728a	c2 96 72 	. . r 
 	call DRAW_DOH_MOUTH_OPEN		;728d	cd 94 75 	. . u 
@@ -7328,7 +7328,7 @@ l96e4h:
 
     ; Doh has been defeated!
 	ld a, 1		            ;96fc	3e 01 	> . 
-	ld (DOH_DEFEATED),a		;96fe	32 0d e5
+	ld (DOH_IS_FIRING),a		;96fe	32 0d e5
 	call DEACTIVE_ALL_BALLS	;9701	cd 10 97
 
 	ld a,SOUND_DOH_DEFEATED	;9704	3e 09
