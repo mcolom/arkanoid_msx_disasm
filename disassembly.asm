@@ -5374,7 +5374,7 @@ doh_level:
 	jp nz,l7296h		;728a	c2 96 72 	. . r 
 	call sub_7594h		;728d	cd 94 75 	. . u 
 	call sub_7469h		;7290	cd 69 74 	. i t 
-	call sub_7a68h		;7293	cd 68 7a 	. h z 
+	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
 	call sub_74c7h		;7296	cd c7 74 	. . t 
 	call sub_73aah		;7299	cd aa 73 	. . s 
@@ -5703,7 +5703,7 @@ l7483h:
 	ld a,000h		;748e	3e 00 	> . 
 	ld (0e581h),a		;7490	32 81 e5 	2 . . 
 	ld b,003h		;7493	06 03 	. . 
-	ld ix,0e563h		;7495	dd 21 63 e5 	. ! c . 
+	ld ix,DOH_BULLETS_TABLE		;7495	dd 21 63 e5 	. ! c . 
 	ld iy,SPR_16_SPR_PARAMS		;7499	fd 21 0d e1 	. ! . . 
 l749dh:
 	ld a,(ix+000h)		;749d	dd 7e 00 	. ~ . 
@@ -5723,10 +5723,11 @@ l74bdh:
 	add ix,de		;74c2	dd 19 	. . 
 	djnz l749dh		;74c4	10 d7 	. . 
 	ret			;74c6	c9 	. 
+
 sub_74c7h:
-	ld b,003h		;74c7	06 03 	. . 
-	ld ix,0e563h		;74c9	dd 21 63 e5 	. ! c . 
-	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1 	. ! . . 
+	ld b, 3		                ;74c7	06 03
+	ld ix,DOH_BULLETS_TABLE		        ;74c9	dd 21 63 e5
+	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1
 l74d1h:
 	push bc			;74d1	c5 	. 
 	ld a,(ix+000h)		;74d2	dd 7e 00 	. ~ . 
@@ -5835,7 +5836,7 @@ l7587h:
 	inc bc			;7592	03 	. 
 	inc b			;7593	04 	. 
 sub_7594h:
-	ld ix,0e563h		;7594	dd 21 63 e5 	. ! c . 
+	ld ix,DOH_BULLETS_TABLE		;7594	dd 21 63 e5 	. ! c . 
 	ld a,(ix+000h)		;7598	dd 7e 00 	. ~ . 
 	or a			;759b	b7 	. 
 	jr nz,l75c8h		;759c	20 2a 	  * 
@@ -5860,6 +5861,7 @@ l75adh:
 	add iy,de		;75c3	fd 19 	. . 
 	djnz l75adh		;75c5	10 e6 	. . 
 	ret			;75c7	c9 	. 
+
 l75c8h:
 	ld b,003h		;75c8	06 03 	. . 
 	ld ix,l75edh		;75ca	dd 21 ed 75 	. ! . u 
@@ -6636,50 +6638,70 @@ l7a5bh:
 	scf			;7a66	37 	7 
 	ret			;7a67	c9 	. 
 
-sub_7a68h:
+; Checks if any of the bullets has touched Vaus
+; If so, destroy Vaus
+CHECK_VAUS_KILLED_BY_DOH:
     ; Skip if Vaus is exploding
     ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		;7a68	3a 4b e5
-	cp VAUS_ACTION_STATE_EXPLODING	;7a6b	fe 06
-	ret z			                ;7a6d	c8
+	cp VAUS_ACTION_STATE_EXPLODING	                    ;7a6b	fe 06
+	ret z			                                    ;7a6d	c8
     
-	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0 	. ! . . 
-	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1 	. ! . . 
-	ld hl,0e563h		;7a76	21 63 e5 	! c . 
-	ld b,003h		;7a79	06 03 	. . 
+	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0
+	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1
+	ld hl,DOH_BULLETS_TABLE		;7a76	21 63 e5
+	ld b, 3		                ;7a79	06 03
 l7a7bh:
-	ld a,(hl)			;7a7b	7e 	~ 
-	or a			;7a7c	b7 	. 
-	jp z,l7ab4h		;7a7d	ca b4 7a 	. . z 
-	ld a,(iy+000h)		;7a80	fd 7e 00 	. ~ . 
-	cp 0a7h		;7a83	fe a7 	. . 
-	jp c,l7ab4h		;7a85	da b4 7a 	. . z 
-	cp 0b8h		;7a88	fe b8 	. . 
-	jp nc,l7ab4h		;7a8a	d2 b4 7a 	. . z 
-	ld a,(ix+001h)		;7a8d	dd 7e 01 	. ~ . 
-	add a,008h		;7a90	c6 08 	. . 
-	cp (iy+001h)		;7a92	fd be 01 	. . . 
-	jp nc,l7ab4h		;7a95	d2 b4 7a 	. . z 
-	ld a,(ix+001h)		;7a98	dd 7e 01 	. ~ . 
-	add a,020h		;7a9b	c6 20 	.   
-	cp (iy+001h)		;7a9d	fd be 01 	. . . 
-	jp c,l7ab4h		;7aa0	da b4 7a 	. . z 
+    ; Check DOH_BULLETS_ACTIVE
+	ld a,(hl)	                    ;7a7b	7e
+	or a			                ;7a7c	b7
+	jp z,doh_next_bullet		    ;7a7d	ca b4 7a
+
+    ; Next bullet if Y < 167
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7a80	fd 7e 00
+	cp 167		                    ;7a83	fe a7
+	jp c,doh_next_bullet		    ;7a85	da b4 7a
+
+    ; Next bullet if Y >= 184
+	cp 184		                    ;7a88	fe b8
+	jp nc,doh_next_bullet		    ;7a8a	d2 b4 7a
+    
+    ; 168 <= Y <= 183   --> Y-position of Vaus :S
+	
+    ; Skip if DOH_BULLETS_TABLE_IDX_X + 8 >= SPR_PARAMS_IDX_X
+    ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;7a8d	dd 7e 01
+	add a, 8		                        ;7a90	c6 08
+	cp (iy+SPR_PARAMS_IDX_X)		        ;7a92	fd be 01
+	jp nc,doh_next_bullet		            ;7a95	d2 b4 7a
+
+    ; Skip if DOH_BULLETS_TABLE_IDX_X + 32 < SPR_PARAMS_IDX_X    
+	ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;7a98	dd 7e 01
+	add a, 32		                        ;7a9b	c6 20
+	cp (iy+SPR_PARAMS_IDX_X)		        ;7a9d	fd be 01
+	jp c,doh_next_bullet		            ;7aa0	da b4 7a
+    
+    ; DOH_BULLETS_TABLE_IDX_X + 8 <= X <= DOH_BULLETS_TABLE_IDX_X + 31
+    
+    ; Doh has reached Vaus with one of the bullets :S
 
     ; Set Vaus action state to exploding
-	ld a,VAUS_ACTION_STATE_EXPLODING	;7aa3	3e 06
-	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		    ;7aa5	32 4b e5
+	ld a,VAUS_ACTION_STATE_EXPLODING	                ;7aa3	3e 06
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;7aa5	32 4b e5
 
-	ld (iy+000h),0c0h		;7aa8	fd 36 00 c0 	. 6 . . 
+    ; Set invisible
+	ld (iy+SPR_PARAMS_IDX_Y), 192		;7aa8	fd 36 00 c0
 
 	ld a,SOUND_VAUS_DESTROYED	;7aac	3e 07
 	call ADD_SOUND		        ;7aae	cd ef 5b
 
-	call DEACTIVE_ALL_BALLS		;7ab1	cd 10 97 	. . . 
-l7ab4h:
-	ld de,00004h		;7ab4	11 04 00 	. . . 
-	add iy,de		;7ab7	fd 19 	. . 
-	add hl,de			;7ab9	19 	. 
-	djnz l7a7bh		;7aba	10 bf 	. . 
-	ret			;7abc	c9 	. 
+	call DEACTIVE_ALL_BALLS		;7ab1	cd 10 97
+
+    ; Next bullet
+doh_next_bullet:
+	ld de, SPR_PARAMS_LEN		;7ab4	11 04 00
+	add iy,de		            ;7ab7	fd 19
+	add hl,de			        ;7ab9	19
+	djnz l7a7bh		            ;7aba	10 bf
+	ret			                ;7abc	c9
 
 ; Obtain a pointer to the list of sprite patterns of the aliens, according to
 ; the current level.

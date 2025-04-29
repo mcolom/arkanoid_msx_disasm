@@ -4,7 +4,17 @@ DOH_HIT: equ 0xe505     ; 1 when Doh is hit
 DOH_HIT_2: equ 0xe2b9   ; 1 when Doh is hit
 
 DOH_TABLE: equ 0xe50d
+;
 DOH_TABLE_IDX_DEFEATED: equ 0
+
+
+
+DOH_BULLETS_TABLE: equ 0xe563
+;
+DOH_BULLETS_ACTIVE: equ 0
+DOH_BULLETS_TABLE_IDX_X: equ 1
+
+
 
 DOH_RECEIVED_HITS: equ 0xe5b3
 
