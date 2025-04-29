@@ -15,7 +15,9 @@ ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM: equ 5           ;0xe4cc
 
 ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR: equ 6; 0xe4cd  The alien exits the door and goes left (0) or right (2)
 ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield from the door
-ALIEN_TABLE_IDX_GO_DOWN: equ 8      ; 0xe4cf Bit 7; 0 ==> go down, 1==> go up
+
+ALIEN_TABLE_IDX_VERT_SPEED: equ 8   ; 0xe4cf Vertical speed
+ALIEN_TABLE_IDX_HORIZ_SPEED: equ 9  ; 0xe4da Horizontal speed
 
 ALIEN_TABLE_IDX_CAN_CROSS_BRICKS: equ 19      ; 0xe4da The alien can travel through the bricks
 ; [ToDo] Incomplete table

@@ -5974,26 +5974,30 @@ l7647h:
 	ld h, 0		    ;766b	26 00
 
     ; A = TBL[((VAUS_X - 8)\16) & 0xf0]
+    ; Choose if the alien should move right or left
 	ld de,TBL_7aec		        ;766d	11 ec 7a
 	ld a,(iy+SPR_PARAMS_IDX_X)	;7670	fd 7e 01
 	cp 40		                ;7673	fe 28
 	jr z,l767ah		            ;7675	28 03
 	ld de,l7af9h		        ;7677	11 f9 7a
 l767ah:
-	add hl,de			;767a	19 	. 
-	ld a,(hl)			;767b	7e 	~ 
+	add hl,de			;767a
+	ld a,(hl)			;767b
 
-	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR),a		;767c	dd 77 06 	. w . 
-	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR)		;767f	dd 7e 06 	. ~ . 
-	and 003h		;7682	e6 03 	. . 
-	ld l,a			;7684	6f 	o 
-	ld h,000h		;7685	26 00 	& . 
-	add hl,hl			;7687	29 	) 
-	ld de,l7b06h		;7688	11 06 7b 	. . { 
-	add hl,de			;768b	19 	. 
-	ld a,(hl)			;768c	7e 	~ 
+    ; Set direction
+	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR),a		;767c	dd 77 06
+	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR)		;767f	dd 7e 06
+    
+	; ALIEN_GO_DOWN = TBL_ALIEN_VERT_SPEED[2*(direction & 3)]
+    and 3		                                        ;7682	e6 03
+	ld l,a                                              ;7684	6f
+	ld h, 0		                                        ;7685	26 00
+	add hl,hl			                                ;7687	29
+	ld de,TBL_ALIEN_VERT_SPEED		                                ;7688	11 06 7b
+	add hl,de			                                ;768b	19
+	ld a,(hl)			                                ;768c	7e
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		            ;768d	dd 77 08
 
-	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;768d	dd 77 08 	. w . 
 	inc hl			;7690	23 	# 
 	ld a,(hl)			;7691	7e 	~ 
 	ld (ix+009h),a		;7692	dd 77 09 	. w . 
@@ -6001,7 +6005,7 @@ l7695h:
 	ld a,(iy+SPR_PARAMS_IDX_Y)		;7695	fd 7e 00 	. ~ . 
 	cp 64		;7698	fe 40 	. @ 
 	jp nc,l77aeh		;769a	d2 ae 77 	. . w 
-	ld a,(ix+ALIEN_TABLE_IDX_GO_DOWN)		;769d	dd 7e 08 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;769d	dd 7e 08 	. ~ . 
 	add a,(iy+SPR_PARAMS_IDX_X)		;76a0	fd 86 00 	. . . 
 	ld (iy+SPR_PARAMS_IDX_Y),a		;76a3	fd 77 00 	. w . 
 	ld a,(ix+009h)		;76a6	dd 7e 09 	. ~ . 
@@ -6017,11 +6021,11 @@ l7695h:
 	ld a,(iy+SPR_PARAMS_IDX_Y)		;76c1	fd 7e 00 	. ~ . 
 	cp 007h		;76c4	fe 07 	. . 
 	jp nc,l76d6h		;76c6	d2 d6 76 	. . v 
-	ld a,(ix+ALIEN_TABLE_IDX_GO_DOWN)		;76c9	dd 7e 08 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;76c9	dd 7e 08 	. ~ . 
 	bit 7,a		;76cc	cb 7f 	.  
 	jp z,l76d6h		;76ce	ca d6 76 	. . v 
 	neg		;76d1	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;76d3	dd 77 08 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;76d3	dd 77 08 	. w . 
 l76d6h:
 	bit 7,(ix+009h)		;76d6	dd cb 09 7e 	. . . ~ 
 	jr z,l76ech		;76da	28 10 	( . 
@@ -6042,9 +6046,9 @@ l76ech:
 	ld (ix+009h),a		;76ff	dd 77 09 	. w . 
 	jp l7763h		;7702	c3 63 77 	. c w 
 l7705h:
-	ld a,(ix+ALIEN_TABLE_IDX_GO_DOWN)		;7705	dd 7e 08 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;7705	dd 7e 08 	. ~ . 
 	neg		;7708	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;770a	dd 77 08 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;770a	dd 77 08 	. w . 
 	jp l7763h		;770d	c3 63 77 	. c w 
 l7710h:
 	ld a,(ix+009h)		;7710	dd 7e 09 	. ~ . 
@@ -6156,7 +6160,7 @@ l77aeh:
 l77e2h:
 	add hl,de			;77e2	19 	. 
 	ld a,(hl)			;77e3	7e 	~ 
-	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;77e4	dd 77 08 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;77e4	dd 77 08 	. w . 
 	inc hl			;77e7	23 	# 
 	ld a,(hl)			;77e8	7e 	~ 
 	ld (ix+9),a		;77e9	dd 77 09 	. w . 
@@ -6645,11 +6649,9 @@ l7af9h:
 	ld (bc),a			;7b03	02 	. 
 	ld (bc),a			;7b04	02 	. 
 	ld (bc),a			;7b05	02 	. 
-l7b06h:
-	ld bc,001ffh		;7b06	01 ff 01 	. . . 
-	nop			;7b09	00 	. 
-    db 0x01     ;7b0a   01
-    db 0x01     ;7b0b   01
+
+TBL_ALIEN_VERT_SPEED:
+    db 1, -1, 1, 0, 1, 1
 
 ; Sprite pattern numbers for the exploding alien
 TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
@@ -7276,7 +7278,7 @@ l9738h:
     ; This is because if the alien goes up, it'll reach the
     ; brick with his head, but with his feet if he goes down.
 	ld e, 8		                                ;974c	1e 08
-	bit 7,(iy+ALIEN_TABLE_IDX_GO_DOWN)		    ;974e	fd cb 08 7e
+	bit 7,(iy+ALIEN_TABLE_IDX_VERT_SPEED)		    ;974e	fd cb 08 7e
 	jr z,l9756h		                            ;9752	28 02
 	ld e, 32		                            ;9754	1e 20
 l9756h:
@@ -7329,9 +7331,9 @@ l9786h:
 	jr nc,l979bh		    ;9791	30 08
     
     ; If the alien it a brick, then change its vertical direction
-	ld a,(iy+ALIEN_TABLE_IDX_GO_DOWN)		;9793	fd 7e 08
+	ld a,(iy+ALIEN_TABLE_IDX_VERT_SPEED)		;9793	fd 7e 08
 	neg		                                ;9796	ed 44
-	ld (iy+ALIEN_TABLE_IDX_GO_DOWN),a		;9798	fd 77 08
+	ld (iy+ALIEN_TABLE_IDX_VERT_SPEED),a		;9798	fd 77 08
 l979bh:
     ; Next alien
 	ld de,ALIEN_TABLE_LEN	;979b	11 14 00
