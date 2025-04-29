@@ -6190,12 +6190,19 @@ l7763h:
 ; It's used the reset the animation.
 TBL_ALIEN_LAST_FRAME:
     db 8, 8, 6, 17
-    
+
+; ALIEN_Y >= 64
 l77aeh:
-	ld a,(ix+11)		;77ae	dd 7e 0b 	. ~ . 
-	cp 1		;77b1	fe 01 	. . 
-	jp z,l77f1h		;77b3	ca f1 77 	. . w 
-	ld (ix+11),1		;77b6	dd 36 0b 01 	. 6 . . 
+    ; Mark forever that this alien has gone as down as ALIEN_Y >= 64
+    ; Skip if already marked
+	ld a,(ix+11)		;77ae	dd 7e 0b
+	cp 1		        ;77b1	fe 01
+	jp z,l77f1h		    ;77b3	ca f1 77
+    
+	; Mark the alien
+    ld (ix+11),1		;77b6	dd 36 0b 01 	. 6 . . 
+    
+    
 	ld a,(ix+12)		;77ba	dd 7e 0c 	. ~ . 
 	sla a		;77bd	cb 27 	. ' 
 	sla a		;77bf	cb 27 	. ' 
@@ -6215,48 +6222,68 @@ l77aeh:
 l77e2h:
 	add hl,de			;77e2	19 	. 
 	ld a,(hl)			;77e3	7e 	~ 
-	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;77e4	dd 77 08 	. w . 
-	inc hl			;77e7	23 	# 
-	ld a,(hl)			;77e8	7e 	~ 
-	ld (ix+9),a		;77e9	dd 77 09 	. w . 
+    
+    ; Set new vertical speed
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a	;77e4	dd 77 08
+    
+    ; Set new horizontal speed
+	inc hl			                        ;77e7	23
+	ld a,(hl)			                    ;77e8	7e
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;77e9	dd 77 09
+    
 	inc hl			;77ec	23 	# 
 	ld a,(hl)			;77ed	7e 	~ 
 	ld (ix+15),a		;77ee	dd 77 0f 	. w . 
 l77f1h:
-	ld a,(ix+008h)		;77f1	dd 7e 08 	. ~ . 
-	add a,(iy+SPR_PARAMS_IDX_Y)		;77f4	fd 86 00 	. . . 
-	ld (iy+SPR_PARAMS_IDX_Y),a		;77f7	fd 77 00 	. w . 
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;77fa	dd 7e 09 	. ~ . 
-	add a,(iy+SPR_PARAMS_IDX_X)		;77fd	fd 86 01 	. . . 
-	ld (iy+SPR_PARAMS_IDX_X),a		;7800	fd 77 01 	. w . 
-	ld a,(iy+SPR_PARAMS_IDX_X)		;7803	fd 7e 01 	. ~ . 
-	cp 17		;7806	fe 11 	. . 
-	jr nc,l7817h		;7808	30 0d 	0 . 
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;780a	dd 7e 09 	. ~ . 
-	bit 7,a		;780d	cb 7f 	.  
-	jp z,l7817h		;780f	ca 17 78 	. . x 
-	neg		;7812	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7814	dd 77 09 	. w . 
+    ; Update alien's vertical position according to his speed
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)	;77f1	dd 7e 08
+	add a,(iy+SPR_PARAMS_IDX_Y)		        ;77f4	fd 86 00
+	ld (iy+SPR_PARAMS_IDX_Y),a		        ;77f7	fd 77 00
+
+    ; Update alien's horizontal position according to his speed
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)	;77fa	dd 7e 09
+	add a,(iy+SPR_PARAMS_IDX_X)		        ;77fd	fd 86 01
+	ld (iy+SPR_PARAMS_IDX_X),a		        ;7800	fd 77 01
+    
+    ; Skip if X >= 17
+	ld a,(iy+SPR_PARAMS_IDX_X)		        ;7803	fd 7e 01
+	cp 17		                            ;7806	fe 11
+	jr nc,l7817h		                    ;7808	30 0d
+    ; X < 17
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)	;780a	dd 7e 09
+    ; Ensure the horizontal speed is negative
+	bit 7,a		                            ;780d	cb 7f
+	jp z,l7817h		                        ;780f	ca 17 78
+	neg		                                ;7812	ed 44
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;7814	dd 77 09
 l7817h:
-	ld a,(iy+SPR_PARAMS_IDX_X)		;7817	fd 7e 01 	. ~ . 
-	cp 175		;781a	fe af 	. . 
-	jr c,l782bh		;781c	38 0d 	8 . 
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;781e	dd 7e 09 	. ~ . 
-	bit 7,a		;7821	cb 7f 	.  
-	jp nz,l782bh		;7823	c2 2b 78 	. + x 
-	neg		;7826	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7828	dd 77 09 	. w . 
+	; Skip if X < 175
+    ld a,(iy+SPR_PARAMS_IDX_X)		        ;7817	fd 7e 01
+	cp 175		                            ;781a	fe af
+	jr c,l782bh		                        ;781c	38 0d
+    
+    ; Ensure the horizontal speed is positive
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)	;781e	dd 7e 09
+	bit 7,a		                            ;7821	cb 7f
+	jp nz,l782bh		                    ;7823	c2 2b 78
+	neg		                                ;7826	ed 44
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;7828	dd 77 09
 l782bh:
-	ld a,(ix+00fh)		;782b	dd 7e 0f 	. ~ . 
+	ld a,(ix+15)		;782b	dd 7e 0f 	. ~ . 
 	dec a			;782e	3d 	= 
 	ld (ix+15),a		;782f	dd 77 0f 	. w . 
 	jp nz,l7763h		;7832	c2 63 77 	. c w 
-	ld (ix+00bh), 0		;7835	dd 36 0b 00 	. 6 . . 
-	ld a,(iy+SPR_PARAMS_IDX_Y)		;7839	fd 7e 00 	. ~ . 
-	cp 174		;783c	fe ae 	. . 
-	jp nc,l785bh		;783e	d2 5b 78 	. [ x 
-	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;7841	dd 7e 00 	. ~ . 
-	cp 2		;7844	fe 02 	. . 
+
+	ld (ix+11), 0		;7835	dd 36 0b 00 	. 6 . . 
+
+    ; Skip if Y >= 174
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7839	fd 7e 00
+	cp 174		                    ;783c	fe ae
+	jp nc,l785bh		            ;783e	d2 5b 78    
+    ; Y < 174
+
+	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;7841	dd 7e 00
+	cp 2		                        ;7844	fe 02
 	jp z,l787dh		;7846	ca 7d 78 	. } x 
 	inc (ix+12)		;7849	dd 34 0c 	. 4 . 
 	ld a,(ix+12)		;784c	dd 7e 0c 	. ~ . 
@@ -6287,9 +6314,9 @@ next_alien:
 	ret			;787c	c9 	. 
 
 l787dh:
-	inc (ix+00ch)		;787d	dd 34 0c 	. 4 . 
-	ld a,(ix+00ch)		;7880	dd 7e 0c 	. ~ . 
-	cp 006h		;7883	fe 06 	. . 
+	inc (ix+12)		;787d	dd 34 0c 	. 4 . 
+	ld a,(ix+12)		;7880	dd 7e 0c 	. ~ . 
+	cp 6		;7883	fe 06 	. . 
 	jp l7851h		;7885	c3 51 78 	. Q x 
 
 ; Check if any of the 3 lasers hit an alien.
