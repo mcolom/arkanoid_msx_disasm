@@ -8,7 +8,8 @@ ALIEN_TABLE_IDX_ACTIVE: equ 1                       ; 0xe4c8
 ALIEN_TABLE_IDX_EXPLODING: equ 2                    ; 0xe4c9
 ALIEN_TABLE_IDX_TICKS: equ 3                        ; 0xe4ca
 ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS: equ 4         ; 0xe4cb
-ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM: equ 5           ;0xe4cc
+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM: equ 5           ; 0xe4cc    Current pattern when the alien is exploding
+
 
 
 
@@ -18,6 +19,14 @@ ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield
 
 ALIEN_TABLE_IDX_VERT_SPEED: equ 8   ; 0xe4cf Vertical speed
 ALIEN_TABLE_IDX_HORIZ_SPEED: equ 9  ; 0xe4da Horizontal speed
+
+ALIEN_TABLE_IDX_FLYING_ANIM_NUM: equ 10 ;0xe4db Current pattern when the alien is flying
+
+
+ALIEN_TABLE_IDX_NEXT_ACTION: equ 16      ; 0xe4d7 Alien's next action
+; 1: alien_inv_vert_speed
+; 2: alien_inv_horiz_speed
+; 3: set_alien_exploding
 
 ALIEN_TABLE_IDX_CAN_CROSS_BRICKS: equ 19      ; 0xe4da The alien can travel through the bricks
 ; [ToDo] Incomplete table

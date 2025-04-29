@@ -5908,20 +5908,20 @@ l760fh:
     ; Skip if the alien is exploding
 	ld a,(ix+ALIEN_TABLE_IDX_EXPLODING)		;7610	dd 7e 02
 	cp 1		                            ;7613	fe 01
-	jp z,l7722h		                        ;7615	ca 22 77
+	jp z,alien_exploding		                        ;7615	ca 22 77
 
     ; Check alien ticks
     ; We only execute every 5 ticks. Otherwise, move to the next alien
 	inc (ix+ALIEN_TABLE_IDX_TICKS)		;7618	dd 34 03
 	ld a,(ix+ALIEN_TABLE_IDX_TICKS)		;761b	dd 7e 03
 	cp 5		                        ;761e	fe 05       Already in the 5th tick?
-	jp nz,l786dh		                ;7620	c2 6d 78    No, next alien
+	jp nz,next_alien		                ;7620	c2 6d 78    No, next alien
 	ld (ix+ALIEN_TABLE_IDX_TICKS),0	    ;7623	dd 36 03 00
 
     ; If the alien is not active, move to the next
 	ld a,(ix+ALIEN_TABLE_IDX_ACTIVE)	;7627	dd 7e 01
 	or a			                    ;762a	b7
-	jp z,l786dh		                    ;762b	ca 6d 78
+	jp z,next_alien		                    ;762b	ca 6d 78
 
     ; Check if the alien is in the door
 	ld a,(ix+ALIEN_TABLE_IDX_IN_DOOR)		;762e	dd 7e 07
@@ -5988,7 +5988,8 @@ l767ah:
 	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR),a		;767c	dd 77 06
 	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR)		;767f	dd 7e 06
     
-	; ALIEN_VERT_SPEED = TBL_ALIEN_VERT_SPEED[2*(direction & 3)]
+	; Set vertical speed
+    ; ALIEN_VERT_SPEED = TBL_ALIEN_VERT_SPEED[2*(direction & 3)]
     and 3		                                        ;7682	e6 03
 	ld l,a                                              ;7684	6f
 	ld h, 0		                                        ;7685	26 00
@@ -5998,77 +5999,108 @@ l767ah:
 	ld a,(hl)			                                ;768c	7e
 	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		        ;768d	dd 77 08
 
-	inc hl			;7690	23 	# 
-	ld a,(hl)			;7691	7e 	~ 
-	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7692	dd 77 09 	. w . 
+    ; Set ALIEN_HORIZ_SPEED
+	inc hl			                                    ;7690	23
+	ld a,(hl)			                                ;7691	7e
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		        ;7692	dd 77 09
 l7695h:
-	ld a,(iy+SPR_PARAMS_IDX_Y)		;7695	fd 7e 00 	. ~ . 
-	cp 64		;7698	fe 40 	. @ 
-	jp nc,l77aeh		;769a	d2 ae 77 	. . w 
-	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;769d	dd 7e 08 	. ~ . 
-	add a,(iy+SPR_PARAMS_IDX_X)		;76a0	fd 86 00 	. . . 
-	ld (iy+SPR_PARAMS_IDX_Y),a		;76a3	fd 77 00 	. w . 
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76a6	dd 7e 09 	. ~ . 
-	add a,(iy+SPR_PARAMS_IDX_X)		;76a9	fd 86 01 	. . . 
-	ld (iy+SPR_PARAMS_IDX_X),a		;76ac	fd 77 01 	. w . 
-	ld a,(ix+16)		;76af	dd 7e 10 	. ~ . 
-	cp 1		;76b2	fe 01 	. . 
-	jp z,l7705h		;76b4	ca 05 77 	. . w 
-	cp 2		;76b7	fe 02 	. . 
-	jp z,l7710h		;76b9	ca 10 77 	. . w 
-	cp 3		;76bc	fe 03 	. . 
-	jp z,l771bh		;76be	ca 1b 77 	. . w 
-	ld a,(iy+SPR_PARAMS_IDX_Y)		;76c1	fd 7e 00 	. ~ . 
-	cp 007h		;76c4	fe 07 	. . 
-	jp nc,l76d6h		;76c6	d2 d6 76 	. . v 
-	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;76c9	dd 7e 08 	. ~ . 
-	bit 7,a		;76cc	cb 7f 	.  
-	jp z,l76d6h		;76ce	ca d6 76 	. . v 
-	neg		;76d1	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;76d3	dd 77 08 	. w . 
+    ; Skip if ALIEN_Y >= 64
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7695	fd 7e 00
+	cp 64		                    ;7698	fe 40
+	jp nc,l77aeh		            ;769a	d2 ae 77
+
+    ; Update vertical position according to the speed
+    ; SPR_PARAMS_IDX_Y += ALIEN_TABLE_IDX_VERT_SPEED
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)	;769d	dd 7e 08
+	add a,(iy+SPR_PARAMS_IDX_X)		        ;76a0	fd 86 00
+	ld (iy+SPR_PARAMS_IDX_Y),a		        ;76a3	fd 77 00
+    
+    ; Update horizontal position according to the speed
+    ; SPR_PARAMS_IDX_X += ALIEN_TABLE_IDX_HORIZ _SPEED
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)	;76a6	dd 7e 09
+	add a,(iy+SPR_PARAMS_IDX_X)		        ;76a9	fd 86 01
+	ld (iy+SPR_PARAMS_IDX_X),a		        ;76ac	fd 77 01
+
+    ; Perform next alien's action
+	ld a,(ix+ALIEN_TABLE_IDX_NEXT_ACTION)		;76af	dd 7e 10
+	cp 1		                    ;76b2	fe 01
+	jp z,alien_inv_vert_speed		;76b4	ca 05 77
+	cp 2		                    ;76b7	fe 02
+	jp z,alien_inv_horiz_speed		;76b9	ca 10 77
+	cp 3		                    ;76bc	fe 03
+	jp z,set_alien_exploding		;76be	ca 1b 77
+    
+    ; Skip if Y >= 7
+	ld a,(iy+SPR_PARAMS_IDX_Y)	            ;76c1	fd 7e 00
+	cp 7		                            ;76c4	fe 07
+	jp nc,l76d6h		                    ;76c6	d2 d6 76
+    ; If VERT_SPEED < 0, then invert VERT_SPEED
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)	;76c9	dd 7e 08
+	bit 7,a		                            ;76cc	cb 7f
+	jp z,l76d6h		                        ;76ce	ca d6 76
+	neg		                                ;76d1	ed 44   Invert speed
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a	;76d3	dd 77 08
+
 l76d6h:
-	bit 7,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76d6	dd cb 09 7e 	. . . ~ 
-	jr z,l76ech		;76da	28 10 	( . 
-	ld a,(iy+SPR_PARAMS_IDX_X)		;76dc	fd 7e 01 	. ~ . 
-	cp 16		;76df	fe 10 	. . 
-	jp nc,l76ech		;76e1	d2 ec 76 	. . v 
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76e4	dd 7e 09 	. ~ . 
-	neg		;76e7	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;76e9	dd 77 09 	. w . 
+    ; Skip if HORIZ_SPEED >= 0
+	bit 7,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76d6	dd cb 09 7e
+	jr z,l76ech		                            ;76da	28 10
+
+    ; Skip if X >= 16
+	ld a,(iy+SPR_PARAMS_IDX_X)		            ;76dc	fd 7e 01
+	cp 16		                                ;76df	fe 10
+	jp nc,l76ech		                        ;76e1	d2 ec 76
+    
+    ; Invert HORIZ_SPEED
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76e4	dd 7e 09
+	neg		                                    ;76e7	ed 44
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;76e9	dd 77 09
 l76ech:
-	bit 7,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76ec	dd cb 09 7e 	. . . ~ 
-	jr nz,l7763h		;76f0	20 71 	  q 
-	ld a,(iy+SPR_PARAMS_IDX_X)		;76f2	fd 7e 01 	. ~ . 
-	cp 176		;76f5	fe b0 	. . 
-	jp c,l7763h		;76f7	da 63 77 	. c w 
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76fa	dd 7e 09 	. ~ . 
-	neg		;76fd	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;76ff	dd 77 09 	. w . 
-	jp l7763h		;7702	c3 63 77 	. c w 
-l7705h:
-	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;7705	dd 7e 08 	. ~ . 
-	neg		;7708	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;770a	dd 77 08 	. w . 
-	jp l7763h		;770d	c3 63 77 	. c w 
-l7710h:
-	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;7710	dd 7e 09 	. ~ . 
-	neg		;7713	ed 44 	. D 
-	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7715	dd 77 09 	. w . 
-	jp l7763h		;7718	c3 63 77 	. c w 
-l771bh:
-	ld (ix+ALIEN_TABLE_IDX_EXPLODING), 1		;771b	dd 36 02 01 	. 6 . . 
-	jp l7763h		;771f	c3 63 77 	. c w 
+    ; Skip if HORIZ_SPEED < 0
+	bit 7,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76ec	dd cb 09 7e
+	jr nz,l7763h		                        ;76f0	20 71
+
+    ; Skip if X < 176
+	ld a,(iy+SPR_PARAMS_IDX_X)		            ;76f2	fd 7e 01
+	cp 176		                                ;76f5	fe b0
+	jp c,l7763h		                            ;76f7	da 63 77
+
+    ; Invert HORIZ_SPEED
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76fa	dd 7e 09
+	neg		                                    ;76fd	ed 44
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;76ff	dd 77 09
+	jp l7763h		                            ;7702	c3 63 77
+
+; Actions:
+
+; Invert alien's vertical speed
+alien_inv_vert_speed:
+	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;7705	dd 7e 08
+	neg		                                    ;7708	ed 44
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;770a	dd 77 08
+	jp l7763h		                            ;770d	c3 63 77
+
+; Invert alien's horizontal speed
+alien_inv_horiz_speed:
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;7710	dd 7e 09
+	neg		                                    ;7713	ed 44
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7715	dd 77 09
+	jp l7763h		                            ;7718	c3 63 77
+
+; Set alien is exploding
+set_alien_exploding:
+	ld (ix+ALIEN_TABLE_IDX_EXPLODING), 1	;771b	dd 36 02 01
+	jp l7763h		                        ;771f	c3 63 77
 
     ; The alien is exploding
-l7722h:
+alien_exploding:
     ; Increment counter of the explosion animation
     ; Skip of the counter hasn't already reached 10.
 	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7722	dd 34 04
 	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7725	dd 7e 04
 	cp 10		                                        ;7728	fe 0a
-	jp nz,l786dh		                                ;772a	c2 6d 78
-    
-    
+	jp nz,next_alien		                                ;772a	c2 6d 78
+
     ; Reset animation ticks
 	ld (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS), 0		;772d	dd 36 04 00
     
@@ -6076,51 +6108,70 @@ l7722h:
 	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)    ;7731	dd 7e 05
 	ld l,a			                                ;7734	6f
 	ld h, 0		                                    ;7735	26 00
-	ld de, TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN		                            ;7737	11 0c 7b
+	ld de, TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN		;7737	11 0c 7b
 	add hl,de			                            ;773a	19
 	ld a,(hl)			                            ;773b	7e
     
+    ; Set the corresponding sprite pattern in the animation step, and
+    ; the color to red
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a	        ;773c	fd 77 02
+	ld (iy+SPR_PARAMS_IDX_COLOR), 8		            ;773f	fd 36 03 08
+
+    ; Increment the animation step
+    ; If all 4 frames done, go to the next alien
+	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)		;7743	dd 34 05
+	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)	;7746	dd 7e 05
+	cp 4		                                    ;7749	fe 04
+	jp nz,next_alien		                        ;774b	c2 6d 78
+
+	ld (iy+SPR_PARAMS_IDX_Y), 192		;774e	fd 36 00 c0     Invisible
+	; HL = DE = ALIEN_TABLE
+    push ix		;7752	dd e5
+	push ix		;7754	dd e5
+	pop hl		;7756	e1
+	pop de		;7757	d1
+
+    ; Set alien inactive after the 4 frames of the explosion
+    inc de		;7758	13      ; Point to index 1: ALIEN_TABLE_IDX_ACTIVE
+	ld (hl), 0	;7759	36 00
     
-	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a	;773c	fd 77 02 	. w . 
-	ld (iy+SPR_PARAMS_IDX_COLOR),8		    ;773f	fd 36 03 08 	. 6 . . 
-	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)		;7743	dd 34 05 	. 4 . 
-	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)		;7746	dd 7e 05 	. ~ . 
-	cp 4		;7749	fe 04 	. . 
-	jp nz,l786dh		;774b	c2 6d 78 	. m x 
-	ld (iy+SPR_PARAMS_IDX_Y), 192		;774e	fd 36 00 c0 	. 6 . . 
-	push ix		;7752	dd e5 	. . 
-	push ix		;7754	dd e5 	. . 
-	pop hl			;7756	e1 	. 
-	pop de			;7757	d1 	. 
-	inc de			;7758	13 	. 
-	ld (hl), 0		;7759	36 00 	6 . 
-	ld bc, 19		;775b	01 13 00 	. . . 
-	ldir		;775e	ed b0 	. . 
-	jp l786dh		;7760	c3 6d 78 	. m x 
+    ; Reset this alien's entry in ALIEN_TABLE
+	ld bc, ALIEN_TABLE_LEN - 1  ;775b	01 13 00
+	ldir		                ;775e	ed b0
+	jp next_alien		        ;7760	c3 6d 78
+
 l7763h:
 	inc (ix+17)		;7763	dd 34 11 	. 4 . 
 	ld a,(ix+17)		;7766	dd 7e 11 	. ~ . 
 	cp 4		;7769	fe 04 	. . 
-	jp nz,l786dh		;776b	c2 6d 78 	. m x 
+	jp nz,next_alien		;776b	c2 6d 78 	. m x 
 	ld (ix+17), 0		;776e	dd 36 11 00 	. 6 . . 
 
-	ld a,(LEVEL)		;7772	3a 1b e0 	: . . 
-	and 3		;7775	e6 03 	. . 
-	ld l,a			;7777	6f 	o 
-	ld h, 0		;7778	26 00 	& . 
-	add hl,hl			;777a	29 	) 
-	ld de,l7abdh		;777b	11 bd 7a 	. . z 
-	add hl,de			;777e	19 	. 
-	ld e,(hl)			;777f	5e 	^ 
-	inc hl			;7780	23 	# 
-	ld d,(hl)			;7781	56 	V 
-	ld a,(ix+10)		;7782	dd 7e 0a 	. ~ . 
-	ld l,a			;7785	6f 	o 
-	ld h,0		;7786	26 00 	& . 
-	add hl,de			;7788	19 	. 
-	ld a,(hl)			;7789	7e 	~ 
-	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a		;778a	fd 77 02 	. w . 
-	inc (ix+10)		;778d	dd 34 0a 	. 4 . 
+    ; Update the alien's sprite pattern
+
+    ; Obtain a pointer to the alien patterns according to the
+    ; current level.
+    ; DE = TBL_ALIEN_SPR_PATTERN_PTR_LEVEL[2*(LEVEL & 3)]
+	ld a,(LEVEL)	;7772	3a 1b e0
+	and 3		    ;7775	e6 03
+	ld l,a			;7777	6f
+	ld h, 0		    ;7778	26 00
+	add hl,hl		;777a	29
+	ld de,TBL_ALIEN_SPR_PATTERN_PTR_LEVEL	;777b	11 bd 7a
+	add hl,de		;777e	19
+	ld e,(hl)		;777f	5e
+	inc hl			;7780	23
+	ld d,(hl)		;7781	56
+    
+    ; Apply the corresponding sprite pattern to the alien
+	ld a,(ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)	;7782	dd 7e 0a
+	ld l,a			;7785	6f
+	ld h,0		    ;7786	26 00
+	add hl,de		;7788	19
+	ld a,(hl)		;7789	7e
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a	    ;778a	fd 77 02
+	inc (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)    ;778d	dd 34 0a
+
 	ld a,(LEVEL)		;7790	3a 1b e0 	: . . 
 	and 3		;7793	e6 03 	. . 
 	ld l,a			;7795	6f 	o 
@@ -6128,10 +6179,10 @@ l7763h:
 	ld de,l77aah		;7798	11 aa 77 	. . w 
 	add hl,de			;779b	19 	. 
 	ld a,(hl)			;779c	7e 	~ 
-	cp (ix+10)		;779d	dd be 0a 	. . . 
-	jp nz,l786dh		;77a0	c2 6d 78 	. m x 
-	ld (ix+10),0		;77a3	dd 36 0a 00 	. 6 . . 
-	jp l786dh		;77a7	c3 6d 78 	. m x 
+	cp (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)		;779d	dd be 0a 	. . . 
+	jp nz,next_alien		;77a0	c2 6d 78 	. m x 
+	ld (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM),0		;77a3	dd 36 0a 00 	. 6 . . 
+	jp next_alien		;77a7	c3 6d 78 	. m x 
 l77aah:
 	ex af,af'			;77aa	08 	. 
 	ex af,af'			;77ab	08 	. 
@@ -6209,7 +6260,7 @@ l782bh:
 l7851h:
 	jp nz,l7763h		;7851	c2 63 77 	. c w 
 	ld (ix+12),0	;7854	dd 36 0c 00 	. 6 . . 
-	jp l786dh		;7858	c3 6d 78 	. m x 
+	jp next_alien		;7858	c3 6d 78 	. m x 
 l785bh:
 	ld (iy+SPR_PARAMS_IDX_Y), 192		;785b	fd 36 00 c0 	. 6 . . 
 	push ix		;785f	dd e5 	. . 
@@ -6220,7 +6271,8 @@ l785bh:
 	ld (hl), 0		;7866	36 00 	6 . 
 	ld bc, 19		;7868	01 13 00 	. . . 
 	ldir		;786b	ed b0 	. . 
-l786dh:
+; Process next alien
+next_alien:
 	pop bc			;786d	c1 	. 
 	ld de,ALIEN_TABLE_LEN		;786e	11 14 00 	. . . 
 	add ix,de		;7871	dd 19 	. . 
@@ -6595,39 +6647,26 @@ l7ab4h:
 	djnz l7a7bh		;7aba	10 bf 	. . 
 	ret			;7abc	c9 	. 
 
-; ToDo
-; This is a table, used at 0x777b
-l7abdh:
-	push bc			;7abd	c5 	. 
-	ld a,d			;7abe	7a 	z 
-	call 0d57ah		;7abf	cd 7a d5 	. z . 
-	ld a,d			;7ac2	7a 	z 
-	in a,(07ah)		;7ac3	db 7a 	. z 
-	ret nz			;7ac5	c0 	. 
-	call nz,0ccc8h		;7ac6	c4 c8 cc 	. . . 
-	ret nc			;7ac9	d0 	. 
-	call nc,0dcd8h		;7aca	d4 d8 dc 	. . . 
-	ret nz			;7acd	c0 	. 
-	call nz,0ccc8h		;7ace	c4 c8 cc 	. . . 
-	ret nc			;7ad1	d0 	. 
-	call nc,0ccd8h		;7ad2	d4 d8 cc 	. . . 
-	ret nz			;7ad5	c0 	. 
-	call nz,0ccc8h		;7ad6	c4 c8 cc 	. . . 
-	ret nc			;7ad9	d0 	. 
-	call nc,0c4c0h		;7ada	d4 c0 c4 	. . . 
-	ret z			;7add	c8 	. 
-	call z,0dcd0h		;7ade	cc d0 dc 	. . . 
-	ret nz			;7ae1	c0 	. 
-	call nz,0ccc8h		;7ae2	c4 c8 cc 	. . . 
-	ret nc			;7ae5	d0 	. 
-	call c,0d8d4h		;7ae6	dc d4 d8 	. . . 
-	ret c			;7ae9	d8 	. 
-    db 0xd4, 0xd0   ; 7aea
+; Obtain a pointer to the list of sprite patterns of the aliens, according to
+; the current level.
+; It's indexed as TBL_ALIEN_SPR_PATTERN_PTR_LEVEL[2*(LEVEL & 3)], 4 pointers
+TBL_ALIEN_SPR_PATTERN_PTR_LEVEL:
+    dw alien_patterns_1, alien_patterns_2, alien_patterns_3, alien_patterns_4 ; 0x7abd
+
+alien_patterns_1:
+    db 0xc0, 0xc4, 0xc8, 0xcc, 0xd0, 0xd4, 0xd8, 0xdc ; 0x7ac5 - 0x7acc
+alien_patterns_2:
+    db 0xc0, 0xc4, 0xc8, 0xcc, 0xd0, 0xd4, 0xd8, 0xcc ; 0x7acd - 0x7ad4
+alien_patterns_3:
+    db 0xc0, 0xc4, 0xc8, 0xcc, 0xd0, 0xd4
+alien_patterns_4:
+    db 0xc0, 0xc4 ; 0x7adb
+    db 0xc8, 0xcc, 0xd0, 0xdc, 0xc0, 0xc4, 0xc8, 0xcc ; 0x7add - 0x7ae4
+    db 0xd0, 0xdc, 0xd4, 0xd8, 0xd8, 0xd4, 0xd0       ; 0x7ae5 - 0x7aeb
 
 TBL_7aec:
     db 0            ; 7aec
-
-	nop			;7aed	00 	. 
+    db 0            ; 7aed
 	ld bc,00201h		;7aee	01 01 02 	. . . 
 	ld (bc),a			;7af1	02 	. 
 	ld (bc),a			;7af2	02 	. 
