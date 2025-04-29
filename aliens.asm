@@ -9,11 +9,6 @@ ALIEN_TABLE_IDX_EXPLODING: equ 2                    ; 0xe4c9
 ALIEN_TABLE_IDX_TICKS: equ 3                        ; 0xe4ca
 ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS: equ 4         ; 0xe4cb
 ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM: equ 5           ; 0xe4cc    Current pattern when the alien is exploding
-
-
-
-
-
 ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR: equ 6; 0xe4cd  The alien exits the door and goes left (0) or right (2)
 ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield from the door
 
@@ -24,6 +19,7 @@ ALIEN_TABLE_IDX_FLYING_ANIM_NUM: equ 10 ;0xe4db Current pattern when the alien i
 
 
 ALIEN_TABLE_IDX_NEXT_ACTION: equ 16      ; 0xe4d7 Alien's next action
+ALIEN_TABLE_NEXT_FRAME_COUNTER: equ 17   ; 0xe4d8 Counter to update the alien's animation frame
 ; 1: alien_inv_vert_speed
 ; 2: alien_inv_horiz_speed
 ; 3: set_alien_exploding

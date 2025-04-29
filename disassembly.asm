@@ -6141,11 +6141,13 @@ alien_exploding:
 	jp next_alien		        ;7760	c3 6d 78
 
 l7763h:
-	inc (ix+17)		;7763	dd 34 11 	. 4 . 
-	ld a,(ix+17)		;7766	dd 7e 11 	. ~ . 
-	cp 4		;7769	fe 04 	. . 
-	jp nz,next_alien		;776b	c2 6d 78 	. m x 
-	ld (ix+17), 0		;776e	dd 36 11 00 	. 6 . . 
+    ; Increment the animation counter
+    ; If it reaches 4, update the sprite's pattern
+	inc (ix+ALIEN_TABLE_NEXT_FRAME_COUNTER)		;7763	dd 34 11
+	ld a,(ix+ALIEN_TABLE_NEXT_FRAME_COUNTER)	;7766	dd 7e 11
+	cp 4		                                ;7769	fe 04
+	jp nz,next_alien		                    ;776b	c2 6d 78
+	ld (ix+ALIEN_TABLE_NEXT_FRAME_COUNTER), 0	;776e	dd 36 11 00
 
     ; Update the alien's sprite pattern
 
