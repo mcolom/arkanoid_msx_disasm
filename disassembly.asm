@@ -5373,7 +5373,7 @@ doh_level:
 	or a			;7289	b7 	. 
 	jp nz,l7296h		;728a	c2 96 72 	. . r 
 	call sub_7594h		;728d	cd 94 75 	. . u 
-	call sub_7469h		;7290	cd 69 74 	. i t 
+	call CHECK_DOH_CAN_THROW_BULLETS		;7290	cd 69 74 	. i t 
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
 	call sub_74c7h		;7296	cd c7 74 	. . t 
@@ -5677,23 +5677,34 @@ sub_7452h:
 	call FILVRM		;7464	cd 56 00 	. V . 
 	pop af			;7467	f1 	. 
 	ret			;7468	c9 	. 
-sub_7469h:
-	ld a,(0e51ah)		;7469	3a 1a e5 	: . . 
-	cp 003h		;746c	fe 03 	. . 
-	ret z			;746e	c8 	. 
-	ld hl,0e578h		;746f	21 78 e5 	! x . 
+
+; Check if Doh can throw bullets according to DOH_THROW_BULLETS_COUNTER
+CHECK_DOH_CAN_THROW_BULLETS:
+    ; Skip if all 3 bullets are already active
+	ld a,(DOH_NUM_ACTIVE_BULLETS)	;7469	3a 1a e5
+	cp 3		                    ;746c	fe 03
+	ret z			                ;746e	c8
+
+	ld hl,DOH_CAN_THROW_BULLETS		;746f	21 78 e5 	! x . 
 	ld a,(hl)			;7472	7e 	~ 
 	or a			;7473	b7 	. 
 	jp z,l7483h		;7474	ca 83 74 	. . t 
-	inc hl			;7477	23 	# 
-	inc (hl)			;7478	34 	4 
-	ld a,(hl)			;7479	7e 	~ 
-	cp 078h		;747a	fe 78 	. x 
-	ret nz			;747c	c0 	. 
-	ld (hl),000h		;747d	36 00 	6 . 
-	dec hl			;747f	2b 	+ 
-	ld (hl),000h		;7480	36 00 	6 . 
-	ret			;7482	c9 	. 
+
+    ; Increment DOH_THROW_BULLETS_COUNTER
+	inc hl			    ;7477	23
+	inc (hl)			;7478	34
+	ld a,(hl)			;7479	7e
+	cp 120		        ;747a	fe 78
+	ret nz			    ;747c	c0      Skip if 120 not reached
+    
+    ; DOH_THROW_BULLETS_COUNTER has reached 120
+    ld (hl), 0  		;747d	36 00   Reset counter
+    
+    ; DOH_CAN_THROW_BULLETS <-- 0
+	dec hl			;747f	2b
+	ld (hl), 0  	;7480	36 00
+	ret			    ;7482	c9
+
 l7483h:
 	ld a,(0e581h)		;7483	3a 81 e5 	: . . 
 	add a,001h		;7486	c6 01 	. . 
@@ -5714,7 +5725,7 @@ l749dh:
 	ld (iy+001h),064h		;74ac	fd 36 01 64 	. 6 . d 
 	ld (iy+002h),08ch		;74b0	fd 36 02 8c 	. 6 . . 
 	ld (iy+003h),00eh		;74b4	fd 36 03 0e 	. 6 . . 
-	ld hl,0e51ah		;74b8	21 1a e5 	! . . 
+	ld hl,DOH_NUM_ACTIVE_BULLETS		;74b8	21 1a e5 	! . . 
 	inc (hl)			;74bb	34 	4 
 	ret			;74bc	c9 	. 
 l74bdh:
@@ -5798,7 +5809,7 @@ l7501h:
 	inc hl			;755f	23 	# 
 	ld (hl),001h		;7560	36 01 	6 . 
 	xor a			;7562	af 	. 
-	ld (0e51ah),a		;7563	32 1a e5 	2 . . 
+	ld (DOH_NUM_ACTIVE_BULLETS),a		;7563	32 1a e5 	2 . . 
 l7566h:
 	pop bc			;7566	c1 	. 
 	ld de,00004h		;7567	11 04 00 	. . . 
