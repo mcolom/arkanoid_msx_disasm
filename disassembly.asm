@@ -6163,7 +6163,7 @@ l7763h:
 	inc hl			;7780	23
 	ld d,(hl)		;7781	56
     
-    ; Apply the corresponding sprite pattern to the alien
+    ; Increment the alien's sprite pattern
 	ld a,(ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)	;7782	dd 7e 0a
 	ld l,a			;7785	6f
 	ld h,0		    ;7786	26 00
@@ -6172,21 +6172,25 @@ l7763h:
 	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a	    ;778a	fd 77 02
 	inc (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)    ;778d	dd 34 0a
 
-	ld a,(LEVEL)		;7790	3a 1b e0 	: . . 
-	and 3		;7793	e6 03 	. . 
-	ld l,a			;7795	6f 	o 
-	ld h, 0		;7796	26 00 	& . 
-	ld de,l77aah		;7798	11 aa 77 	. . w 
-	add hl,de			;779b	19 	. 
-	ld a,(hl)			;779c	7e 	~ 
-	cp (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)		;779d	dd be 0a 	. . . 
-	jp nz,next_alien		;77a0	c2 6d 78 	. m x 
-	ld (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM),0		;77a3	dd 36 0a 00 	. 6 . . 
-	jp next_alien		;77a7	c3 6d 78 	. m x 
-l77aah:
-	ex af,af'			;77aa	08 	. 
-	ex af,af'			;77ab	08 	. 
-	ld b, 17		;77ac	06 11 	. . 
+    ; Reset the animation's frame if it was the last
+	ld a,(LEVEL)		;7790	3a 1b e0
+	and 3		        ;7793	e6 03
+	ld l,a			    ;7795	6f
+	ld h, 0		        ;7796	26 00
+	ld de,TBL_ALIEN_LAST_FRAME		;7798	11 aa 77
+	add hl,de			;779b	19
+	ld a,(hl)			;779c	7e
+	cp (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM)		;779d	dd be 0a
+	jp nz,next_alien		                    ;77a0	c2 6d 78
+    ; Reset animation
+	ld (ix+ALIEN_TABLE_IDX_FLYING_ANIM_NUM),0	;77a3	dd 36 0a 00
+	jp next_alien		                        ;77a7	c3 6d 78
+
+; Last frame of the alien's animation.
+; It's used the reset the animation.
+TBL_ALIEN_LAST_FRAME:
+    db 8, 8, 6, 17
+    
 l77aeh:
 	ld a,(ix+11)		;77ae	dd 7e 0b 	. ~ . 
 	cp 1		;77b1	fe 01 	. . 
