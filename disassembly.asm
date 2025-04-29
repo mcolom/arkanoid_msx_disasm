@@ -6057,21 +6057,30 @@ l771bh:
 
     ; The alien is exploding
 l7722h:
-	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7722	dd 34 04 	. 4 . 
-	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7725	dd 7e 04 	. ~ . 
-	cp 10		;7728	fe 0a 	. . 
-	jp nz,l786dh		;772a	c2 6d 78 	. m x 
-	ld (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS),0		;772d	dd 36 04 00 	. 6 . . 
-	ld a,(ix+005h)		;7731	dd 7e 05 	. ~ . 
-	ld l,a			;7734	6f 	o 
-	ld h, 0		;7735	26 00 	& . 
-	ld de,07b0ch		;7737	11 0c 7b 	. . { 
-	add hl,de			;773a	19 	. 
-	ld a,(hl)			;773b	7e 	~ 
+    ; Increment counter of the explosion animation
+    ; Skip of the counter hasn't already reached 10.
+	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7722	dd 34 04
+	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7725	dd 7e 04
+	cp 10		                                        ;7728	fe 0a
+	jp nz,l786dh		                                ;772a	c2 6d 78
+    
+    
+    ; Reset animation ticks
+	ld (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS), 0		;772d	dd 36 04 00
+    
+    ;A = exploding animation sprite pattern
+	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)    ;7731	dd 7e 05
+	ld l,a			                                ;7734	6f
+	ld h, 0		                                    ;7735	26 00
+	ld de, TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN		                            ;7737	11 0c 7b
+	add hl,de			                            ;773a	19
+	ld a,(hl)			                            ;773b	7e
+    
+    
 	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a	;773c	fd 77 02 	. w . 
 	ld (iy+SPR_PARAMS_IDX_COLOR),8		    ;773f	fd 36 03 08 	. 6 . . 
-	inc (ix+005h)		;7743	dd 34 05 	. 4 . 
-	ld a,(ix+005h)		;7746	dd 7e 05 	. ~ . 
+	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)		;7743	dd 34 05 	. 4 . 
+	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM)		;7746	dd 7e 05 	. ~ . 
 	cp 4		;7749	fe 04 	. . 
 	jp nz,l786dh		;774b	c2 6d 78 	. m x 
 	ld (iy+SPR_PARAMS_IDX_Y), 192		;774e	fd 36 00 c0 	. 6 . . 
@@ -6639,10 +6648,12 @@ l7af9h:
 l7b06h:
 	ld bc,001ffh		;7b06	01 ff 01 	. . . 
 	nop			;7b09	00 	. 
-	ld bc,0x9001		;7b0a	01 01 90 	. . . 
-	sub h			;7b0d	94 	. 
-	sbc a,b			;7b0e	98 	. 
-	sbc a,h			;7b0f	9c 	. 
+    db 0x01     ;7b0a   01
+    db 0x01     ;7b0b   01
+
+; Sprite pattern numbers for the exploding alien
+TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
+    db 0x90, 0x94, 0x98, 0x9c     ;7b0c
 l7b10h:
 	ld bc,02800h		;7b10	01 00 28 	. . ( 
 	nop			;7b13	00 	. 
