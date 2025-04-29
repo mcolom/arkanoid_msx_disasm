@@ -5321,6 +5321,7 @@ l723ch:
 	ld c,(hl)			;723f	4e 	N 
 	ld b,h			;7240	44 	D 
 
+;ToDo
 sub_7241h:
     ; Skip if we're not in the demo
 	ld a,(GAME_STATE)		;7241	3a 0b e0
@@ -5356,19 +5357,19 @@ sub_7241h:
 	ret			            ;726d	c9
 
 l726eh:
-	ld a,(LEVEL)		;726e	3a 1b e0
-	cp FINAL_LEVEL		;7271	fe 20
-	jp z,l7286h		;7273	ca 86 72 	. . r 
-	call sub_7605h		;7276	cd 05 76 	. . v   ToDo
-	call CHECK_LASERS_HITS_ALIEN		;7279	cd 88 78 	. . x 
-	call CHECK_ALIEN_HIT_BY_VAUS		;727c	cd 42 79 	. B y 
-	call UPDATE_ALIEN_APPEAR_FROM_DOOR		;727f	cd 0c 73 	. . s 
-	call UPDATE_DOORS		;7282	cd a0 72 	. . r 
-	ret			;7285	c9 	. 
+	ld a,(LEVEL)		                ;726e	3a 1b e0
+	cp FINAL_LEVEL		                ;7271	fe 20
+	jp z,doh_level		                    ;7273	ca 86 72
+	call UPDATE_ALIENS		            ;7276	cd 05 76
+	call CHECK_LASERS_HITS_ALIEN	    ;7279	cd 88 78
+	call CHECK_ALIEN_HIT_BY_VAUS	    ;727c	cd 42 79
+	call UPDATE_ALIEN_APPEAR_FROM_DOOR	;727f	cd 0c 73
+	call UPDATE_DOORS		            ;7282	cd a0 72
+	ret			                        ;7285	c9
 
 ; This is Doh's stuff...
-l7286h:
-	ld a,(0e50dh)		;7286	3a 0d e5 	: . . 
+doh_level:
+	ld a,(DOH_DEFEATED)		;7286	3a 0d e5 	: . . 
 	or a			;7289	b7 	. 
 	jp nz,l7296h		;728a	c2 96 72 	. . r 
 	call sub_7594h		;728d	cd 94 75 	. . u 
@@ -5586,11 +5587,11 @@ l73a2h:
 	ret			            ;73a9	c9
 
 sub_73aah:
-	ld ix,0e50dh		;73aa	dd 21 0d e5 	. ! . . 
-	ld a,(ix+000h)		;73ae	dd 7e 00 	. ~ . 
+	ld ix,DOH_TABLE		;73aa	dd 21 0d e5 	. ! . . 
+	ld a,(ix+DOH_TABLE_IDX_DEFEATED)		;73ae	dd 7e 00 	. ~ . 
 	or a			;73b1	b7 	. 
 	ret nz			;73b2	c0 	. 
-	ld ix,0e505h		;73b3	dd 21 05 e5 	. ! . . 
+	ld ix,DOH_HIT		;73b3	dd 21 05 e5 	. ! . . 
 	ld a,(ix+000h)		;73b7	dd 7e 00 	. ~ . 
 	or a			;73ba	b7 	. 
 	ret z			;73bb	c8 	. 
@@ -5615,8 +5616,8 @@ sub_73aah:
 	ld (ix+003h),000h		;73eb	dd 36 03 00 	. 6 . . 
 	ret			;73ef	c9 	. 
 sub_73f0h:
-	ld ix,0e50dh		;73f0	dd 21 0d e5 	. ! . . 
-	ld a,(ix+000h)		;73f4	dd 7e 00 	. ~ . 
+	ld ix,DOH_TABLE		;73f0	dd 21 0d e5 	. ! . . 
+	ld a,(ix+DOH_TABLE_IDX_DEFEATED)		;73f4	dd 7e 00 	. ~ . 
 	or a			;73f7	b7 	. 
 	ret z			;73f8	c8 	. 
 	ld a,(ix+001h)		;73f9	dd 7e 01 	. ~ . 
@@ -5898,7 +5899,7 @@ l75edh:
 ; ToDo
 ; This is quite a long function!
 ; It'll be very useful to understand the alien's table
-sub_7605h:
+UPDATE_ALIENS:
     ld ix, ALIEN_TABLE
     ld iy, SPR_13_SPR_PARAMS
     ld b, 3
@@ -6976,7 +6977,7 @@ brick_repaint_action_done:
     ; Set we're in the title screen
 	ld (GAME_STATE),a		        ;7c56	32 0b e0
     ; Reset Doh hits
-	ld (DOH_HITS),a		            ;7c59	32 b3 e5
+	ld (DOH_RECEIVED_HITS),a		            ;7c59	32 b3 e5
 	ret			                    ;7c5c	c9
 
 l7c5dh:
@@ -7277,29 +7278,29 @@ l96e4h:
 	call ADD_SOUND		;96e6	cd ef 5b
 
 	ld a,001h		;96e9	3e 01 	> . 
-	ld (0e2b9h),a		;96eb	32 b9 e2 	2 . . 
+	ld (DOH_HIT_2),a		;96eb	32 b9 e2 	2 . . 
 
     ; Increment Doh hits
     ; Doh is defeated if hit 16 times
-	ld ix,DOH_HITS		;96ee	dd 21 b3 e5
+	ld ix,DOH_RECEIVED_HITS		;96ee	dd 21 b3 e5
 	inc (ix+000h)		;96f2	dd 34 00
 	ld a,(ix+000h)		;96f5	dd 7e 00
 	cp 16		        ;96f8	fe 10
 	jr nz,l970ah		;96fa	20 0e
 
     ; Doh has been defeated!
-	ld a,001h		;96fc	3e 01 	> . 
-	ld (0e50dh),a		;96fe	32 0d e5 	2 . . 
-	call DEACTIVE_ALL_BALLS		;9701	cd 10 97 	. . . 
+	ld a, 1		            ;96fc	3e 01 	> . 
+	ld (DOH_DEFEATED),a		;96fe	32 0d e5
+	call DEACTIVE_ALL_BALLS	;9701	cd 10 97
 
-	ld a,SOUND_DOH_DEFEATED		;9704	3e 09
-	call ADD_SOUND		        ;9706	cd ef 5b
-	ret			                ;9709	c9
+	ld a,SOUND_DOH_DEFEATED	;9704	3e 09
+	call ADD_SOUND		    ;9706	cd ef 5b
+	ret			            ;9709	c9
 
 l970ah:
-	ld a,001h		;970a	3e 01 	> . 
-	ld (0e505h),a		;970c	32 05 e5 	2 . . 
-	ret			;970f	c9 	. 
+	ld a, 1		    ;970a	3e 01
+	ld (DOH_HIT),a	;970c	32 05 e5
+	ret			    ;970f	c9
 
 ; Deactivate all the balls and set the sprites invisible
 DEACTIVE_ALL_BALLS:
@@ -7847,7 +7848,7 @@ l9a36h:
 	add a,(ix+001h)		;9a42	dd 86 01 	. . . 
 	ld (ix+001h),a		;9a45	dd 77 01 	. w . 
 	xor a			;9a48	af 	. 
-	ld (0e2b9h),a		;9a49	32 b9 e2 	2 . . 
+	ld (DOH_HIT_2),a		;9a49	32 b9 e2 	2 . . 
 	push bc			;9a4c	c5 	. 
 	push ix		;9a4d	dd e5 	. . 
 	push iy		;9a4f	fd e5 	. . 
@@ -7862,7 +7863,7 @@ l9a60h:
 	pop iy		;9a60	fd e1 	. . 
 	pop ix		;9a62	dd e1 	. . 
 	pop bc			;9a64	c1 	. 
-	ld a,(0e2b9h)		;9a65	3a b9 e2 	: . . 
+	ld a,(DOH_HIT_2)		;9a65	3a b9 e2 	: . . 
 	or a			;9a68	b7 	. 
 	ret nz			;9a69	c0 	. 
 	djnz l9a36h		;9a6a	10 ca 	. . 
@@ -10360,7 +10361,7 @@ THERE_IS_A_BRICK:
     
     ; ToDo: what is this var?
 	ld a,0		        ;adaa	3e 00
-	ld (0e2b9h),a		;adac	32 b9 e2
+	ld (DOH_HIT_2),a		;adac	32 b9 e2
     
     ; A <- BRICK_ROW
     ; If A < 11 then A = 11
@@ -10556,7 +10557,7 @@ laffch:
 
 lb000h:
 	pop iy		;b000	fd e1 	. . 
-	ld hl,0e2b9h		;b002	21 b9 e2 	! . . 
+	ld hl,DOH_HIT_2		;b002	21 b9 e2 	! . . 
 	ld (hl),000h		;b005	36 00 	6 . 
 	jr z,lb00dh		;b007	28 04 	( . 
 	ld (hl),001h		;b009	36 01 	6 . 
