@@ -6054,12 +6054,14 @@ l7710h:
 l771bh:
 	ld (ix+ALIEN_TABLE_IDX_EXPLODING), 1		;771b	dd 36 02 01 	. 6 . . 
 	jp l7763h		;771f	c3 63 77 	. c w 
+
+    ; The alien is exploding
 l7722h:
-	inc (ix+004h)		;7722	dd 34 04 	. 4 . 
-	ld a,(ix+004h)		;7725	dd 7e 04 	. ~ . 
+	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7722	dd 34 04 	. 4 . 
+	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7725	dd 7e 04 	. ~ . 
 	cp 10		;7728	fe 0a 	. . 
 	jp nz,l786dh		;772a	c2 6d 78 	. m x 
-	ld (ix+004h),0		;772d	dd 36 04 00 	. 6 . . 
+	ld (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS),0		;772d	dd 36 04 00 	. 6 . . 
 	ld a,(ix+005h)		;7731	dd 7e 05 	. ~ . 
 	ld l,a			;7734	6f 	o 
 	ld h, 0		;7735	26 00 	& . 

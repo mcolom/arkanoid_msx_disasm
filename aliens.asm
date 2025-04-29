@@ -3,10 +3,11 @@
 ALIEN_TABLE: equ 0xe4c7
 ALIEN_TABLE_LEN: equ 20
 ;
-ALIEN_TABLE_IDX_COLOR: equ 0        ; 0xe4c7
-ALIEN_TABLE_IDX_ACTIVE: equ 1       ; 0xe4c8
-ALIEN_TABLE_IDX_EXPLODING: equ 2    ; 0xe4c9
-ALIEN_TABLE_IDX_TICKS: equ 3        ; 0xe4ca
+ALIEN_TABLE_IDX_COLOR: equ 0                        ; 0xe4c7
+ALIEN_TABLE_IDX_ACTIVE: equ 1                       ; 0xe4c8
+ALIEN_TABLE_IDX_EXPLODING: equ 2                    ; 0xe4c9
+ALIEN_TABLE_IDX_TICKS: equ 3                        ; 0xe4ca
+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS: equ 4         ; 0xe4cb
 
 
 ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR: equ 6; 0xe4cd  The alien exits the door and goes left (0) or right (2)
