@@ -8,6 +8,8 @@ ALIEN_TABLE_IDX_ACTIVE: equ 1       ; 0xe4c8
 ALIEN_TABLE_IDX_EXPLODING: equ 2    ; 0xe4c9
 ALIEN_TABLE_IDX_TICKS: equ 3        ; 0xe4ca
 
+
+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR: equ 6; 0xe4cd  The alien exits the door and goes left (0) or right (2)
 ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield from the door
 ALIEN_TABLE_IDX_GO_DOWN: equ 8      ; 0xe4cf Bit 7; 0 ==> go down, 1==> go up
 

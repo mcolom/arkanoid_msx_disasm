@@ -5328,7 +5328,7 @@ sub_7241h:
 	jp nz,l726eh		    ;7245	c2 6e 72
 
     ; We're in the demo
-    
+
     ; Increment demo timeout counter
     ; The demo timeout after 2880 (0xb40) counts 
 	ld hl,(DEMO_TIMEOUT)		;7248	2a ad e5
@@ -5351,7 +5351,7 @@ sub_7241h:
 	ld hl,BRICK_HIT_ROW		;7260	21 3c e5
 	ld de,BRICK_HIT_COL		;7263	11 3d e5
 	ld bc, 7		        ;7266	01 07 00
-	ld (hl),0		        ;7269	36 00
+	ld (hl), 0  	        ;7269	36 00
 	ldir		            ;726b	ed b0
 	ret			            ;726d	c9
 
@@ -5897,6 +5897,7 @@ l75edh:
 
 ; ToDo
 ; This is quite a long function!
+; It'll be very useful to understand the alien's table
 sub_7605h:
     ld ix, ALIEN_TABLE
     ld iy, SPR_13_SPR_PARAMS
@@ -5924,7 +5925,7 @@ l760fh:
 
     ; Check if the alien is in the door
 	ld a,(ix+ALIEN_TABLE_IDX_IN_DOOR)		;762e	dd 7e 07
-	cp 0x00		                            ;7631	fe 00
+	cp 0		                            ;7631	fe 00
 	jp nz,l7695h		                    ;7633	c2 95 76 Jump is he's in the door
     ; Set the alien is in the door
 	ld (ix+ALIEN_TABLE_IDX_IN_DOOR), 1		;7636	dd 36 07 01
@@ -5939,46 +5940,51 @@ l760fh:
 l7647h:
 	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		        ;7647	dd 7e 00
 
+    ; HL = 2*color + SPR_DOOR_x_TABLE
 	ld l,a			;764a	6f
 	ld h, 0		    ;764b	26 00   HL = color
 	add hl,hl		;764d	29      HL = 2*color
 	add hl,de		;764e	19      HL = 2*color + table
     
-    ; DE = table[2*color]
+    ; DE = SPR_DOOR_x_TABLE[2*color]
 	ld e,(hl)			;764f	5e
 	inc hl			    ;7650	23
 	ld d,(hl)			;7651	56
 	
-    ; HL = table[2*color]
+    ; HL = SPR_DOOR_x_TABLE[2*color]
     ex de,hl			;7652	eb
 	
     ; DE = SPR_13_SPR_PARAMS
     push iy		;7653	fd e5
 	pop de		;7655	d1
 
-    ; Copy sprite parameters SPR_13_SPR_PARAMS from table[2*color]
+    ; Copy sprite parameters SPR_13_SPR_PARAMS from SPR_DOOR_x_TABLE[2*color]
 	ld bc,SPR_PARAMS_LEN	;7656	01 04 00
 	ldir		            ;7659	ed b0
 
-	ld a,(VAUS_X)		;765b	3a ce e0 	: . . 
-	sub 008h		;765e	d6 08 	. . 
-	and 0f0h		;7660	e6 f0 	. . 
-	srl a		;7662	cb 3f 	. ? 
-	srl a		;7664	cb 3f 	. ? 
-	srl a		;7666	cb 3f 	. ? 
-	srl a		;7668	cb 3f 	. ? 
-	ld l,a			;766a	6f 	o 
-	ld h,000h		;766b	26 00 	& . 
-	ld de,07aech		;766d	11 ec 7a 	. . z 
-	ld a,(iy+001h)		;7670	fd 7e 01 	. ~ . 
-	cp 028h		;7673	fe 28 	. ( 
-	jr z,l767ah		;7675	28 03 	( . 
-	ld de,l7af9h		;7677	11 f9 7a 	. . z 
+	; HL = ((VAUS_X - 8)\16) & 0xf0
+    ld a,(VAUS_X)		;765b	3a ce e0
+	sub 008h		;765e	d6 08
+	and 0f0h		;7660	e6 f0
+	srl a		    ;7662	cb 3f
+	srl a		    ;7664	cb 3f
+	srl a		    ;7666	cb 3f
+	srl a		    ;7668	cb 3f
+	ld l,a			;766a	6f
+	ld h, 0		    ;766b	26 00
+
+    ; A = TBL[((VAUS_X - 8)\16) & 0xf0]
+	ld de,TBL_7aec		        ;766d	11 ec 7a
+	ld a,(iy+SPR_PARAMS_IDX_X)	;7670	fd 7e 01
+	cp 40		                ;7673	fe 28
+	jr z,l767ah		            ;7675	28 03
+	ld de,l7af9h		        ;7677	11 f9 7a
 l767ah:
 	add hl,de			;767a	19 	. 
 	ld a,(hl)			;767b	7e 	~ 
-	ld (ix+006h),a		;767c	dd 77 06 	. w . 
-	ld a,(ix+006h)		;767f	dd 7e 06 	. ~ . 
+
+	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR),a		;767c	dd 77 06 	. w . 
+	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR)		;767f	dd 7e 06 	. ~ . 
 	and 003h		;7682	e6 03 	. . 
 	ld l,a			;7684	6f 	o 
 	ld h,000h		;7685	26 00 	& . 
@@ -5986,40 +5992,41 @@ l767ah:
 	ld de,l7b06h		;7688	11 06 7b 	. . { 
 	add hl,de			;768b	19 	. 
 	ld a,(hl)			;768c	7e 	~ 
-	ld (ix+008h),a		;768d	dd 77 08 	. w . 
+
+	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;768d	dd 77 08 	. w . 
 	inc hl			;7690	23 	# 
 	ld a,(hl)			;7691	7e 	~ 
 	ld (ix+009h),a		;7692	dd 77 09 	. w . 
 l7695h:
-	ld a,(iy+000h)		;7695	fd 7e 00 	. ~ . 
-	cp 040h		;7698	fe 40 	. @ 
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7695	fd 7e 00 	. ~ . 
+	cp 64		;7698	fe 40 	. @ 
 	jp nc,l77aeh		;769a	d2 ae 77 	. . w 
-	ld a,(ix+008h)		;769d	dd 7e 08 	. ~ . 
-	add a,(iy+000h)		;76a0	fd 86 00 	. . . 
-	ld (iy+000h),a		;76a3	fd 77 00 	. w . 
+	ld a,(ix+ALIEN_TABLE_IDX_GO_DOWN)		;769d	dd 7e 08 	. ~ . 
+	add a,(iy+SPR_PARAMS_IDX_X)		;76a0	fd 86 00 	. . . 
+	ld (iy+SPR_PARAMS_IDX_Y),a		;76a3	fd 77 00 	. w . 
 	ld a,(ix+009h)		;76a6	dd 7e 09 	. ~ . 
-	add a,(iy+001h)		;76a9	fd 86 01 	. . . 
-	ld (iy+001h),a		;76ac	fd 77 01 	. w . 
-	ld a,(ix+010h)		;76af	dd 7e 10 	. ~ . 
-	cp 001h		;76b2	fe 01 	. . 
+	add a,(iy+SPR_PARAMS_IDX_X)		;76a9	fd 86 01 	. . . 
+	ld (iy+SPR_PARAMS_IDX_X),a		;76ac	fd 77 01 	. w . 
+	ld a,(ix+16)		;76af	dd 7e 10 	. ~ . 
+	cp 1		;76b2	fe 01 	. . 
 	jp z,l7705h		;76b4	ca 05 77 	. . w 
-	cp 002h		;76b7	fe 02 	. . 
+	cp 2		;76b7	fe 02 	. . 
 	jp z,l7710h		;76b9	ca 10 77 	. . w 
-	cp 003h		;76bc	fe 03 	. . 
+	cp 3		;76bc	fe 03 	. . 
 	jp z,l771bh		;76be	ca 1b 77 	. . w 
-	ld a,(iy+000h)		;76c1	fd 7e 00 	. ~ . 
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;76c1	fd 7e 00 	. ~ . 
 	cp 007h		;76c4	fe 07 	. . 
 	jp nc,l76d6h		;76c6	d2 d6 76 	. . v 
-	ld a,(ix+008h)		;76c9	dd 7e 08 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_GO_DOWN)		;76c9	dd 7e 08 	. ~ . 
 	bit 7,a		;76cc	cb 7f 	.  
 	jp z,l76d6h		;76ce	ca d6 76 	. . v 
 	neg		;76d1	ed 44 	. D 
-	ld (ix+008h),a		;76d3	dd 77 08 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;76d3	dd 77 08 	. w . 
 l76d6h:
 	bit 7,(ix+009h)		;76d6	dd cb 09 7e 	. . . ~ 
 	jr z,l76ech		;76da	28 10 	( . 
-	ld a,(iy+001h)		;76dc	fd 7e 01 	. ~ . 
-	cp 010h		;76df	fe 10 	. . 
+	ld a,(iy+SPR_PARAMS_IDX_X)		;76dc	fd 7e 01 	. ~ . 
+	cp 16		;76df	fe 10 	. . 
 	jp nc,l76ech		;76e1	d2 ec 76 	. . v 
 	ld a,(ix+009h)		;76e4	dd 7e 09 	. ~ . 
 	neg		;76e7	ed 44 	. D 
@@ -6027,17 +6034,17 @@ l76d6h:
 l76ech:
 	bit 7,(ix+009h)		;76ec	dd cb 09 7e 	. . . ~ 
 	jr nz,l7763h		;76f0	20 71 	  q 
-	ld a,(iy+001h)		;76f2	fd 7e 01 	. ~ . 
-	cp 0b0h		;76f5	fe b0 	. . 
+	ld a,(iy+SPR_PARAMS_IDX_X)		;76f2	fd 7e 01 	. ~ . 
+	cp 176		;76f5	fe b0 	. . 
 	jp c,l7763h		;76f7	da 63 77 	. c w 
 	ld a,(ix+009h)		;76fa	dd 7e 09 	. ~ . 
 	neg		;76fd	ed 44 	. D 
 	ld (ix+009h),a		;76ff	dd 77 09 	. w . 
 	jp l7763h		;7702	c3 63 77 	. c w 
 l7705h:
-	ld a,(ix+008h)		;7705	dd 7e 08 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_GO_DOWN)		;7705	dd 7e 08 	. ~ . 
 	neg		;7708	ed 44 	. D 
-	ld (ix+008h),a		;770a	dd 77 08 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;770a	dd 77 08 	. w . 
 	jp l7763h		;770d	c3 63 77 	. c w 
 l7710h:
 	ld a,(ix+009h)		;7710	dd 7e 09 	. ~ . 
@@ -6045,114 +6052,115 @@ l7710h:
 	ld (ix+009h),a		;7715	dd 77 09 	. w . 
 	jp l7763h		;7718	c3 63 77 	. c w 
 l771bh:
-	ld (ix+002h),001h		;771b	dd 36 02 01 	. 6 . . 
+	ld (ix+ALIEN_TABLE_IDX_EXPLODING), 1		;771b	dd 36 02 01 	. 6 . . 
 	jp l7763h		;771f	c3 63 77 	. c w 
 l7722h:
 	inc (ix+004h)		;7722	dd 34 04 	. 4 . 
 	ld a,(ix+004h)		;7725	dd 7e 04 	. ~ . 
-	cp 00ah		;7728	fe 0a 	. . 
+	cp 10		;7728	fe 0a 	. . 
 	jp nz,l786dh		;772a	c2 6d 78 	. m x 
-	ld (ix+004h),000h		;772d	dd 36 04 00 	. 6 . . 
+	ld (ix+004h),0		;772d	dd 36 04 00 	. 6 . . 
 	ld a,(ix+005h)		;7731	dd 7e 05 	. ~ . 
 	ld l,a			;7734	6f 	o 
-	ld h,000h		;7735	26 00 	& . 
+	ld h, 0		;7735	26 00 	& . 
 	ld de,07b0ch		;7737	11 0c 7b 	. . { 
 	add hl,de			;773a	19 	. 
 	ld a,(hl)			;773b	7e 	~ 
-	ld (iy+002h),a		;773c	fd 77 02 	. w . 
-	ld (iy+003h),008h		;773f	fd 36 03 08 	. 6 . . 
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a	;773c	fd 77 02 	. w . 
+	ld (iy+SPR_PARAMS_IDX_COLOR),8		    ;773f	fd 36 03 08 	. 6 . . 
 	inc (ix+005h)		;7743	dd 34 05 	. 4 . 
 	ld a,(ix+005h)		;7746	dd 7e 05 	. ~ . 
-	cp 004h		;7749	fe 04 	. . 
+	cp 4		;7749	fe 04 	. . 
 	jp nz,l786dh		;774b	c2 6d 78 	. m x 
-	ld (iy+000h),0c0h		;774e	fd 36 00 c0 	. 6 . . 
+	ld (iy+SPR_PARAMS_IDX_Y), 192		;774e	fd 36 00 c0 	. 6 . . 
 	push ix		;7752	dd e5 	. . 
 	push ix		;7754	dd e5 	. . 
 	pop hl			;7756	e1 	. 
 	pop de			;7757	d1 	. 
 	inc de			;7758	13 	. 
-	ld (hl),000h		;7759	36 00 	6 . 
-	ld bc,00013h		;775b	01 13 00 	. . . 
+	ld (hl), 0		;7759	36 00 	6 . 
+	ld bc, 19		;775b	01 13 00 	. . . 
 	ldir		;775e	ed b0 	. . 
 	jp l786dh		;7760	c3 6d 78 	. m x 
 l7763h:
-	inc (ix+011h)		;7763	dd 34 11 	. 4 . 
-	ld a,(ix+011h)		;7766	dd 7e 11 	. ~ . 
-	cp 004h		;7769	fe 04 	. . 
+	inc (ix+17)		;7763	dd 34 11 	. 4 . 
+	ld a,(ix+17)		;7766	dd 7e 11 	. ~ . 
+	cp 4		;7769	fe 04 	. . 
 	jp nz,l786dh		;776b	c2 6d 78 	. m x 
-	ld (ix+011h),000h		;776e	dd 36 11 00 	. 6 . . 
+	ld (ix+17), 0		;776e	dd 36 11 00 	. 6 . . 
+
 	ld a,(LEVEL)		;7772	3a 1b e0 	: . . 
-	and 003h		;7775	e6 03 	. . 
+	and 3		;7775	e6 03 	. . 
 	ld l,a			;7777	6f 	o 
-	ld h,000h		;7778	26 00 	& . 
+	ld h, 0		;7778	26 00 	& . 
 	add hl,hl			;777a	29 	) 
 	ld de,l7abdh		;777b	11 bd 7a 	. . z 
 	add hl,de			;777e	19 	. 
 	ld e,(hl)			;777f	5e 	^ 
 	inc hl			;7780	23 	# 
 	ld d,(hl)			;7781	56 	V 
-	ld a,(ix+00ah)		;7782	dd 7e 0a 	. ~ . 
+	ld a,(ix+10)		;7782	dd 7e 0a 	. ~ . 
 	ld l,a			;7785	6f 	o 
-	ld h,000h		;7786	26 00 	& . 
+	ld h,0		;7786	26 00 	& . 
 	add hl,de			;7788	19 	. 
 	ld a,(hl)			;7789	7e 	~ 
-	ld (iy+002h),a		;778a	fd 77 02 	. w . 
-	inc (ix+00ah)		;778d	dd 34 0a 	. 4 . 
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM),a		;778a	fd 77 02 	. w . 
+	inc (ix+10)		;778d	dd 34 0a 	. 4 . 
 	ld a,(LEVEL)		;7790	3a 1b e0 	: . . 
-	and 003h		;7793	e6 03 	. . 
+	and 3		;7793	e6 03 	. . 
 	ld l,a			;7795	6f 	o 
-	ld h,000h		;7796	26 00 	& . 
+	ld h, 0		;7796	26 00 	& . 
 	ld de,l77aah		;7798	11 aa 77 	. . w 
 	add hl,de			;779b	19 	. 
 	ld a,(hl)			;779c	7e 	~ 
-	cp (ix+00ah)		;779d	dd be 0a 	. . . 
+	cp (ix+10)		;779d	dd be 0a 	. . . 
 	jp nz,l786dh		;77a0	c2 6d 78 	. m x 
-	ld (ix+00ah),000h		;77a3	dd 36 0a 00 	. 6 . . 
+	ld (ix+10),0		;77a3	dd 36 0a 00 	. 6 . . 
 	jp l786dh		;77a7	c3 6d 78 	. m x 
 l77aah:
 	ex af,af'			;77aa	08 	. 
 	ex af,af'			;77ab	08 	. 
-	ld b,011h		;77ac	06 11 	. . 
+	ld b, 17		;77ac	06 11 	. . 
 l77aeh:
-	ld a,(ix+00bh)		;77ae	dd 7e 0b 	. ~ . 
-	cp 001h		;77b1	fe 01 	. . 
+	ld a,(ix+11)		;77ae	dd 7e 0b 	. ~ . 
+	cp 1		;77b1	fe 01 	. . 
 	jp z,l77f1h		;77b3	ca f1 77 	. . w 
-	ld (ix+00bh),001h		;77b6	dd 36 0b 01 	. 6 . . 
-	ld a,(ix+00ch)		;77ba	dd 7e 0c 	. ~ . 
+	ld (ix+11),1		;77b6	dd 36 0b 01 	. 6 . . 
+	ld a,(ix+12)		;77ba	dd 7e 0c 	. ~ . 
 	sla a		;77bd	cb 27 	. ' 
 	sla a		;77bf	cb 27 	. ' 
 	ld l,a			;77c1	6f 	o 
-	ld h,000h		;77c2	26 00 	& . 
-	ld a,(ix+000h)		;77c4	dd 7e 00 	. ~ . 
+	ld h, 0		;77c2	26 00 	& . 
+	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;77c4	dd 7e 00 	. ~ . 
 	ld de,l7b10h		;77c7	11 10 7b 	. . { 
-	cp 000h		;77ca	fe 00 	. . 
+	cp 0		;77ca	fe 00 	. . 
 	jp z,l77e2h		;77cc	ca e2 77 	. . w 
 	ld de,l7b24h		;77cf	11 24 7b 	. $ { 
-	cp 001h		;77d2	fe 01 	. . 
+	cp 1		;77d2	fe 01 	. . 
 	jp z,l77e2h		;77d4	ca e2 77 	. . w 
 	ld de,l7b38h		;77d7	11 38 7b 	. 8 { 
-	cp 002h		;77da	fe 02 	. . 
+	cp 2		;77da	fe 02 	. . 
 	jp z,l77e2h		;77dc	ca e2 77 	. . w 
 	ld de,l7b50h		;77df	11 50 7b 	. P { 
 l77e2h:
 	add hl,de			;77e2	19 	. 
 	ld a,(hl)			;77e3	7e 	~ 
-	ld (ix+008h),a		;77e4	dd 77 08 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_GO_DOWN),a		;77e4	dd 77 08 	. w . 
 	inc hl			;77e7	23 	# 
 	ld a,(hl)			;77e8	7e 	~ 
-	ld (ix+009h),a		;77e9	dd 77 09 	. w . 
+	ld (ix+9),a		;77e9	dd 77 09 	. w . 
 	inc hl			;77ec	23 	# 
 	ld a,(hl)			;77ed	7e 	~ 
-	ld (ix+00fh),a		;77ee	dd 77 0f 	. w . 
+	ld (ix+15),a		;77ee	dd 77 0f 	. w . 
 l77f1h:
 	ld a,(ix+008h)		;77f1	dd 7e 08 	. ~ . 
-	add a,(iy+000h)		;77f4	fd 86 00 	. . . 
-	ld (iy+000h),a		;77f7	fd 77 00 	. w . 
+	add a,(iy+SPR_PARAMS_IDX_Y)		;77f4	fd 86 00 	. . . 
+	ld (iy+SPR_PARAMS_IDX_Y),a		;77f7	fd 77 00 	. w . 
 	ld a,(ix+009h)		;77fa	dd 7e 09 	. ~ . 
-	add a,(iy+001h)		;77fd	fd 86 01 	. . . 
-	ld (iy+001h),a		;7800	fd 77 01 	. w . 
-	ld a,(iy+001h)		;7803	fd 7e 01 	. ~ . 
-	cp 011h		;7806	fe 11 	. . 
+	add a,(iy+SPR_PARAMS_IDX_X)		;77fd	fd 86 01 	. . . 
+	ld (iy+SPR_PARAMS_IDX_X),a		;7800	fd 77 01 	. w . 
+	ld a,(iy+SPR_PARAMS_IDX_X)		;7803	fd 7e 01 	. ~ . 
+	cp 17		;7806	fe 11 	. . 
 	jr nc,l7817h		;7808	30 0d 	0 . 
 	ld a,(ix+009h)		;780a	dd 7e 09 	. ~ . 
 	bit 7,a		;780d	cb 7f 	.  
@@ -6160,8 +6168,8 @@ l77f1h:
 	neg		;7812	ed 44 	. D 
 	ld (ix+009h),a		;7814	dd 77 09 	. w . 
 l7817h:
-	ld a,(iy+001h)		;7817	fd 7e 01 	. ~ . 
-	cp 0afh		;781a	fe af 	. . 
+	ld a,(iy+SPR_PARAMS_IDX_X)		;7817	fd 7e 01 	. ~ . 
+	cp 175		;781a	fe af 	. . 
 	jr c,l782bh		;781c	38 0d 	8 . 
 	ld a,(ix+009h)		;781e	dd 7e 09 	. ~ . 
 	bit 7,a		;7821	cb 7f 	.  
@@ -6171,37 +6179,37 @@ l7817h:
 l782bh:
 	ld a,(ix+00fh)		;782b	dd 7e 0f 	. ~ . 
 	dec a			;782e	3d 	= 
-	ld (ix+00fh),a		;782f	dd 77 0f 	. w . 
+	ld (ix+15),a		;782f	dd 77 0f 	. w . 
 	jp nz,l7763h		;7832	c2 63 77 	. c w 
-	ld (ix+00bh),000h		;7835	dd 36 0b 00 	. 6 . . 
-	ld a,(iy+000h)		;7839	fd 7e 00 	. ~ . 
-	cp 0aeh		;783c	fe ae 	. . 
+	ld (ix+00bh), 0		;7835	dd 36 0b 00 	. 6 . . 
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7839	fd 7e 00 	. ~ . 
+	cp 174		;783c	fe ae 	. . 
 	jp nc,l785bh		;783e	d2 5b 78 	. [ x 
-	ld a,(ix+000h)		;7841	dd 7e 00 	. ~ . 
-	cp 002h		;7844	fe 02 	. . 
+	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;7841	dd 7e 00 	. ~ . 
+	cp 2		;7844	fe 02 	. . 
 	jp z,l787dh		;7846	ca 7d 78 	. } x 
-	inc (ix+00ch)		;7849	dd 34 0c 	. 4 . 
-	ld a,(ix+00ch)		;784c	dd 7e 0c 	. ~ . 
-	cp 005h		;784f	fe 05 	. . 
+	inc (ix+12)		;7849	dd 34 0c 	. 4 . 
+	ld a,(ix+12)		;784c	dd 7e 0c 	. ~ . 
+	cp 5		;784f	fe 05 	. . 
 l7851h:
 	jp nz,l7763h		;7851	c2 63 77 	. c w 
-	ld (ix+00ch),000h		;7854	dd 36 0c 00 	. 6 . . 
+	ld (ix+12),0	;7854	dd 36 0c 00 	. 6 . . 
 	jp l786dh		;7858	c3 6d 78 	. m x 
 l785bh:
-	ld (iy+000h),0c0h		;785b	fd 36 00 c0 	. 6 . . 
+	ld (iy+SPR_PARAMS_IDX_Y), 192		;785b	fd 36 00 c0 	. 6 . . 
 	push ix		;785f	dd e5 	. . 
 	push ix		;7861	dd e5 	. . 
 	pop hl			;7863	e1 	. 
 	pop de			;7864	d1 	. 
 	inc de			;7865	13 	. 
-	ld (hl),000h		;7866	36 00 	6 . 
-	ld bc,00013h		;7868	01 13 00 	. . . 
+	ld (hl), 0		;7866	36 00 	6 . 
+	ld bc, 19		;7868	01 13 00 	. . . 
 	ldir		;786b	ed b0 	. . 
 l786dh:
 	pop bc			;786d	c1 	. 
 	ld de,ALIEN_TABLE_LEN		;786e	11 14 00 	. . . 
 	add ix,de		;7871	dd 19 	. . 
-	ld de,00004h		;7873	11 04 00 	. . . 
+	ld de, SPR_PARAMS_LEN		;7873	11 04 00 	. . . 
 	add iy,de		;7876	fd 19 	. . 
 	dec b			;7878	05 	. 
 	jp nz,l760fh		;7879	c2 0f 76 	. . v 
@@ -6599,7 +6607,11 @@ l7abdh:
 	ret nc			;7ae5	d0 	. 
 	call c,0d8d4h		;7ae6	dc d4 d8 	. . . 
 	ret c			;7ae9	d8 	. 
-	call nc,000d0h		;7aea	d4 d0 00 	. . . 
+    db 0xd4, 0xd0   ; 7aea
+
+TBL_7aec:
+    db 0            ; 7aec
+
 	nop			;7aed	00 	. 
 	ld bc,00201h		;7aee	01 01 02 	. . . 
 	ld (bc),a			;7af1	02 	. 
