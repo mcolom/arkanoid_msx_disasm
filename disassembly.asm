@@ -5846,16 +5846,18 @@ l7587h:
 	inc b			;7591	04 	. 
 	inc bc			;7592	03 	. 
 	inc b			;7593	04 	. 
+
+; SEGIR
 sub_7594h:
 	ld ix,DOH_BULLETS_TABLE		;7594	dd 21 63 e5 	. ! c . 
-	ld a,(ix+000h)		;7598	dd 7e 00 	. ~ . 
+	ld a,(ix+DOH_BULLETS_ACTIVE)		;7598	dd 7e 00 	. ~ . 
 	or a			;759b	b7 	. 
 	jr nz,l75c8h		;759c	20 2a 	  * 
 	ld a,(ix+008h)		;759e	dd 7e 08 	. ~ . 
 	or a			;75a1	b7 	. 
 	ret z			;75a2	c8 	. 
 	ld b,003h		;75a3	06 03 	. . 
-	ld ix,075f9h		;75a5	dd 21 f9 75 	. ! . u 
+	ld ix,TBL_75f9		;75a5	dd 21 f9 75 	. ! . u 
 	ld iy,0190bh		;75a9	fd 21 0b 19 	. ! . . 
 l75adh:
 	push ix		;75ad	dd e5 	. . 
@@ -5875,7 +5877,7 @@ l75adh:
 
 l75c8h:
 	ld b,003h		;75c8	06 03 	. . 
-	ld ix,l75edh		;75ca	dd 21 ed 75 	. ! . u 
+	ld ix,TBL_75ed		;75ca	dd 21 ed 75 	. ! . u 
 	ld iy,0190bh		;75ce	fd 21 0b 19 	. ! . . 
 l75d2h:
 	push ix		;75d2	dd e5 	. . 
@@ -5892,7 +5894,7 @@ l75d2h:
 	add iy,de		;75e8	fd 19 	. . 
 	djnz l75d2h		;75ea	10 e6 	. . 
 	ret			;75ec	c9 	. 
-l75edh:
+TBL_75ed:
 	ret p			;75ed	f0 	. 
 	pop af			;75ee	f1 	. 
 	jp p,0f4f3h		;75ef	f2 f3 f4 	. . . 
@@ -5900,14 +5902,10 @@ l75edh:
 	or 0f7h		;75f3	f6 f7 	. . 
 	ret m			;75f5	f8 	. 
 	ld sp,hl			;75f6	f9 	. 
-	jp m,lbafbh		;75f7	fa fb ba 	. . . 
-	cp e			;75fa	bb 	. 
-	cp h			;75fb	bc 	. 
-	cp l			;75fc	bd 	. 
-	jp nz,0c4c3h		;75fd	c2 c3 c4 	. . . 
-	push bc			;7600	c5 	. 
-	jp z,0cccbh		;7601	ca cb cc 	. . . 
-    db 0xcd          ;7604
+	db 0xfa, 0xfb   ;75f7
+
+TBL_75f9: ;75f9
+    db 0xba, 0xbb, 0xbc, 0xbd, 0xc2, 0xc3, 0xc4, 0xc5, 0xca, 0xcb, 0xcc, 0xcd
 
 ; ToDo
 ; This is quite a long function!
