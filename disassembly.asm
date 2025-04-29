@@ -5988,19 +5988,19 @@ l767ah:
 	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR),a		;767c	dd 77 06
 	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR)		;767f	dd 7e 06
     
-	; ALIEN_GO_DOWN = TBL_ALIEN_VERT_SPEED[2*(direction & 3)]
+	; ALIEN_VERT_SPEED = TBL_ALIEN_VERT_SPEED[2*(direction & 3)]
     and 3		                                        ;7682	e6 03
 	ld l,a                                              ;7684	6f
 	ld h, 0		                                        ;7685	26 00
 	add hl,hl			                                ;7687	29
-	ld de,TBL_ALIEN_VERT_SPEED		                                ;7688	11 06 7b
+	ld de,TBL_ALIEN_VERT_SPEED		                    ;7688	11 06 7b
 	add hl,de			                                ;768b	19
 	ld a,(hl)			                                ;768c	7e
-	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		            ;768d	dd 77 08
+	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		        ;768d	dd 77 08
 
 	inc hl			;7690	23 	# 
 	ld a,(hl)			;7691	7e 	~ 
-	ld (ix+009h),a		;7692	dd 77 09 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7692	dd 77 09 	. w . 
 l7695h:
 	ld a,(iy+SPR_PARAMS_IDX_Y)		;7695	fd 7e 00 	. ~ . 
 	cp 64		;7698	fe 40 	. @ 
@@ -6008,7 +6008,7 @@ l7695h:
 	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;769d	dd 7e 08 	. ~ . 
 	add a,(iy+SPR_PARAMS_IDX_X)		;76a0	fd 86 00 	. . . 
 	ld (iy+SPR_PARAMS_IDX_Y),a		;76a3	fd 77 00 	. w . 
-	ld a,(ix+009h)		;76a6	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76a6	dd 7e 09 	. ~ . 
 	add a,(iy+SPR_PARAMS_IDX_X)		;76a9	fd 86 01 	. . . 
 	ld (iy+SPR_PARAMS_IDX_X),a		;76ac	fd 77 01 	. w . 
 	ld a,(ix+16)		;76af	dd 7e 10 	. ~ . 
@@ -6027,23 +6027,23 @@ l7695h:
 	neg		;76d1	ed 44 	. D 
 	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;76d3	dd 77 08 	. w . 
 l76d6h:
-	bit 7,(ix+009h)		;76d6	dd cb 09 7e 	. . . ~ 
+	bit 7,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76d6	dd cb 09 7e 	. . . ~ 
 	jr z,l76ech		;76da	28 10 	( . 
 	ld a,(iy+SPR_PARAMS_IDX_X)		;76dc	fd 7e 01 	. ~ . 
 	cp 16		;76df	fe 10 	. . 
 	jp nc,l76ech		;76e1	d2 ec 76 	. . v 
-	ld a,(ix+009h)		;76e4	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76e4	dd 7e 09 	. ~ . 
 	neg		;76e7	ed 44 	. D 
-	ld (ix+009h),a		;76e9	dd 77 09 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;76e9	dd 77 09 	. w . 
 l76ech:
-	bit 7,(ix+009h)		;76ec	dd cb 09 7e 	. . . ~ 
+	bit 7,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76ec	dd cb 09 7e 	. . . ~ 
 	jr nz,l7763h		;76f0	20 71 	  q 
 	ld a,(iy+SPR_PARAMS_IDX_X)		;76f2	fd 7e 01 	. ~ . 
 	cp 176		;76f5	fe b0 	. . 
 	jp c,l7763h		;76f7	da 63 77 	. c w 
-	ld a,(ix+009h)		;76fa	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;76fa	dd 7e 09 	. ~ . 
 	neg		;76fd	ed 44 	. D 
-	ld (ix+009h),a		;76ff	dd 77 09 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;76ff	dd 77 09 	. w . 
 	jp l7763h		;7702	c3 63 77 	. c w 
 l7705h:
 	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)		;7705	dd 7e 08 	. ~ . 
@@ -6051,9 +6051,9 @@ l7705h:
 	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		;770a	dd 77 08 	. w . 
 	jp l7763h		;770d	c3 63 77 	. c w 
 l7710h:
-	ld a,(ix+009h)		;7710	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;7710	dd 7e 09 	. ~ . 
 	neg		;7713	ed 44 	. D 
-	ld (ix+009h),a		;7715	dd 77 09 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7715	dd 77 09 	. w . 
 	jp l7763h		;7718	c3 63 77 	. c w 
 l771bh:
 	ld (ix+ALIEN_TABLE_IDX_EXPLODING), 1		;771b	dd 36 02 01 	. 6 . . 
@@ -6171,26 +6171,26 @@ l77f1h:
 	ld a,(ix+008h)		;77f1	dd 7e 08 	. ~ . 
 	add a,(iy+SPR_PARAMS_IDX_Y)		;77f4	fd 86 00 	. . . 
 	ld (iy+SPR_PARAMS_IDX_Y),a		;77f7	fd 77 00 	. w . 
-	ld a,(ix+009h)		;77fa	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;77fa	dd 7e 09 	. ~ . 
 	add a,(iy+SPR_PARAMS_IDX_X)		;77fd	fd 86 01 	. . . 
 	ld (iy+SPR_PARAMS_IDX_X),a		;7800	fd 77 01 	. w . 
 	ld a,(iy+SPR_PARAMS_IDX_X)		;7803	fd 7e 01 	. ~ . 
 	cp 17		;7806	fe 11 	. . 
 	jr nc,l7817h		;7808	30 0d 	0 . 
-	ld a,(ix+009h)		;780a	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;780a	dd 7e 09 	. ~ . 
 	bit 7,a		;780d	cb 7f 	.  
 	jp z,l7817h		;780f	ca 17 78 	. . x 
 	neg		;7812	ed 44 	. D 
-	ld (ix+009h),a		;7814	dd 77 09 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7814	dd 77 09 	. w . 
 l7817h:
 	ld a,(iy+SPR_PARAMS_IDX_X)		;7817	fd 7e 01 	. ~ . 
 	cp 175		;781a	fe af 	. . 
 	jr c,l782bh		;781c	38 0d 	8 . 
-	ld a,(ix+009h)		;781e	dd 7e 09 	. ~ . 
+	ld a,(ix+ALIEN_TABLE_IDX_HORIZ_SPEED)		;781e	dd 7e 09 	. ~ . 
 	bit 7,a		;7821	cb 7f 	.  
 	jp nz,l782bh		;7823	c2 2b 78 	. + x 
 	neg		;7826	ed 44 	. D 
-	ld (ix+009h),a		;7828	dd 77 09 	. w . 
+	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a		;7828	dd 77 09 	. w . 
 l782bh:
 	ld a,(ix+00fh)		;782b	dd 7e 0f 	. ~ . 
 	dec a			;782e	3d 	= 
