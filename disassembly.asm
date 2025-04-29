@@ -5372,7 +5372,7 @@ doh_level:
 	ld a,(DOH_DEFEATED)		;7286	3a 0d e5 	: . . 
 	or a			;7289	b7 	. 
 	jp nz,l7296h		;728a	c2 96 72 	. . r 
-	call sub_7594h		;728d	cd 94 75 	. . u 
+	call DRAW_DOH_MOUTH_OPEN		;728d	cd 94 75 	. . u 
 	call CHECK_DOH_CAN_THROW_BULLETS		;7290	cd 69 74 	. i t 
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
@@ -5847,33 +5847,38 @@ l7587h:
 	inc bc			;7592	03 	. 
 	inc b			;7593	04 	. 
 
-; SEGIR
-sub_7594h:
-	ld ix,DOH_BULLETS_TABLE		;7594	dd 21 63 e5 	. ! c . 
-	ld a,(ix+DOH_BULLETS_ACTIVE)		;7598	dd 7e 00 	. ~ . 
-	or a			;759b	b7 	. 
-	jr nz,l75c8h		;759c	20 2a 	  * 
-	ld a,(ix+008h)		;759e	dd 7e 08 	. ~ . 
+; Draw Doh with his mouth open
+DRAW_DOH_MOUTH_OPEN:
+    ; Skip if the bullet is not active
+	ld ix,DOH_BULLETS_TABLE		    ;7594	dd 21 63 e5
+	ld a,(ix+DOH_BULLETS_ACTIVE)	;7598	dd 7e 00
+	or a			                ;759b	b7
+	jr nz,l75c8h		            ;759c	20 2a
+
+    ; Skip if... ToDo
+	ld a,(ix+008h)	;759e	dd 7e 08
 	or a			;75a1	b7 	. 
 	ret z			;75a2	c8 	. 
-	ld b,003h		;75a3	06 03 	. . 
-	ld ix,TBL_75f9		;75a5	dd 21 f9 75 	. ! . u 
-	ld iy,0190bh		;75a9	fd 21 0b 19 	. ! . . 
+
+	ld b, 3		                ;75a3	06 03       3 rows of chars
+	ld ix,CHARS_DOH_OPEN_MOUTH		        ;75a5	dd 21 f9 75
+	ld iy, 0x1800 + 11 + 8*32	;75a9	fd 21 0b 19 Locate at [11, 8]
 l75adh:
-	push ix		;75ad	dd e5 	. . 
-	push iy		;75af	fd e5 	. . 
+	push ix		    ;75ad	dd e5
+	push iy		    ;75af	fd e5
 	pop de			;75b1	d1 	. 
 	pop hl			;75b2	e1 	. 
 	push bc			;75b3	c5 	. 
-	ld bc,00004h		;75b4	01 04 00 	. . . 
-	call LDIRVM		;75b7	cd 5c 00 	. \ . 
-	pop bc			;75ba	c1 	. 
-	ld de,00004h		;75bb	11 04 00 	. . . 
-	add ix,de		;75be	dd 19 	. . 
-	ld de,00020h		;75c0	11 20 00 	.   . 
-	add iy,de		;75c3	fd 19 	. . 
-	djnz l75adh		;75c5	10 e6 	. . 
-	ret			;75c7	c9 	. 
+	ld bc, 4		;75b4	01 04 00    4 chars
+	call LDIRVM		;75b7	cd 5c 00    Write to VRAM
+	pop bc			;75ba	c1
+    ; Next row
+	ld de, 4    	;75bb	11 04 00
+	add ix,de		;75be	dd 19
+	ld de, 32   	;75c0	11 20 00
+	add iy,de		;75c3	fd 19
+	djnz l75adh		;75c5	10 e6
+	ret			    ;75c7	c9
 
 l75c8h:
 	ld b,003h		;75c8	06 03 	. . 
@@ -5904,8 +5909,10 @@ TBL_75ed:
 	ld sp,hl			;75f6	f9 	. 
 	db 0xfa, 0xfb   ;75f7
 
-TBL_75f9: ;75f9
-    db 0xba, 0xbb, 0xbc, 0xbd, 0xc2, 0xc3, 0xc4, 0xc5, 0xca, 0xcb, 0xcc, 0xcd
+CHARS_DOH_OPEN_MOUTH: ;75f9
+    db 0xba, 0xbb, 0xbc, 0xbd
+    db 0xc2, 0xc3, 0xc4, 0xc5
+    db 0xca, 0xcb, 0xcc, 0xcd
 
 ; ToDo
 ; This is quite a long function!
