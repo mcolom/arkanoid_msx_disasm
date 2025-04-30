@@ -5369,10 +5369,10 @@ l726eh:
 
 ; This is Doh's stuff...
 doh_level:
-    ; Skip if Doh is already firing
-	ld a,(DOH_IS_FIRING)		;7286	3a 0d e5
-	or a			            ;7289	b7
-	jp nz,l7296h		        ;728a	c2 96 72
+    ; Skip if Doh is already defeated
+	ld a,(DOH_TABLE)		;7286	3a 0d e5
+	or a			        ;7289	b7
+	jp nz,l7296h		    ;728a	c2 96 72
 	call DRAW_DOH_MOUTH_OPEN		    ;728d	cd 94 75
 	call CHECK_DOH_CAN_THROW_BULLETS	;7290	cd 69 74
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
@@ -5596,23 +5596,23 @@ DOH_UPDATE_COLOR:
 	ret nz			                    ;73b2	c0
     
     ; Skip if Doh hasn't been hit
-	ld ix,DOH_HIT		;73b3	dd 21 05 e5
-	ld a,(ix+000h)		;73b7	dd 7e 00
-	or a			    ;73ba	b7
-	ret z			    ;73bb	c8
+	ld ix,TBL_DOH_HIT		                ;73b3	dd 21 05 e5
+	ld a,(ix+TBL_DOH_HIT_IDX_DOH_BEEN_HIT)	;73b7	dd 7e 00
+	or a			                    ;73ba	b7
+	ret z			                    ;73bb	c8
 
     ; Delay counter
     ; Wait 3 cycles before changing the color
-	inc (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73bc	dd 34 01
-	ld a,(ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73bf	dd 7e 01
+	inc (ix+TBL_DOH_HIT_IDX_HIT_CYCLE_NUM)		;73bc	dd 34 01
+	ld a,(ix+TBL_DOH_HIT_IDX_HIT_CYCLE_NUM)		;73bf	dd 7e 01
 	cp 3		                                ;73c2	fe 03
 	ret nz			                            ;73c4	c0
 
     ; Reset delay counter
-	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 0		;73c5	dd 36 01 00
+	ld (ix+TBL_DOH_HIT_IDX_HIT_CYCLE_NUM), 0		;73c5	dd 36 01 00
     
     ; Choose the color for Doh: turning into white, or getting back to red
-	ld e,(ix+DOH_TABLE_IDX_COLOR)		;73c9	dd 5e 02
+	ld e,(ix+TBL_DOH_HIT_IDX_COLOR)		;73c9	dd 5e 02
 	ld d, 0		                        ;73cc	16 00
 	ld hl,TBL_DOH_HIT_COLORS		    ;73ce	21 50 74
 	add hl,de			                ;73d1	19
@@ -5621,17 +5621,17 @@ DOH_UPDATE_COLOR:
     
     ; Next color
     ; If >= 2, then color = 0
-	inc (ix+DOH_TABLE_IDX_COLOR)		;73d6	dd 34 02
-	ld a,(ix+DOH_TABLE_IDX_COLOR)		;73d9	dd 7e 02
+	inc (ix+TBL_DOH_HIT_IDX_COLOR)		;73d6	dd 34 02
+	ld a,(ix+TBL_DOH_HIT_IDX_COLOR)		;73d9	dd 7e 02
 	cp 2		                        ;73dc	fe 02
 	ret nz			                    ;73de	c0
     
     ; Reset Doh's attributes
-	ld (ix+DOH_TABLE_IDX_DEFEATED), 0	    ;73df	dd 36 00 00
-	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 0  ;73e3	dd 36 01 00
-	ld (ix+DOH_TABLE_IDX_COLOR), 0	        ;73e7	dd 36 02 00
-	ld (ix+003h),000h		                ;73eb	dd 36 03 00 	. 6 . . 
-	ret			                            ;73ef	c9
+	ld (ix+TBL_DOH_HIT_IDX_DOH_BEEN_HIT), 0	 ;73df	dd 36 00 00
+	ld (ix+TBL_DOH_HIT_IDX_HIT_CYCLE_NUM), 0 ;73e3	dd 36 01 00
+	ld (ix+TBL_DOH_HIT_IDX_COLOR), 0	     ;73e7	dd 36 02 00
+	ld (ix+003h),000h		                 ;73eb	dd 36 03 00
+	ret			                             ;73ef	c9
 
 sub_73f0h:
     ; Skip if Doh hasn't been yet defeated
@@ -5639,49 +5639,55 @@ sub_73f0h:
 	ld a,(ix+DOH_TABLE_IDX_DEFEATED)	;73f4	dd 7e 00
 	or a			                    ;73f7	b7
 	ret z			                    ;73f8	c8
+    
+    ; Doh has been defeated
 
-    ; Execute the corresponding hit action
-	ld a,(ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73f9	dd 7e 01
+    ; Execute the corresponding "postmorten" action
+	ld a,(ix+DOH_TABLE_IDX_POSTMORTEN_ACTION)	;73f9	dd 7e 01
 	cp 1		                                ;73fc	fe 01
-	jp z,do_hit_cycle_1		                    ;73fe	ca 10 74
+	jp z,remove_one_line_of_doh		                    ;73fe	ca 10 74
 	cp 2		                                ;7401	fe 02
-	jp z,delay_before_ending		                    ;7403	ca 41 74
+	jp z,delay_before_ending		            ;7403	ca 41 74
 
     ; Colorize Doh with gray over black
 	ld a,0xe1		                            ;7406	3e e1
 	call COLORIZE_DOH		                    ;7408	cd 52 74
-    ; Set the next hit cycle to 1
-	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 1		;740b	dd 36 01 01
+
+    ; Set the next action to 1
+	ld (ix+DOH_TABLE_IDX_POSTMORTEN_ACTION), 1	;740b	dd 36 01 01
 	ret			                                ;740f	c9
 
-do_hit_cycle_1:
-	inc (ix+DOH_TABLE_IDX_COLOR)		;7410	dd 34 02 	. 4 . 
-	ld a,(ix+DOH_TABLE_IDX_COLOR)		;7413	dd 7e 02 	. ~ . 
-	cp 22		;7416	fe 16 	. . 
-	ret nz			;7418	c0 	. 
+remove_one_line_of_doh:
+	inc (ix+DOH_TABLE_IDX_ROW_DELAY)		;7410	dd 34 02
+	ld a,(ix+DOH_TABLE_IDX_ROW_DELAY)		;7413	dd 7e 02
+	cp 22		                            ;7416	fe 16
+	ret nz			                        ;7418	c0
 
-	ld (ix+DOH_TABLE_IDX_COLOR),000h		;7419	dd 36 02 00 	. 6 . . 
-	ld l,(ix+003h)		;741d	dd 6e 03 	. n . 
-	ld h,000h		;7420	26 00 	& . 
-	add hl,hl			;7422	29 	) 
-	add hl,hl			;7423	29 	) 
-	add hl,hl			;7424	29 	) 
-	add hl,hl			;7425	29 	) 
-	add hl,hl			;7426	29 	) 
+	ld (ix+DOH_TABLE_IDX_ROW_DELAY), 0		;7419	dd 36 02 00
+
+    ; Erase one line of chars of Doh
+	ld l,(ix+DOH_TABLE_IDX_ROW)		;741d	dd 6e 03
+	ld h, 0		        ;7420	26 00
+	add hl,hl			;7422	29
+	add hl,hl			;7423	29
+	add hl,hl			;7424	29
+	add hl,hl			;7425	29
+	add hl,hl			;7426	29
 	ld de,0x1800 + 9 + 3*32		;7427	11 69 18    Locate at [9, 3]
-	add hl,de			;742a	19 	. 
-	ld bc, 8		;742b	01 08 00 	. . . 
-	ld a, 0		;742e	3e 00 	> . 
-	call FILVRM		;7430	cd 56 00 	. V . 
+	add hl,de			;742a	19
+    ; Fill with 8 zeros
+	ld bc, 8		    ;742b	01 08 00
+	ld a, 0		        ;742e	3e 00
+	call FILVRM		    ;7430	cd 56 00
 
-	inc (ix+003h)		;7433	dd 34 03 	. 4 . 
-	ld a,(ix+003h)		;7436	dd 7e 03 	. ~ . 
-	cp 00ch		;7439	fe 0c 	. . 
-	ret nz			;743b	c0 	. 
+	inc (ix+DOH_TABLE_IDX_ROW)		;7433	dd 34 03
+	ld a,(ix+DOH_TABLE_IDX_ROW)		;7436	dd 7e 03
+	cp 12		                        ;7439	fe 0c
+	ret nz			                    ;743b	c0
 
-    ; The next hit cycle is 2
-	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 2		;743c	dd 36 01 02 	. 6 . . 
-	ret			;7440	c9 	. 
+    ; The next "postmorten" cycle is 2: delay and ending text
+	ld (ix+DOH_TABLE_IDX_POSTMORTEN_ACTION), 2		;743c	dd 36 01 02
+	ret			                                    ;7440	c9
 ;
 delay_before_ending:
     ; Increment the delay counter
@@ -5777,21 +5783,22 @@ l74bdh:
 DOH_MOVE_BULLETS:
 	ld b, 3		                ;74c7	06 03
 	ld ix,DOH_BULLETS_TABLE		;74c9	dd 21 63 e5
-	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1
+	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1     Bullet
 l74d1h:
 	push bc			                    ;74d1
     
     ; Skip if the bullet is not active
 	ld a,(ix+DOH_BULLETS_ACTIVE)		;74d2	dd 7e 00
 	or a			                    ;74d5	b7
-	jp z,doh_process_next_bullet		                    ;74d6	ca 66 75
+	jp z,doh_process_next_bullet        ;74d6	ca 66 75
 
-    ; Skip if... ToDo
-	ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;74d9	dd 7e 01 	. ~ . 
-	or a			;74dc	b7 	. 
-	jp nz,l7501h		;74dd	c2 01 75 	. . u 
+    ; Skip if the bullets are following Vaus
+	ld a,(ix+DOH_BULLETS_TABLE_IDX_FOLLOW_VAUS)   ;74d9	dd 7e 01
+	or a			                              ;74dc
+	jp nz,l7501h		                            ;74dd	c2 01 75
     
-	ld (ix+DOH_BULLETS_TABLE_IDX_X),001h		;74e0	dd 36 01 01 	. 6 . . 
+	; The bullets are not following Vaus
+    ld (ix+DOH_BULLETS_TABLE_IDX_FOLLOW_VAUS), 1	;74e0	dd 36 01 01
     
     ; A <-- (BULLET_X - 8) \ 8
 	ld hl,SPR_PARAMS_BASE		;74e4	21 cd e0
@@ -5810,7 +5817,7 @@ l74d1h:
 	add hl,de			                ;74f9	19
 	ld a,(hl)			                ;74fa	7e
 
-    ; Set bullet skewness
+    ; Set bullet skewness so it follows Vaus
 	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS),a	;74fb	dd 77 02
 	ld (0e582h),a		;74fe	32 82 e5 	2 . . 
 l7501h:
@@ -5819,7 +5826,7 @@ l7501h:
 	ld (ix+003h),a		;7505	dd 77 03 	. w . 
 	cp 003h		;7508	fe 03 	. . 
 	jp c,doh_process_next_bullet		;750a	da 66 75 	. f u 
-    
+
     ; Reset counter
 	ld (ix+003h), 0		            ;750d	dd 36 03 00
 
@@ -5863,7 +5870,7 @@ l7501h:
     
     ; Y > 180: remove bullet
     ld (ix+DOH_BULLETS_ACTIVE), 0		        ;7543	dd 36 00 00
-	ld (ix+DOH_BULLETS_TABLE_IDX_X), 0		    ;7547	dd 36 01 00
+	ld (ix+DOH_BULLETS_TABLE_IDX_FOLLOW_VAUS), 0		    ;7547	dd 36 01 00
 	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS), 0	;754b	dd 36 02 00
 	ld (iy+SPR_PARAMS_IDX_COLOR), 0		        ;754f	fd 36 03 00
 
@@ -6709,8 +6716,8 @@ CHECK_VAUS_KILLED_BY_DOH:
 	cp VAUS_ACTION_STATE_EXPLODING	                    ;7a6b	fe 06
 	ret z			                                    ;7a6d	c8
     
-	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0
-	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1
+	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0     Vaus
+	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1     Bullet
 	ld hl,DOH_BULLETS_TABLE		;7a76	21 63 e5
 	ld b, 3		                ;7a79	06 03
 l7a7bh:
@@ -6728,29 +6735,29 @@ l7a7bh:
 	cp 184		                    ;7a88	fe b8
 	jp nc,doh_next_bullet		    ;7a8a	d2 b4 7a
     
-    ; 168 <= Y <= 183   --> Y-position of Vaus :S
+    ; 168 <= Y_bullet <= 183   --> Y-position of Vaus :S
 	
-    ; Skip if DOH_BULLETS_TABLE_IDX_X + 8 >= SPR_PARAMS_IDX_X
-    ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;7a8d	dd 7e 01
+    ; Skip if X_bullet <= X_vaus + 8
+    ld a,(ix+SPR_PARAMS_IDX_X)		        ;7a8d	dd 7e 01
 	add a, 8		                        ;7a90	c6 08
 	cp (iy+SPR_PARAMS_IDX_X)		        ;7a92	fd be 01
 	jp nc,doh_next_bullet		            ;7a95	d2 b4 7a
 
-    ; Skip if DOH_BULLETS_TABLE_IDX_X + 32 < SPR_PARAMS_IDX_X    
-	ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;7a98	dd 7e 01
+    ; Skip if X_bullet > X_vaus + 32
+	ld a,(ix+SPR_PARAMS_IDX_X)		        ;7a98	dd 7e 01
 	add a, 32		                        ;7a9b	c6 20
 	cp (iy+SPR_PARAMS_IDX_X)		        ;7a9d	fd be 01
 	jp c,doh_next_bullet		            ;7aa0	da b4 7a
     
-    ; DOH_BULLETS_TABLE_IDX_X + 8 <= X <= DOH_BULLETS_TABLE_IDX_X + 31
+    ;  X_bullet - 32 <= X_vaus < X_bullet - 8
     
-    ; Doh has reached Vaus with one of the bullets :S
+    ; Vaus has been reached with one of the bullets! :S
 
     ; Set Vaus action state to exploding
 	ld a,VAUS_ACTION_STATE_EXPLODING	                ;7aa3	3e 06
 	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;7aa5	32 4b e5
 
-    ; Set invisible
+    ; Set invisible bullet
 	ld (iy+SPR_PARAMS_IDX_Y), 192		;7aa8	fd 36 00 c0
 
 	ld a,SOUND_VAUS_DESTROYED	;7aac	3e 07
@@ -7308,6 +7315,7 @@ l9677h:
 	add hl,bc			;9678	09 	. 
 	ld a,(bc)			;9679	0a 	. 
 	dec bc			;967a	0b 	. 
+
 sub_967bh:
 	ld a,(iy+000h)		;967b	fd 7e 00 	. ~ . 
 	or a			;967e	b7 	. 
@@ -7363,7 +7371,7 @@ l96e4h:
 	call ADD_SOUND		;96e6	cd ef 5b
 
 	ld a,001h		;96e9	3e 01 	> . 
-	ld (DOH_HIT_2),a		;96eb	32 b9 e2 	2 . . 
+	ld (DOH_H_IT_2),a		;96eb	32 b9 e2 	2 . . 
 
     ; Increment Doh hits
     ; Doh is defeated if hit 16 times
@@ -7375,7 +7383,7 @@ l96e4h:
 
     ; Doh has been defeated!
 	ld a, 1		            ;96fc	3e 01 	> . 
-	ld (DOH_IS_FIRING),a		;96fe	32 0d e5
+	ld (DOH_TABLE),a		;96fe	32 0d e5
 	call DEACTIVE_ALL_BALLS	;9701	cd 10 97
 
 	ld a,SOUND_DOH_DEFEATED	;9704	3e 09
@@ -7384,7 +7392,7 @@ l96e4h:
 
 l970ah:
 	ld a, 1		    ;970a	3e 01
-	ld (DOH_HIT),a	;970c	32 05 e5
+	ld (TBL_DOH_HIT),a	;970c	32 05 e5
 	ret			    ;970f	c9
 
 ; Deactivate all the balls and set the sprites invisible
@@ -7933,7 +7941,7 @@ l9a36h:
 	add a,(ix+001h)		;9a42	dd 86 01 	. . . 
 	ld (ix+001h),a		;9a45	dd 77 01 	. w . 
 	xor a			;9a48	af 	. 
-	ld (DOH_HIT_2),a		;9a49	32 b9 e2 	2 . . 
+	ld (DOH_H_IT_2),a		;9a49	32 b9 e2 	2 . . 
 	push bc			;9a4c	c5 	. 
 	push ix		;9a4d	dd e5 	. . 
 	push iy		;9a4f	fd e5 	. . 
@@ -7948,7 +7956,7 @@ l9a60h:
 	pop iy		;9a60	fd e1 	. . 
 	pop ix		;9a62	dd e1 	. . 
 	pop bc			;9a64	c1 	. 
-	ld a,(DOH_HIT_2)		;9a65	3a b9 e2 	: . . 
+	ld a,(DOH_H_IT_2)		;9a65	3a b9 e2 	: . . 
 	or a			;9a68	b7 	. 
 	ret nz			;9a69	c0 	. 
 	djnz l9a36h		;9a6a	10 ca 	. . 
@@ -10446,7 +10454,7 @@ THERE_IS_A_BRICK:
     
     ; ToDo: what is this var?
 	ld a,0		        ;adaa	3e 00
-	ld (DOH_HIT_2),a		;adac	32 b9 e2
+	ld (DOH_H_IT_2),a		;adac	32 b9 e2
     
     ; A <- BRICK_ROW
     ; If A < 11 then A = 11
@@ -10642,7 +10650,7 @@ laffch:
 
 lb000h:
 	pop iy		;b000	fd e1 	. . 
-	ld hl,DOH_HIT_2		;b002	21 b9 e2 	! . . 
+	ld hl,DOH_H_IT_2		;b002	21 b9 e2 	! . . 
 	ld (hl),000h		;b005	36 00 	6 . 
 	jr z,lb00dh		;b007	28 04 	( . 
 	ld (hl),001h		;b009	36 01 	6 . 
