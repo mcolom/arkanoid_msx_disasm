@@ -15,7 +15,13 @@ GAME_STATE: equ 0xe00b
 IN_DEMO: equ 0xe00d
 
 ; Pause in bit 6 and start in bit 4
-PAUSE_B6_AND_START_B4: equ 0xe0bf
+; Bit 0: up
+; Bit 1: down
+; Bit 2: left
+; Bit 3: right
+; Bit 4: start
+; Bit 6: pause
+CONTROLS: equ 0xe0bf
 
 DEMO_TIMEOUT: equ 0xe5ad
 

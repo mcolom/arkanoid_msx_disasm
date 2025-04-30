@@ -29,6 +29,7 @@ include 'capsules.asm'
 include 'doh.asm'
 include 'portal.asm'
 include 'lives.asm'
+include 'demo.asm'
 
 
 
@@ -209,11 +210,11 @@ l40d7h:
     ; Check if the game is paused.
     ; If already paused, skip playing the pause sound and writing "PAUSE" again
 	halt			                            ;40d7	76
-	ld a,(PAUSE_B6_AND_START_B4)   ;40d8	3a bf e0
+	ld a,(CONTROLS)   ;40d8	3a bf e0
 	bit 6,a		                                ;40db	cb 77
 	jr z,l4103h		                            ;40dd	28 24
 
-    ; Skup if state is title screen
+    ; Skip if state is title screen
 	ld a,(GAME_STATE)		;40df	3a 0b e0
 	or a			        ;40e2	b7
 	jp z,l4103h		        ;40e3	ca 03 41
@@ -234,7 +235,7 @@ l40d7h:
 ; Do the pause...
 l40fbh:
 	halt			                ;40fb	76
-	ld a,(PAUSE_B6_AND_START_B4)	;40fc	3a bf e0
+	ld a,(CONTROLS)	;40fc	3a bf e0
 	bit 6,a		                    ;40ff	cb 77
 l4101h:
 	jr z,l40fbh		                ;4101	28 f8    
@@ -508,7 +509,7 @@ l427ch:
 	and 0f0h		;428e	e6 f0 	. . 
 	and e			;4290	a3 	. 
 	xor e			;4291	ab 	. 
-	ld (PAUSE_B6_AND_START_B4),a		;4292	32 bf e0 	2 . . 
+	ld (CONTROLS),a		;4292	32 bf e0 	2 . . 
 	ld b,a			;4295	47 	G 
 
     ; Keep going if we're in the title screen
@@ -2062,7 +2063,7 @@ l4c48h:
 	jp nz,l4c73h		;4c54	c2 73 4c 	. s L 
 	jp l4c62h		;4c57	c3 62 4c 	. b L 
 l4c5ah:
-	ld a,(PAUSE_B6_AND_START_B4)		;4c5a	3a bf e0 	: . . 
+	ld a,(CONTROLS)		;4c5a	3a bf e0 	: . . 
 	bit 4,a		;4c5d	cb 67 	. g 
 	jp nz,l4c73h		;4c5f	c2 73 4c 	. s L 
 l4c62h:
@@ -2215,7 +2216,7 @@ l4d09h:
 	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
 l4d22h:
     ; Clear variables
-	ld hl,PAUSE_B6_AND_START_B4		;4d22	21 bf e0
+	ld hl,CONTROLS		;4d22	21 bf e0
 	ld de,KEYBOARD_INPUT		    ;4d25	11 c0 e0
 	ld bc,004f5h		            ;4d28	01 f5 04
 	dec bc			                ;4d2b	0b
@@ -2462,7 +2463,7 @@ l4eb4h:
 
     ; ToDo: what is this var?
 	ld a,068h		;4eb9	3e 68 	> h 
-	ld (0e0f6h),a		;4ebb	32 f6 e0 	2 . . 
+	ld (BALL_X_DEMO),a		;4ebb	32 f6 e0 	2 . . 
     
     ; Clear some variables
     ; ToDo: what are the other vars?
@@ -2495,7 +2496,7 @@ l4eddh:
 	jp nz,l4f6bh		;4ef1	c2 6b 4f 	. k O 
 	jp l4effh		;4ef4	c3 ff 4e 	. . N 
 l4ef7h:
-	ld a,(PAUSE_B6_AND_START_B4)		;4ef7	3a bf e0 	: . . 
+	ld a,(CONTROLS)		;4ef7	3a bf e0 	: . . 
 	bit 4,a		;4efa	cb 67 	. g 
 	jp nz,l4f6bh		;4efc	c2 6b 4f 	. k O 
 l4effh:
@@ -3984,19 +3985,19 @@ sub_68c4h:
 	jp z,l68dch		                 ;68c9	ca dc 68
 
 	ld hl,SPR_DATA_ARKANOID_CENTERED		    ;68cc	21 e7 6f
-	ld de,SPR_PARAMS_BASE	;68cf	11 cd e0
-	ld bc, 4*SPR_PARAMS_LEN ;68d2	01 10 00
+	ld de,SPR_PARAMS_BASE	                    ;68cf	11 cd e0
+	ld bc, 4*SPR_PARAMS_LEN                     ;68d2	01 10 00
 l68d5h:
-	ldir		;68d5	ed b0
+	ldir		                                ;68d5	ed b0
 
 	ld a, 1 	;68d7	3e 01
 	ld (RESET_VAUS_SPR_POSITION),a		;68d9	32 a9 e5
 l68dch:
 	ld ix,VAUS_TABLE		;68dc	dd 21 4b e5
-	ld iy,SPR_PARAMS_BASE		;68e0	fd 21 cd e0
+	ld iy,SPR_PARAMS_BASE	;68e0	fd 21 cd e0
     
     ; Choose action on VAUS_TABLE_ACTION_STATE
-	ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)         ;68e4	dd 7e 00
+	ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)   ;68e4	dd 7e 00
 	cp VAUS_ACTION_STATE_KEEP		        ;68e7	fe 01
 	jp z,l690fh		                        ;68e9	ca 0f 69
 	cp VAUS_ACTION_STATE_ENLARGING		    ;68ec	fe 02
@@ -4014,38 +4015,47 @@ l68dch:
     
     ; Transformation completed, keep current state
 	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
-	ret nz			                        ;690e	c0
+	ret nz			                                                ;690e	c0
 l690fh:
     ; VAUS_ACTION_STATE_KEEP
 
-    ; Keep going if we're at the title screen
-	ld a,(GAME_STATE)		;690f	3a 0b e0 	: . . 
-	or a			;6912	b7 	. 
-	jp nz,l6924h		;6913	c2 24 69 	. $ i 
+    ; Skip if we're not in the demo
+	ld a,(GAME_STATE)		;690f	3a 0b e0
+	or a			        ;6912	b7
+	jp nz,l6924h		    ;6913	c2 24 69
     
-	ld a,(0e0f6h)		;6916	3a f6 e0 	: . . 
-	sub 010h		;6919	d6 10 	. . 
-	ld (iy+001h),a		;691b	fd 77 01 	. w . 
-	ld (VAUS_X2),a		;691e	32 3e e5 	2 > . 
-	jp l6972h		;6921	c3 72 69 	. r i 
+    ; In the demo we set Vaus to the same X position as the ball
+	ld a,(BALL_X_DEMO)		    ;6916	3a f6 e0
+	sub 16		                ;6919	d6 10   X-16 actually
+	ld (iy+SPR_PARAMS_IDX_X),a	;691b	fd 77 01
+	ld (VAUS_X2),a		        ;691e	32 3e e5
+	jp l6972h		            ;6921	c3 72 69
+
 l6924h:
-	ld a,(USE_VAUS_PADDLE)		;6924	3a 0c e0 	: . . 
-	or a			;6927	b7 	. 
-	jp nz,l6946h		;6928	c2 46 69 	. F i 
+    ; We're not in the demo
+	ld a,(USE_VAUS_PADDLE)		;6924	3a 0c e0
+	or a			            ;6927	b7 	. 
+	jp nz,l6946h		        ;6928	c2 46 69    Go the the paddle function
+    
     ; Using cursors
-	ld a,(PAUSE_B6_AND_START_B4)		;692b	3a bf e0 	: . . 
-	and 00fh		;692e	e6 0f 	. . 
-	ld l,a			;6930	6f 	o 
-	ld h,000h		;6931	26 00 	& . 
-	add hl,hl			;6933	29 	) 
-	ld de,TBL_6ff7		;6934	11 f7 6f 	. . o 
-	add hl,de			;6937	19 	. 
-	inc hl			;6938	23 	# 
-	ld a,(hl)			;6939	7e 	~ 
-	add a,(iy+001h)		;693a	fd 86 01 	. . . 
-	ld (iy+001h),a		;693d	fd 77 01 	. w . 
-	ld (VAUS_X2),a		;6940	32 3e e5 	2 > . 
-	jp l6972h		;6943	c3 72 69 	. r i 
+	ld a,(CONTROLS)		;692b	3a bf e0
+	and 00fh            ;692e	e6 0f
+	
+    ; Get Vaus increment in X according to the controls
+    ; A = TBL_INCREMENT_POS_VAUS_CONTROLS[2*CONTROLS + 1]
+    ld l,a			;6930	6f
+	ld h, 0 		;6931	26 00
+	add hl,hl		;6933	29
+	ld de,TBL_INCREMENT_POS_VAUS_CONTROLS	;6934	11 f7 6f
+	add hl,de		;6937	19
+	inc hl			;6938	23
+	ld a,(hl)		;6939	7e
+
+    ; VAUS_X <-- VAUS_X + TBL_INCREMENT_POS_VAUS_CONTROLS[2*CONTROLS + 1]
+	add a,(iy+SPR_PARAMS_IDX_X)		;693a	fd 86 01
+	ld (iy+SPR_PARAMS_IDX_X),a		;693d	fd 77 01
+	ld (VAUS_X2),a		            ;6940	32 3e e5
+	jp l6972h		                ;6943	c3 72 69
 l6946h:
     ; Using the paddle
 	ld b,008h		;6946	06 08 	. . 
@@ -4891,42 +4901,55 @@ SPR_DATA_ARKANOID_CENTERED:
     db 174, 112, 12,  8
     db 174, 128,  1,  0
 
-TBL_6ff7:
-    db 0        ;6ff7   00	
-    nop			;6ff8	00 	. 
-	nop			;6ff9	00 	. 
-	nop			;6ffa	00 	. 
-	nop			;6ffb	00 	. 
-	nop			;6ffc	00 	. 
-	nop			;6ffd	00 	. 
-	nop			;6ffe	00 	. 
-	nop			;6fff	00 	. 
-	call m,0fc00h		;7000	fc 00 fc 	. . . 
-	nop			;7003	00 	. 
-	call m,00000h		;7004	fc 00 00 	. . . 
-	nop			;7007	00 	. 
-	inc b			;7008	04 	. 
-	nop			;7009	00 	. 
-	inc b			;700a	04 	. 
-	nop			;700b	00 	. 
-	inc b			;700c	04 	. 
-	nop			;700d	00 	. 
-	nop			;700e	00 	. 
-	nop			;700f	00 	. 
-	nop			;7010	00 	. 
-	nop			;7011	00 	. 
-	nop			;7012	00 	. 
-	nop			;7013	00 	. 
-	nop			;7014	00 	. 
-	nop			;7015	00 	. 
-	nop			;7016	00 	. 
-	nop			;7017	00 	. 
-	nop			;7018	00 	. 
+; This table is used to get in increment is Vaus' position according to
+; the controls
+; Indexed as TBL_INCREMENT_POS_VAUS_CONTROLS[2*CONTROLS + 1]
+TBL_INCREMENT_POS_VAUS_CONTROLS:
+    db 0        ;6ff7
+    db 0		;6ff8
+	db 0		;6ff9
+	db 0		;6ffa
+	db 0		;6ffb
+	db 0		;6ffc
+	db 0		;6ffd
+	db 0		;6ffe
+	db 0		;6fff    
+
+    db -4       ;7000
+    db 0        ;7001
+
+    db -4       ;7002
+
+	db 0		;7003
+
+    db -4       ;7004
+
+    db 0        ;7005
+    db 0        ;7006
+	db 0		;7007
+	db 4		;7008
+	db 0		;7009
+	db 4		;700a
+	db 0		;700b
+	db 4		;700c
+	db 0		;700d
+	db 0		;700e
+	db 0		;700f
+	db 0		;7010
+	db 0		;7011
+	db 0		;7012
+	db 0		;7013
+	db 0		;7014
+	db 0		;7015
+	db 0		;7016
+	db 0		;7017
+	db 0		;7018
+
 l7019h:
-	nop			;7019	00 	. 
-	nop			;701a	00 	. 
-	nop			;701b	00 	. 
-	nop			;701c	00 	. 
+	db 0			;7019	00 	. 
+	db 0			;701a	00 	. 
+	db 0			;701b	00 	. 
+	db 0			;701c	00 	. 
 	dec hl			;701d	2b 	+ 
 	ld (hl),b			;701e	70 	p 
 	ld (02b70h),a		;701f	32 70 2b 	2 p + 
@@ -4989,7 +5012,7 @@ CHECK_START_LASERS:
 l706ah:
     ; Check if the fire button has been pressed
     ; If not, just exit
-	ld a,(PAUSE_B6_AND_START_B4)	;706a	3a bf e0
+	ld a,(CONTROLS)	;706a	3a bf e0
 	bit 4,a		                    ;706d	cb 67
 	jp z,l70afh		                ;706f	ca af 70
 l7072h:
@@ -7762,7 +7785,7 @@ ACTION_BALL_FOLLOWS_VAUS_IF_STICKY:
 	jr nz,l9935h		;990b	20 28 	  ( 
 	jp l9917h		;990d	c3 17 99 	. . . 
 l9910h:
-	ld a,(PAUSE_B6_AND_START_B4)		;9910	3a bf e0 	: . . 
+	ld a,(CONTROLS)		;9910	3a bf e0 	: . . 
 	bit 4,a		;9913	cb 67 	. g 
 	jr nz,l9935h		;9915	20 1e 	  . 
 l9917h:
