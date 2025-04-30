@@ -6,6 +6,8 @@ DOH_HIT_2: equ 0xe2b9   ; 1 when Doh is hit
 DOH_TABLE: equ 0xe50d
 ;
 DOH_TABLE_IDX_DEFEATED: equ 0
+DOH_TABLE_IDX_DELAY_COUNTER: equ 1
+DOH_TABLE_IDX_COLOR: equ 2
 
 
 

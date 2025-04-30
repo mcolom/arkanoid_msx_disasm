@@ -5369,15 +5369,16 @@ l726eh:
 
 ; This is Doh's stuff...
 doh_level:
-	ld a,(DOH_IS_FIRING)		;7286	3a 0d e5 	: . .   ToDo: this is not DOH_IS_FIRING, but firing!
-	or a			;7289	b7 	. 
-	jp nz,l7296h		;728a	c2 96 72 	. . r 
-	call DRAW_DOH_MOUTH_OPEN		;728d	cd 94 75 	. . u 
-	call CHECK_DOH_CAN_THROW_BULLETS		;7290	cd 69 74 	. i t 
+    ; Skip if Doh is already firing
+	ld a,(DOH_IS_FIRING)		;7286	3a 0d e5
+	or a			            ;7289	b7
+	jp nz,l7296h		        ;728a	c2 96 72
+	call DRAW_DOH_MOUTH_OPEN		    ;728d	cd 94 75
+	call CHECK_DOH_CAN_THROW_BULLETS	;7290	cd 69 74
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
 	call sub_74c7h		;7296	cd c7 74 	. . t 
-	call sub_73aah		;7299	cd aa 73 	. . s 
+	call DOH_UPDATE_COLOR		;7299	cd aa 73 	. . s 
 	call sub_73f0h		;729c	cd f0 73 	. . s 
 	ret			;729f	c9 	. 
 
@@ -5586,35 +5587,52 @@ l73a2h:
 	djnz l7386h		        ;73a7	10 dd
 	ret			            ;73a9	c9
 
-sub_73aah:
-	ld ix,DOH_TABLE		;73aa	dd 21 0d e5 	. ! . . 
-	ld a,(ix+DOH_TABLE_IDX_DEFEATED)		;73ae	dd 7e 00 	. ~ . 
-	or a			;73b1	b7 	. 
-	ret nz			;73b2	c0 	. 
-	ld ix,DOH_HIT		;73b3	dd 21 05 e5 	. ! . . 
-	ld a,(ix+000h)		;73b7	dd 7e 00 	. ~ . 
-	or a			;73ba	b7 	. 
-	ret z			;73bb	c8 	. 
-	inc (ix+001h)		;73bc	dd 34 01 	. 4 . 
-	ld a,(ix+001h)		;73bf	dd 7e 01 	. ~ . 
-	cp 003h		;73c2	fe 03 	. . 
-	ret nz			;73c4	c0 	. 
-	ld (ix+001h),000h		;73c5	dd 36 01 00 	. 6 . . 
-	ld e,(ix+002h)		;73c9	dd 5e 02 	. ^ . 
-	ld d,000h		;73cc	16 00 	. . 
-	ld hl,l7450h		;73ce	21 50 74 	! P t 
-	add hl,de			;73d1	19 	. 
-	ld a,(hl)			;73d2	7e 	~ 
-	call sub_7452h		;73d3	cd 52 74 	. R t 
-	inc (ix+002h)		;73d6	dd 34 02 	. 4 . 
-	ld a,(ix+002h)		;73d9	dd 7e 02 	. ~ . 
-	cp 002h		;73dc	fe 02 	. . 
-	ret nz			;73de	c0 	. 
-	ld (ix+000h),000h		;73df	dd 36 00 00 	. 6 . . 
-	ld (ix+001h),000h		;73e3	dd 36 01 00 	. 6 . . 
-	ld (ix+002h),000h		;73e7	dd 36 02 00 	. 6 . . 
-	ld (ix+003h),000h		;73eb	dd 36 03 00 	. 6 . . 
-	ret			;73ef	c9 	. 
+; Change Doh's color, from back to red, and vice versa.
+DOH_UPDATE_COLOR:
+    ; Skip is Doh has been defeated
+	ld ix,DOH_TABLE		                ;73aa	dd 21 0d e5
+	ld a,(ix+DOH_TABLE_IDX_DEFEATED)	;73ae	dd 7e 00
+	or a			                    ;73b1	b7
+	ret nz			                    ;73b2	c0
+    
+    ; Skip if Doh hasn't been hit
+	ld ix,DOH_HIT		;73b3	dd 21 05 e5
+	ld a,(ix+000h)		;73b7	dd 7e 00
+	or a			    ;73ba	b7
+	ret z			    ;73bb	c8
+
+    ; Delay counter
+    ; Wait 3 cycles before changing the color
+	inc (ix+DOH_TABLE_IDX_DELAY_COUNTER)		;73bc	dd 34 01
+	ld a,(ix+DOH_TABLE_IDX_DELAY_COUNTER)		;73bf	dd 7e 01
+	cp 3		                                ;73c2	fe 03
+	ret nz			                            ;73c4	c0
+
+    ; Reset delay counter
+	ld (ix+DOH_TABLE_IDX_DELAY_COUNTER), 0		;73c5	dd 36 01 00
+    
+    ; Choose the color for Doh: turning into white, or getting back to red
+	ld e,(ix+DOH_TABLE_IDX_COLOR)		;73c9	dd 5e 02
+	ld d, 0		                        ;73cc	16 00
+	ld hl,TBL_DOH_HIT_COLORS		    ;73ce	21 50 74
+	add hl,de			                ;73d1	19
+	ld a,(hl)			                ;73d2	7e
+	call COLORIZE_DOH		            ;73d3	cd 52 74
+    
+    ; Next color
+    ; If >= 2, then color = 0
+	inc (ix+DOH_TABLE_IDX_COLOR)		;73d6	dd 34 02
+	ld a,(ix+DOH_TABLE_IDX_COLOR)		;73d9	dd 7e 02
+	cp 2		                        ;73dc	fe 02
+	ret nz			                    ;73de	c0
+    
+    ; Reset Doh's attributes
+	ld (ix+DOH_TABLE_IDX_DEFEATED), 0	    ;73df	dd 36 00 00
+	ld (ix+DOH_TABLE_IDX_DELAY_COUNTER), 0  ;73e3	dd 36 01 00
+	ld (ix+DOH_TABLE_IDX_COLOR), 0	        ;73e7	dd 36 02 00
+	ld (ix+003h),000h		                ;73eb	dd 36 03 00 	. 6 . . 
+	ret			                            ;73ef	c9
+
 sub_73f0h:
 	ld ix,DOH_TABLE		;73f0	dd 21 0d e5 	. ! . . 
 	ld a,(ix+DOH_TABLE_IDX_DEFEATED)		;73f4	dd 7e 00 	. ~ . 
@@ -5626,9 +5644,10 @@ sub_73f0h:
 	cp 002h		;7401	fe 02 	. . 
 	jp z,l7441h		;7403	ca 41 74 	. A t 
 	ld a,0e1h		;7406	3e e1 	> . 
-	call sub_7452h		;7408	cd 52 74 	. R t 
+	call COLORIZE_DOH		;7408	cd 52 74 	. R t 
 	ld (ix+001h),001h		;740b	dd 36 01 01 	. 6 . . 
 	ret			;740f	c9 	. 
+
 l7410h:
 	inc (ix+002h)		;7410	dd 34 02 	. 4 . 
 	ld a,(ix+002h)		;7413	dd 7e 02 	. ~ . 
@@ -5662,21 +5681,26 @@ l7441h:
 	ld a,002h		;744a	3e 02 	> . 
 	ld (GAME_TRANSITION_ACTION),a		;744c	32 0a e0 	2 . . 
 	ret			;744f	c9 	. 
-l7450h:
-	pop af			;7450	f1 	. 
-	add a,c			;7451	81 	. 
-sub_7452h:
-	push af			;7452	f5 	. 
-	ld hl,02480h		;7453	21 80 24 	! . $ 
-	ld bc,00380h		;7456	01 80 03 	. . . 
-	call FILVRM		;7459	cd 56 00 	. V . 
-	pop af			;745c	f1 	. 
-	push af			;745d	f5 	. 
-	ld hl,02c80h		;745e	21 80 2c 	! . , 
-	ld bc,00380h		;7461	01 80 03 	. . . 
-	call FILVRM		;7464	cd 56 00 	. V . 
-	pop af			;7467	f1 	. 
-	ret			;7468	c9 	. 
+
+; This table picks the colors of Doh when hit
+TBL_DOH_HIT_COLORS:
+    db 0xf1 ; White over black
+    db 0x81 ; Red over black
+
+COLORIZE_DOH:
+	push af			    ;7452	f5
+    ; Fill first half of Doh
+	ld hl,02480h		;7453	21 80 24
+	ld bc,00380h		;7456	01 80 03
+	call FILVRM		    ;7459	cd 56 00
+	pop af			    ;745c	f1
+    ; Fill second half of Doh
+	push af			    ;745d	f5
+	ld hl,02c80h		;745e	21 80 2c
+	ld bc,00380h		;7461	01 80 03
+	call FILVRM		    ;7464	cd 56 00
+	pop af			    ;7467	f1
+	ret			        ;7468	c9
 
 ; Check if Doh can throw bullets according to DOH_THROW_BULLETS_COUNTER
 CHECK_DOH_CAN_THROW_BULLETS:
@@ -5741,13 +5765,16 @@ sub_74c7h:
 	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1
 l74d1h:
 	push bc			;74d1	c5 	. 
-	ld a,(ix+000h)		;74d2	dd 7e 00 	. ~ . 
-	or a			;74d5	b7 	. 
-	jp z,l7566h		;74d6	ca 66 75 	. f u 
-	ld a,(ix+001h)		;74d9	dd 7e 01 	. ~ . 
+    
+    ; Skip if the bullet is not active
+	ld a,(ix+DOH_BULLETS_ACTIVE)		;74d2	dd 7e 00
+	or a			                    ;74d5	b7
+	jp z,l7566h		                    ;74d6	ca 66 75
+
+	ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;74d9	dd 7e 01 	. ~ . 
 	or a			;74dc	b7 	. 
 	jp nz,l7501h		;74dd	c2 01 75 	. . u 
-	ld (ix+001h),001h		;74e0	dd 36 01 01 	. 6 . . 
+	ld (ix+DOH_BULLETS_TABLE_IDX_X),001h		;74e0	dd 36 01 01 	. 6 . . 
 	ld hl,SPR_PARAMS_BASE		;74e4	21 cd e0 	! . . 
 	inc hl			;74e7	23 	# 
 	ld a,(hl)			;74e8	7e 	~ 
@@ -5756,7 +5783,7 @@ l74d1h:
 	srl a		;74ed	cb 3f 	. ? 
 	srl a		;74ef	cb 3f 	. ? 
 	srl a		;74f1	cb 3f 	. ? 
-	ld hl,l7573h		;74f3	21 73 75 	! s u 
+	ld hl,TBL_7573		;74f3	21 73 75 	! s u 
 	ld e,a			;74f6	5f 	_ 
 	ld d,000h		;74f7	16 00 	. . 
 	add hl,de			;74f9	19 	. 
@@ -5812,13 +5839,14 @@ l7501h:
 	ld (DOH_NUM_ACTIVE_BULLETS),a		;7563	32 1a e5 	2 . . 
 l7566h:
 	pop bc			;7566	c1 	. 
-	ld de,00004h		;7567	11 04 00 	. . . 
+	ld de, SPR_PARAMS_LEN		;7567	11 04 00 	. . . 
 	add ix,de		;756a	dd 19 	. . 
 	add iy,de		;756c	fd 19 	. . 
 	dec b			;756e	05 	. 
 	jp nz,l74d1h		;756f	c2 d1 74 	. . t 
 	ret			;7572	c9 	. 
-l7573h:
+
+TBL_7573:
 	nop			;7573	00 	. 
 	ld bc,00101h		;7574	01 01 01 	. . . 
 	ld (bc),a			;7577	02 	. 
