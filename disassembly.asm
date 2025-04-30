@@ -5374,7 +5374,7 @@ doh_level:
 	or a			        ;7289	b7
 	jp nz,l7296h		    ;728a	c2 96 72
 	call DRAW_DOH_MOUTH_OPEN		    ;728d	cd 94 75
-	call CHECK_DOH_CAN_THROW_BULLETS	;7290	cd 69 74
+	call DOH_THROW_BULLETS_CYCLE	;7290	cd 69 74
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
 	call DOH_MOVE_BULLETS		;7296	cd c7 74 	. . t 
@@ -5723,8 +5723,9 @@ COLORIZE_DOH:
 	pop af			    ;7467	f1
 	ret			        ;7468	c9
 
-; Check if Doh can throw bullets according to DOH_THROW_BULLETS_COUNTER
-CHECK_DOH_CAN_THROW_BULLETS:
+; Check if Doh can throw bullets and throw them according to the
+; corresponding counters.
+DOH_THROW_BULLETS_CYCLE:
     ; Skip if all 3 bullets are already active
 	ld a,(DOH_NUM_ACTIVE_BULLETS)	;7469	3a 1a e5
 	cp 3		                    ;746c	fe 03
@@ -5895,18 +5896,25 @@ l7501h:
 	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS), 0	    ;754b	dd 36 02 00
 	ld (iy+SPR_PARAMS_IDX_COLOR), 0		            ;754f	fd 36 03 00
 
-	; ToDo
-    ld hl,0e577h		;7553	21 77 e5 	! w . 
-	inc (hl)			;7556	34 	4 
-	ld a,(hl)			;7557	7e 	~ 
-	cp 3		;7558	fe 03 	. . 
-	jp nz,doh_process_next_bullet		;755a	c2 66 75 	. f u 
+	; Count how many bullets are out at this moment.
+    ; If all 3 are out, allow Doh to throw more
+    ld hl,DOH_NUM_BULLETS_OUT		;7553	21 77 e5
+	inc (hl)			            ;7556	34
+	ld a,(hl)			            ;7557	7e
+	cp 3		                    ;7558	fe 03
+	jp nz,doh_process_next_bullet	;755a	c2 66 75
     
-	ld (hl),000h		;755d	36 00 	6 . 
-	inc hl			;755f	23 	# 
-	ld (hl),001h		;7560	36 01 	6 . 
-	xor a			;7562	af 	. 
-	ld (DOH_NUM_ACTIVE_BULLETS),a		;7563	32 1a e5 	2 . . 
+    ; Reset counter
+	ld (hl), 0		;755d	36 00
+    
+    ; Doh can now throw bullets
+    ; DOH_CAN_THROW_BULLETS <-- 1
+	inc hl			    ;755f	23  Point to DOH_CAN_THROW_BULLETS
+	ld (hl), 1		    ;7560	36 01
+
+    ; No active bullets now
+	xor a			                    ;7562	af
+	ld (DOH_NUM_ACTIVE_BULLETS),a		;7563	32 1a e5
 doh_process_next_bullet:
 	pop bc			        ;7566	c1
 	ld de, SPR_PARAMS_LEN	;7567	11 04 00

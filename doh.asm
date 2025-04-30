@@ -33,7 +33,7 @@ DOH_NEW_BULLET_COUNTER: equ 0xe581
 DOH_RECEIVED_HITS: equ 0xe5b3
 
 
-
+DOH_NUM_BULLETS_OUT: equ 0xe577     ; Number of bullets that have been removed so far
 DOH_CAN_THROW_BULLETS: equ 0xe578
 DOH_THROW_BULLETS_COUNTER: equ 0xe579
 
