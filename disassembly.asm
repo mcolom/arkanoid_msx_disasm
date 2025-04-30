@@ -5377,7 +5377,7 @@ doh_level:
 	call CHECK_DOH_CAN_THROW_BULLETS	;7290	cd 69 74
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
-	call sub_74c7h		;7296	cd c7 74 	. . t 
+	call DOH_MOVE_BULLETS		;7296	cd c7 74 	. . t 
 	call DOH_UPDATE_COLOR		;7299	cd aa 73
 	call sub_73f0h		;729c	cd f0 73 	. . s 
 	ret			;729f	c9 	. 
@@ -5762,25 +5762,27 @@ l74bdh:
 	djnz l749dh		;74c4	10 d7 	. . 
 	ret			;74c6	c9 	. 
 
-sub_74c7h:
+; Move Doh's bullets
+DOH_MOVE_BULLETS:
 	ld b, 3		                ;74c7	06 03
-	ld ix,DOH_BULLETS_TABLE		        ;74c9	dd 21 63 e5
+	ld ix,DOH_BULLETS_TABLE		;74c9	dd 21 63 e5
 	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1
 l74d1h:
-	push bc			;74d1	c5 	. 
+	push bc			                    ;74d1
     
     ; Skip if the bullet is not active
 	ld a,(ix+DOH_BULLETS_ACTIVE)		;74d2	dd 7e 00
 	or a			                    ;74d5	b7
-	jp z,l7566h		                    ;74d6	ca 66 75
+	jp z,doh_process_next_bullet		                    ;74d6	ca 66 75
 
-    ; Skip 
+    ; Skip if... ToDo
 	ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;74d9	dd 7e 01 	. ~ . 
 	or a			;74dc	b7 	. 
 	jp nz,l7501h		;74dd	c2 01 75 	. . u 
     
 	ld (ix+DOH_BULLETS_TABLE_IDX_X),001h		;74e0	dd 36 01 01 	. 6 . . 
     
+    ; A <-- (BULLET_X - 8) \ 8
 	ld hl,SPR_PARAMS_BASE		;74e4	21 cd e0
 	inc hl			            ;74e7	23
 	ld a,(hl)			        ;74e8	7e      A = BULLET_X
@@ -5790,100 +5792,96 @@ l74d1h:
 	srl a		                ;74ef	cb 3f
 	srl a		                ;74f1	cb 3f   A = (BULLET_X - 8) \ 8
 
-    ; A <-- TBL_7573[(BULLET_X - 8) \ 8]
-	ld hl,TBL_7573		;74f3	21 73 75 	! s u 
-	ld e,a			    ;74f6	5f
-	ld d, 0		        ;74f7	16 00
-	add hl,de			;74f9	19
-	ld a,(hl)			;74fa	7e
+    ; A <-- TBL_DOH_BULLET_SKEWNESS_1[(BULLET_X - 8) \ 8]
+	ld hl,TBL_DOH_BULLET_SKEWNESS_1		;74f3	21 73 75
+	ld e,a			                    ;74f6	5f
+	ld d, 0		                        ;74f7	16 00
+	add hl,de			                ;74f9	19
+	ld a,(hl)			                ;74fa	7e
 
-    ; Set... ToDo
-	ld (ix+002h),a		;74fb	dd 77 02 	. w . 
+    ; Set bullet skewness
+	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS),a	;74fb	dd 77 02
 	ld (0e582h),a		;74fe	32 82 e5 	2 . . 
 l7501h:
 	ld a,(ix+003h)		;7501	dd 7e 03 	. ~ . 
 	inc a			;7504	3c 	< 
 	ld (ix+003h),a		;7505	dd 77 03 	. w . 
 	cp 003h		;7508	fe 03 	. . 
-	jp c,l7566h		;750a	da 66 75 	. f u 
-	ld (ix+003h),000h		;750d	dd 36 03 00 	. 6 . . 
-	ld a,001h		;7511	3e 01 	> . 
-	ld (ix+003h),a		;7513	dd 77 03 	. w . 
-	ld a,(ix+002h)		;7516	dd 7e 02 	. ~ . 
-	ld l,a			;7519	6f 	o 
-	ld h,000h		;751a	26 00 	& . 
-	add hl,hl			;751c	29 	) 
-	ld de,07586h		;751d	11 86 75 	. . u 
-	add hl,de			;7520	19 	. 
-	ld a,(hl)			;7521	7e 	~ 
-	ld b,a			;7522	47 	G 
-	ld a,(iy+001h)		;7523	fd 7e 01 	. ~ . 
-	add a,b			;7526	80 	. 
-	ld (iy+001h),a		;7527	fd 77 01 	. w . 
-	ld a,(ix+002h)		;752a	dd 7e 02 	. ~ . 
-	ld l,a			;752d	6f 	o 
-	ld h,000h		;752e	26 00 	& . 
-	add hl,hl			;7530	29 	) 
-	ld de,l7587h		;7531	11 87 75 	. . u 
-	add hl,de			;7534	19 	. 
-	ld a,(hl)			;7535	7e 	~ 
-	ld b,a			;7536	47 	G 
-	ld a,(iy+000h)		;7537	fd 7e 00 	. ~ . 
-	add a,b			;753a	80 	. 
-	ld (iy+000h),a		;753b	fd 77 00 	. w . 
-	cp 0b4h		;753e	fe b4 	. . 
-	jp c,l7566h		;7540	da 66 75 	. f u 
-	ld (ix+000h),000h		;7543	dd 36 00 00 	. 6 . . 
-	ld (ix+001h),000h		;7547	dd 36 01 00 	. 6 . . 
-	ld (ix+002h),000h		;754b	dd 36 02 00 	. 6 . . 
-	ld (iy+003h),000h		;754f	fd 36 03 00 	. 6 . . 
-	ld hl,0e577h		;7553	21 77 e5 	! w . 
+	jp c,doh_process_next_bullet		;750a	da 66 75 	. f u 
+    
+    ; Reset counter
+	ld (ix+003h), 0		            ;750d	dd 36 03 00
+
+	; But now set to 1 :D
+    ld a, 1		        ;7511	3e 01
+	ld (ix+003h),a		;7513	dd 77 03
+    
+    ; A <--(TBL_DOH_BULLET_SKEWNESS_2)[2*SKEWNESS]
+	ld a,(ix+DOH_BULLETS_TABLE_IDX_SKEWNESS)	;7516	dd 7e 02
+	ld l,a			                            ;7519	6f
+	ld h, 0		                                ;751a	26 00
+	add hl,hl			                        ;751c	29
+	ld de,TBL_DOH_BULLET_SKEWNESS_2		                    ;751d	11 86 75
+	add hl,de			                        ;7520	19
+	ld a,(hl)			                        ;7521	7e
+
+    ; Set bullet's X <-- X + (TBL_DOH_BULLET_SKEWNESS_2)[2*SKEWNESS]
+	ld b,a			                    ;7522	47          B = (TBL_DOH_BULLET_SKEWNESS_2)[2*SKEWNESS]
+	ld a,(iy+SPR_PARAMS_IDX_X)		    ;7523	fd 7e 01
+	add a,b			                    ;7526	80
+	ld (iy+SPR_PARAMS_IDX_X),a		    ;7527	fd 77 01
+
+	; A <-- (TBL_DOH_BULLET_SKEWNESS_2+1)[SKEWNESS]
+    ld a,(ix+DOH_BULLETS_TABLE_IDX_SKEWNESS)	;752a	dd 7e 02
+	ld l,a			                            ;752d	6f
+	ld h, 0		                                ;752e	26 00
+	add hl,hl			                        ;7530	29
+	ld de,TBL_DOH_BULLET_SKEWNESS_2+1		        ;7531	11 87 75
+	add hl,de			                        ;7534	19
+	ld a,(hl)			                        ;7535	7e
+    
+	; Set bullet's Y <-- Y + (TBL_DOH_BULLET_SKEWNESS_2+1)[SKEWNESS]
+    ld b,a			                            ;7536	47  B = (TBL_DOH_BULLET_SKEWNESS_2+1)[SKEWNESS]
+	ld a,(iy+SPR_PARAMS_IDX_Y)		            ;7537	fd 7e 00
+	add a,b			                            ;753a	80
+	ld (iy+SPR_PARAMS_IDX_Y),a		            ;753b	fd 77 00
+    
+    ; If the ball's Y > 180, then reset its parameters
+	cp 180		                        ;753e	fe b4
+	jp c,doh_process_next_bullet		;7540	da 66 5
+    
+    ; Y > 180: remove bullet
+    ld (ix+DOH_BULLETS_ACTIVE), 0		        ;7543	dd 36 00 00
+	ld (ix+DOH_BULLETS_TABLE_IDX_X), 0		    ;7547	dd 36 01 00
+	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS), 0	;754b	dd 36 02 00
+	ld (iy+SPR_PARAMS_IDX_COLOR), 0		        ;754f	fd 36 03 00
+
+	; ToDo
+    ld hl,0e577h		;7553	21 77 e5 	! w . 
 	inc (hl)			;7556	34 	4 
 	ld a,(hl)			;7557	7e 	~ 
-	cp 003h		;7558	fe 03 	. . 
-	jp nz,l7566h		;755a	c2 66 75 	. f u 
+	cp 3		;7558	fe 03 	. . 
+	jp nz,doh_process_next_bullet		;755a	c2 66 75 	. f u 
+    
 	ld (hl),000h		;755d	36 00 	6 . 
 	inc hl			;755f	23 	# 
 	ld (hl),001h		;7560	36 01 	6 . 
 	xor a			;7562	af 	. 
 	ld (DOH_NUM_ACTIVE_BULLETS),a		;7563	32 1a e5 	2 . . 
-l7566h:
-	pop bc			;7566	c1 	. 
-	ld de, SPR_PARAMS_LEN		;7567	11 04 00 	. . . 
-	add ix,de		;756a	dd 19 	. . 
-	add iy,de		;756c	fd 19 	. . 
-	dec b			;756e	05 	. 
-	jp nz,l74d1h		;756f	c2 d1 74 	. . t 
-	ret			;7572	c9 	. 
+doh_process_next_bullet:
+	pop bc			        ;7566	c1
+	ld de, SPR_PARAMS_LEN	;7567	11 04 00
+	add ix,de		        ;756a	dd 19
+	add iy,de		        ;756c	fd 19
+	dec b			        ;756e	05
+	jp nz,l74d1h		    ;756f	c2 d1 74
+	ret			            ;7572	c9
 
-TBL_7573:
-	nop			;7573	00 	. 
-	ld bc,00101h		;7574	01 01 01 	. . . 
-	ld (bc),a			;7577	02 	. 
-	ld (bc),a			;7578	02 	. 
-	ld (bc),a			;7579	02 	. 
-	inc bc			;757a	03 	. 
-	inc bc			;757b	03 	. 
-	inc bc			;757c	03 	. 
-	inc b			;757d	04 	. 
-	inc b			;757e	04 	. 
-	inc b			;757f	04 	. 
-	dec b			;7580	05 	. 
-	dec b			;7581	05 	. 
-	dec b			;7582	05 	. 
-	ld b,006h		;7583	06 06 	. . 
-	ld b,0fdh		;7585	06 fd 	. . 
-l7587h:
-	inc b			;7587	04 	. 
-	cp 004h		;7588	fe 04 	. . 
-	rst 38h			;758a	ff 	. 
-	inc b			;758b	04 	. 
-	nop			;758c	00 	. 
-	inc b			;758d	04 	. 
-	ld bc,00204h		;758e	01 04 02 	. . . 
-	inc b			;7591	04 	. 
-	inc bc			;7592	03 	. 
-	inc b			;7593	04 	. 
+TBL_DOH_BULLET_SKEWNESS_1:
+    db 0, 1, 1, 1, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 5, 6, 6, 6
+
+TBL_DOH_BULLET_SKEWNESS_2:
+    db -3, 4, -2, 4, -1, 4, 0, 4, 1, 4, 2, 4, 3, 4
 
 ; Draw Doh with his mouth open
 DRAW_DOH_MOUTH_OPEN:
