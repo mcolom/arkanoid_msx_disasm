@@ -5634,29 +5634,33 @@ DOH_UPDATE_COLOR:
 	ret			                            ;73ef	c9
 
 sub_73f0h:
-	ld ix,DOH_TABLE		;73f0	dd 21 0d e5 	. ! . . 
-	ld a,(ix+DOH_TABLE_IDX_DEFEATED)		;73f4	dd 7e 00 	. ~ . 
-	or a			;73f7	b7 	. 
-	ret z			;73f8	c8 	. 
+    ; Skip if Doh's been defeated
+	ld ix,DOH_TABLE		                ;73f0	dd 21 0d e5
+	ld a,(ix+DOH_TABLE_IDX_DEFEATED)	;73f4	dd 7e 00
+	or a			                    ;73f7	b7
+	ret z			                    ;73f8	c8
 
-	ld a,(ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73f9	dd 7e 01 	. ~ . 
-	cp 1		;73fc	fe 01 	. . 
-	jp z,l7410h		;73fe	ca 10 74 	. . t 
-	cp 2		;7401	fe 02 	. . 
-	jp z,l7441h		;7403	ca 41 74 	. A t 
+    ; Execute the corresponding hit action
+	ld a,(ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73f9	dd 7e 01
+	cp 1		                                ;73fc	fe 01
+	jp z,do_hit_cycle_1		                    ;73fe	ca 10 74
+	cp 2		                                ;7401	fe 02
+	jp z,do_hit_cycle_2		                    ;7403	ca 41 74
 
     ; Colorize Doh with gray over black
-	ld a,0xe1		        ;7406	3e e1
-	call COLORIZE_DOH		;7408	cd 52 74
-	ld (ix+001h), 1		    ;740b	dd 36 01 01
-	ret			            ;740f	c9
+	ld a,0xe1		                            ;7406	3e e1
+	call COLORIZE_DOH		                    ;7408	cd 52 74
+    ; Set the next hit cycle to 1
+	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 1		;740b	dd 36 01 01
+	ret			                                ;740f	c9
 
-l7410h:
-	inc (ix+002h)		;7410	dd 34 02 	. 4 . 
-	ld a,(ix+002h)		;7413	dd 7e 02 	. ~ . 
-	cp 016h		;7416	fe 16 	. . 
+do_hit_cycle_1:
+	inc (ix+DOH_TABLE_IDX_COLOR)		;7410	dd 34 02 	. 4 . 
+	ld a,(ix+DOH_TABLE_IDX_COLOR)		;7413	dd 7e 02 	. ~ . 
+	cp 22		;7416	fe 16 	. . 
 	ret nz			;7418	c0 	. 
-	ld (ix+002h),000h		;7419	dd 36 02 00 	. 6 . . 
+
+	ld (ix+DOH_TABLE_IDX_COLOR),000h		;7419	dd 36 02 00 	. 6 . . 
 	ld l,(ix+003h)		;741d	dd 6e 03 	. n . 
 	ld h,000h		;7420	26 00 	& . 
 	add hl,hl			;7422	29 	) 
@@ -5664,24 +5668,28 @@ l7410h:
 	add hl,hl			;7424	29 	) 
 	add hl,hl			;7425	29 	) 
 	add hl,hl			;7426	29 	) 
-	ld de,01869h		;7427	11 69 18 	. i . 
+	ld de,0x1800 + 9 + 3*32		;7427	11 69 18    Locate at [9, 3]
 	add hl,de			;742a	19 	. 
-	ld bc,00008h		;742b	01 08 00 	. . . 
-	ld a,000h		;742e	3e 00 	> . 
+	ld bc, 8		;742b	01 08 00 	. . . 
+	ld a, 0		;742e	3e 00 	> . 
 	call FILVRM		;7430	cd 56 00 	. V . 
+
 	inc (ix+003h)		;7433	dd 34 03 	. 4 . 
 	ld a,(ix+003h)		;7436	dd 7e 03 	. ~ . 
 	cp 00ch		;7439	fe 0c 	. . 
 	ret nz			;743b	c0 	. 
-	ld (ix+001h),002h		;743c	dd 36 01 02 	. 6 . . 
+
+    ; The next hit cycle is 2
+	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 2		;743c	dd 36 01 02 	. 6 . . 
 	ret			;7440	c9 	. 
-l7441h:
+;
+do_hit_cycle_2:
 	inc (ix+004h)		;7441	dd 34 04 	. 4 . 
 	ld a,(ix+004h)		;7444	dd 7e 04 	. ~ . 
 	cp 078h		;7447	fe 78 	. x 
 	ret nz			;7449	c0 	. 
 
-	ld a,002h		;744a	3e 02 	> . 
+	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;744a	3e 02 	> . 
 	ld (GAME_TRANSITION_ACTION),a		;744c	32 0a e0 	2 . . 
 	ret			;744f	c9 	. 
 
