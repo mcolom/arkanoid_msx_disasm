@@ -5634,7 +5634,7 @@ DOH_UPDATE_COLOR:
 	ret			                            ;73ef	c9
 
 sub_73f0h:
-    ; Skip if Doh's been defeated
+    ; Skip if Doh hasn't been yet defeated
 	ld ix,DOH_TABLE		                ;73f0	dd 21 0d e5
 	ld a,(ix+DOH_TABLE_IDX_DEFEATED)	;73f4	dd 7e 00
 	or a			                    ;73f7	b7
@@ -5645,7 +5645,7 @@ sub_73f0h:
 	cp 1		                                ;73fc	fe 01
 	jp z,do_hit_cycle_1		                    ;73fe	ca 10 74
 	cp 2		                                ;7401	fe 02
-	jp z,do_hit_cycle_2		                    ;7403	ca 41 74
+	jp z,delay_before_ending		                    ;7403	ca 41 74
 
     ; Colorize Doh with gray over black
 	ld a,0xe1		                            ;7406	3e e1
@@ -5683,15 +5683,18 @@ do_hit_cycle_1:
 	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 2		;743c	dd 36 01 02 	. 6 . . 
 	ret			;7440	c9 	. 
 ;
-do_hit_cycle_2:
-	inc (ix+004h)		;7441	dd 34 04 	. 4 . 
-	ld a,(ix+004h)		;7444	dd 7e 04 	. ~ . 
-	cp 078h		;7447	fe 78 	. x 
-	ret nz			;7449	c0 	. 
+delay_before_ending:
+    ; Increment the delay counter
+    ; When it reaches 120, end the game
+	inc (ix+DOH_TABLE_IDX_DELAY_BEFORE_ENDING)		;7441	dd 34 04
+	ld a,(ix+DOH_TABLE_IDX_DELAY_BEFORE_ENDING)		;7444	dd 7e 04
+	cp 120		                                    ;7447	fe 78
+	ret nz			                                ;7449	c0
 
-	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;744a	3e 02 	> . 
-	ld (GAME_TRANSITION_ACTION),a		;744c	32 0a e0 	2 . . 
-	ret			;744f	c9 	. 
+    ; Move to the game ending
+	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		    ;744a	3e 02
+	ld (GAME_TRANSITION_ACTION),a		            ;744c	32 0a e0
+	ret			                                    ;744f	c9
 
 ; This table picks the colors of Doh when hit
 TBL_DOH_HIT_COLORS:
