@@ -4914,24 +4914,19 @@ TBL_INCREMENT_POS_VAUS_CONTROLS:
 	db 0		;6ffd
 	db 0		;6ffe
 	db 0		;6fff    
-
-    db -4       ;7000
+    db -4       ;7000   Left
     db 0        ;7001
-
-    db -4       ;7002
-
+    db -4       ;7002   Left
 	db 0		;7003
-
-    db -4       ;7004
-
+    db -4       ;7004   Left
     db 0        ;7005
     db 0        ;7006
 	db 0		;7007
-	db 4		;7008
+	db 4		;7008   Right
 	db 0		;7009
-	db 4		;700a
+	db 4		;700a   Right
 	db 0		;700b
-	db 4		;700c
+	db 4		;700c   Right
 	db 0		;700d
 	db 0		;700e
 	db 0		;700f
