@@ -5378,7 +5378,7 @@ doh_level:
 	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
 l7296h:
 	call sub_74c7h		;7296	cd c7 74 	. . t 
-	call DOH_UPDATE_COLOR		;7299	cd aa 73 	. . s 
+	call DOH_UPDATE_COLOR		;7299	cd aa 73
 	call sub_73f0h		;729c	cd f0 73 	. . s 
 	ret			;729f	c9 	. 
 
@@ -5603,13 +5603,13 @@ DOH_UPDATE_COLOR:
 
     ; Delay counter
     ; Wait 3 cycles before changing the color
-	inc (ix+DOH_TABLE_IDX_DELAY_COUNTER)		;73bc	dd 34 01
-	ld a,(ix+DOH_TABLE_IDX_DELAY_COUNTER)		;73bf	dd 7e 01
+	inc (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73bc	dd 34 01
+	ld a,(ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73bf	dd 7e 01
 	cp 3		                                ;73c2	fe 03
 	ret nz			                            ;73c4	c0
 
     ; Reset delay counter
-	ld (ix+DOH_TABLE_IDX_DELAY_COUNTER), 0		;73c5	dd 36 01 00
+	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 0		;73c5	dd 36 01 00
     
     ; Choose the color for Doh: turning into white, or getting back to red
 	ld e,(ix+DOH_TABLE_IDX_COLOR)		;73c9	dd 5e 02
@@ -5628,7 +5628,7 @@ DOH_UPDATE_COLOR:
     
     ; Reset Doh's attributes
 	ld (ix+DOH_TABLE_IDX_DEFEATED), 0	    ;73df	dd 36 00 00
-	ld (ix+DOH_TABLE_IDX_DELAY_COUNTER), 0  ;73e3	dd 36 01 00
+	ld (ix+DOH_TABLE_IDX_HIT_CYCLE_NUM), 0  ;73e3	dd 36 01 00
 	ld (ix+DOH_TABLE_IDX_COLOR), 0	        ;73e7	dd 36 02 00
 	ld (ix+003h),000h		                ;73eb	dd 36 03 00 	. 6 . . 
 	ret			                            ;73ef	c9
@@ -5638,15 +5638,18 @@ sub_73f0h:
 	ld a,(ix+DOH_TABLE_IDX_DEFEATED)		;73f4	dd 7e 00 	. ~ . 
 	or a			;73f7	b7 	. 
 	ret z			;73f8	c8 	. 
-	ld a,(ix+001h)		;73f9	dd 7e 01 	. ~ . 
-	cp 001h		;73fc	fe 01 	. . 
+
+	ld a,(ix+DOH_TABLE_IDX_HIT_CYCLE_NUM)		;73f9	dd 7e 01 	. ~ . 
+	cp 1		;73fc	fe 01 	. . 
 	jp z,l7410h		;73fe	ca 10 74 	. . t 
-	cp 002h		;7401	fe 02 	. . 
+	cp 2		;7401	fe 02 	. . 
 	jp z,l7441h		;7403	ca 41 74 	. A t 
-	ld a,0e1h		;7406	3e e1 	> . 
-	call COLORIZE_DOH		;7408	cd 52 74 	. R t 
-	ld (ix+001h),001h		;740b	dd 36 01 01 	. 6 . . 
-	ret			;740f	c9 	. 
+
+    ; Colorize Doh with gray over black
+	ld a,0xe1		        ;7406	3e e1
+	call COLORIZE_DOH		;7408	cd 52 74
+	ld (ix+001h), 1		    ;740b	dd 36 01 01
+	ret			            ;740f	c9
 
 l7410h:
 	inc (ix+002h)		;7410	dd 34 02 	. 4 . 
@@ -5771,23 +5774,30 @@ l74d1h:
 	or a			                    ;74d5	b7
 	jp z,l7566h		                    ;74d6	ca 66 75
 
+    ; Skip 
 	ld a,(ix+DOH_BULLETS_TABLE_IDX_X)		;74d9	dd 7e 01 	. ~ . 
 	or a			;74dc	b7 	. 
 	jp nz,l7501h		;74dd	c2 01 75 	. . u 
+    
 	ld (ix+DOH_BULLETS_TABLE_IDX_X),001h		;74e0	dd 36 01 01 	. 6 . . 
-	ld hl,SPR_PARAMS_BASE		;74e4	21 cd e0 	! . . 
-	inc hl			;74e7	23 	# 
-	ld a,(hl)			;74e8	7e 	~ 
-	sub 008h		;74e9	d6 08 	. . 
-	and 0f8h		;74eb	e6 f8 	. . 
-	srl a		;74ed	cb 3f 	. ? 
-	srl a		;74ef	cb 3f 	. ? 
-	srl a		;74f1	cb 3f 	. ? 
+    
+	ld hl,SPR_PARAMS_BASE		;74e4	21 cd e0
+	inc hl			            ;74e7	23
+	ld a,(hl)			        ;74e8	7e      A = BULLET_X
+	sub 8		                ;74e9	d6 08   A = BULLET_X - 8
+	and 0f8h		            ;74eb	e6 f8
+	srl a		                ;74ed	cb 3f
+	srl a		                ;74ef	cb 3f
+	srl a		                ;74f1	cb 3f   A = (BULLET_X - 8) \ 8
+
+    ; A <-- TBL_7573[(BULLET_X - 8) \ 8]
 	ld hl,TBL_7573		;74f3	21 73 75 	! s u 
-	ld e,a			;74f6	5f 	_ 
-	ld d,000h		;74f7	16 00 	. . 
-	add hl,de			;74f9	19 	. 
-	ld a,(hl)			;74fa	7e 	~ 
+	ld e,a			    ;74f6	5f
+	ld d, 0		        ;74f7	16 00
+	add hl,de			;74f9	19
+	ld a,(hl)			;74fa	7e
+
+    ; Set... ToDo
 	ld (ix+002h),a		;74fb	dd 77 02 	. w . 
 	ld (0e582h),a		;74fe	32 82 e5 	2 . . 
 l7501h:
