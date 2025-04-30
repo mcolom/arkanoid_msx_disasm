@@ -5630,6 +5630,7 @@ DOH_UPDATE_COLOR:
 	ld (ix+TBL_DOH_HIT_IDX_DOH_BEEN_HIT), 0	 ;73df	dd 36 00 00
 	ld (ix+TBL_DOH_HIT_IDX_HIT_CYCLE_NUM), 0 ;73e3	dd 36 01 00
 	ld (ix+TBL_DOH_HIT_IDX_COLOR), 0	     ;73e7	dd 36 02 00
+    ; ToDo
 	ld (ix+003h),000h		                 ;73eb	dd 36 03 00
 	ret			                             ;73ef	c9
 
@@ -5729,20 +5730,25 @@ CHECK_DOH_CAN_THROW_BULLETS:
 	cp 3		                    ;746c	fe 03
 	ret z			                ;746e	c8
 
-	ld hl,DOH_CAN_THROW_BULLETS		;746f	21 78 e5 	! x . 
-	ld a,(hl)			;7472	7e 	~ 
-	or a			;7473	b7 	. 
-	jp z,l7483h		;7474	ca 83 74 	. . t 
+    ; If Doh can't throw bullets, check the bullets counter
+	ld hl,DOH_CAN_THROW_BULLETS		;746f	21 78 e5
+	ld a,(hl)			            ;7472	7e
+	or a			                ;7473	b7
+	jp z,l7483h		                ;7474	ca 83 74
+    
+    ; Doh can throw bullets
 
     ; Increment DOH_THROW_BULLETS_COUNTER
-	inc hl			    ;7477	23
+    ; Exit if it hasn't yet reached 120
+	inc hl			    ;7477	23      Point to DOH_THROW_BULLETS_COUNTER
 	inc (hl)			;7478	34
 	ld a,(hl)			;7479	7e
 	cp 120		        ;747a	fe 78
 	ret nz			    ;747c	c0      Skip if 120 not reached
     
-    ; DOH_THROW_BULLETS_COUNTER has reached 120
-    ld (hl), 0  		;747d	36 00   Reset counter
+    ; DOH_THROW_BULLETS_COUNTER has reached 120.
+    ; Reset counter.
+    ld (hl), 0  		;747d	36 00
     
     ; DOH_CAN_THROW_BULLETS <-- 0
 	dec hl			;747f	2b
@@ -5750,34 +5756,47 @@ CHECK_DOH_CAN_THROW_BULLETS:
 	ret			    ;7482	c9
 
 l7483h:
-	ld a,(0e581h)		;7483	3a 81 e5 	: . . 
-	add a,001h		;7486	c6 01 	. . 
-	ld (0e581h),a		;7488	32 81 e5 	2 . . 
-	cp 00ch		;748b	fe 0c 	. . 
-	ret c			;748d	d8 	. 
-	ld a,000h		;748e	3e 00 	> . 
-	ld (0e581h),a		;7490	32 81 e5 	2 . . 
-	ld b,003h		;7493	06 03 	. . 
-	ld ix,DOH_BULLETS_TABLE		;7495	dd 21 63 e5 	. ! c . 
-	ld iy,SPR_16_SPR_PARAMS		;7499	fd 21 0d e1 	. ! . . 
-l749dh:
-	ld a,(ix+000h)		;749d	dd 7e 00 	. ~ . 
-	or a			;74a0	b7 	. 
-	jp nz,l74bdh		;74a1	c2 bd 74 	. . t 
-	ld (ix+000h),001h		;74a4	dd 36 00 01 	. 6 . . 
-	ld (iy+000h),050h		;74a8	fd 36 00 50 	. 6 . P 
-	ld (iy+001h),064h		;74ac	fd 36 01 64 	. 6 . d 
-	ld (iy+002h),08ch		;74b0	fd 36 02 8c 	. 6 . . 
-	ld (iy+003h),00eh		;74b4	fd 36 03 0e 	. 6 . . 
-	ld hl,DOH_NUM_ACTIVE_BULLETS		;74b8	21 1a e5 	! . . 
-	inc (hl)			;74bb	34 	4 
-	ret			;74bc	c9 	. 
-l74bdh:
-	ld de,00004h		;74bd	11 04 00 	. . . 
-	add iy,de		;74c0	fd 19 	. . 
-	add ix,de		;74c2	dd 19 	. . 
-	djnz l749dh		;74c4	10 d7 	. . 
-	ret			;74c6	c9 	. 
+    ; Increment the bullets counter and exit if
+    ; it hasn't reached 12 yet
+	ld a,(DOH_NEW_BULLET_COUNTER)		;7483	3a 81 e5
+	add a, 1		                    ;7486	c6 01
+	ld (DOH_NEW_BULLET_COUNTER),a		;7488	32 81 e5
+	cp 12		                        ;748b	fe 0c
+	ret c			                    ;748d	d8
+    
+    ; Reset bullets counter
+	ld a, 0		                        ;748e	3e 00
+	ld (DOH_NEW_BULLET_COUNTER),a		;7490	32 81 e5
+    
+    ; Now add bullets, using the inactive slots in the list
+	ld b, 3		                ;7493	06 03
+	ld ix,DOH_BULLETS_TABLE	    ;7495	dd 21 63 e5
+	ld iy,SPR_16_SPR_PARAMS	    ;7499	fd 21 0d e1
+add_new_bullet:
+    ; Go to the next bullet if this one is already active
+	ld a,(ix+DOH_BULLETS_ACTIVE)	;749d	dd 7e 00
+	or a			                ;74a0	b7
+	jp nz,doh_goto_next_bullet		;74a1	c2 bd 74
+
+	; Set bullet as active
+    ld (ix+DOH_BULLETS_ACTIVE), 1	            ;74a4	dd 36 00 01
+    
+	ld (iy+SPR_PARAMS_IDX_Y), 80		        ;74a8	fd 36 00 50
+	ld (iy+SPR_PARAMS_IDX_X), 100		        ;74ac	fd 36 01 64     Position (100, 80)
+	ld (iy+SPR_PARAMS_IDX_PATTERN_NUM), 140		;74b0	fd 36 02 8c     Diamond
+	ld (iy+SPR_PARAMS_IDX_COLOR), 14		    ;74b4	fd 36 03 0e     Gray color
+
+    ; A new bullet in the list
+	ld hl,DOH_NUM_ACTIVE_BULLETS		;74b8	21 1a e5
+	inc (hl)			                ;74bb	34
+	ret			                        ;74bc	c9
+
+doh_goto_next_bullet:
+	ld de, SPR_PARAMS_LEN		;74bd	11 04 00
+	add iy,de		            ;74c0	fd 19
+	add ix,de		            ;74c2	dd 19
+	djnz add_new_bullet		            ;74c4	10 d7
+	ret			                ;74c6	c9
 
 ; Move Doh's bullets
 DOH_MOVE_BULLETS:
@@ -5821,25 +5840,27 @@ l74d1h:
 	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS),a	;74fb	dd 77 02
 	ld (0e582h),a		;74fe	32 82 e5 	2 . . 
 l7501h:
-	ld a,(ix+003h)		;7501	dd 7e 03 	. ~ . 
-	inc a			;7504	3c 	< 
-	ld (ix+003h),a		;7505	dd 77 03 	. w . 
-	cp 003h		;7508	fe 03 	. . 
-	jp c,doh_process_next_bullet		;750a	da 66 75 	. f u 
+    ; Change the balls skewness only when DOH_BULLETS_TABLE_IDX_SKEWNESS_COUNTER
+    ; reaches 3.
+	ld a,(ix+DOH_BULLETS_TABLE_IDX_SKEWNESS_COUNTER)		;7501	dd 7e 03
+	inc a			                                        ;7504	3c
+	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS_COUNTER),a		;7505	dd 77 03
+	cp 3		                                            ;7508	fe 03
+	jp c,doh_process_next_bullet		                    ;750a	da 66 75
 
     ; Reset counter
-	ld (ix+003h), 0		            ;750d	dd 36 03 00
+	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS_COUNTER), 0		;750d	dd 36 03 00
 
 	; But now set to 1 :D
-    ld a, 1		        ;7511	3e 01
-	ld (ix+003h),a		;7513	dd 77 03
+    ld a, 1		                                            ;7511	3e 01
+	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS_COUNTER),a		;7513	dd 77 03
     
     ; A <--(TBL_DOH_BULLET_SKEWNESS_2)[2*SKEWNESS]
 	ld a,(ix+DOH_BULLETS_TABLE_IDX_SKEWNESS)	;7516	dd 7e 02
 	ld l,a			                            ;7519	6f
 	ld h, 0		                                ;751a	26 00
 	add hl,hl			                        ;751c	29
-	ld de,TBL_DOH_BULLET_SKEWNESS_2		                    ;751d	11 86 75
+	ld de,TBL_DOH_BULLET_SKEWNESS_2		        ;751d	11 86 75
 	add hl,de			                        ;7520	19
 	ld a,(hl)			                        ;7521	7e
 
@@ -5854,7 +5875,7 @@ l7501h:
 	ld l,a			                            ;752d	6f
 	ld h, 0		                                ;752e	26 00
 	add hl,hl			                        ;7530	29
-	ld de,TBL_DOH_BULLET_SKEWNESS_2+1		        ;7531	11 87 75
+	ld de,TBL_DOH_BULLET_SKEWNESS_2+1		    ;7531	11 87 75
 	add hl,de			                        ;7534	19
 	ld a,(hl)			                        ;7535	7e
     
@@ -5869,10 +5890,10 @@ l7501h:
 	jp c,doh_process_next_bullet		;7540	da 66 5
     
     ; Y > 180: remove bullet
-    ld (ix+DOH_BULLETS_ACTIVE), 0		        ;7543	dd 36 00 00
-	ld (ix+DOH_BULLETS_TABLE_IDX_FOLLOW_VAUS), 0		    ;7547	dd 36 01 00
-	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS), 0	;754b	dd 36 02 00
-	ld (iy+SPR_PARAMS_IDX_COLOR), 0		        ;754f	fd 36 03 00
+    ld (ix+DOH_BULLETS_ACTIVE), 0		            ;7543	dd 36 00 00
+	ld (ix+DOH_BULLETS_TABLE_IDX_FOLLOW_VAUS), 0	;7547	dd 36 01 00
+	ld (ix+DOH_BULLETS_TABLE_IDX_SKEWNESS), 0	    ;754b	dd 36 02 00
+	ld (iy+SPR_PARAMS_IDX_COLOR), 0		            ;754f	fd 36 03 00
 
 	; ToDo
     ld hl,0e577h		;7553	21 77 e5 	! w . 
@@ -8116,6 +8137,7 @@ sub_9b2ah:
 	jp z,l9b4ah		;9b45	ca 4a 9b 	. J . 
 	dec (hl)			;9b48	35 	5 
 	ret			;9b49	c9 	. 
+
 l9b4ah:
     ; Skip if Vaus is going through the portal
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE)		    ;9b4a	3a 4b e5
