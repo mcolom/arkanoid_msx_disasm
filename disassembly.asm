@@ -3897,6 +3897,8 @@ sub_6835h:
 	call sub_683fh		;683b	cd 3f 68 	. ? h 
 	ret			;683e	c9 	. 
 
+; Animation of the open portal
+; ToDo
 sub_683fh:
     ; If the portal is closed, exit
 	ld a,(PORTAL_OPEN)		;683f	3a 26 e3
@@ -3934,6 +3936,7 @@ l687ah:
 	inc a			;687a	3c 	< 
 	ld (0e57bh),a		;687b	32 7b e5 	2 { . 
 	ret			;687e	c9 	. 
+;
 l687fh:
 	ld (0e57bh),a		;687f	32 7b e5 	2 { . 
 	ld a,(0e576h)		;6882	3a 76 e5 	: v . 
