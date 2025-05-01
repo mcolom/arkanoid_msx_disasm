@@ -9123,6 +9123,7 @@ la281h:
 	jp la299h		;a296	c3 99 a2 	. . . 
 la299h:
 	ret			;a299	c9 	. 
+
 sub_a29ah:
 	ld a,(0e58bh)		;a29a	3a 8b e5 	: . . 
 	cp 00bh		;a29d	fe 0b 	. . 
@@ -9131,6 +9132,7 @@ sub_a29ah:
 	cp 00ah		;a2a5	fe 0a 	. . 
 	jp nz,la324h		;a2a7	c2 24 a3 	. $ . 
 	jp la2bdh		;a2aa	c3 bd a2 	. . . 
+
 sub_a2adh:
 	ld a,(0e58bh)		;a2ad	3a 8b e5 	: . . 
 	cp 00fh		;a2b0	fe 0f 	. . 
@@ -9187,6 +9189,7 @@ la324h:
 la326h:
 	scf			;a326	37 	7 
 	ret			;a327	c9 	. 
+
 sub_a328h:
 	ld a,(0e58bh)		;a328	3a 8b e5 	: . . 
 	ld b,a			;a32b	47 	G 
@@ -9254,6 +9257,7 @@ la3cdh:
 	jp la3d0h		;a3cd	c3 d0 a3 	. . . 
 la3d0h:
 	ret			;a3d0	c9 	. 
+
 sub_a3d1h:
 	ld hl,0e541h		;a3d1	21 41 e5 	! A . 
 	ld (hl),000h		;a3d4	36 00 	6 . 
@@ -9493,6 +9497,7 @@ la589h:
 la58fh:
 	or a			;a58f	b7 	. 
 	ret			;a590	c9 	. 
+
 sub_a591h:
 	ld hl,0e541h		;a591	21 41 e5 	! A . 
 	ld (hl),000h		;a594	36 00 	6 . 
@@ -9774,6 +9779,7 @@ la78ah:
 	ld (BRICK_HIT_COL),a		;a792	32 3d e5 	2 = . 
 	pop af			;a795	f1 	. 
 	ret			;a796	c9 	. 
+
 la797h:
 	bit 7,(iy+003h)		;a797	fd cb 03 7e 	. . . ~ 
 	jp nz,la7d7h		;a79b	c2 d7 a7 	. . . 
@@ -9846,6 +9852,7 @@ la803h:
 	ld (BRICK_HIT_COL),a		;a80b	32 3d e5 	2 = . 
 	pop af			;a80e	f1 	. 
 	ret			;a80f	c9 	. 
+
 sub_a810h:
 	ld hl,0e541h		;a810	21 41 e5 	! A . 
 	ld (hl),000h		;a813	36 00 	6 . 
@@ -9974,6 +9981,7 @@ la8edh:
 la8fdh:
 	ld (ix+000h),a		;a8fd	dd 77 00 	. w . 
 	ret			;a900	c9 	. 
+
 la901h:
 	ld hl,0e541h		;a901	21 41 e5 	! A . 
 	ld (hl),000h		;a904	36 00 	6 . 
@@ -12153,6 +12161,7 @@ lb5fch:
 	ld a,c			;b639	79 	y 
 	ld (0e5ceh),a		;b63a	32 ce e5 	2 . . 
 	ret			;b63d	c9 	. 
+
 sub_b63eh:
 	inc bc			;b63e	03 	. 
 	ld a,(bc)			;b63f	0a 	. 
@@ -12160,6 +12169,7 @@ sub_b63eh:
 	jr z,lb5deh		;b642	28 9a 	( . 
 	ld hl,lb666h		;b644	21 66 b6 	! f . 
 	jr lb652h		;b647	18 09 	. . 
+
 sub_b649h:
 	inc bc			;b649	03 	. 
 	ld a,(bc)			;b64a	0a 	. 
@@ -12261,6 +12271,7 @@ lb6dch:
 	ret			;b6e0	c9 	. 
 	ld hl,0e5c7h		;b6e1	21 c7 e5 	! . . 
 	ld d,002h		;b6e4	16 02 	. . 
+
 sub_b6e6h:
 	ld a,(ix+00bh)		;b6e6	dd 7e 0b 	. ~ . 
 	and 007h		;b6e9	e6 07 	. . 
@@ -12332,6 +12343,7 @@ lb759h:
 	ret			;b760	c9 	. 
 	bit 3,a		;b761	cb 5f 	. _ 
 	jr nz,lb76fh		;b763	20 0a 	  . 
+
 sub_b765h:
 	ld (0e5fch),a		;b765	32 fc e5 	2 . . 
 	and a			;b768	a7 	. 
@@ -12344,6 +12356,7 @@ lb76fh:
 	sub a			;b775	97 	. 
 	call sub_b765h		;b776	cd 65 b7 	. e . 
 	jr lb753h		;b779	18 d8 	. . 
+
 sub_b77bh:
 	ld e,(hl)			;b77b	5e 	^ 
 	bit 7,e		;b77c	cb 7b 	. { 
@@ -12371,6 +12384,7 @@ lb796h:
 	ld b,h			;b797	44 	D 
 	ld c,l			;b798	4d 	M 
 	jr lb759h		;b799	18 be 	. . 
+
 sub_b79bh:
 	push hl			;b79b	e5 	. 
 	pop ix		;b79c	dd e1 	. . 
@@ -12396,6 +12410,7 @@ sub_b79bh:
 	jr nc,lb759h		;b7b7	30 a0 	0 . 
 	ld c,a			;b7b9	4f 	O 
 	ret			;b7ba	c9 	. 
+
 lb7bbh:
 	ld a,c			;b7bb	79 	y 
 	and a			;b7bc	a7 	. 
@@ -12413,6 +12428,7 @@ lb7c1h:
 	jr nz,lb807h		;b7c8	20 3d 	  = 
 	ld (ix+000h),000h		;b7ca	dd 36 00 00 	. 6 . . 
 	ret			;b7ce	c9 	. 
+
 sub_b7cfh:
 	ld a,c			;b7cf	79 	y 
 	and a			;b7d0	a7 	. 
@@ -12431,6 +12447,7 @@ sub_b7cfh:
 	dec hl			;b7e2	2b 	+ 
 	ld (hl),a			;b7e3	77 	w 
 	jr lb7bfh		;b7e4	18 d9 	. . 
+
 sub_b7e6h:
 	ld a,(de)			;b7e6	1a 	. 
 	and a			;b7e7	a7 	. 
@@ -12491,6 +12508,7 @@ lb824h:
 	ld (hl),a			;b82b	77 	w 
 lb82ch:
 	ret			;b82c	c9 	. 
+
 sub_b82dh:
 	ld (ix+00bh),000h		;b82d	dd 36 0b 00 	. 6 . . 
 sub_b831h:
@@ -13514,7 +13532,6 @@ lbcafh:
 	jp nc,00881h		;bcca	d2 81 08 	. . . 
 	sub b			;bccd	90 	. 
 	jp nc,00881h		;bcce	d2 81 08 	. . . 
-sub_bcd1h:
 	sbc a,l			;bcd1	9d 	. 
 	add a,b			;bcd2	80 	. 
 	ld a,a			;bcd3	7f 	 
