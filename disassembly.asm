@@ -5469,14 +5469,17 @@ doh_level:
 	ld a,(DOH_TABLE)		;7286	3a 0d e5
 	or a			        ;7289	b7
 	jp nz,l7296h		    ;728a	c2 96 72
-	call DRAW_DOH_MOUTH_OPEN		    ;728d	cd 94 75
+
+    ; Doh's not defeated
+	call DRAW_DOH_MOUTH_OPEN		;728d	cd 94 75
 	call DOH_THROW_BULLETS_CYCLE	;7290	cd 69 74
-	call CHECK_VAUS_KILLED_BY_DOH		;7293	cd 68 7a
+	call CHECK_VAUS_KILLED_BY_DOH	;7293	cd 68 7a
 l7296h:
-	call DOH_MOVE_BULLETS		;7296	cd c7 74 	. . t 
+    ; Doh's been defeated
+	call DOH_MOVE_BULLETS		;7296	cd c7 74
 	call DOH_UPDATE_COLOR		;7299	cd aa 73
-	call sub_73f0h		;729c	cd f0 73 	. . s 
-	ret			;729f	c9 	. 
+	call DOH_DEFEATED_ANIMATION	;729c	cd f0 73
+	ret			                ;729f	c9
 
 ; Draw the doors according to their state, if active
 UPDATE_DOORS:
@@ -5730,7 +5733,7 @@ DOH_UPDATE_COLOR:
 	ld (ix+003h),000h		                 ;73eb	dd 36 03 00
 	ret			                             ;73ef	c9
 
-sub_73f0h:
+DOH_DEFEATED_ANIMATION:
     ; Skip if Doh hasn't been yet defeated
 	ld ix,DOH_TABLE		                ;73f0	dd 21 0d e5
 	ld a,(ix+DOH_TABLE_IDX_DEFEATED)	;73f4	dd 7e 00
