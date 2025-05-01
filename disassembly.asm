@@ -6726,49 +6726,58 @@ l7999h:
 	djnz l794fh		            ;79a2	10 ab
 	ret			                ;79a4	c9
 
-sub_79a5h:
+; Checks if any of the active balls hits and alien, and destroys it
+CHECK_ANY_BALL_HITS_ALIEN:
 	ld ix,BALL1_SPR_PARAMS		                ;79a5	dd 21 f5 e0
     
-    ; Skip the following part if the ball is not active
+    ; First ball
 	ld a,(BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE)	;79a9	3a 4e e2
 	or a			                            ;79ac	b7
 	jp z,l79c2h		                            ;79ad	ca c2 79
 
-	call sub_79fdh		;79b0	cd fd 79 	. . y 
-	jp c,l79c2h		;79b3	da c2 79 	. . y 
-	ld iy,BALL_TABLE1		;79b6	fd 21 4e e2 	. ! N . 
-	call INVERT_BALL_VERTICAL_SKEWNESS		;79ba	cd 8a 9b 	. . . 
+    ; Check if the first ball hit an alien
+	call CHECK_BALL_HITS_ALIEN		            ;79b0	cd fd 79
+	jp c,l79c2h		                            ;79b3	da c2 79
+	ld iy,BALL_TABLE1		                    ;79b6	fd 21 4e e2
+	call INVERT_BALL_VERTICAL_SKEWNESS		    ;79ba	cd 8a 9b
 
-	ld a,SOUND_ALIEN_DESTROYED	;79bd	3e c2
-	call ADD_SOUND		        ;79bf	cd ef 5b
+	ld a,SOUND_ALIEN_DESTROYED	                ;79bd	3e c2
+	call ADD_SOUND		                        ;79bf	cd ef 5b
 l79c2h:
-	ld ix,BALL2_SPR_PARAMS		;79c2	dd 21 f9 e0 	. ! . . 
-	ld a,(BALL_TABLE2)		;79c6	3a 62 e2 	: b . 
-	or a			;79c9	b7 	. 
-	jp z,l79dfh		;79ca	ca df 79 	. . y 
-	call sub_79fdh		;79cd	cd fd 79 	. . y 
-	jp c,l79dfh		;79d0	da df 79 	. . y 
-	ld iy,BALL_TABLE2		;79d3	fd 21 62 e2 	. ! b . 
-	call INVERT_BALL_VERTICAL_SKEWNESS		;79d7	cd 8a 9b 	. . . 
+    ; Second ball
+	ld ix,BALL2_SPR_PARAMS		                ;79c2	dd 21 f9 e0
+	ld a,(BALL_TABLE2)		                    ;79c6	3a 62 e2
+	or a			                            ;79c9	b7
+	jp z,l79dfh		                            ;79ca	ca df 79
+    
+    ; Check if the second ball hit an alien
+	call CHECK_BALL_HITS_ALIEN		            ;79cd	cd fd 79
+	jp c,l79dfh		                            ;79d0	da df 79
+	ld iy,BALL_TABLE2		                    ;79d3	fd 21 62 e2
+	call INVERT_BALL_VERTICAL_SKEWNESS		    ;79d7	cd 8a 9b
 
-	ld a,SOUND_ALIEN_DESTROYED	;79da	3e c2
-	call ADD_SOUND		        ;79dc	cd ef 5b
+	ld a,SOUND_ALIEN_DESTROYED	                ;79da	3e c2
+	call ADD_SOUND		                        ;79dc	cd ef 5b
 l79dfh:
-	ld ix,BALL3_SPR_PARAMS		;79df	dd 21 fd e0 	. ! . . 
-	ld a,(BALL_TABLE3)		;79e3	3a 76 e2 	: v . 
-	or a			;79e6	b7 	. 
-	jp z,l79fch		;79e7	ca fc 79 	. . y 
-	call sub_79fdh		;79ea	cd fd 79 	. . y 
-	jp c,l79fch		;79ed	da fc 79 	. . y 
-	ld iy,BALL_TABLE3		;79f0	fd 21 76 e2 	. ! v . 
-	call INVERT_BALL_VERTICAL_SKEWNESS		;79f4	cd 8a 9b 	. . . 
+    ; Third ball
+	ld ix,BALL3_SPR_PARAMS		                ;79df	dd 21 fd e0
+	ld a,(BALL_TABLE3)		                    ;79e3	3a 76 e2
+	or a			                            ;79e6	b7
+	jp z,l79fch		                            ;79e7	ca fc 79
+    
+    ; Check if the third ball hit an alien
+	call CHECK_BALL_HITS_ALIEN		            ;79ea	cd fd 79
+	jp c,l79fch		                            ;79ed	da fc 79
+	ld iy,BALL_TABLE3		                    ;79f0	fd 21 76 e2
+	call INVERT_BALL_VERTICAL_SKEWNESS		    ;79f4	cd 8a 9b
 
-	ld a,SOUND_ALIEN_DESTROYED	;79f7	3e c2
-	call ADD_SOUND		        ;79f9	cd ef 5b
+	ld a,SOUND_ALIEN_DESTROYED	                ;79f7	3e c2
+	call ADD_SOUND		                        ;79f9	cd ef 5b
 l79fch:
-	ret			;79fc	c9 	. 
+	ret			                                ;79fc	c9
 
-sub_79fdh:
+; ToDo
+CHECK_BALL_HITS_ALIEN:
     ; IX = BALL(i)_SPR_PARAMS
 	ld iy,SPR_13_SPR_PARAMS		;79fd	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;7a01	21 c8 e4
@@ -8087,7 +8096,7 @@ l9a60h:
 	djnz l9a36h		;9a6a	10 ca 	. . 
 	push iy		;9a6c	fd e5 	. . 
 	push ix		;9a6e	dd e5 	. . 
-	call sub_79a5h		;9a70	cd a5 79 	. . y 
+	call CHECK_ANY_BALL_HITS_ALIEN		;9a70	cd a5 79 	. . y 
 	pop ix		;9a73	dd e1 	. . 
 	pop iy		;9a75	fd e1 	. . 
 	ret			;9a77	c9 	. 
