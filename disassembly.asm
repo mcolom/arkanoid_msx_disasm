@@ -1519,7 +1519,6 @@ l474fh:
 	ld sp,00241h		;4841	31 41 02 	1 A . 
 	ld b,c			;4844	41 	A 
 	ld (03203h),a		;4845	32 03 32 	2 . 2 
-sub_4848h:
 	ld b,c			;4848	41 	A 
 	ld bc,0x4111		;4849	01 11 41 	. . A 
 	ld sp,03141h		;484c	31 41 31 	1 A 1 
@@ -7984,7 +7983,7 @@ l99a2h:
 	jp c,l99b8h		                    ;99b2	da b8 99 Jump if Y < 184
     
     ; Y > 184: ball lost!
-	call sub_9b2ah		;99b5	cd 2a 9b 	. * . 
+	call BALL_OUT_BELOW		;99b5	cd 2a 9b 	. * . 
 l99b8h:
 	pop iy		                    ;99b8	fd e1
 	pop ix		                    ;99ba	dd e1
@@ -8236,23 +8235,35 @@ l9b18h:
 BALL_SPEED_TABLE:
     db 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 4, 8, 16, 24, 31
 
-sub_9b2ah:
-	push iy		;9b2a	fd e5 	. . 
-	push iy		;9b2c	fd e5 	. . 
-	pop hl			;9b2e	e1 	. 
-	pop de			;9b2f	d1 	. 
-	inc de			;9b30	13 	. 
-	ld (hl),000h		;9b31	36 00 	6 . 
-	ld bc,00013h		;9b33	01 13 00 	. . . 
-	ldir		;9b36	ed b0 	. . 
-	ld (ix+000h),0c0h		;9b38	dd 36 00 c0 	. 6 . . 
-	ld (ix+003h),000h		;9b3c	dd 36 03 00 	. 6 . . 
-	ld hl,EXTRA_BALLS		;9b40	21 25 e3 	! % . 
-	ld a,(hl)			;9b43	7e 	~ 
-	or a			;9b44	b7 	. 
-	jp z,l9b4ah		;9b45	ca 4a 9b 	. J . 
-	dec (hl)			;9b48	35 	5 
-	ret			;9b49	c9 	. 
+; This is called when a ball is lost, BALL_Y > 184.
+; It checks if there are extra balls, and it so, an extra ball is lost.
+; Otherwise, a life is lost.
+BALL_OUT_BELOW:
+    ; HL = DE = BALL_TABLE
+	push iy		    ;9b2a	fd e5
+	push iy		    ;9b2c	fd e5
+	pop hl			;9b2e	e1
+	pop de			;9b2f	d1
+
+    ; 
+	inc de			                ;9b30	13
+	ld (hl), 0		                ;9b31	36 00
+	ld bc, BALL_TABLE_LEN - 1		;9b33	01 13 00
+	ldir		                    ;9b36	ed b0
+
+	ld (ix+SPR_PARAMS_IDX_Y), 192	;9b38	dd 36 00 c0
+	ld (ix+SPR_PARAMS_IDX_COLOR),0	;9b3c	dd 36 03 00
+
+    ; If there are not extra balls, check if Vaus is going through the portal (it escapes).
+	ld hl,EXTRA_BALLS	;9b40	21 25 e3
+	ld a,(hl)			;9b43	7e
+	or a			    ;9b44	b7
+	jp z,l9b4ah		    ;9b45	ca 4a 9b    No extra balls
+    
+    ; Yes, we have extra balls.
+    ; We don't lose a life, but one of the extra balls.
+	dec (hl)			;9b48	35
+	ret			        ;9b49	c9
 
 l9b4ah:
     ; Skip if Vaus is going through the portal
@@ -11884,6 +11895,8 @@ lb518h:
 	pop hl			;b51b	e1 	. 
 	ret			;b51c	c9 	. 
 
+; Sound related...
+; ToDo
 sub_b51dh:
     ; BC = 0xb4.. , with A
 	ld b,0b4h		;b51d	06 b4 	. . 
@@ -11986,6 +11999,8 @@ lb56ah:
 	ex de,hl			;b56d	eb 	. 
 	ld e,0bfh		;b56e	1e bf 	. . 
 
+; Sound related
+; ToDo
 sub_b570h:
 	ld a, 7		;b570	3e 07 PSG register 7
 	bit 7,e		;b572	cb 7b 	. { 
@@ -12028,6 +12043,8 @@ lb58ch:
 	pop af			;b592	f1
 	ret			    ;b593	c9
 
+; Sound related
+; ToDo
 sub_b594h:
     ; Is the variable at SOUND_NUMBER+1 useless?
     ; It seems it's only checked here, but never written
