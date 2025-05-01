@@ -371,16 +371,17 @@ TRANSITION_START_LEVEL:
     
 TRANSITION_PLAY_LEVEL:
     ;ToDo: figure out what are these
-	call sub_6835h		;41c0	cd 35 68 	. 5 h 
-	call UPDATE_OBJECTS		;41c3	cd f4 95 	. . . 
-	call sub_7241h		;41c6	cd 41 72 	. A r ToDo: move aliens
+	call sub_6835h		        ;41c0	cd 35 68    ToDo
+	call UPDATE_OBJECTS		    ;41c3	cd f4 95
+	call CHECK_DEMO_TIMEOUT		;41c6	cd 41 72
 	
     ; Scores of the right
     ld a, 1 		            ;41c9	3e 01
 	ld (SCORE_POSITION),a		;41cb	32 44 e5
 
-	call DRAW_SCORE_NUMBERS		;41ce	cd b9 53 	. . S 
-	jp go_on_after_transition		;41d1	c3 da 41 	. . A 
+    ; Draw scores and go on
+	call DRAW_SCORE_NUMBERS		;41ce	cd b9 53
+	jp go_on_after_transition	;41d1	c3 da 41
 
 TRANSITION_NEXT_LEVEL:
 	call NEXT_OR_SAME_LEVEL		;41d4	cd 94 7b 	. . { 
@@ -5416,8 +5417,9 @@ l723ch:
 	ld c,(hl)			;723f	4e 	N 
 	ld b,h			;7240	44 	D 
 
-;ToDo
-sub_7241h:
+; Checks the demo's timeout and moves back to the title's screen
+; when reached.
+CHECK_DEMO_TIMEOUT:
     ; Skip if we're not in the demo
 	ld a,(GAME_STATE)		;7241	3a 0b e0
 	or a			        ;7244	b7
