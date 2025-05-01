@@ -194,7 +194,7 @@ ROM_START:
 
     ; ToDo: what is this function?
     ; Without it, it hangs when the ball hits a brick
-	call sub_43ffh		;40c0	cd ff 43 	. . C 
+	call FILL_BRICK_ACTION_TABLE		;40c0	cd ff 43 	. . C 
 
 	ld a,SOUND_NOP		;40c3	3e f8
 	ld (SOUND_NUMBER),a	;40c5	32 c0 e5
@@ -851,8 +851,10 @@ l43f0h:
 	pop bc			;43fc	c1
 	jr l43cch		;43fd	18 cd
 
-sub_43ffh:
-    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
+; ToDo
+FILL_BRICK_ACTION_TABLE:
+    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN.
+    ; However, probably this is here a counter for the columns or rows.
 	xor a			            ;43ff	af
 	ld (TITLE_SCREEN_ACTION),a	;4400	32 3c e5
 l4403h:
@@ -862,14 +864,14 @@ l4406h:
 	ld h,000h		;4407	26 00 	& . 
 	add hl,hl			;4409	29 	) 
 	push hl			;440a	e5 	. 
-	ld de,l4445h		;440b	11 45 44 	. E D 
+	ld de,TBL_4445		;440b	11 45 44 	. E D 
 	add hl,de			;440e	19 	. 
 	ld e,(hl)			;440f	5e 	^ 
 	inc hl			;4410	23 	# 
 l4411h:
 	ld d,(hl)			;4411	56 	V 
 	pop hl			;4412	e1 	. 
-	ld bc,04485h		;4413	01 85 44 	. . D 
+	ld bc,TBL_4485		;4413	01 85 44 	. . D 
 	add hl,bc			;4416	09 	. 
 	ld c,(hl)			;4417	4e 	N 
 	inc hl			;4418	23 	# 
@@ -888,6 +890,10 @@ l4425h:
 	srl a		;4427	cb 3f 	. ? 
 	srl a		;4429	cb 3f 	. ? 
 l442bh:
+    ; This writes from 0xC000...
+    ; 0xC000 is referenced in ;TBL_BRICK_ACTION_TABLE_OFFSETs:
+        ; This points to tables with the bricks "unrolled".
+        ; This is used to identify the brick type and take the appropriate action.
 	ld (de),a			;442b	12 	. 
 	inc de			;442c	13 	. 
 	djnz l442bh		;442d	10 fc 	. . 
@@ -909,8 +915,8 @@ l442bh:
 	ret			                ;4444	c9
 
 ; ToDo: what is this table?
-; Related to function sub_43ffh
-l4445h:
+; Related to function FILL_BRICK_ACTION_TABLE
+TBL_4445:
 	nop			;4445	00 	. 
 	ret nz			;4446	c0 	. 
 	add a,h			;4447	84 	. 
@@ -950,8 +956,13 @@ l4445h:
 	adc a,0f4h		;447e	ce f4 	. . 
 	adc a,078h		;4480	ce 78 	. x 
 	rst 8			;4482	cf 	. 
-	call m,0c5cfh		;4483	fc cf c5 	. . . 
-	ld b,h			;4486	44 	D 
+    db 0xfc, 0xcf
+
+; ToDo: what is this table?
+; Related to function FILL_BRICK_ACTION_TABLE
+TBL_4485:
+    db 0xc5         ;4485
+    ld b,h			;4486	44 	D 
 	jp nc,0f144h		;4487	d2 44 f1 	. D . 
 	ld b,h			;448a	44 	D 
 	ld (de),a			;448b	12 	. 
@@ -4711,7 +4722,7 @@ l6d71h:
 	ld (ix+000h),001h		;6d71	dd 36 00 01 	. 6 . . 
 	jp vaus_follow_ball_demo_or_read_controls		;6d75	c3 0f 69 	. . i 
 
-l6d78h:
+l6d78h: ; vaus_do_shrinking
     ; VAUS_ACTION_STATE_SHRINKING
 	inc (ix+002h)		;6d78	dd 34 02 	. 4 . 
 	ld a,(ix+002h)		;6d7b	dd 7e 02 	. ~ . 
