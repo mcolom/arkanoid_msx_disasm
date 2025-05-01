@@ -6727,7 +6727,7 @@ l7999h:
 	ret			                ;79a4	c9
 
 sub_79a5h:
-	ld ix,BALL1_SPR_PARAMS		                        ;79a5	dd 21 f5 e0
+	ld ix,BALL1_SPR_PARAMS		                ;79a5	dd 21 f5 e0
     
     ; Skip the following part if the ball is not active
 	ld a,(BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE)	;79a9	3a 4e e2
@@ -6737,7 +6737,7 @@ sub_79a5h:
 	call sub_79fdh		;79b0	cd fd 79 	. . y 
 	jp c,l79c2h		;79b3	da c2 79 	. . y 
 	ld iy,BALL_TABLE1		;79b6	fd 21 4e e2 	. ! N . 
-	call sub_9b8ah		;79ba	cd 8a 9b 	. . . 
+	call INVERT_BALL_VERTICAL_SKEWNESS		;79ba	cd 8a 9b 	. . . 
 
 	ld a,SOUND_ALIEN_DESTROYED	;79bd	3e c2
 	call ADD_SOUND		        ;79bf	cd ef 5b
@@ -6749,7 +6749,7 @@ l79c2h:
 	call sub_79fdh		;79cd	cd fd 79 	. . y 
 	jp c,l79dfh		;79d0	da df 79 	. . y 
 	ld iy,BALL_TABLE2		;79d3	fd 21 62 e2 	. ! b . 
-	call sub_9b8ah		;79d7	cd 8a 9b 	. . . 
+	call INVERT_BALL_VERTICAL_SKEWNESS		;79d7	cd 8a 9b 	. . . 
 
 	ld a,SOUND_ALIEN_DESTROYED	;79da	3e c2
 	call ADD_SOUND		        ;79dc	cd ef 5b
@@ -6761,7 +6761,7 @@ l79dfh:
 	call sub_79fdh		;79ea	cd fd 79 	. . y 
 	jp c,l79fch		;79ed	da fc 79 	. . y 
 	ld iy,BALL_TABLE3		;79f0	fd 21 76 e2 	. ! v . 
-	call sub_9b8ah		;79f4	cd 8a 9b 	. . . 
+	call INVERT_BALL_VERTICAL_SKEWNESS		;79f4	cd 8a 9b 	. . . 
 
 	ld a,SOUND_ALIEN_DESTROYED	;79f7	3e c2
 	call ADD_SOUND		        ;79f9	cd ef 5b
@@ -7468,28 +7468,28 @@ sub_967bh:
 	ld a,(iy+002h)		;96aa	fd 7e 02 	. ~ . 
 	bit 7,a		;96ad	cb 7f 	.  
 	ret z			;96af	c8 	. 
-	call sub_9b5bh		;96b0	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;96b0	cd 5b 9b 	. [ . 
 	ld (ix+000h),077h		;96b3	dd 36 00 77 	. 6 . w 
 	jr l96e4h		;96b7	18 2b 	. + 
 l96b9h:
 	ld a,(iy+003h)		;96b9	fd 7e 03 	. ~ . 
 	bit 7,a		;96bc	cb 7f 	.  
 	ret nz			;96be	c0 	. 
-	call sub_9b80h		;96bf	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;96bf	cd 80 9b 	. . . 
 	ld (ix+001h),04bh		;96c2	dd 36 01 4b 	. 6 . K 
 	jr l96e4h		;96c6	18 1c 	. . 
 l96c8h:
 	ld a,(iy+003h)		;96c8	fd 7e 03 	. ~ . 
 	bit 7,a		;96cb	cb 7f 	.  
 	ret z			;96cd	c8 	. 
-	call sub_9b80h		;96ce	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;96ce	cd 80 9b 	. . . 
 	ld (ix+001h),081h		;96d1	dd 36 01 81 	. 6 . . 
 	jr l96e4h		;96d5	18 0d 	. . 
 l96d7h:
 	ld a,(iy+002h)		;96d7	fd 7e 02 	. ~ . 
 	bit 7,a		;96da	cb 7f 	.  
 	ret nz			;96dc	c0 	. 
-	call sub_9b5bh		;96dd	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;96dd	cd 5b 9b 	. [ . 
 	ld (ix+000h),012h		;96e0	dd 36 00 12 	. 6 . . 
 l96e4h:
 	ld a, SOUND_DOH_HIT	;96e4	3e 08
@@ -7913,7 +7913,7 @@ ACTION_9941:
     
     ; It's moving right with X > 186
 	call UPDATE_BALL_SPEED		;995a	cd f0 9a
-	call sub_9b80h		        ;995d	cd 80 9b
+	call BALL_HORIZONTAL_BOUNCE		        ;995d	cd 80 9b
     
     ; Set the position to 185
 	ld a, 185		            ;9960	3e b9
@@ -7934,7 +7934,7 @@ l996bh:
     
     ; It's touched the left border
 	call UPDATE_BALL_SPEED		;9977	cd f0 9a
-	call sub_9b80h		        ;997a	cd 80 9b
+	call BALL_HORIZONTAL_BOUNCE		        ;997a	cd 80 9b
 
     ; Set the position to 18
 	ld a, 18		            ;997d	3e 12
@@ -7953,7 +7953,7 @@ l9985h:
     
     ; Has touched the ceiling
 	call UPDATE_BALL_SPEED		;9994	cd f0 9a
-	call sub_9b5bh		        ;9997	cd 5b 9b
+	call BALL_VERTICAL_BOUNCE		        ;9997	cd 5b 9b
     
     ; Set position to 9
 	ld a,9		                ;999a	3e 09
@@ -8256,51 +8256,67 @@ l9b4ah:
 	call ADD_SOUND		            ;9b57	cd ef 5b
 	ret			                    ;9b5a	c9
 
-sub_9b5bh:
-	push af			;9b5b	f5 	. 
-	ld a,(iy+BALL_TABLE_IDX_VERT)		;9b5c	fd 7e 02 	. ~ . 
-	neg		;9b5f	ed 44 	. D 
-	ld (iy+BALL_TABLE_IDX_VERT),a		;9b61	fd 77 02 	. w . 
-	pop af			;9b64	f1 	. 
-	push af			;9b65	f5 	. 
-	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b66	fd 7e 06 	. ~ . 
-	bit 7,a		;9b69	cb 7f 	.  
-	jp z,l9b70h		;9b6b	ca 70 9b 	. p . 
-	neg		;9b6e	ed 44 	. D 
+; The ball inverts its vertical direction, as well as its skewness
+BALL_VERTICAL_BOUNCE:
+    ; Invert ball's vertical speed
+	push af			                ;9b5b	f5
+	ld a,(iy+BALL_TABLE_IDX_VERT)	;9b5c	fd 7e 02
+	neg		                        ;9b5f	ed 44
+	ld (iy+BALL_TABLE_IDX_VERT),a	;9b61	fd 77 02
+	pop af			                ;9b64	f1
+    
+    ; And invert its skewness
+	push af			                    ;9b65	f5
+    ; If skewness >= 0, invert it
+    ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;9b66	fd 7e 06
+	bit 7,a		                        ;9b69	cb 7f
+	jp z,l9b70h		                    ;9b6b	ca 70 9b
+	neg		                            ;9b6e	ed 44
 l9b70h:
-	sub 009h		;9b70	d6 09 	. . 
-	bit 7,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b72	fd cb 06 7e 	. . . ~ 
-	jp z,l9b7bh		;9b76	ca 7b 9b 	. { . 
-	neg		;9b79	ed 44 	. D 
+    ; If skewness >= 9, invert it
+	sub 9		                        ;9b70	d6 09   A = SKEWNESS - 9
+	bit 7,(iy+BALL_TABLE_IDX_SKEWNESS)	;9b72	fd cb 06 7e
+	jp z,l9b7bh		                    ;9b76	ca 7b 9b
+	neg		                            ;9b79	ed 44
 l9b7bh:
-	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;9b7b	fd 77 06
-	pop af			;9b7e	f1 	. 
-	ret			;9b7f	c9 	. 
+    ; Update skewness
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a	;9b7b	fd 77 06
+	pop af			                    ;9b7e	f1
+	ret			                        ;9b7f	c9
 
-sub_9b80h:
-	push af			;9b80	f5 	. 
+; The ball inverts its horizontal direction, as well as its skewness
+BALL_HORIZONTAL_BOUNCE:
+    ; Invert ball's vertical speed
+	push af			                    ;9b80	f5
 	ld a,(iy+BALL_TABLE_IDX_HORIZ)		;9b81	fd 7e 03
-	neg		;9b84	ed 44 	. D 
+	neg		                            ;9b84	ed 44
 	ld (iy+BALL_TABLE_IDX_HORIZ),a		;9b86	fd 77 03
-	pop af			;9b89	f1 	. 
-sub_9b8ah:
-	push af			;9b8a	f5 	. 
-	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b8b	fd 7e 06
-	bit 7,a		;9b8e	cb 7f 	.  
-	jp z,l9b95h		;9b90	ca 95 9b 	. . . 
-	neg		;9b93	ed 44 	. D 
+	pop af			                    ;9b89	f1
+    ; Fall to
+    
+; Invert ball's vertical skewness
+INVERT_BALL_VERTICAL_SKEWNESS:
+	push af			                    ;9b8a	f5 	.    
+    ; If skewness >= 0,then invert it
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;9b8b	fd 7e 06
+	bit 7,a		                        ;9b8e	cb 7f
+	jp z,l9b95h		                    ;9b90	ca 95 9b
+	neg		                            ;9b93	ed 44
 l9b95h:
-	ld c,a			;9b95	4f 	O 
-	ld a,009h		;9b96	3e 09 	> . 
-	sub c			;9b98	91 	. 
-	ld c,(iy+BALL_TABLE_IDX_SKEWNESS)		;9b99	fd 4e 06
-	bit 7,c		;9b9c	cb 79 	. y 
-	jp z,l9ba3h		;9b9e	ca a3 9b 	. . . 
-	neg		;9ba1	ed 44 	. D 
+	ld c,a			                    ;9b95	4f
+	ld a, 9		                        ;9b96	3e 09
+	sub c			                    ;9b98	91      A = SKEWNESS -9
+
+    ; If current skewness >= 0 then invert
+	ld c,(iy+BALL_TABLE_IDX_SKEWNESS)	;9b99	fd 4e 06
+	bit 7,c		                        ;9b9c	cb 79
+	jp z,l9ba3h		                    ;9b9e	ca a3 9b
+	neg		                            ;9ba1	ed 44
 l9ba3h:
-	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;9ba3	fd 77 06
-	pop af			;9ba6	f1 	. 
-	ret			;9ba7	c9 	. 
+    ; Set new skewness
+	ld (iy+BALL_TABLE_IDX_SKEWNESS),a	;9ba3	fd 77 06
+	pop af			                    ;9ba6	f1
+	ret			                        ;9ba7	c9
 
 ; Checks if the ball has reached Vaus
 ; If so, make it bounce with the proper skewness (or stick to Vaus if
@@ -8522,7 +8538,7 @@ l9cfdh:
 	ld (BRICK_COL),a		;9d06	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9d09	cd a8 ad 	. . . 
 	jp nc,la299h		;9d0c	d2 99 a2 	. . . 
-	call sub_9b5bh		;9d0f	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9d0f	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9d12	cd 05 aa 	. . . 
 	jp la299h		;9d15	c3 99 a2 	. . . 
 l9d18h:
@@ -8533,7 +8549,7 @@ l9d18h:
 	call THERE_IS_A_BRICK		;9d24	cd a8 ad 	. . . 
 	jp nc,la299h		;9d27	d2 99 a2 	. . . 
 	call la901h		;9d2a	cd 01 a9 	. . . 
-	call sub_9b80h		;9d2d	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;9d2d	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9d30	cd 05 aa 	. . . 
 	jp la299h		;9d33	c3 99 a2 	. . . 
 l9d36h:
@@ -8544,7 +8560,7 @@ l9d36h:
 	call THERE_IS_A_BRICK		;9d42	cd a8 ad 	. . . 
 	jp nc,la299h		;9d45	d2 99 a2 	. . . 
 	call sub_a810h		;9d48	cd 10 a8 	. . . 
-	call sub_9b5bh		;9d4b	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9d4b	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9d4e	cd 05 aa 	. . . 
 	jp la299h		;9d51	c3 99 a2 	. . . 
 l9d54h:
@@ -8560,7 +8576,7 @@ l9d54h:
 	ld (ix+000h),a		;9d6f	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;9d72	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9d75	dd 77 01 	. w . 
-	call sub_9b5bh		;9d78	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9d78	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9d7b	cd 05 aa 	. . . 
 	jp la299h		;9d7e	c3 99 a2 	. . . 
 l9d81h:
@@ -8569,7 +8585,7 @@ l9d81h:
 	call THERE_IS_A_BRICK		;9d87	cd a8 ad 	. . . 
 	jp nc,la299h		;9d8a	d2 99 a2 	. . . 
 	call la901h		;9d8d	cd 01 a9 	. . . 
-	call sub_9b80h		;9d90	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;9d90	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9d93	cd 05 aa 	. . . 
 	jp la299h		;9d96	c3 99 a2 	. . . 
 l9d99h:
@@ -8580,7 +8596,7 @@ l9d99h:
 	call THERE_IS_A_BRICK		;9da5	cd a8 ad 	. . . 
 	jp nc,l9db7h		;9da8	d2 b7 9d 	. . . 
 	call la901h		;9dab	cd 01 a9 	. . . 
-	call sub_9b80h		;9dae	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;9dae	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9db1	cd 05 aa 	. . . 
 	jp la299h		;9db4	c3 99 a2 	. . . 
 l9db7h:
@@ -8589,7 +8605,7 @@ l9db7h:
 	call THERE_IS_A_BRICK		;9dbd	cd a8 ad 	. . . 
 	jp nc,la299h		;9dc0	d2 99 a2 	. . . 
 	call sub_a810h		;9dc3	cd 10 a8 	. . . 
-	call sub_9b5bh		;9dc6	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9dc6	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9dc9	cd 05 aa 	. . . 
 	jp la299h		;9dcc	c3 99 a2 	. . . 
 l9dcfh:
@@ -8686,7 +8702,7 @@ l9e99h:
 	ld (BRICK_COL),a		;9ea2	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9ea5	cd a8 ad 	. . . 
 	jp nc,la299h		;9ea8	d2 99 a2 	. . . 
-	call sub_9b5bh		;9eab	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9eab	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9eae	cd 05 aa 	. . . 
 	jp la299h		;9eb1	c3 99 a2 	. . . 
 l9eb4h:
@@ -8697,7 +8713,7 @@ l9eb4h:
 	call THERE_IS_A_BRICK		;9ec0	cd a8 ad 	. . . 
 	jp nc,la299h		;9ec3	d2 99 a2 	. . . 
 	call la901h		;9ec6	cd 01 a9 	. . . 
-	call sub_9b80h		;9ec9	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;9ec9	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9ecc	cd 05 aa 	. . . 
 	jp la299h		;9ecf	c3 99 a2 	. . . 
 l9ed2h:
@@ -8708,7 +8724,7 @@ l9ed2h:
 	call THERE_IS_A_BRICK		;9ede	cd a8 ad 	. . . 
 	jp nc,la299h		;9ee1	d2 99 a2 	. . . 
 	call sub_a810h		;9ee4	cd 10 a8 	. . . 
-	call sub_9b5bh		;9ee7	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9ee7	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9eea	cd 05 aa 	. . . 
 	jp la299h		;9eed	c3 99 a2 	. . . 
 l9ef0h:
@@ -8724,7 +8740,7 @@ l9ef0h:
 	ld (ix+000h),a		;9f0b	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;9f0e	3a 3d e5 	: = . 
 	ld (ix+001h),a		;9f11	dd 77 01 	. w . 
-	call sub_9b5bh		;9f14	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9f14	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9f17	cd 05 aa 	. . . 
 	jp la299h		;9f1a	c3 99 a2 	. . . 
 l9f1dh:
@@ -8733,7 +8749,7 @@ l9f1dh:
 	call THERE_IS_A_BRICK		;9f23	cd a8 ad 	. . . 
 	jp nc,la299h		;9f26	d2 99 a2 	. . . 
 	call la901h		;9f29	cd 01 a9 	. . . 
-	call sub_9b80h		;9f2c	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;9f2c	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9f2f	cd 05 aa 	. . . 
 	jp la299h		;9f32	c3 99 a2 	. . . 
 l9f35h:
@@ -8744,7 +8760,7 @@ l9f35h:
 	call THERE_IS_A_BRICK		;9f41	cd a8 ad 	. . . 
 	jp nc,l9f53h		;9f44	d2 53 9f 	. S . 
 	call la901h		;9f47	cd 01 a9 	. . . 
-	call sub_9b80h		;9f4a	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;9f4a	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9f4d	cd 05 aa 	. . . 
 	jp la299h		;9f50	c3 99 a2 	. . . 
 l9f53h:
@@ -8753,7 +8769,7 @@ l9f53h:
 	call THERE_IS_A_BRICK		;9f59	cd a8 ad 	. . . 
 	jp nc,la299h		;9f5c	d2 99 a2 	. . . 
 	call sub_a810h		;9f5f	cd 10 a8 	. . . 
-	call sub_9b5bh		;9f62	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;9f62	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9f65	cd 05 aa 	. . . 
 	jp la299h		;9f68	c3 99 a2 	. . . 
 l9f6bh:
@@ -8848,7 +8864,7 @@ la030h:
 	ld (BRICK_COL),a		;a039	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a03c	cd a8 ad 	. . . 
 	jp nc,la299h		;a03f	d2 99 a2 	. . . 
-	call sub_9b5bh		;a042	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a042	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a045	cd 05 aa 	. . . 
 	jp la299h		;a048	c3 99 a2 	. . . 
 la04bh:
@@ -8859,7 +8875,7 @@ la04bh:
 	call THERE_IS_A_BRICK		;a057	cd a8 ad 	. . . 
 	jp nc,la299h		;a05a	d2 99 a2 	. . . 
 	call la901h		;a05d	cd 01 a9 	. . . 
-	call sub_9b80h		;a060	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a060	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a063	cd 05 aa 	. . . 
 	jp la299h		;a066	c3 99 a2 	. . . 
 la069h:
@@ -8870,7 +8886,7 @@ la069h:
 	call THERE_IS_A_BRICK		;a075	cd a8 ad 	. . . 
 	jp nc,la299h		;a078	d2 99 a2 	. . . 
 	call sub_a810h		;a07b	cd 10 a8 	. . . 
-	call sub_9b5bh		;a07e	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a07e	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a081	cd 05 aa 	. . . 
 	jp la299h		;a084	c3 99 a2 	. . . 
 la087h:
@@ -8887,7 +8903,7 @@ la090h:
 	ld (ix+000h),a		;a0a2	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;a0a5	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a0a8	dd 77 01 	. w . 
-	call sub_9b5bh		;a0ab	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a0ab	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a0ae	cd 05 aa 	. . . 
 	jp la299h		;a0b1	c3 99 a2 	. . . 
 la0b4h:
@@ -8897,7 +8913,7 @@ la0b4h:
 	jp nc,la299h		;a0bd	d2 99 a2 	. . . 
 la0c0h:
 	call la901h		;a0c0	cd 01 a9 	. . . 
-	call sub_9b80h		;a0c3	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a0c3	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a0c6	cd 05 aa 	. . . 
 	jp la299h		;a0c9	c3 99 a2 	. . . 
 la0cch:
@@ -8908,7 +8924,7 @@ la0cch:
 	call THERE_IS_A_BRICK		;a0d8	cd a8 ad 	. . . 
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
 	call la901h		;a0de	cd 01 a9 	. . . 
-	call sub_9b80h		;a0e1	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a0e1	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a0e4	cd 05 aa 	. . . 
 	jp la299h		;a0e7	c3 99 a2 	. . . 
 la0eah:
@@ -8917,7 +8933,7 @@ la0eah:
 	call THERE_IS_A_BRICK		;a0f0	cd a8 ad 	. . . 
 	jp nc,la299h		;a0f3	d2 99 a2 	. . . 
 	call sub_a810h		;a0f6	cd 10 a8 	. . . 
-	call sub_9b5bh		;a0f9	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a0f9	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a0fc	cd 05 aa 	. . . 
 	jp la299h		;a0ff	c3 99 a2 	. . . 
 la102h:
@@ -9012,7 +9028,7 @@ la1c7h:
 	ld (BRICK_COL),a		;a1d0	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a1d3	cd a8 ad 	. . . 
 	jp nc,la299h		;a1d6	d2 99 a2 	. . . 
-	call sub_9b5bh		;a1d9	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a1d9	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a1dc	cd 05 aa 	. . . 
 	jp la299h		;a1df	c3 99 a2 	. . . 
 la1e2h:
@@ -9023,7 +9039,7 @@ la1e2h:
 	call THERE_IS_A_BRICK		;a1ee	cd a8 ad 	. . . 
 	jp nc,la299h		;a1f1	d2 99 a2 	. . . 
 	call la901h		;a1f4	cd 01 a9 	. . . 
-	call sub_9b80h		;a1f7	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a1f7	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a1fa	cd 05 aa 	. . . 
 	jp la299h		;a1fd	c3 99 a2 	. . . 
 la200h:
@@ -9034,7 +9050,7 @@ la200h:
 	call THERE_IS_A_BRICK		;a20c	cd a8 ad 	. . . 
 	jp nc,la299h		;a20f	d2 99 a2 	. . . 
 	call sub_a810h		;a212	cd 10 a8 	. . . 
-	call sub_9b5bh		;a215	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a215	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a218	cd 05 aa 	. . . 
 	jp la299h		;a21b	c3 99 a2 	. . . 
 la21eh:
@@ -9050,7 +9066,7 @@ la21eh:
 	ld (ix+000h),a		;a239	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;a23c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a23f	dd 77 01 	. w . 
-	call sub_9b5bh		;a242	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a242	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a245	cd 05 aa 	. . . 
 	jp la299h		;a248	c3 99 a2 	. . . 
 la24bh:
@@ -9059,7 +9075,7 @@ la24bh:
 	call THERE_IS_A_BRICK		;a251	cd a8 ad 	. . . 
 	jp nc,la299h		;a254	d2 99 a2 	. . . 
 	call la901h		;a257	cd 01 a9 	. . . 
-	call sub_9b80h		;a25a	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a25a	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a25d	cd 05 aa 	. . . 
 	jp la299h		;a260	c3 99 a2 	. . . 
 la263h:
@@ -9070,7 +9086,7 @@ la263h:
 	call THERE_IS_A_BRICK		;a26f	cd a8 ad 	. . . 
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
 	call la901h		;a275	cd 01 a9 	. . . 
-	call sub_9b80h		;a278	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a278	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a27b	cd 05 aa 	. . . 
 	jp la299h		;a27e	c3 99 a2 	. . . 
 la281h:
@@ -9079,7 +9095,7 @@ la281h:
 	call THERE_IS_A_BRICK		;a287	cd a8 ad 	. . . 
 	jp nc,la299h		;a28a	d2 99 a2 	. . . 
 	call sub_a810h		;a28d	cd 10 a8 	. . . 
-	call sub_9b5bh		;a290	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a290	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a293	cd 05 aa 	. . . 
 	jp la299h		;a296	c3 99 a2 	. . . 
 la299h:
@@ -9120,7 +9136,7 @@ la2dfh:
 	ld a,(0e58ch)		;a2df	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a2e2	32 aa e2 	2 . . 
 	call sub_a3d1h		;a2e5	cd d1 a3 	. . . 
-	call sub_9b80h		;a2e8	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a2e8	cd 80 9b 	. . . 
 	jp la326h		;a2eb	c3 26 a3 	. & . 
 la2eeh:
 	ld a,(0e58ah)		;a2ee	3a 8a e5 	: . . 
@@ -9135,12 +9151,12 @@ la2eeh:
 	ld (ix+000h),a		;a309	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;a30c	3a 3d e5 	: = . 
 	ld (ix+001h),a		;a30f	dd 77 01 	. w . 
-	call sub_9b5bh		;a312	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a312	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a315	cd 05 aa 	. . . 
 	jp la326h		;a318	c3 26 a3 	. & . 
 la31bh:
 	call sub_a3d1h		;a31b	cd d1 a3 	. . . 
-	call sub_9b80h		;a31e	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a31e	cd 80 9b 	. . . 
 	jp la326h		;a321	c3 26 a3 	. & . 
 la324h:
 	xor a			;a324	af 	. 
@@ -9161,7 +9177,7 @@ sub_a328h:
 	call THERE_IS_A_BRICK		;a33f	cd a8 ad 	. . . 
 	jp nc,la351h		;a342	d2 51 a3 	. Q . 
 	call sub_a810h		;a345	cd 10 a8 	. . . 
-	call sub_9b5bh		;a348	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a348	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a34b	cd 05 aa 	. . . 
 	jp la3d0h		;a34e	c3 d0 a3 	. . . 
 la351h:
@@ -9184,7 +9200,7 @@ la367h:
 	call THERE_IS_A_BRICK		;a37c	cd a8 ad 	. . . 
 	jp nc,la38eh		;a37f	d2 8e a3 	. . . 
 	call sub_a810h		;a382	cd 10 a8 	. . . 
-	call sub_9b5bh		;a385	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a385	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a388	cd 05 aa 	. . . 
 	jp la3d0h		;a38b	c3 d0 a3 	. . . 
 la38eh:
@@ -9195,7 +9211,7 @@ la38eh:
 	call THERE_IS_A_BRICK		;a39a	cd a8 ad 	. . . 
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
 	call la901h		;a3a0	cd 01 a9 	. . . 
-	call sub_9b80h		;a3a3	cd 80 9b 	. . . 
+	call BALL_HORIZONTAL_BOUNCE		;a3a3	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a3a6	cd 05 aa 	. . . 
 	jp la3d0h		;a3a9	c3 d0 a3 	. . . 
 la3ach:
@@ -9208,7 +9224,7 @@ la3afh:
 	call THERE_IS_A_BRICK		;a3bb	cd a8 ad 	. . . 
 	jp nc,la3cdh		;a3be	d2 cd a3 	. . . 
 	call sub_a810h		;a3c1	cd 10 a8 	. . . 
-	call sub_9b5bh		;a3c4	cd 5b 9b 	. [ . 
+	call BALL_VERTICAL_BOUNCE		;a3c4	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a3c7	cd 05 aa 	. . . 
 	jp la3d0h		;a3ca	c3 d0 a3 	. . . 
 la3cdh:
