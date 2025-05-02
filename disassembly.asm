@@ -4019,7 +4019,7 @@ l68dch:
 	cp VAUS_ACTION_STATE_SHRINKING		    ;68f1	fe 03
 	jp z,vaus_do_shrinking		                        ;68f3	ca 78 6d
 	cp VAUS_ACTION_STATE_LASER		        ;68f6	fe 04
-	jp z,l6f31h		                        ;68f8	ca 31 6f
+	jp z,vaus_gets_lasers		                        ;68f8	ca 31 6f
 	cp VAUS_ACTION_STATE_UNLASER		    ;68fb	fe 05
 	jp z,l6cceh		                        ;68fd	ca ce 6c
 	cp VAUS_ACTION_STATE_EXPLODING		    ;6900	fe 06
@@ -4934,73 +4934,109 @@ l6f12h:
 	ld (GAME_TRANSITION_ACTION),a	;6f2d	32 0a e0
 	ret			                    ;6f30	c9
 
-l6f31h:
+vaus_gets_lasers:
     ; VAUS_ACTION_STATE_LASER
+    
+    ; Got laser
 	ld (ix+VAUS_TABLE_IDX_HAS_LASER), 1		;6f31	dd 36 06 01
-	ld a,(ix+005h)		;6f35	dd 7e 05 	. ~ . 
-	cp 002h		;6f38	fe 02 	. . 
-	jp z,l6fe0h		;6f3a	ca e0 6f 	. . o 
     
+    ; Exit if unlasering
+	ld a,(ix+VAUS_ACTION_STATE_UNLASER)		;6f35	dd 7e 05
+	cp 2		                            ;6f38	fe 02
+	jp z,l6fe0h		                        ;6f3a	ca e0 6f
+
     ; Next lasering transformation step
-	inc (ix+VAUS_TABLE_IDX_LASERING_STEP)		;6f3d	dd 34 02
-	ld a,(ix+VAUS_TABLE_IDX_LASERING_STEP)		;6f40	dd 7e 02
-	cp 10		                                ;6f43	fe 0a
-	jp nz,vaus_follow_ball_demo_or_read_controls		;6f45	c2 0f 69 	. . i 
-    
+	inc (ix+VAUS_TABLE_IDX_LASERING_STEP)		    ;6f3d	dd 34 02
+	ld a,(ix+VAUS_TABLE_IDX_LASERING_STEP)		    ;6f40	dd 7e 02
+	cp 10		                                    ;6f43	fe 0a
+	jp nz,vaus_follow_ball_demo_or_read_controls	;6f45	c2 0f 69
+
     ; Transformation completed
-	ld (ix+VAUS_TABLE_IDX_LASERING_STEP),0		;6f48	dd 36 02 00
+	ld (ix+VAUS_TABLE_IDX_LASERING_STEP), 0		    ;6f48	dd 36 02 00
     
-	ld a,(ix+007h)		;6f4c	dd 7e 07 	. ~ . 
-	cp 001h		;6f4f	fe 01 	. . 
-	jp z,l6f80h		;6f51	ca 80 6f 	. . o 
-	cp 002h		;6f54	fe 02 	. . 
-	jp z,l6fb6h		;6f56	ca b6 6f 	. . o 
-	cp 003h		;6f59	fe 03 	. . 
-	jp z,l6fb6h		;6f5b	ca b6 6f 	. . o 
-	ld a,004h		;6f5e	3e 04 	> . 
-	add a,(iy+001h)		;6f60	fd 86 01 	. . . 
-	ld (iy+001h),a		;6f63	fd 77 01 	. w . 
-	ld a,0fch		;6f66	3e fc 	> . 
-	add a,(iy+009h)		;6f68	fd 86 09 	. . . 
-	ld (iy+009h),a		;6f6b	fd 77 09 	. w . 
-	ld a,0e8h		;6f6e	3e e8 	> . 
-	add a,(iy+00dh)		;6f70	fd 86 0d 	. . . 
-	ld (iy+00dh),a		;6f73	fd 77 0d 	. w . 
+	ld a,(ix+VAUS_ACTION_STATE_THROUGH_PORTAL)		;6f4c	dd 7e 07
+	cp 1		                                    ;6f4f	fe 01
+	jp z,lasering_step_1		                    ;6f51	ca 80 6f
+	cp 2		                                    ;6f54	fe 02
+	jp z,lasering_step_2_and_3		                ;6f56	ca b6 6f
+	cp 3		                                    ;6f59	fe 03
+	jp z,lasering_step_2_and_3		                ;6f5b	ca b6 6f
+
+    ; Move right
+	ld a,4		                                        ;6f5e	3e 04
+	add a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6f60	fd 86 01
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6f63	fd 77 01
+
+	; Move left
+    ld a, -4		                                    ;6f66	3e fc
+	add a,(iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6f68	fd 86 09
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6f6b	fd 77 09
+
+	; Move left
+    ld a, - 24		                                    ;6f6e	3e e8
+	add a,(iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6f70	fd 86 0d
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6f73	fd 77 0d
+
+    ; Next lasering transformation step
 	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6f76	dd 34 07
 	ld (ix+VAUS_TABLE_IDX_RESIZING),VAUS_ACTION_STATE_KEEP	;6f79	dd 36 05 01
-	jp vaus_follow_ball_demo_or_read_controls		;6f7d	c3 0f 69 	. . i 
-l6f80h:
-	ld a,004h		;6f80	3e 04 	> . 
-	add a,(iy+001h)		;6f82	fd 86 01 	. . . 
-	ld (iy+001h),a		;6f85	fd 77 01 	. w . 
-	ld a,0f4h		;6f88	3e f4 	> . 
-	add a,(iy+009h)		;6f8a	fd 86 09 	. . . 
-	ld (iy+009h),a		;6f8d	fd 77 09 	. w . 
-	ld (iy+002h),014h		;6f90	fd 36 02 14 	. 6 . . 
-	ld (iy+006h),010h		;6f94	fd 36 06 10 	. 6 . . 
-	ld (iy+00ah),01ch		;6f98	fd 36 0a 1c 	. 6 . . 
-	ld (iy+00eh),018h		;6f9c	fd 36 0e 18 	. 6 . . 
-	ld (iy+003h),00eh		;6fa0	fd 36 03 0e 	. 6 . . 
-	ld (iy+007h),00eh		;6fa4	fd 36 07 0e 	. 6 . . 
-	ld (iy+00bh),008h		;6fa8	fd 36 0b 08 	. 6 . . 
-	ld (iy+00fh),00eh		;6fac	fd 36 0f 0e 	. 6 . . 
-	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fb0	dd 34 07
-	jp vaus_follow_ball_demo_or_read_controls		;6fb3	c3 0f 69 	. . i 
-l6fb6h:
-	ld a,0fch		;6fb6	3e fc 	> . 
-	add a,(iy+001h)		;6fb8	fd 86 01 	. . . 
-	ld (iy+001h),a		;6fbb	fd 77 01 	. w . 
-	ld a,004h		;6fbe	3e 04 	> . 
-	add a,(iy+00dh)		;6fc0	fd 86 0d 	. . . 
-	ld (iy+00dh),a		;6fc3	fd 77 0d 	. w . 
+    
+    ; Done
+	jp vaus_follow_ball_demo_or_read_controls		        ;6f7d	c3 0f 69
+
+lasering_step_1:
+    ; Move right
+	ld a, 4		                                            ;6f80	3e 04
+	add a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		    ;6f82	fd 86 01
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		    ;6f85	fd 77 01
+
+	; Move left
+    ld a, -12		                                        ;6f88	3e f4
+	add a,(iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		    ;6f8a	fd 86 09
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		    ;6f8d	fd 77 09
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 20	    ;6f90	fd 36 02 14     Left edge
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 16		;6f94	fd 36 06 10     Gray center
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 28		;6f98	fd 36 0a 1c     Red central part of the firing Vaus
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 24		;6f9c	fd 36 0e 18     Right edge
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6fa0	fd 36 03 0e 	Gray
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6fa4	fd 36 07 0e 	Gray
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  8		;6fa8	fd 36 0b 08 	Red
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6fac	fd 36 0f 0e 	Gray
+	
+    ; Next lasering transformation step 
+    inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fb0	dd 34 07
+
+    ; Done
+	jp vaus_follow_ball_demo_or_read_controls		        ;6fb3	c3 0f 69
+
+lasering_step_2_and_3:
+    ; Move left
+	ld a, -4		                                    ;6fb6	3e fc
+	add a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6fb8	fd 86 01
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6fbb	fd 77 01
+
+    ; Move right
+	ld a, 4		                                        ;6fbe	3e 04
+	add a,(iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6fc0	fd 86 0d
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6fc3	fd 77 0d
+
+    ; Next lasering transformation step
 	inc (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fc6	dd 34 07
 	ld a,(ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP)		;6fc9	dd 7e 07
 	cp 4		                                            ;6fcc	fe 04
-	jp nz,vaus_follow_ball_demo_or_read_controls		;6fce	c2 0f 69 	. . i 
-	ld (ix+VAUS_TABLE_IDX_RESIZING),VAUS_ACTION_STATE_WAIT_READY		;6fd1	dd 36 05 00
+	jp nz,vaus_follow_ball_demo_or_read_controls		    ;6fce	c2 0f 69
+
+    ; Transformation done
+	ld (ix+VAUS_TABLE_IDX_RESIZING),VAUS_ACTION_STATE_WAIT_READY	;6fd1	dd 36 05 00
 	ld (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP), 0		        ;6fd5	dd 36 07 00
-	ld (ix+000h),001h		;6fd9	dd 36 00 01 	. 6 . . 
-	jp vaus_follow_ball_demo_or_read_controls		;6fdd	c3 0f 69 	. . i 
+
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_KEEP     ;6fd9	dd 36 00 01
+
+    ; Done
+	jp vaus_follow_ball_demo_or_read_controls		                ;6fdd	c3 0f 69
+
 l6fe0h:
 	ld (ix+000h),003h		;6fe0	dd 36 00 03 	. 6 . . 
 	jp vaus_follow_ball_demo_or_read_controls		;6fe4	c3 0f 69 	. . i 
