@@ -370,10 +370,9 @@ TRANSITION_START_LEVEL:
 	jp go_on_after_transition	;41bd	c3 da 41
     
 TRANSITION_PLAY_LEVEL:
-    ;ToDo: figure out what are these
-	call sub_6835h		        ;41c0	cd 35 68    ToDo
-	call UPDATE_OBJECTS		    ;41c3	cd f4 95
-	call CHECK_DEMO_TIMEOUT		;41c6	cd 41 72
+	call EXECUTE_VAUS_ACTION_AND_LASERS_STEP_AND_PORTAL_ANIMATION   ;41c0	cd 35 68    Several functions in one call
+	call UPDATE_OBJECTS		                                        ;41c3	cd f4 95
+	call CHECK_DEMO_TIMEOUT		                                    ;41c6	cd 41 72
 	
     ; Scores of the right
     ld a, 1 		            ;41c9	3e 01
@@ -3891,11 +3890,15 @@ include 'level_colors.asm'
 include 'level_maps.asm'
 
 
-sub_6835h:
-	call EXECUTE_VAUS_ACTION		;6835	cd c4 68 	. . h 
-	call LASERS_STEP		;6838	cd 39 70 	. 9 p 
-	call PORTAL_ANIMATION		;683b	cd 3f 68 	. ? h 
-	ret			;683e	c9 	. 
+; Several operations in one function:
+; - Execute the corresponding Vaus action
+; - Check and perform lasering
+; - Check and perform portal animation
+EXECUTE_VAUS_ACTION_AND_LASERS_STEP_AND_PORTAL_ANIMATION:
+	call EXECUTE_VAUS_ACTION	;6835	cd c4 68
+	call LASERS_STEP		    ;6838	cd 39 70
+	call PORTAL_ANIMATION		;683b	cd 3f 68
+	ret			                ;683e	c9
 
 ; Animation of the open portal
 ; ToDo
