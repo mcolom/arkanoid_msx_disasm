@@ -3892,7 +3892,7 @@ include 'level_maps.asm'
 
 
 sub_6835h:
-	call sub_68c4h		;6835	cd c4 68 	. . h 
+	call EXECUTE_VAUS_ACTION		;6835	cd c4 68 	. . h 
 	call LASERS_STEP		;6838	cd 39 70 	. 9 p 
 	call PORTAL_ANIMATION		;683b	cd 3f 68 	. ? h 
 	ret			;683e	c9 	. 
@@ -3991,8 +3991,15 @@ l68bch:
 	ld l,l			;68c2	6d 	m 
     db 0x21         ;68c3   21
 
-; ToDo
-sub_68c4h:
+; ToDo: complete
+; Executes a Vaus action:
+; - Follow the ball when in the demo 
+; - Enlarge
+; - Shrink
+; - Get lasers
+; - Explode
+; - Go through the portal
+EXECUTE_VAUS_ACTION:
     ; Reset the position of Vaus if we're starting a level
     ld a, (RESET_VAUS_SPR_POSITION)  ;68c4  3a a9 e5
     cp 1                             ;68c7  fe 01
@@ -4011,21 +4018,21 @@ l68dch:
 	ld iy,SPR_PARAMS_BASE	;68e0	fd 21 cd e0
     
     ; Choose action on VAUS_TABLE_ACTION_STATE
-	ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)   ;68e4	dd 7e 00
-	cp VAUS_ACTION_STATE_KEEP		        ;68e7	fe 01
-	jp z,vaus_follow_ball_demo_or_read_controls		                        ;68e9	ca 0f 69
-	cp VAUS_ACTION_STATE_ENLARGING		    ;68ec	fe 02
-	jp z,vaus_do_enlarge		                        ;68ee	ca 3e 6c
-	cp VAUS_ACTION_STATE_SHRINKING		    ;68f1	fe 03
-	jp z,vaus_do_shrinking		                        ;68f3	ca 78 6d
-	cp VAUS_ACTION_STATE_LASER		        ;68f6	fe 04
-	jp z,vaus_gets_lasers		                        ;68f8	ca 31 6f
-	cp VAUS_ACTION_STATE_UNLASER		    ;68fb	fe 05
-	jp z,l6cceh		                        ;68fd	ca ce 6c
-	cp VAUS_ACTION_STATE_EXPLODING		    ;6900	fe 06
-	jp z,l6e0eh		                        ;6902	ca 0e 6e
-	cp VAUS_ACTION_STATE_THROUGH_PORTAL		;6905	fe 07
-	jp z,l6adbh		                        ;6907	ca db 6a
+	ld a,(ix+VAUS_TABLE_IDX_ACTION_STATE)       ;68e4	dd 7e 00
+	cp VAUS_ACTION_STATE_KEEP		            ;68e7	fe 01
+	jp z,vaus_follow_ball_demo_or_read_controls ;68e9	ca 0f 69
+	cp VAUS_ACTION_STATE_ENLARGING		        ;68ec	fe 02
+	jp z,vaus_do_enlarge		                ;68ee	ca 3e 6c
+	cp VAUS_ACTION_STATE_SHRINKING		        ;68f1	fe 03
+	jp z,vaus_do_shrinking		                ;68f3	ca 78 6d
+	cp VAUS_ACTION_STATE_LASER		            ;68f6	fe 04
+	jp z,vaus_gets_lasers		                ;68f8	ca 31 6f
+	cp VAUS_ACTION_STATE_UNLASER		        ;68fb	fe 05
+	jp z,l6cceh		                            ;68fd	ca ce 6c
+	cp VAUS_ACTION_STATE_EXPLODING		        ;6900	fe 06
+	jp z,l6e0eh		                            ;6902	ca 0e 6e
+	cp VAUS_ACTION_STATE_THROUGH_PORTAL		    ;6905	fe 07
+	jp z,l6adbh		                            ;6907	ca db 6a
     
     ; Transformation completed, keep current state
 	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
