@@ -4034,7 +4034,7 @@ l68dch:
 	cp VAUS_ACTION_STATE_UNLASER		        ;68fb	fe 05
 	jp z,vaus_unlaser		                            ;68fd	ca ce 6c
 	cp VAUS_ACTION_STATE_EXPLODING		        ;6900	fe 06
-	jp z,l6e0eh		                            ;6902	ca 0e 6e
+	jp z,vaus_destroyed		                            ;6902	ca 0e 6e
 	cp VAUS_ACTION_STATE_THROUGH_PORTAL		    ;6905	fe 07
 	jp z,l6adbh		                            ;6907	ca db 6a
     
@@ -4865,41 +4865,53 @@ l6dffh:
 	ld (ix+VAUS_TABLE_IDX_LASER_TRANSFORMATION_STEP), 0		        ;6e07	dd 36 07 00
 	jp vaus_follow_ball_demo_or_read_controls		                ;6e0b	c3 0f 69
 
-l6e0eh:
+vaus_destroyed:
     ; VAUS_ACTION_STATE_EXPLODING
 	ld (ix+VAUS_TABLE_IDX_HAS_LASER), 0		        ;6e0e	dd 36 06 00
     
     ; It uses two variables VAUS_TABLE_IDX_DESTRUCTION_STEP1 and
     ; VAUS_TABLE_IDX_DESTRUCTION_STEP2 to control the animation steps.
+    
+    ; Exit if count not yet reached
 	inc (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP1)		;6e12	dd 34 03
 	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP1)		;6e15	dd 7e 03
 	cp 12		                                    ;6e18	fe 0c
 	ret nz			                                ;6e1a	c0
-	
+
     ld (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP1), 0		;6e1b	dd 36 03 00
 	inc (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6e1f	dd 34 04
 	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6e22	dd 7e 04
 	cp 1		                                    ;6e25	fe 01
 	jp nz,l6e64h		                            ;6e27	c2 64 6e
 
-	ld a,(iy+005h)		;6e2a	fd 7e 05 	. ~ . 
-	add a,010h		;6e2d	c6 10 	. . 
-	ld (iy+009h),a		;6e2f	fd 77 09 	. w . 
-	add a,010h		;6e32	c6 10 	. . 
-    ; ToDo: put the symbols of all these variables!
-	ld (iy+00dh),a		;6e34	fd 77 0d 	. w . 
-	ld (iy+003h),008h		;6e37	fd 36 03 08 	. 6 . . 
-	ld (iy+007h),00eh		;6e3b	fd 36 07 0e 	. 6 . . 
-	ld (iy+00bh),008h		;6e3f	fd 36 0b 08 	. 6 . . 
-	ld (iy+00fh),000h		;6e43	fd 36 0f 00 	. 6 . . 
-	ld (iy+002h),020h		;6e47	fd 36 02 20 	. 6 .   
-	ld (iy+006h),024h		;6e4b	fd 36 06 24 	. 6 . $ 
-	ld (iy+00ah),028h		;6e4f	fd 36 0a 28 	. 6 . ( 
-	ld (iy+00eh),001h		;6e53	fd 36 0e 01 	. 6 . . 
-	ld (iy+00bh),008h		;6e57	fd 36 0b 08 	. 6 . . 
-	ld (iy+00fh),000h		;6e5b	fd 36 0f 00 	. 6 . . 
-	ld (iy+003h),008h		;6e5f	fd 36 03 08 	. 6 . . 
-	ret			;6e63	c9 	. 
+    ; Move right
+	ld a,(iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e2a	fd 7e 05
+	add a, 16		                                    ;6e2d	c6 10
+
+    ; Move right
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e2f	fd 77 09
+	add a, 16		                                    ;6e32	c6 10
+
+    ; Set color
+    ; This seems to be useless, since right after it's set to transparent.
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		    ;6e34	fd 77 0d
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  8		;6e37	fd 36 03 08     Red
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6e3b	fd 36 07 0e     Gray
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  8		;6e3f	fd 36 0b 08     Red
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  0		;6e43	fd 36 0f 00     Transparent
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 32	    ;6e47	fd 36 02 20     Left corner, breaking
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 36		;6e4b	fd 36 06 24     Center, breaking
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM), 40		;6e4f	fd 36 0a 28     Right edge, breaking
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM),  1		;6e53	fd 36 0e 01
+
+    ; This code is redundant, since this was already set in 6e37
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 8		;6e57	fd 36 0b 08     Red
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 0		;6e5b	fd 36 0f 00     Transparent
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 8		;6e5f	fd 36 03 08     Red
+	ret			                                            ;6e63	c9
+
 l6e64h:
 	ld a,(ix+004h)		;6e64	dd 7e 04 	. ~ . 
 	cp 003h		;6e67	fe 03 	. . 
