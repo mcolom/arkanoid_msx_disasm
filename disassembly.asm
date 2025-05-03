@@ -3289,6 +3289,7 @@ SCORE_LETTERS_DUP:
 
 ; ToDo: this looks like an structure similar to SPRITE_PATTERN_POINTERS
 ; Give proper names.
+; ToDo: decode how the indirection works exactly.
 VRAM_DATA_POINTERS: ; 552d
 dw VRAM_DATA_1 ; Points to 0x5535
 dw VRAM_DATA_2 ; Points to 0x55b5
@@ -3940,7 +3941,7 @@ PORTAL_ANIMATION:
 	cp 001h		;6847	fe 01 	. . 
 	jp z,l686fh		;6849	ca 6f 68 	. o h 
 	ld b,004h		;684c	06 04 	. . 
-	ld hl,l68b8h		;684e	21 b8 68 	! . h 
+	ld hl,TBL_68b8		;684e	21 b8 68 	! . h 
 	ld iy,01a98h		;6851	fd 21 98 1a 	. ! . . 
 l6855h:
 	push iy		;6855	fd e5 	. . 
@@ -3983,7 +3984,7 @@ l6891h:
 	sla a		;6896	cb 27 	. ' 
 	ld l,a			;6898	6f 	o 
 	ld h,000h		;6899	26 00 	& . 
-	ld de,l68bch		;689b	11 bc 68 	. . h 
+	ld de,TBL_68bc		;689b	11 bc 68 	. . h 
 	add hl,de			;689e	19 	. 
 	push hl			;689f	e5 	. 
 	pop ix		;68a0	dd e1 	. . 
@@ -4010,17 +4011,12 @@ l68a7h:
 	djnz l68a7h		    ;68b5	10 f0
 	ret			        ;68b7	c9
 
-l68b8h:
-	ld d,017h		;68b8	16 17 	. . 
-	jr l68d5h		;68ba	18 19 	. . 
-l68bch:
-	ld a,(de)			;68bc	1a 	. 
-	dec de			;68bd	1b 	. 
-	inc e			;68be	1c 	. 
-	dec e			;68bf	1d 	. 
-	ld e,01fh		;68c0	1e 1f 	. . 
-	ld l,l			;68c2	6d 	m 
-    db 0x21         ;68c3   21
+TBL_68b8:
+    db 22, 23, 24, 25
+
+TBL_68bc:
+    db 26, 27, 28, 29, 30, 31
+    db 109, 33
 
 ; Executes a Vaus action:
 ; - Follow the ball when in the demo 
@@ -6672,15 +6668,15 @@ l78ddh:
     ; Skip if alien is not active
 	ld a,(hl)		;78dd	7e
 	or a			;78de	b7
-	jp z,l7935h		;78df	ca 35 79
+	jp z,l7935h		;78df	ca 35 79    Done, next alien
 
-    ; ToDo: skip if alien...
-	push hl			;78e2	e5 	. 
-	inc hl			;78e3	23 	# 
-	ld a,(hl)			;78e4	7e 	~ 
-	or a			;78e5	b7 	. 
-	pop hl			;78e6	e1 	. 
-	jp nz,l7935h		;78e7	c2 35 79 	. 5 y 
+    ; ToDo: skip if alien is exploding
+	push hl			;78e2	e5
+	inc hl			;78e3	23  Point to ALIEN_TABLE_IDX_EXPLODING
+	ld a,(hl)		;78e4	7e
+	or a			;78e5	b7
+	pop hl			;78e6	e1
+	jp nz,l7935h	;78e7	c2 35 79    Done, next alien
 
 	ld a,(ix+SPR_PARAMS_IDX_Y)	;78ea	dd 7e 00
 	sub 16		                ;78ed	d6 10
