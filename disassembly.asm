@@ -2639,7 +2639,7 @@ l4eb4h:
 
     ; Clear story-writting variables
 	ld (STORY_WRITE_ROW),hl		    ;4ec4	22 0f e0
-	ld (STORY_CHAR_INDEX),hl	    ;4ec7	22 11 e0
+	ld (STORY_MSG_INDEX),hl	    ;4ec7	22 11 e0
 	ld (STORY_ALREADY_WRITTEN),hl	;4eca	22 13 e0
 
     ; Clear sound
@@ -2688,11 +2688,11 @@ l4effh:
 	ld e,(ix+000h)		;4f1b	dd 5e 00 	. ^ . 
 	ld d,(ix+001h)		;4f1e	dd 56 01 	. V . 
 	ex de,hl			;4f21	eb 	. 
-	ld a,(0e010h)		;4f22	3a 10 e0 	: . . 
+	ld a,(STORY_CHAR_OF_LINE_INDEX)		;4f22	3a 10 e0 	: . . 
 	ld e,a			;4f25	5f 	_ 
 	ld d,000h		;4f26	16 00 	. . 
 	add hl,de			;4f28	19 	. 
-	ld a,(STORY_CHAR_INDEX)		;4f29	3a 11 e0 	: . . 
+	ld a,(STORY_MSG_INDEX)		;4f29	3a 11 e0 	: . . 
 	ld e,a			;4f2c	5f 	_ 
 	ld d,000h		;4f2d	16 00 	. . 
 	add iy,de		;4f2f	fd 19 	. . 
@@ -2701,19 +2701,19 @@ l4effh:
 	jp z,l4f3ch		;4f36	ca 3c 4f 	. < O 
 	call WRTVRM		;4f39	cd 4d 00 	. M . 
 l4f3ch:
-	ld hl,STORY_CHAR_INDEX		;4f3c	21 11 e0 	! . . 
+	ld hl,STORY_MSG_INDEX		;4f3c	21 11 e0 	! . . 
 	inc (hl)			;4f3f	34 	4 
-	ld hl,0e010h		;4f40	21 10 e0 	! . . 
+	ld hl,STORY_CHAR_OF_LINE_INDEX		;4f40	21 10 e0 	! . . 
 	inc (hl)			;4f43	34 	4 
 l4f44h:
-	ld hl,0e012h		;4f44	21 12 e0 	! . . 
+	ld hl,STORY_CHARS_WRITTEN_TO_LINE		;4f44	21 12 e0 	! . . 
 	inc (hl)			;4f47	34 	4 
 	ld a,(hl)			;4f48	7e 	~ 
-	cp 01ah		;4f49	fe 1a 	. . 
+	cp STORY_CHARS_PER_LINE		;4f49	fe 1a 	. . 
 	ret nz			;4f4b	c0 	. 
 	ld (hl),000h		;4f4c	36 00 	6 . 
 	xor a			;4f4e	af 	. 
-	ld (0e010h),a		;4f4f	32 10 e0 	2 . . 
+	ld (STORY_CHAR_OF_LINE_INDEX),a		;4f4f	32 10 e0 	2 . . 
 
     ; Next row of the story.
     ; Exit if we've done already the STORY_NUM_LINES lines.
@@ -2726,6 +2726,7 @@ l4f44h:
 	ld hl,STORY_ALREADY_WRITTEN		;4f5a	21 13 e0
 	ld (hl), 1		                ;4f5d	36 01
 	ret			                    ;4f5f	c9
+
 l4f60h:
 	ld hl,0e014h		;4f60	21 14 e0 	! . . 
 	inc (hl)			;4f63	34 	4 
@@ -2744,7 +2745,7 @@ l4f7ah:
 	ld hl,00000h		;4f7a	21 00 00 	! . . 
 	ld (IN_DEMO),hl		;4f7d	22 0d e0 	" . . 
 	ld (STORY_WRITE_ROW),hl		;4f80	22 0f e0 	" . . 
-	ld (STORY_CHAR_INDEX),hl		;4f83	22 11 e0 	" . . 
+	ld (STORY_MSG_INDEX),hl		;4f83	22 11 e0 	" . . 
 	ld (STORY_ALREADY_WRITTEN),hl		;4f86	22 13 e0 	" . . 
 	ret			;4f89	c9 	. 
 
