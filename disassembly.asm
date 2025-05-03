@@ -389,30 +389,44 @@ TRANSITION_NEXT_LEVEL:
 ; ToDo
 go_on_after_transition:
     ; Related to playing sounds
-	ld hl,SOUND_RELATED_TABLE		;41da	21 20 e5 	!   . 
-	ld a,(hl)			;41dd	7e 	~ 
-	or a			;41de	b7 	. 
-	jp z,l40d7h		;41df	ca d7 40 	. . @ 
-	ld (SOUND_NUMBER),a		;41e2	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;41e5	cd e8 b4 	. . . 
-	ei			;41e8	fb 	. 
-	ld (hl),000h		;41e9	36 00 	6 . 
-	inc hl			;41eb	23 	# 
-	ld b,007h		;41ec	06 07 	. . 
-l41eeh:
-	ld a,(hl)			;41ee	7e 	~ 
-	dec hl			;41ef	2b 	+ 
-	ld (hl),a			;41f0	77 	w 
-	inc hl			;41f1	23 	# 
-	inc hl			;41f2	23 	# 
-	djnz l41eeh		;41f3	10 f9 	. . 
-	dec hl			;41f5	2b 	+ 
-	ld (hl),000h		;41f6	36 00 	6 . 
+    
+    ; Read a sound number from the table
+	ld hl,SOUNDS_BUFFER		;41da	21 20 e5
+	ld a,(hl)		                ;41dd	7e
+    
+    ; Done if it's zero
+	or a			                ;41de	b7
+	jp z,l40d7h		                ;41df	ca d7 40
 
-    ; Sound done
+    ; Play the sound
+	ld (SOUND_NUMBER),a	    ;41e2	32 c0 e5
+	call PLAY_SOUND		    ;41e5	cd e8 b4
+
+	ei			;41e8	fb
+    
+    ; Overwrite the sound code in the table with a zero
+	ld (hl), 0	;41e9	36 00
+
+    ; Clear 7 values in the table
+	inc hl			;41eb	23
+	ld b, 7		    ;41ec	06 07
+l41eeh:
+	ld a,(hl)		;41ee	7e
+	dec hl			;41ef	2b
+	ld (hl),a		;41f0	77
+	inc hl			;41f1	23
+	inc hl			;41f2	23
+	djnz l41eeh		;41f3	10
+
+	dec hl			;41f5	2b
+	ld (hl), 0		;41f6	36 00
+
+    ; Sound done, decrement counter
 	ld hl,SOUNDS_COUNT		;41f8	21 1e e5
-	dec (hl)			            ;41fb	35 	5
-	jp l40d7h		                ;41fc	c3 d7 40
+	dec (hl)			    ;41fb	35 	5
+    
+    ; Done
+	jp l40d7h		        ;41fc	c3 d7 40
 
 FILL_COLORS_ALL_SCREEN:
 	ld de,TITLE_COLORS_COMPRESSED   ;41ff	11 f4 93
@@ -3461,14 +3475,14 @@ ADD_SOUND:
 	or a			                ;5bf6	b7
 	jp nz,l5c11h		            ;5bf7	c2 11 5c
 
-    ; HL = SOUND_RELATED_TABLE + [SOUNDS_COUNT]
+    ; HL = SOUNDS_BUFFER + [SOUNDS_COUNT]
 	ld a,(SOUNDS_COUNT)		        ;5bfa	3a 1e e5
 	ld e,a			                ;5bfd	5f
 	ld d, 0		                    ;5bfe	16 00
-	ld hl,SOUND_RELATED_TABLE		;5c00	21 20 e5
+	ld hl,SOUNDS_BUFFER		;5c00	21 20 e5
 	add hl,de			            ;5c03	19
 
-    ; SOUND_RELATED_TABLE[SOUNDS_COUNT] = sound_code
+    ; SOUNDS_BUFFER[SOUNDS_COUNT] = sound_code
 	ld (hl),c			            ;5c04	71
 
     ; Increment SOUNDS_COUNT, with a limit of 7
@@ -3995,7 +4009,6 @@ l68bch:
 	ld l,l			;68c2	6d 	m 
     db 0x21         ;68c3   21
 
-; ToDo: complete
 ; Executes a Vaus action:
 ; - Follow the ball when in the demo 
 ; - Enlarge
@@ -4036,7 +4049,7 @@ l68dch:
 	cp VAUS_ACTION_STATE_EXPLODING		        ;6900	fe 06
 	jp z,vaus_destroyed		                            ;6902	ca 0e 6e
 	cp VAUS_ACTION_STATE_THROUGH_PORTAL		    ;6905	fe 07
-	jp z,l6adbh		                            ;6907	ca db 6a
+	jp z,vaus_crosses_portal		                            ;6907	ca db 6a
     
     ; Transformation completed, keep current state
 	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
@@ -4303,7 +4316,7 @@ l6ac7h:
 	ld (iy+00dh),a		;6ad7	fd 77 0d 	. w . 
 	ret			;6ada	c9 	. 
 
-l6adbh:
+vaus_crosses_portal:
     ; VAUS_ACTION_STATE_THROUGH_PORTAL
 
     ; Increment portaling step counter
@@ -4717,7 +4730,7 @@ l6d71h:
     ; Done
 	jp vaus_follow_ball_demo_or_read_controls	                    ;6d75	c3 0f 69
 
-vaus_do_shrinking: ; vaus_do_shrinking
+vaus_do_shrinking:
     ; VAUS_ACTION_STATE_SHRINKING
 
     ; Incremente lasering step.

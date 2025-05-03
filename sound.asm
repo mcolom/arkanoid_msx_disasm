@@ -1,5 +1,5 @@
-; ToDo: this table is related to sounds, but how?
-SOUND_RELATED_TABLE: equ 0xe520
+; Buffer of sound codes
+SOUNDS_BUFFER: equ 0xe520
 
 ; The code for the SOUND being played
 SOUND_NUMBER: equ 0xe5c0
