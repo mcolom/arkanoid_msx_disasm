@@ -2452,83 +2452,114 @@ l4d46h:
     
     ; ToDo...
 
-	ld a,000h		;4dcb	3e 00 	> . 
-	ld (DOH_ROW_DRAW_COUNTER),a		;4dcd	32 6f e5 	2 o . 
-	ld b,017h		;4dd0	06 17 	. . 
-	ld iy,01822h		;4dd2	fd 21 22 18 	. ! " . 
+	ld a, 0		                    ;4dcb	3e 00
+	ld (ROW_DRAW_COUNTER),a		;4dcd	32 6f e5
+
+	ld b, 23		                ;4dd0	06 17
+	ld iy,0x1800 + 2 + 1*32         ;4dd2	fd 21 22 18     Locate at [2, 1]
 l4dd6h:
-	ld e,a			;4dd6	5f 	_ 
-	sla e		;4dd7	cb 23 	. # 
-	ld d,000h		;4dd9	16 00 	. . 
-	ld hl,VRAM_DATA_BACKGROUND_PERIODIC_PATTERNS		;4ddb	21 b5 57 	! . W 
-	add hl,de			;4dde	19 	. 
-	ld e,(hl)			;4ddf	5e 	^ 
-	inc hl			;4de0	23 	# 
-	ld d,(hl)			;4de1	56 	V 
-	ex de,hl			;4de2	eb 	. 
-	push iy		;4de3	fd e5 	. . 
-	pop de			;4de5	d1 	. 
-	push bc			;4de6	c5 	. 
-	ld bc,00016h		;4de7	01 16 00 	. . . 
-	call LDIRVM		;4dea	cd 5c 00 	. \ . 
-	ld a,(DOH_ROW_DRAW_COUNTER)		;4ded	3a 6f e5 	: o . 
-	inc a			;4df0	3c 	< 
-	cp 004h		;4df1	fe 04 	. . 
-	jr nz,l4df7h		;4df3	20 02 	  . 
-	ld a,000h		;4df5	3e 00 	> . 
+    ; DE = 2*ROW
+	ld e,a			;4dd6	5f
+	sla e		    ;4dd7	cb 23
+	ld d, 0 		;4dd9	16 00
+    
+    ; Obtain a pointer to the row
+    ; HL = VRAM_DATA_BACKGROUND_PERIODIC_PATTERNS[2*ROW]
+	ld hl,VRAM_DATA_BACKGROUND_PERIODIC_PATTERNS    ;4ddb	21 b5 57
+	add hl,de			;4dde	19
+	ld e,(hl)			;4ddf	5e
+	inc hl			    ;4de0	23
+	ld d,(hl)			;4de1	56
+	ex de,hl			;4de2	eb
+	
+    ; DE = locate address
+    push iy		    ;4de3	fd e5
+	pop de			;4de5	d1
+    
+	push bc			;4de6	c5
+    ; Copy 24 - 2 (borders) patterns
+	ld bc, 22		;4de7	01 16 00
+	call LDIRVM		;4dea	cd 5c 00
+	
+    ; Next row, between 0 and 3
+    ; The patterns are indeed periodic
+    ld a,(ROW_DRAW_COUNTER)		;4ded	3a 6f e5
+	inc a			                ;4df0	3c
+	cp 4		                    ;4df1	fe 04
+	jr nz,l4df7h		            ;4df3	20 02
+	ld a, 0		                    ;4df5	3e 00
 l4df7h:
-	ld (DOH_ROW_DRAW_COUNTER),a		;4df7	32 6f e5 	2 o . 
-	ld de,00020h		;4dfa	11 20 00 	.   . 
-	add iy,de		;4dfd	fd 19 	. . 
-	pop bc			;4dff	c1 	. 
-	djnz l4dd6h		;4e00	10 d4 	. . 
-	ld b,003h		;4e02	06 03 	. . 
-	ld iy,00380h		;4e04	fd 21 80 03 	. ! . . 
+	ld (ROW_DRAW_COUNTER),a		;4df7	32 6f e5
+
+    ; Next row in the screen
+	ld de, 32		;4dfa	11 20 00
+	add iy,de		;4dfd	fd 19
+	pop bc			;4dff	c1
+	djnz l4dd6h		;4e00	10 d4
+
+    ; Copy 3 times
+	ld b, 3		         ;4e02	06 03
+	ld iy,00380h		;4e04	fd 21 80 03 
 l4e08h:
-	ld hl,VRAM_DATA_DOH		;4e08	21 35 57 	! 5 W 
-	ld a,(LEVEL)		;4e0b	3a 1b e0 	: . . 
-	cp FINAL_LEVEL		;4e0e	fe 20 	.   
-	jp z,l4e22h		;4e10	ca 22 4e 	. " N 
-	and 003h		;4e13	e6 03 	. . 
-	ld e,a			;4e15	5f 	_ 
-	ld d,000h		;4e16	16 00 	. . 
-	sla e		;4e18	cb 23 	. # 
+	ld hl,VRAM_DATA_DOH		;4e08	21 35 57
+    
+	ld a,(LEVEL)		;4e0b	3a 1b e0
+	cp FINAL_LEVEL		;4e0e	fe 20
+	jp z,l4e22h		    ;4e10	ca 22 4e
+    
+    ; Not final level
+    ; DE = 2*(LEVEL & 3)
+	and 3		;4e13	e6 03   A = LEVEL & 3
+	ld e,a		;4e15	5f      E = LEVEL & 3
+	ld d, 0		;4e16	16 00
+	sla e		;4e18	cb 23
 
+    ; HL = VRAM_DATA_POINTERS[2*(LEVEL & 3)]
 	ld hl, VRAM_DATA_POINTERS		;4e1a	21 2d 55
-	add hl,de			;4e1d	19 	. 
-	ld e,(hl)			;4e1e	5e 	^ 
-	inc hl			;4e1f	23 	# 
-	ld d,(hl)			;4e20	56 	V 
-	ex de,hl			;4e21	eb 	. 
-l4e22h:
+	add hl,de			            ;4e1d	19
+	ld e,(hl)			            ;4e1e	5e
+	inc hl			                ;4e1f	23
+	ld d,(hl)			            ;4e20	56
+	ex de,hl			            ;4e21	eb
 
+l4e22h:
     ; Fill VRAM tables from RAM
-	push iy		;4e22	fd e5 	. . 
-	pop de			;4e24	d1 	. 
-	push bc			;4e25	c5 	. 
-	ld bc,00080h		;4e26	01 80 00 	. . . 
-	call LDIRVM		;4e29	cd 5c 00 	. \ . 
-	pop bc			;4e2c	c1 	. 
-	ld de,00800h		;4e2d	11 00 08 	. . . 
-	add iy,de		;4e30	fd 19 	. . 
-	djnz l4e08h		;4e32	10 d4 	. . 
+    
+    ; DE points a location from 0x380
+	push iy		    ;4e22	fd e5
+	pop de			;4e24	d1
+
+	push bc			;4e25	c5
+    
+    ; Set the periodic periodic patterns of 1/3 of the screen
+    ; This actually sets the shapes, not the codes;
+	ld bc, 128		;4e26	01 80 00
+	call LDIRVM		;4e29	cd 5c 00
+	pop bc			;4e2c	c1
+
+	ld de, 2048		;4e2d	11 00 08
+	add iy,de		;4e30	fd 19
+	djnz l4e08h		;4e32	10 d4
     
     ; Draw the background
-	call COLORIZE_BACKGROUND		;4e34	cd bd 5b
+	call COLORIZE_BACKGROUND	;4e34	cd bd 5b
 
-    call WRITE_ROUND_MSG		;4e37	cd 04 72 	. . r 
-	call DRAW_LIVES		;4e3a	cd b9 71 	. . q 
-	ld a,(LEVEL)		;4e3d	3a 1b e0 	: . . 
-	cp FINAL_LEVEL		;4e40	fe 20
-	jp z,l4e71h		;4e42	ca 71 4e 	. q N 
-	ld hl,LEVELS_PTR_TABLE		;4e45	21 ef 5d 	! . ] 
+    call WRITE_ROUND_MSG		;4e37	cd 04 72
+
+	call DRAW_LIVES		        ;4e3a	cd b9 71
+
+	ld a,(LEVEL)		        ;4e3d	3a 1b e0
+	cp FINAL_LEVEL		        ;4e40	fe 20
+	jp z,l4e71h		            ;4e42	ca 71 4e
+
+	ld hl,LEVELS_PTR_TABLE		;4e45	21 ef 5d
 
     ; Skip the following if we're not doing a full brick repaint
 	ld a,(BRICK_REPAINT_TYPE)	;4e48	3a 22 e0
 	cp BRICK_REPAINT_REMAINING  ;4e4b	fe 02
 	jp z,l4e65h		            ;4e4d	ca 65 4e
     
-    ; Copy current level to RAM
+    ; Copy current level (the bricks tilemap) to RAM
     
     ; DE = 2*LEVEL
 	ld a,(LEVEL)	;4e50	3a 1b e0
@@ -2544,18 +2575,18 @@ l4e22h:
 	inc hl			;4e5a	23
 	ld d,(hl)		;4e5b	56
     
-    ; Copy level to RAM
+    ; Copy bricks to RAM tilemap and draw it
 	ex de,hl			;4e5c	eb  HL = LEVELS_PTR_TABLE[2*LEVEL]
 	ld de,BRICK_MAP		;4e5d	11 27 e0
 	ld bc,BRICK_MAP_LEN	;4e60	01 11 00
-	ldir		;4e63	ed b0 	. . 
+	ldir		        ;4e63	ed b0
 l4e65h:
-	call ADD_BRICKS_TO_TILEMAP		;4e65	cd 15 5c 	. . \ 
-	call DRAW_BACKGROUND_TILEMAP		;4e68	cd 79 5d 	. y ] 
-	call UPDATE_SPRITE_PATTERNS_ON_LEVEL		;4e6b	cd 65 51 	. e Q 
-	jp l4e74h		;4e6e	c3 74 4e 	. t N 
+	call ADD_BRICKS_TO_TILEMAP		        ;4e65	cd 15 5c
+	call DRAW_BACKGROUND_TILEMAP		    ;4e68	cd 79 5d
+	call UPDATE_SPRITE_PATTERNS_ON_LEVEL	;4e6b	cd 65 51
+	jp l4e74h		                        ;4e6e	c3 74 4e
 l4e71h:
-	call DRAW_DOH		;4e71	cd 80 51 	. . Q 
+	call DRAW_DOH		                    ;4e71	cd 80 51
 l4e74h:
     ; Full brick repaint
     ; BRICK_REPAINT_INITIAL
@@ -2564,7 +2595,7 @@ l4e74h:
 
     ; Vaus and the READY string as sprites
 	ld hl,VAUS_AND_READY_SPRITE_TABLE		;4e78	21 49 51
-	ld de,VRAM_SPRITES_ATTRIB_TABLE		        ;4e7b	11 00 1b
+	ld de,VRAM_SPRITES_ATTRIB_TABLE		    ;4e7b	11 00 1b
 	ld bc, 7 * 4		                    ;4e7e	01 1c 00 	7 sprites
 	call LDIRVM		                        ;4e81	cd 5c 00
     
@@ -2923,7 +2954,7 @@ UPDATE_SPRITE_PATTERNS_ON_LEVEL:
 ; Draw Doh
 DRAW_DOH:
 	ld a, 0		            ;5180	3e 00
-	ld (DOH_ROW_DRAW_COUNTER),a		    ;5182	32 6f e5
+	ld (ROW_DRAW_COUNTER),a		    ;5182	32 6f e5
 	ld b, DOH_NUM_ROWS		;5185	06 0c
 	ld iy,01869h		    ;5187	fd 21 69 18
 l518bh:
@@ -2952,7 +2983,7 @@ l518bh:
 	call LDIRVM		    ;519f	cd 5c 00
 
     ; Increment row count
-	ld a,(DOH_ROW_DRAW_COUNTER)		;51a2	3a 6f e5
+	ld a,(ROW_DRAW_COUNTER)		;51a2	3a 6f e5
 	inc a			                ;51a5	3c
     
     ; Reset row index if we've done the last char
@@ -2960,7 +2991,7 @@ l518bh:
 	jr nz,l51ach		;51a8	20 02
 	ld a, 0		        ;51aa	3e 00
 l51ach:
-	ld (DOH_ROW_DRAW_COUNTER),a		;51ac	32 6f e5
+	ld (ROW_DRAW_COUNTER),a		;51ac	32 6f e5
     
     ; Point to the next lext
 	ld de, 32		                ;51af	11 20 00
