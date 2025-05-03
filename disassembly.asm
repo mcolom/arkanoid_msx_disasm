@@ -470,63 +470,178 @@ CLEAR_SCREEN:
 	ret			        ;4249	c9
 
 VDP_HOOK_HANDLER:
-	call RDVDP		;424a	cd 3e 01 	. > . 
-	call sub_b594h		;424d	cd 94 b5 	. . . 
+	call RDVDP		;424a	cd 3e 01
+	call sub_b594h	;424d	cd 94 b5
     
-    ; ToDo: read keyboard matrix
+    ; Read keyboard matrix and obtain these keys:
+    ; STOP, GRAPH, STOP,  CURSOR RIGHT, CURSOR LEFT, CURSOR DOWN, CURSOR UP.    
     
-	ld a,006h		;4250	3e 06 	> . 
-	call SNSMAT		;4252	cd 41 01 	. A . 
-	and 004h		;4255	e6 04 	. . 
-	rra			;4257	1f 	. 
-	ld e,a			;4258	5f 	_ 
-	ld a,008h		;4259	3e 08 	> . 
-	call SNSMAT		;425b	cd 41 01 	. A . 
-	and 0f1h		;425e	e6 f1 	. . 
-	or e			;4260	b3 	. 
-	ld e,a			;4261	5f 	_ 
-	sra a		;4262	cb 2f 	. / 
-	and 0b8h		;4264	e6 b8 	. . 
-	ld d,a			;4266	57 	W 
-	rla			;4267	17 	. 
-	rla			;4268	17 	. 
-	rla			;4269	17 	. 
-	and 040h		;426a	e6 40 	. @ 
-	or d			;426c	b2 	. 
-	ld d,a			;426d	57 	W 
-	ld a,e			;426e	7b 	{ 
+    ; Read line 6, bit 2: GRAPH
+	ld a, 6		    ;4250	3e 06
+	call SNSMAT		;4252	cd 41 01
+	and 4		    ;4255	e6 04       0000.0100
+
+    ; E = GRAPH in bit 1
+	rra			    ;4257	1f  Put it in bit 1
+	ld e,a			;4258	5f
+    
+    ; Read line 8, bits 7 (right), 6 (down), 5 (up), 4 (left), and 0 (space).
+    ; 1111.0001
+    ld a, 8		    ;4259	3e 08
+	call SNSMAT		;425b	cd 41 01
+	and 0f1h		;425e	e6 f1       1111.0001
+    
+    ; OR the GRAPH in bit 1
+	or e			;4260	b3
+    
+    ; V = 1111.0011
+    
+    ; Now we have in A:
+    ; B7: right
+    ; B6: down
+    ; B5: up
+    ; B4: left
+    ; B3: 0
+    ; B2: 0
+    ; B1: GRAPH
+    ; B0: SPACE
+    
+	ld e,a			;4261	5f      E = (R, D, U, L, 0, 0, G, S)
+
+	sra a		    ;4262	cb 2f   A = (R, R, D, U, L, 0, 0, G), carry=S
+
+	and 0b8h		;4264	e6 b8   10111000    A = (R, 0, D, U, L, 0, 0, 0), carry=0
+
+	ld d,a			;4266	57      D = (R, 0, D, U, L, 0, 0, 0)
+
+    ; A = (R, 0, D, U, L, 0, 0, 0)
+    ; carry = 0
+
+	rla			    ;4267
+
+    ; A = (0, D, U, L, 0, 0, 0, 0)
+    ; carry=R
+
+	rla			    ;4268
+
+    ; A = (D, U, L, 0, 0, 0, 0, R)
+    ; carry=0
+
+	rla			    ;4269
+
+    ; A = (U, L, 0, 0, 0, 0, R, 0)
+    ; carry=D
+        
+	and 040h		;426a	e6 40        0  1  0  0  0  0  0  0
+    
+    ; A = (0, L, 0, 0, 0, 0, 0, 0)
+
+	or d			;426c	b2
+    
+    ; (0, L, 0, 0, 0, 0, 0, 0)
+    ; OR
+    ; (R, 0, D, U, L, 0, 0, 0)
+    ; ------------------------
+    ; (R, L, D, U, L, 0, 0, 0)
+    
+	ld d,a			;426d	57
+    
+    ; D = (R, L, D, U, L, 0, 0, 0)
+    
+	ld a,e			;426e	7b
+
+    ; A = (R, D, U, L, 0, 0, G, S)
+    
 	and 003h		;426f	e6 03 	. . 
-	or d			;4271	b2 	. 
-	rrca			;4272	0f 	. 
-	rrca			;4273	0f 	. 
-	rrca			;4274	0f 	. 
-	rrca			;4275	0f 	. 
-	cpl			;4276	2f 	/ 
-	and 03fh		;4277	e6 3f 	. ? 
-	jp l427ch		;4279	c3 7c 42 	. | B 
+
+    ; A = (0, 0, 0, 0, 0, 0, G, S)
+
+	or d			;4271	b2
+
+    ; A = (0, 0, 0, 0, 0, 0, G, S)
+    ; OR
+    ; D = (R, L, D, U, L, 0, 0, 0)
+    ; ----------------------------
+    ;     (R, L, D, U, L, 0, G, S)
+
+    ; A = (R, L, D, U, L, 0, G, S)
+	rrca			;4272	0f
+    ; A = (S, R, L, D, U, L, 0, G)
+    rrca			;4273	0f
+    ; A = (G, S, R, L, D, U, L, 0)
+	rrca			;4274	0f
+    ; A = (0, G, S, R, L, D, U, L)
+	rrca			;4275	0f
+    ; A = (L, 0, G, S, R, L, D, U)
+    
+	cpl			    ;4276	2f  Active keys are now 1
+    
+	and 03fh		;4277	e6 3f   0011.1111
+    
+    ; A = (0, 0, G, S, R, L, D, U)
+    
+	jp l427ch		;4279	c3 7c 42    ; Useless...
 l427ch:
-	ld e,a			;427c	5f 	_ 
-	ld a,007h		;427d	3e 07 	> . 
-	call SNSMAT		;427f	cd 41 01 	. A . 
-	rla			;4282	17 	. 
-	rla			;4283	17 	. 
-	cpl			;4284	2f 	/ 
-	and 040h		;4285	e6 40 	. @ 
-	or e			;4287	b3 	. 
-	ld e,a			;4288	5f 	_ 
-	ld hl,KEYBOARD_INPUT		;4289	21 c0 e0 	! . . 
-	ld a,(hl)			;428c	7e 	~ 
-	ld (hl),e			;428d	73 	s 
-	and 0f0h		;428e	e6 f0 	. . 
-	and e			;4290	a3 	. 
-	xor e			;4291	ab 	. 
-	ld (CONTROLS),a		;4292	32 bf e0 	2 . . 
-	ld b,a			;4295	47 	G 
+	ld e,a			;427c	5f
+    
+    ; E = (0, 0, G, S, R, L, D, U)
+    
+	ld a, 7		    ;427d	3e 07
+	call SNSMAT		;427f	cd 41 01
+    
+    ; A = (RET, SELECT, BS,	STOP, TAB, ESC, F5, F4)
+	rla			    ;4282	17
+    ; A = (SELECT, BS,	STOP, TAB, ESC, F5, F4, x)
+	rla			    ;4283	17
+    ; A = (BS,	STOP, TAB, ESC, F5, F4, x, x)
+
+	cpl			    ;4284	2f  Active keys are now 1
+    
+	and 040h		;4285	e6 40   0100.0000
+    
+    ; A = (0, STOP, 0, 0, 0, 0, 0, 0)
+	
+    or e			;4287	b3
+    
+    ; (0, STOP, 0, 0, 0, 0, 0, 0)
+    ; OR
+    ; (0,     0,G, S, R, L, D, U)
+    ; ---------------------------
+    ; (0, STOP, G, S, R, L, D, U)
+
+	ld e,a			;4288	5f
+    
+    ; E = (0, STOP, G, S, R, L, D, U)
+    
+	ld hl,KEYBOARD_INPUT		;4289	21 c0 e0
+	ld a,(hl)			        ;428c	7e  A = keys
+    
+    ; A = (0, STOP1, G1, S1, R1, L1, D1, U1)
+    
+    ; KEYBOARD_INPUT <-- (0, STOP, G, S, R, L, D, U)
+	ld (hl),e			        ;428d	73
+    
+	and 0f0h		;428e	e6 f0
+    ; A = (0, STOP1, G1, S1, 0, 0, 0, 0)
+    
+	and e			;4290	a3
+    ; (0, STOP, G, S,  0, 0, 0, 0)
+    ; AND
+    ; (0, STOP, G, S,  R, L, D, U)
+    ; ---------------------------
+    ; (0, STOP, G, S,  0, 0, 0, 0)
+    
+	xor e			;4291	ab
+    ;  b7  b6  b5 b4  b3 b2 b1 b0 
+    ; (0, STOP, G, S,  R, L, D, U)
+
+	ld (CONTROLS),a		;4292	32 bf e0
+	ld b,a			    ;4295	47
 
     ; Keep going if we're in the title screen
-	ld a,(GAME_STATE)		;4296	3a 0b e0 	: . . 
-	or a			;4299	b7 	. 
-	jp nz,l42fch		;429a	c2 fc 42 	. . B 
+	ld a,(GAME_STATE)		;4296	3a 0b e0
+	or a			        ;4299	b7
+	jp nz,l42fch		    ;429a	c2 fc 42
 
     ; Check cheat...
 
@@ -2507,6 +2622,7 @@ l4eb4h:
 	call DELAY_HL_TICKS		;4ed9	cd 80 43
 	ret			            ;4edc	c9
 
+; ToDo, STORY_STR
 l4eddh:
     ; In demo
 	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
@@ -2597,6 +2713,7 @@ l4f7ah:
 	ld (0e013h),hl		;4f86	22 13 e0 	" . . 
 	ret			;4f89	c9 	. 
 
+; ToDo
 ENDING_TEXT_ANIMATION:
 	call CLEAR_SCREEN		    ;4f8a	cd 27 42
     
@@ -2617,13 +2734,13 @@ l4f91h:
 	ex de,hl			;4fa7	eb 	. 
 l4fa8h:
 	ld a,(iy+000h)		;4fa8	fd 7e 00 	. ~ . 
-	cp 020h		;4fab	fe 20 	.   
+	cp 32		;4fab	fe 20 	.   
 	jp z,l4fbbh		;4fad	ca bb 4f 	. . O 
 	push hl			;4fb0	e5 	. 
 	call WRTVRM		;4fb1	cd 4d 00 	. M . 
 
     ; Wait 3 ticks
-	ld hl,00003h		    ;4fb4	21 03 00
+	ld hl, 3		        ;4fb4	21 03 00
 	call DELAY_HL_TICKS		;4fb7	cd 80 43
 
 	pop hl			        ;4fba	e1
@@ -2632,7 +2749,7 @@ l4fbbh:
 	inc iy		;4fbc	fd 23 	. # 
 	ld a,(BRICK_HIT_COL)		;4fbe	3a 3d e5 	: = . 
 	inc a			;4fc1	3c 	< 
-	cp 01ah		;4fc2	fe 1a 	. . 
+	cp 26		;4fc2	fe 1a 	. . 
 	ld (BRICK_HIT_COL),a		;4fc4	32 3d e5 	2 = . 
 	jp nz,l4fa8h		;4fc7	c2 a8 4f 	. . O 
 	pop ix		;4fca	dd e1 	. . 
@@ -2642,7 +2759,7 @@ l4fbbh:
 	ld hl,BRICK_HIT_ROW		;4fcc	21 3c e5 	! < . 
 	inc (hl)			;4fcf	34 	4 
 	ld a,(hl)			;4fd0	7e 	~ 
-	cp 009h		;4fd1	fe 09 	. . 
+	cp 9		;4fd1	fe 09 	. . 
 	jp nz,l4f91h		;4fd3	c2 91 4f 	. . O 
 
     ; Wait 1472 ticks
