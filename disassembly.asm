@@ -6286,13 +6286,15 @@ DRAW_DOH_MOUTH_OPEN:
 	or a			                ;759b	b7
 	jr nz,l75c8h		            ;759c	20 2a
 
-    ; Skip if... ToDo
-	ld a,(ix+008h)	;759e	dd 7e 08
-	or a			;75a1	b7 	. 
-	ret z			;75a2	c8 	. 
+    ; Skip if the 3rd bullet is not active.
+    ; Doh closes his mouths as soon as the 3rd bullet disappears.
+	ld a,(ix+2*DOH_BULLETS_TABLE_LEN + DOH_BULLETS_ACTIVE)	;759e	dd 7e 08
+	or a			;75a1	b7
+	ret z			;75a2	c8
 
+    ; Draw Doh with his mouth open
 	ld b, 3		                ;75a3	06 03       3 rows of chars
-	ld ix,CHARS_DOH_OPEN_MOUTH		        ;75a5	dd 21 f9 75
+	ld ix,CHARS_DOH_OPEN_MOUTH	;75a5	dd 21 f9 75
 	ld iy, 0x1800 + 11 + 8*32	;75a9	fd 21 0b 19 Locate at [11, 8]
 l75adh:
 	push ix		    ;75ad	dd e5
@@ -6304,7 +6306,7 @@ l75adh:
 	call LDIRVM		;75b7	cd 5c 00    Write to VRAM
 	pop bc			;75ba	c1
     ; Next row
-	ld de, 4    	;75bb	11 04 00
+	ld de, DOH_BULLETS_TABLE_LEN    	;75bb	11 04 00
 	add ix,de		;75be	dd 19
 	ld de, 32   	;75c0	11 20 00
 	add iy,de		;75c3	fd 19
