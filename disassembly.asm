@@ -4398,8 +4398,8 @@ vaus_goes_to_portal_resizing:
 	jp move_to_next_level   ;6b45	c3 1c 6b
 
 vaus_goes_to_portal_with_lasers:
-    ; HL = TBL_6bf6[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
-	ld hl,TBL_6bf6		;6b48	21 f6 6b
+    ; HL = TBL_VAUS_CROSSES_PORTAL_WITH_LASERS_SPR_DATA[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
+	ld hl,TBL_VAUS_CROSSES_PORTAL_WITH_LASERS_SPR_DATA		;6b48	21 f6 6b
 	add hl,de			;6b4b	19
 	ld e,(hl)			;6b4c	5e
 	inc hl			    ;6b4d	23
@@ -4488,74 +4488,37 @@ entering_portal_transf_anim_5:
     db 0x0, 0x0, 0x0, 0x0 ; 0x6bee - 0x6bf1
     db 0x0, 0x0, 0x0, 0x0 ; 0x6bf2 - 0x6bf5
 
+; Sprite data to render Vaus crossing the portal,
+; when it's got lasers.
+; When entering, some sprites become invisible.
+TBL_VAUS_CROSSES_PORTAL_WITH_LASERS_SPR_DATA:
+    ; Addresses
+    dw entering_portal_with_lasers_anim_1
+    dw entering_portal_with_lasers_anim_2
+    dw entering_portal_with_lasers_anim_3
+    dw entering_portal_with_lasers_anim_4
 
-TBL_6bf6:
-	cp 06bh		;6bf6	fe 6b 	. k 
-	ld c,06ch		;6bf8	0e 6c 	. l 
-	ld e,06ch		;6bfa	1e 6c 	. l 
-	ld l,06ch		;6bfc	2e 6c 	. l 
-    
-	xor (hl)			;6bfe	ae 	. 
-	and b			;6bff	a0 	. 
-	inc d			;6c00	14 	. 
-	ld c,0aeh		;6c01	0e ae 	. . 
-	or b			;6c03	b0 	. 
-	djnz l6c14h		;6c04	10 0e 	. . 
-	xor (hl)			;6c06	ae 	. 
-	or b			;6c07	b0 	. 
-	inc e			;6c08	1c 	. 
-	ex af,af'			;6c09	08 	. 
-	xor (hl)			;6c0a	ae 	. 
-	ret nz			;6c0b	c0 	. 
-	jr l6c1ch		;6c0c	18 0e 	. . 
-	xor (hl)			;6c0e	ae 	. 
-	xor b			;6c0f	a8 	. 
-	inc d			;6c10	14 	. 
-	ld c,0aeh		;6c11	0e ae 	. . 
-	cp b			;6c13	b8 	. 
-l6c14h:
-	djnz l6c24h		;6c14	10 0e 	. . 
-	xor (hl)			;6c16	ae 	. 
-	cp b			;6c17	b8 	. 
-	inc e			;6c18	1c 	. 
-	ex af,af'			;6c19	08 	. 
-	nop			;6c1a	00 	. 
-	nop			;6c1b	00 	. 
-l6c1ch:
-	nop			;6c1c	00 	. 
-	nop			;6c1d	00 	. 
-	xor (hl)			;6c1e	ae 	. 
-	cp b			;6c1f	b8 	. 
-	inc d			;6c20	14 	. 
-	ld c,000h		;6c21	0e 00 	. . 
-	nop			;6c23	00 	. 
-l6c24h:
-	nop			;6c24	00 	. 
-	nop			;6c25	00 	. 
-	nop			;6c26	00 	. 
-	nop			;6c27	00 	. 
-	nop			;6c28	00 	. 
-	nop			;6c29	00 	. 
-	nop			;6c2a	00 	. 
-	nop			;6c2b	00 	. 
-	nop			;6c2c	00 	. 
-	nop			;6c2d	00 	. 
-	nop			;6c2e	00 	. 
-	nop			;6c2f	00 	. 
-	nop			;6c30	00 	. 
-	nop			;6c31	00 	. 
-	nop			;6c32	00 	. 
-	nop			;6c33	00 	. 
-	nop			;6c34	00 	. 
-	nop			;6c35	00 	. 
-	nop			;6c36	00 	. 
-	nop			;6c37	00 	. 
-	nop			;6c38	00 	. 
-	nop			;6c39	00 	. 
-	nop			;6c3a	00 	. 
-	nop			;6c3b	00 	. 
-	nop			;6c3c	00 	. 
-	nop			;6c3d	00 	. 
+    ; Sprite params
+entering_portal_with_lasers_anim_1:
+    db 0xae, 0xa0, 0x14, 0xe ; 0x6bfe - 0x6c01
+    db 0xae, 0xb0, 0x10, 0xe ; 0x6c02 - 0x6c05
+    db 0xae, 0xb0, 0x1c, 0x8 ; 0x6c06 - 0x6c09
+    db 0xae, 0xc0, 0x18, 0xe ; 0x6c0a - 0x6c0d
+entering_portal_with_lasers_anim_2:
+    db 0xae, 0xa8, 0x14, 0xe ; 0x6c0e - 0x6c11
+    db 0xae, 0xb8, 0x10, 0xe ; 0x6c12 - 0x6c15
+    db 0xae, 0xb8, 0x1c, 0x8 ; 0x6c16 - 0x6c19
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c1a - 0x6c1d
+entering_portal_with_lasers_anim_3:
+    db 0xae, 0xb8, 0x14, 0xe ; 0x6c1e - 0x6c21
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c22 - 0x6c25
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c26 - 0x6c29
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c2a - 0x6c2d
+entering_portal_with_lasers_anim_4:
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c2e - 0x6c31
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c32 - 0x6c35
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c36 - 0x6c39
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6c3a - 0x6c3d
 
 vaus_do_enlarge:
     ; VAUS_ACTION_STATE_ENLARGING
