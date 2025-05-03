@@ -4302,51 +4302,78 @@ l6ac7h:
 	add a,008h		;6ad5	c6 08 	. . 
 	ld (iy+00dh),a		;6ad7	fd 77 0d 	. w . 
 	ret			;6ada	c9 	. 
+
 l6adbh:
     ; VAUS_ACTION_STATE_THROUGH_PORTAL
+
+    ; Increment portaling step counter
+    ; Leave if it's not zero yet
 	ld ix,VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1		;6adb	dd 21 53 e5
 	inc (ix+000h)		;6adf	dd 34 00
 	ld a,(ix+000h)		;6ae2	dd 7e 00
 	cp 10		        ;6ae5	fe 0a
-	ret nz			;6ae7	c0 	. 
+	ret nz			    ;6ae7	c0
+    
+    ; Reset counter
 	ld (ix+000h), 0		;6ae8	dd 36 00 00 Reset VAUS_TABLE_IDX_VAUS_PORTALING_STEP1
+    
+        
+    ; Since ix = VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1 (idx 8),
+    ; ix+001h is index 9 in VAUS_TABLE: VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
 
+    ; DE = VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2
 	ld e,(ix+001h)		;6aec	dd 5e 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
-	sla e		;6aef	cb 23 	. # 
-	ld d,000h		;6af1	16 00 	. . 
-	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)		;6af3	3a 51 e5 	: Q . 
-	cp 1		;6af6	fe 01 	. . 
-	jp z,l6b48h		;6af8	ca 48 6b 	. H k 
-	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_RESIZING)		;6afb	3a 50 e5 	: P . 
-	cp 000h		;6afe	fe 00 	. . 
-	jp nz,l6b2ch		;6b00	c2 2c 6b 	. , k 
-	ld hl,l6b64h		;6b03	21 64 6b 	! d k 
-	add hl,de			;6b06	19 	. 
-	ld e,(hl)			;6b07	5e 	^ 
-	inc hl			;6b08	23 	# 
-	ld d,(hl)			;6b09	56 	V 
-	ex de,hl			;6b0a	eb 	. 
-	ld de,SPR_PARAMS_BASE		;6b0b	11 cd e0 	. . . 
-	ld bc,0000ch		;6b0e	01 0c 00 	. . . 
-	ldir		;6b11	ed b0 	. . 
-	inc (ix+001h)		;6b13	dd 34 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
-	ld a,(ix+001h)		;6b16	dd 7e 01 	VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
-	cp 4		        ;6b19	fe 04
-	ret nz			    ;6b1b	c0
+	sla e		        ;6aef	cb 23
+    ld d, 0		        ;6af1	16 00
+
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)	;6af3	3a 51 e5
+    
+    ; Jump if Vaus has lasers
+	cp 1		    ;6af6	fe 01
+	jp z,vaus_goes_to_portal_with_lasers		;6af8	ca 48 6b
+
+    ; Jump if it's resizing
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_RESIZING)		;6afb	3a 50 e5
+	cp 0		                                    ;6afe	fe 00
+	jp nz,l6b2ch		                            ;6b00	c2 2c 6b
+
+    ; HL = TBL_VAUS_ENTERING_PORTAL_SPR_DATA[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
+	ld hl,TBL_VAUS_ENTERING_PORTAL_SPR_DATA		;6b03	21 64 6b
+	add hl,de			;6b06	19
+	ld e,(hl)			;6b07	5e
+	inc hl			    ;6b08	23
+	ld d,(hl)			;6b09	56
+	ex de,hl			;6b0a	eb
+
+	; Copy 3 sprites from TBL_VAUS_ENTERING_PORTAL_SPR_DATA
+    ; This makes the animation
+    ld de,SPR_PARAMS_BASE	    	;6b0b	11 cd e0
+	ld bc, 3 * SPR_PARAMS_LEN		;6b0e	01 0c 00
+	ldir		                    ;6b11	ed b0
+    
+    ; Next portaling step.
+    ; Leave if it's not 4
+	inc (ix+001h)		            ;6b13	dd 34 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	ld a,(ix+001h)		            ;6b16	dd 7e 01 	VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	cp 4		                    ;6b19	fe 04
+	ret nz			                ;6b1b	c0
 
 l6b1ch:
-	ld a,VAUS_ACTION_STATE_WAIT_READY		;6b1c	3e 00
-	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a		;6b1e	32 4b e5
+    ; Vaus normal state
+	ld a,VAUS_ACTION_STATE_WAIT_READY		            ;6b1c	3e 00
+	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a	    ;6b1e	32 4b e5
 
-	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;6b21	3e 02
-	ld (GAME_TRANSITION_ACTION),a		        ;6b23	32 0a e0
+    ; Move to the next level
+	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		        ;6b21	3e 02
+	ld (GAME_TRANSITION_ACTION),a		                ;6b23	32 0a e0
 
+    ; Make a repaint. ToDo: why unknown?
 	ld a,BRICK_REPAINT_UNKNOWN		;6b26	3e 01
 	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0
 	ret			                    ;6b2b	c9
 
 l6b2ch:
-	ld hl,l6b9ch		;6b2c	21 9c 6b 	! . k 
+	ld hl,TBL_6b9c		;6b2c	21 9c 6b 	! . k 
 	add hl,de			;6b2f	19 	. 
 	ld e,(hl)			;6b30	5e 	^ 
 	inc hl			;6b31	23 	# 
@@ -4360,8 +4387,9 @@ l6b2ch:
 	cp 005h		;6b42	fe 05 	. . 
 	ret nz			;6b44	c0 	. 
 	jp l6b1ch		;6b45	c3 1c 6b 	. . k 
-l6b48h:
-	ld hl,l6bf6h		;6b48	21 f6 6b 	! . k 
+
+vaus_goes_to_portal_with_lasers:
+	ld hl,TBL_6bf6		;6b48	21 f6 6b 	! . k 
 	add hl,de			;6b4b	19 	. 
 	ld e,(hl)			;6b4c	5e 	^ 
 	inc hl			;6b4d	23 	# 
@@ -4375,62 +4403,31 @@ l6b48h:
 	cp 004h		;6b5e	fe 04 	. . 
 	ret nz			;6b60	c0 	. 
 	jp l6b1ch		;6b61	c3 1c 6b 	. . k 
-l6b64h:
-	ld l,h			;6b64	6c 	l 
-	ld l,e			;6b65	6b 	k 
-	ld a,b			;6b66	78 	x 
-	ld l,e			;6b67	6b 	k 
-	add a,h			;6b68	84 	. 
-	ld l,e			;6b69	6b 	k 
-	sub b			;6b6a	90 	. 
-	ld l,e			;6b6b	6b 	k 
-	xor (hl)			;6b6c	ae 	. 
-	and b			;6b6d	a0 	. 
-	ex af,af'			;6b6e	08 	. 
-	ex af,af'			;6b6f	08 	. 
-	xor (hl)			;6b70	ae 	. 
-	or b			;6b71	b0 	. 
-	inc b			;6b72	04 	. 
-	ld c,0aeh		;6b73	0e ae 	. . 
-	ret nz			;6b75	c0 	. 
-	inc c			;6b76	0c 	. 
-	ex af,af'			;6b77	08 	. 
-	xor (hl)			;6b78	ae 	. 
-	xor b			;6b79	a8 	. 
-	ex af,af'			;6b7a	08 	. 
-	ex af,af'			;6b7b	08 	. 
-	xor (hl)			;6b7c	ae 	. 
-	cp b			;6b7d	b8 	. 
-	inc b			;6b7e	04 	. 
-	ld c,000h		;6b7f	0e 00 	. . 
-	nop			;6b81	00 	. 
-	nop			;6b82	00 	. 
-	nop			;6b83	00 	. 
-	xor (hl)			;6b84	ae 	. 
-	cp b			;6b85	b8 	. 
-	ex af,af'			;6b86	08 	. 
-	ex af,af'			;6b87	08 	. 
-	nop			;6b88	00 	. 
-	nop			;6b89	00 	. 
-	nop			;6b8a	00 	. 
-	nop			;6b8b	00 	. 
-	nop			;6b8c	00 	. 
-	nop			;6b8d	00 	. 
-	nop			;6b8e	00 	. 
-	nop			;6b8f	00 	. 
-	nop			;6b90	00 	. 
-	nop			;6b91	00 	. 
-	nop			;6b92	00 	. 
-	nop			;6b93	00 	. 
-	nop			;6b94	00 	. 
-	nop			;6b95	00 	. 
-	nop			;6b96	00 	. 
-	nop			;6b97	00 	. 
-	nop			;6b98	00 	. 
-	nop			;6b99	00 	. 
-	nop			;6b9a	00 	. 
-	nop			;6b9b	00 	. 
-l6b9ch:
+
+; Sprite data to render Vaus crossing the portal.
+; When entering, some sprites become invisible.
+TBL_VAUS_ENTERING_PORTAL_SPR_DATA:
+    ; Each entry is a sprite params. tuple as follows:
+    ; SPR_PARAMS_IDX_Y, SPR_PARAMS_IDX_X, SPR_PARAMS_IDX_PATTERN_NUM, SPR_PARAMS_IDX_COLOR
+    
+    ; I guess this two are never accessed, only the one from 6b6c
+    db 108, 107, 120, 107   ;6b64   "OV"
+    db 132, 107, 144, 107   ;6b68   Exploding alien
+
+    db 174, 160, 8, 8   ;6b6c
+    db 174, 176, 4, 14  ;6b70
+    db 174, 192, 12, 8  ;6b74
+    db 174, 168, 8, 8   ;6b78
+    db 174, 184, 4, 14  ;6b7c
+    db 0, 0, 0, 0       ;6b80
+    db 174, 184, 8, 8   ;6b84
+    db 0, 0, 0, 0       ;6b88
+    db 0, 0, 0, 0       ;6b8c
+    db 0, 0, 0, 0       ;6b90
+    db 0, 0, 0, 0       ;6b94
+    db 0, 0, 0, 0       ;6b98
+
+TBL_6b9c:
 	and (hl)			;6b9c	a6 	. 
 	ld l,e			;6b9d	6b 	k 
 	or (hl)			;6b9e	b6 	. 
@@ -4513,7 +4510,8 @@ l6b9ch:
 	nop			;6bf3	00 	. 
 	nop			;6bf4	00 	. 
 	nop			;6bf5	00 	. 
-l6bf6h:
+
+TBL_6bf6:
 	cp 06bh		;6bf6	fe 6b 	. k 
 	ld c,06ch		;6bf8	0e 6c 	. l 
 	ld e,06ch		;6bfa	1e 6c 	. l 
