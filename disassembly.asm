@@ -6659,6 +6659,7 @@ l78bah:
 l78d3h:
 	ret			                    ;78d3	c9
 
+; ToDo
 CHECK_ALIEN_HIT_BY_LASER:
     ; IX = LASER(i)_SPR_PARAMS
 	ld iy,SPR_13_SPR_PARAMS		;78d4	fd 21 01 e1
@@ -6812,10 +6813,14 @@ l797eh:
     ; hl = ALIEN_TABLE + 1
     ; ToDo: what is it accessing here?
 	push hl			;7992	e5 	. 
-	ld (hl),002h		;7993	36 02 	6 . 
-	inc hl			;7995	23 	# 
-	ld (hl),001h		;7996	36 01 	6 . 
-	pop hl			;7998	e1 	. 
+	
+    ; Set alien active = 2
+    ld (hl),2	    ;7993	36 02   ALIEN_TABLE_IDX_ACTIVE
+    
+    ; Set alien is exploding
+	inc hl			;7995	23
+	ld (hl), 1	    ;7996	36 01   ALIEN_TABLE_IDX_EXPLODING
+	pop hl			;7998	e1
 l7999h:
     ; Next alien
 	ld de,SPR_PARAMS_LEN		;7999	11 04 00
