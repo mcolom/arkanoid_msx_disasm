@@ -4335,7 +4335,7 @@ l6adbh:
     ; Jump if it's resizing
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_RESIZING)		;6afb	3a 50 e5
 	cp 0		                                    ;6afe	fe 00
-	jp nz,l6b2ch		                            ;6b00	c2 2c 6b
+	jp nz,vaus_goes_to_portal_resizing		                            ;6b00	c2 2c 6b
 
     ; HL = TBL_VAUS_ENTERING_PORTAL_SPR_DATA[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
 	ld hl,TBL_VAUS_ENTERING_PORTAL_SPR_DATA		;6b03	21 64 6b
@@ -4358,7 +4358,7 @@ l6adbh:
 	cp 4		                    ;6b19	fe 04
 	ret nz			                ;6b1b	c0
 
-l6b1ch:
+move_to_next_level:
     ; Vaus normal state
 	ld a,VAUS_ACTION_STATE_WAIT_READY		            ;6b1c	3e 00
 	ld (VAUS_TABLE + VAUS_TABLE_IDX_ACTION_STATE),a	    ;6b1e	32 4b e5
@@ -4372,37 +4372,55 @@ l6b1ch:
 	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0
 	ret			                    ;6b2b	c9
 
-l6b2ch:
-	ld hl,TBL_6b9c		;6b2c	21 9c 6b 	! . k 
-	add hl,de			;6b2f	19 	. 
-	ld e,(hl)			;6b30	5e 	^ 
-	inc hl			;6b31	23 	# 
-	ld d,(hl)			;6b32	56 	V 
-	ex de,hl			;6b33	eb 	. 
-	ld de,SPR_PARAMS_BASE		;6b34	11 cd e0 	. . . 
-	ld bc,00010h		;6b37	01 10 00 	. . . 
-	ldir		;6b3a	ed b0 	. . 
-	inc (ix+001h)		;6b3c	dd 34 01 	. 4 . 
-	ld a,(ix+001h)		;6b3f	dd 7e 01 	. ~ . 
-	cp 005h		;6b42	fe 05 	. . 
-	ret nz			;6b44	c0 	. 
-	jp l6b1ch		;6b45	c3 1c 6b 	. . k 
+vaus_goes_to_portal_resizing:
+	; HL = TBL_6b9c[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
+    ld hl,TBL_6b9c		;6b2c	21 9c 6b
+	add hl,de			;6b2f	19
+	ld e,(hl)			;6b30	5e
+	inc hl			    ;6b31	23
+	ld d,(hl)			;6b32	56
+	ex de,hl			;6b33	eb
+
+	; Copy 4 sprites from TBL_6b9c
+    ; This makes the animation    
+	ld de, SPR_PARAMS_BASE		;6b34	11 cd e0
+	ld bc, 4 * SPR_PARAMS_LEN	;6b37	01 10 00
+	ldir		                ;6b3a	ed b0
+    
+    ; Next portaling step.
+    ; Leave if it's not 5
+	inc (ix+001h)		;6b3c	dd 34 01
+	ld a,(ix+001h)		;6b3f	dd 7e 01
+	cp 5		        ;6b42	fe 05
+	ret nz			    ;6b44	c0
+    
+    ; Done
+	jp move_to_next_level   ;6b45	c3 1c 6b
 
 vaus_goes_to_portal_with_lasers:
-	ld hl,TBL_6bf6		;6b48	21 f6 6b 	! . k 
-	add hl,de			;6b4b	19 	. 
-	ld e,(hl)			;6b4c	5e 	^ 
-	inc hl			;6b4d	23 	# 
-	ld d,(hl)			;6b4e	56 	V 
-	ex de,hl			;6b4f	eb 	. 
-	ld de,SPR_PARAMS_BASE		;6b50	11 cd e0 	. . . 
-	ld bc,00010h		;6b53	01 10 00 	. . . 
-	ldir		;6b56	ed b0 	. . 
-	inc (ix+001h)		;6b58	dd 34 01 	. 4 . 
-	ld a,(ix+001h)		;6b5b	dd 7e 01 	. ~ . 
-	cp 004h		;6b5e	fe 04 	. . 
-	ret nz			;6b60	c0 	. 
-	jp l6b1ch		;6b61	c3 1c 6b 	. . k 
+    ; HL = TBL_6bf6[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
+	ld hl,TBL_6bf6		;6b48	21 f6 6b
+	add hl,de			;6b4b	19
+	ld e,(hl)			;6b4c	5e
+	inc hl			    ;6b4d	23
+	ld d,(hl)			;6b4e	56
+	ex de,hl			;6b4f	eb
+
+	; Copy 4 sprites from TBL_6b9c
+    ; This makes the animation  
+	ld de,SPR_PARAMS_BASE		;6b50	11 cd e0
+	ld bc, 4 * SPR_PARAMS_LEN		        ;6b53	01 10 00
+	ldir		                ;6b56	ed b0
+
+    ; Next portaling step.
+    ; Leave if it's not 4
+	inc (ix+001h)		;6b58	dd 34 01
+	ld a,(ix+001h)		;6b5b	dd 7e 01
+	cp 4		        ;6b5e	fe 04
+	ret nz			    ;6b60	c0
+    
+    ; Done
+	jp move_to_next_level   ;6b61	c3 1c 6b
 
 ; Sprite data to render Vaus crossing the portal.
 ; When entering, some sprites become invisible.
