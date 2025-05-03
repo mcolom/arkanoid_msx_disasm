@@ -6670,7 +6670,7 @@ l78ddh:
 	or a			;78de	b7
 	jp z,l7935h		;78df	ca 35 79    Done, next alien
 
-    ; ToDo: skip if alien is exploding
+    ; Skip if alien is exploding
 	push hl			;78e2	e5
 	inc hl			;78e3	23  Point to ALIEN_TABLE_IDX_EXPLODING
 	ld a,(hl)		;78e4	7e
@@ -6703,7 +6703,7 @@ l78ddh:
 	ld a,(ix+SPR_PARAMS_IDX_X)  ;7908	dd 7e 01
 	sub 16		                ;790b	d6 10
 	ld e,a			            ;790d	5f          E = width - 16
-	ld a,(iy+SPR_PARAMS_IDX_X)		            ;790e	fd 7e 01
+	ld a,(iy+SPR_PARAMS_IDX_X)	;790e	fd 7e 01
 	ld d,a			            ;7911	57          D = ALIEN_X
 	ld a,e			            ;7912	7b          A = width - 16
 	cp d			            ;7913	ba          Compare ALIEN_X with width - 16
@@ -6731,7 +6731,7 @@ l78ddh:
 	ld a, 5		                        ;792b	3e 05
 	call ADD_POINTS_AND_UPDATE_SCORES	;792d	cd a0 52
     
-    ; ToDo: what is this in the ALIEN_TABLE?
+    ; Set ALIEN_TABLE_IDX_EXPLODING
 	inc hl			                    ;7930	23
 	ld (hl), 1		                    ;7931	36 01
 
