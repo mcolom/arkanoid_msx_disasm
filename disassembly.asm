@@ -3468,7 +3468,8 @@ ADD_SOUND:
 	push de			;5bf0	d5
 	push bc			;5bf1	c5
 
-	ld c,a          ;5bf2	4f
+	
+    ld c,a          ;5bf2	4f
     
     ; Exit if lasers are being fired. No sounds in that case.
 	ld a,(LASERS_FIRING)		    ;5bf3	3a 19 e5
