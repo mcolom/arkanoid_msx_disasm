@@ -4373,15 +4373,15 @@ move_to_next_level:
 	ret			                    ;6b2b	c9
 
 vaus_goes_to_portal_resizing:
-	; HL = TBL_6b9c[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
-    ld hl,TBL_6b9c		;6b2c	21 9c 6b
+	; HL = TBL_VAUS_CROSSES_PORTAL_TRANSFORMED_SPR_DATA[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
+    ld hl,TBL_VAUS_CROSSES_PORTAL_TRANSFORMED_SPR_DATA		;6b2c	21 9c 6b
 	add hl,de			;6b2f	19
 	ld e,(hl)			;6b30	5e
 	inc hl			    ;6b31	23
 	ld d,(hl)			;6b32	56
 	ex de,hl			;6b33	eb
 
-	; Copy 4 sprites from TBL_6b9c
+	; Copy 4 sprites from TBL_VAUS_CROSSES_PORTAL_TRANSFORMED_SPR_DATA
     ; This makes the animation    
 	ld de, SPR_PARAMS_BASE		;6b34	11 cd e0
 	ld bc, 4 * SPR_PARAMS_LEN	;6b37	01 10 00
@@ -4406,7 +4406,7 @@ vaus_goes_to_portal_with_lasers:
 	ld d,(hl)			;6b4e	56
 	ex de,hl			;6b4f	eb
 
-	; Copy 4 sprites from TBL_6b9c
+	; Copy 4 sprites from TBL_VAUS_CROSSES_PORTAL_TRANSFORMED_SPR_DATA
     ; This makes the animation  
 	ld de,SPR_PARAMS_BASE		;6b50	11 cd e0
 	ld bc, 4 * SPR_PARAMS_LEN		        ;6b53	01 10 00
@@ -4424,116 +4424,77 @@ vaus_goes_to_portal_with_lasers:
 
 ; Sprite data to render Vaus crossing the portal.
 ; When entering, some sprites become invisible.
-TBL_VAUS_ENTERING_PORTAL_SPR_DATA:
+TBL_VAUS_ENTERING_PORTAL_SPR_DATA:  ; 6b64
+    ; Addresses
+    dw entering_portal_anim_1
+    dw entering_portal_anim_2
+    dw entering_portal_anim_3
+    dw entering_portal_anim_4
+
     ; Each entry is a sprite params. tuple as follows:
     ; SPR_PARAMS_IDX_Y, SPR_PARAMS_IDX_X, SPR_PARAMS_IDX_PATTERN_NUM, SPR_PARAMS_IDX_COLOR
-    
-    ; I guess this two are never accessed, only the one from 6b6c
-    db 108, 107, 120, 107   ;6b64   "OV"
-    db 132, 107, 144, 107   ;6b68   Exploding alien
-
+entering_portal_anim_1:
     db 174, 160, 8, 8   ;6b6c
     db 174, 176, 4, 14  ;6b70
     db 174, 192, 12, 8  ;6b74
+entering_portal_anim_2:
     db 174, 168, 8, 8   ;6b78
     db 174, 184, 4, 14  ;6b7c
     db 0, 0, 0, 0       ;6b80
+entering_portal_anim_3:
     db 174, 184, 8, 8   ;6b84
     db 0, 0, 0, 0       ;6b88
     db 0, 0, 0, 0       ;6b8c
+entering_portal_anim_4:
     db 0, 0, 0, 0       ;6b90
     db 0, 0, 0, 0       ;6b94
     db 0, 0, 0, 0       ;6b98
 
-TBL_6b9c:
-	and (hl)			;6b9c	a6 	. 
-	ld l,e			;6b9d	6b 	k 
-	or (hl)			;6b9e	b6 	. 
-	ld l,e			;6b9f	6b 	k 
-	add a,06bh		;6ba0	c6 6b 	. k 
-	sub 06bh		;6ba2	d6 6b 	. k 
-	and 06bh		;6ba4	e6 6b 	. k 
-	xor (hl)			;6ba6	ae 	. 
-	sub b			;6ba7	90 	. 
-	ex af,af'			;6ba8	08 	. 
-	ex af,af'			;6ba9	08 	. 
-	xor (hl)			;6baa	ae 	. 
-	and b			;6bab	a0 	. 
-	inc b			;6bac	04 	. 
-	ld c,0aeh		;6bad	0e ae 	. . 
-	or b			;6baf	b0 	. 
-	inc b			;6bb0	04 	. 
-	ld c,0aeh		;6bb1	0e ae 	. . 
-	ret nz			;6bb3	c0 	. 
-	inc c			;6bb4	0c 	. 
-	ex af,af'			;6bb5	08 	. 
-	xor (hl)			;6bb6	ae 	. 
-	sbc a,b			;6bb7	98 	. 
-	ex af,af'			;6bb8	08 	. 
-	ex af,af'			;6bb9	08 	. 
-	xor (hl)			;6bba	ae 	. 
-	xor b			;6bbb	a8 	. 
-	inc b			;6bbc	04 	. 
-	ld c,0aeh		;6bbd	0e ae 	. . 
-	cp b			;6bbf	b8 	. 
-	inc b			;6bc0	04 	. 
-	ld c,000h		;6bc1	0e 00 	. . 
-	nop			;6bc3	00 	. 
-	nop			;6bc4	00 	. 
-	nop			;6bc5	00 	. 
-	xor (hl)			;6bc6	ae 	. 
-	xor b			;6bc7	a8 	. 
-	ex af,af'			;6bc8	08 	. 
-	ex af,af'			;6bc9	08 	. 
-	xor (hl)			;6bca	ae 	. 
-	cp b			;6bcb	b8 	. 
-	inc b			;6bcc	04 	. 
-	ld c,000h		;6bcd	0e 00 	. . 
-	nop			;6bcf	00 	. 
-	nop			;6bd0	00 	. 
-	nop			;6bd1	00 	. 
-	nop			;6bd2	00 	. 
-	nop			;6bd3	00 	. 
-	nop			;6bd4	00 	. 
-	nop			;6bd5	00 	. 
-	xor (hl)			;6bd6	ae 	. 
-	cp b			;6bd7	b8 	. 
-	ex af,af'			;6bd8	08 	. 
-	ex af,af'			;6bd9	08 	. 
-	nop			;6bda	00 	. 
-	nop			;6bdb	00 	. 
-	nop			;6bdc	00 	. 
-	nop			;6bdd	00 	. 
-	nop			;6bde	00 	. 
-	nop			;6bdf	00 	. 
-	nop			;6be0	00 	. 
-	nop			;6be1	00 	. 
-	nop			;6be2	00 	. 
-	nop			;6be3	00 	. 
-	nop			;6be4	00 	. 
-	nop			;6be5	00 	. 
-	nop			;6be6	00 	. 
-	nop			;6be7	00 	. 
-	nop			;6be8	00 	. 
-	nop			;6be9	00 	. 
-	nop			;6bea	00 	. 
-	nop			;6beb	00 	. 
-	nop			;6bec	00 	. 
-	nop			;6bed	00 	. 
-	nop			;6bee	00 	. 
-	nop			;6bef	00 	. 
-	nop			;6bf0	00 	. 
-	nop			;6bf1	00 	. 
-	nop			;6bf2	00 	. 
-	nop			;6bf3	00 	. 
-	nop			;6bf4	00 	. 
-	nop			;6bf5	00 	. 
+; Sprite data to render Vaus crossing the portal,
+; when it's transformed.
+; When entering, some sprites become invisible.
+TBL_VAUS_CROSSES_PORTAL_TRANSFORMED_SPR_DATA:
+    ; Addresses
+    dw entering_portal_transf_anim_1
+    dw entering_portal_transf_anim_2
+    dw entering_portal_transf_anim_3
+    dw entering_portal_transf_anim_4
+    dw entering_portal_transf_anim_5
+    
+    ; Sprite params
+entering_portal_transf_anim_1:
+    db 0xae, 0x90, 0x8, 0x8 ; 0x6ba6 - 0x6ba9
+    db 0xae, 0xa0, 0x4, 0xe ; 0x6baa - 0x6bad
+    db 0xae, 0xb0, 0x4, 0xe ; 0x6bae - 0x6bb1
+    db 0xae, 0xc0, 0xc, 0x8 ; 0x6bb2 - 0x6bb5
+entering_portal_transf_anim_2:
+    db 0xae, 0x98, 0x8, 0x8 ; 0x6bb6 - 0x6bb9
+    db 0xae, 0xa8, 0x4, 0xe ; 0x6bba - 0x6bbd
+    db 0xae, 0xb8, 0x4, 0xe ; 0x6bbe - 0x6bc1
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bc2 - 0x6bc5
+entering_portal_transf_anim_3:
+    db 0xae, 0xa8, 0x8, 0x8 ; 0x6bc6 - 0x6bc9
+    db 0xae, 0xb8, 0x4, 0xe ; 0x6bca - 0x6bcd
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bce - 0x6bd1
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bd2 - 0x6bd5
+entering_portal_transf_anim_4:
+    db 0xae, 0xb8, 0x8, 0x8 ; 0x6bd6 - 0x6bd9
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bda - 0x6bdd
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bde - 0x6be1
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6be2 - 0x6be5
+entering_portal_transf_anim_5:
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6be6 - 0x6be9
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bea - 0x6bed
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bee - 0x6bf1
+    db 0x0, 0x0, 0x0, 0x0 ; 0x6bf2 - 0x6bf5
+
 
 TBL_6bf6:
 	cp 06bh		;6bf6	fe 6b 	. k 
 	ld c,06ch		;6bf8	0e 6c 	. l 
 	ld e,06ch		;6bfa	1e 6c 	. l 
 	ld l,06ch		;6bfc	2e 6c 	. l 
+    
 	xor (hl)			;6bfe	ae 	. 
 	and b			;6bff	a0 	. 
 	inc d			;6c00	14 	. 
