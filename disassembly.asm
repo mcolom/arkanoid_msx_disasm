@@ -30,6 +30,7 @@ include 'doh.asm'
 include 'portal.asm'
 include 'lives.asm'
 include 'demo.asm'
+include 'text.asm'
 
 
 
@@ -2449,8 +2450,6 @@ l4d46h:
     ld hl,0x1800 + 31 + 7*32	;4dc3	21 ff 18 Locate at [31, 7]
 	ld a, "0"	                ;4dc6	3e 30
 	call WRTVRM		            ;4dc8	cd 4d 00
-    
-    ; ToDo...
 
 	ld a, 0		                    ;4dcb	3e 00
 	ld (ROW_DRAW_COUNTER),a		;4dcd	32 6f e5
@@ -2484,10 +2483,10 @@ l4dd6h:
     ; Next row, between 0 and 3
     ; The patterns are indeed periodic
     ld a,(ROW_DRAW_COUNTER)		;4ded	3a 6f e5
-	inc a			                ;4df0	3c
-	cp 4		                    ;4df1	fe 04
-	jr nz,l4df7h		            ;4df3	20 02
-	ld a, 0		                    ;4df5	3e 00
+	inc a			            ;4df0	3c
+	cp 4		                ;4df1	fe 04
+	jr nz,l4df7h		        ;4df3	20 02
+	ld a, 0		                ;4df5	3e 00
 l4df7h:
 	ld (ROW_DRAW_COUNTER),a		;4df7	32 6f e5
 
@@ -2630,17 +2629,18 @@ l4eb4h:
 	ld a,001h		                                ;4eb4	3e 01
 	ld (BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE),a		;4eb6	32 4e e2
 
-    ; ToDo: what is this var?
-	ld a,068h		;4eb9	3e 68 	> h 
-	ld (BALL_X_DEMO),a		;4ebb	32 f6 e0 	2 . . 
+    ; Starting location of the ball in the demo
+	ld a, 104		        ;4eb9	3e 68
+	ld (BALL_X_DEMO),a		;4ebb	32 f6 e0
     
-    ; Clear some variables
-    ; ToDo: what are the other vars?
-	ld hl,00000h		;4ebe	21 00 00 	! . . 
-	ld (IN_DEMO),hl		;4ec1	22 0d e0 	" . . 
-	ld (0e00fh),hl		;4ec4	22 0f e0 	" . . 
-	ld (0e011h),hl		;4ec7	22 11 e0 	" . . 
-	ld (0e013h),hl		;4eca	22 13 e0 	" . . 
+    ; We're not in the demo
+	ld hl, 0		                ;4ebe	21 00 00
+	ld (IN_DEMO),hl		            ;4ec1	22 0d e0
+
+    ; Clear story-writting variables
+	ld (STORY_WRITE_ROW),hl		    ;4ec4	22 0f e0
+	ld (STORY_CHAR_INDEX),hl	    ;4ec7	22 11 e0
+	ld (STORY_ALREADY_WRITTEN),hl	;4eca	22 13 e0
 
     ; Clear sound
 	ld a, SOUND_NOP_0	;4ecd	3e 00
@@ -2670,7 +2670,7 @@ l4ef7h:
 	bit 4,a		;4efa	cb 67 	. g 
 	jp nz,l4f6bh		;4efc	c2 6b 4f 	. k O 
 l4effh:
-	ld hl,0e013h		;4eff	21 13 e0 	! . . 
+	ld hl,STORY_ALREADY_WRITTEN		;4eff	21 13 e0 	! . . 
 	ld a,(hl)			;4f02	7e 	~ 
 	or a			;4f03	b7 	. 
 	jp nz,l4f60h		;4f04	c2 60 4f 	. ` O 
@@ -2680,7 +2680,7 @@ l4effh:
 	cp 002h		;4f0c	fe 02 	. . 
 	ret nz			;4f0e	c0 	. 
 	ld (hl),000h		;4f0f	36 00 	6 . 
-	ld a,(0e00fh)		;4f11	3a 0f e0 	: . . 
+	ld a,(STORY_WRITE_ROW)		;4f11	3a 0f e0 	: . . 
 	ld e,a			;4f14	5f 	_ 
 	sla e		;4f15	cb 23 	. # 
 	ld d,000h		;4f17	16 00 	. . 
@@ -2692,7 +2692,7 @@ l4effh:
 	ld e,a			;4f25	5f 	_ 
 	ld d,000h		;4f26	16 00 	. . 
 	add hl,de			;4f28	19 	. 
-	ld a,(0e011h)		;4f29	3a 11 e0 	: . . 
+	ld a,(STORY_CHAR_INDEX)		;4f29	3a 11 e0 	: . . 
 	ld e,a			;4f2c	5f 	_ 
 	ld d,000h		;4f2d	16 00 	. . 
 	add iy,de		;4f2f	fd 19 	. . 
@@ -2701,7 +2701,7 @@ l4effh:
 	jp z,l4f3ch		;4f36	ca 3c 4f 	. < O 
 	call WRTVRM		;4f39	cd 4d 00 	. M . 
 l4f3ch:
-	ld hl,0e011h		;4f3c	21 11 e0 	! . . 
+	ld hl,STORY_CHAR_INDEX		;4f3c	21 11 e0 	! . . 
 	inc (hl)			;4f3f	34 	4 
 	ld hl,0e010h		;4f40	21 10 e0 	! . . 
 	inc (hl)			;4f43	34 	4 
@@ -2714,14 +2714,18 @@ l4f44h:
 	ld (hl),000h		;4f4c	36 00 	6 . 
 	xor a			;4f4e	af 	. 
 	ld (0e010h),a		;4f4f	32 10 e0 	2 . . 
-	ld hl,0e00fh		;4f52	21 0f e0 	! . . 
-	inc (hl)			;4f55	34 	4 
-	ld a,(hl)			;4f56	7e 	~ 
-	cp 009h		;4f57	fe 09 	. . 
-	ret nz			;4f59	c0 	. 
-	ld hl,0e013h		;4f5a	21 13 e0 	! . . 
-	ld (hl),001h		;4f5d	36 01 	6 . 
-	ret			;4f5f	c9 	. 
+
+    ; Next row of the story.
+    ; Exit if we've done already the STORY_NUM_LINES lines.
+	ld hl,STORY_WRITE_ROW		;4f52	21 0f e0
+	inc (hl)			        ;4f55	34
+	ld a,(hl)			        ;4f56	7e
+	cp STORY_NUM_LINES		    ;4f57	fe 09
+	ret nz			            ;4f59	c0
+
+	ld hl,STORY_ALREADY_WRITTEN		;4f5a	21 13 e0
+	ld (hl), 1		                ;4f5d	36 01
+	ret			                    ;4f5f	c9
 l4f60h:
 	ld hl,0e014h		;4f60	21 14 e0 	! . . 
 	inc (hl)			;4f63	34 	4 
@@ -2739,9 +2743,9 @@ l4f7ah:
     ; Clear some variables
 	ld hl,00000h		;4f7a	21 00 00 	! . . 
 	ld (IN_DEMO),hl		;4f7d	22 0d e0 	" . . 
-	ld (0e00fh),hl		;4f80	22 0f e0 	" . . 
-	ld (0e011h),hl		;4f83	22 11 e0 	" . . 
-	ld (0e013h),hl		;4f86	22 13 e0 	" . . 
+	ld (STORY_WRITE_ROW),hl		;4f80	22 0f e0 	" . . 
+	ld (STORY_CHAR_INDEX),hl		;4f83	22 11 e0 	" . . 
+	ld (STORY_ALREADY_WRITTEN),hl		;4f86	22 13 e0 	" . . 
 	ret			;4f89	c9 	. 
 
 ; ToDo
