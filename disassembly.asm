@@ -2674,7 +2674,7 @@ l4effh:
 	ld a,(hl)			;4f02	7e 	~ 
 	or a			;4f03	b7 	. 
 	jp nz,l4f60h		;4f04	c2 60 4f 	. ` O 
-	ld hl,0e00eh		;4f07	21 0e e0 	! . . 
+	ld hl,STORY_CHAR_DELAY_COUNTER		;4f07	21 0e e0 	! . . 
 	inc (hl)			;4f0a	34 	4 
 	ld a,(hl)			;4f0b	7e 	~ 
 	cp 002h		;4f0c	fe 02 	. . 
