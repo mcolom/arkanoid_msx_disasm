@@ -2656,98 +2656,137 @@ l4eb4h:
 ; ToDo, STORY_STR
 l4eddh:
     ; In demo
-	ld iy,STORY_STR		;4edd	fd 21 05 50 	. ! . P 
-	ld ix,l50efh		;4ee1	dd 21 ef 50 	. ! . P 
-	ld a,(USE_VAUS_PADDLE)		;4ee5	3a 0c e0 	: . . 
-	or a			;4ee8	b7 	. 
-	jp z,l4ef7h		;4ee9	ca f7 4e 	. . N 
-	ld a,(PADDLE_STATUS+1)		;4eec	3a c5 e0 	: . . 
-	bit 1,a		;4eef	cb 4f 	. O 
-	jp nz,l4f6bh		;4ef1	c2 6b 4f 	. k O 
-	jp l4effh		;4ef4	c3 ff 4e 	. . N 
+
+    ; IY points to the strings of the story
+	ld iy,STORY_STR		        ;4edd	fd 21 05 50
+	ld ix,STORY_ROW_POINTERS	;4ee1	dd 21 ef 50
+
+    ; Read controls or paddle
+	ld a,(USE_VAUS_PADDLE)		;4ee5	3a 0c e0
+	or a			            ;4ee8	b7
+	jp z,l4ef7h		            ;4ee9	ca f7 4e
+
+	ld a,(PADDLE_STATUS+1)		;4eec	3a c5 e0
+	bit 1,a		                ;4eef	cb 4f
+	jp nz,l4f6bh		        ;4ef1	c2 6b 4f
+	jp l4effh		            ;4ef4	c3 ff 4e
 l4ef7h:
-	ld a,(CONTROLS)		;4ef7	3a bf e0 	: . . 
-	bit 4,a		;4efa	cb 67 	. g 
-	jp nz,l4f6bh		;4efc	c2 6b 4f 	. k O 
+	ld a,(CONTROLS)		        ;4ef7	3a bf e0
+	bit 4,a		                ;4efa	cb 67
+	jp nz,l4f6bh		        ;4efc	c2 6b 4f
 l4effh:
-	ld hl,STORY_ALREADY_WRITTEN		;4eff	21 13 e0 	! . . 
-	ld a,(hl)			;4f02	7e 	~ 
-	or a			;4f03	b7 	. 
-	jp nz,l4f60h		;4f04	c2 60 4f 	. ` O 
-	ld hl,STORY_CHAR_DELAY_COUNTER		;4f07	21 0e e0 	! . . 
-	inc (hl)			;4f0a	34 	4 
-	ld a,(hl)			;4f0b	7e 	~ 
-	cp 002h		;4f0c	fe 02 	. . 
-	ret nz			;4f0e	c0 	. 
-	ld (hl),000h		;4f0f	36 00 	6 . 
-	ld a,(STORY_WRITE_ROW)		;4f11	3a 0f e0 	: . . 
-	ld e,a			;4f14	5f 	_ 
-	sla e		;4f15	cb 23 	. # 
-	ld d,000h		;4f17	16 00 	. . 
-	add ix,de		;4f19	dd 19 	. . 
-	ld e,(ix+000h)		;4f1b	dd 5e 00 	. ^ . 
-	ld d,(ix+001h)		;4f1e	dd 56 01 	. V . 
-	ex de,hl			;4f21	eb 	. 
-	ld a,(STORY_CHAR_OF_LINE_INDEX)		;4f22	3a 10 e0 	: . . 
-	ld e,a			;4f25	5f 	_ 
-	ld d,000h		;4f26	16 00 	. . 
-	add hl,de			;4f28	19 	. 
-	ld a,(STORY_MSG_INDEX)		;4f29	3a 11 e0 	: . . 
-	ld e,a			;4f2c	5f 	_ 
-	ld d,000h		;4f2d	16 00 	. . 
-	add iy,de		;4f2f	fd 19 	. . 
-	ld a,(iy+000h)		;4f31	fd 7e 00 	. ~ . 
-	cp 020h		;4f34	fe 20 	.   
-	jp z,l4f3ch		;4f36	ca 3c 4f 	. < O 
-	call WRTVRM		;4f39	cd 4d 00 	. M . 
+    ; If the story's text has been already written, done
+	ld hl,STORY_ALREADY_WRITTEN		;4eff	21 13 e0
+	ld a,(hl)			;4f02	7e
+	or a			    ;4f03	b7
+	jp nz,l4f60h		;4f04	c2 60 4f
+    
+    ; Check the char delay counter.
+    ; If not 2 already, exit
+    ; This allows for a small pause between chars
+	ld hl,STORY_CHAR_DELAY_COUNTER		;4f07	21 0e e0
+	inc (hl)			                ;4f0a	34
+	ld a,(hl)			                ;4f0b	7e
+	cp 2		                        ;4f0c	fe 02
+	ret nz			                    ;4f0e	c0
+    
+    ; Reset STORY_CHAR_DELAY_COUNTER
+	ld (hl), 0		                    ;4f0f	36 00
+
+    ; HL = STORY_ROW_POINTERS[2*STORY_WRITE_ROW]
+	ld a,(STORY_WRITE_ROW)		;4f11	3a 0f e0
+	ld e,a			            ;4f14	5f
+	sla e		                ;4f15	cb 23
+	ld d, 0		                ;4f17	16 00   DE = 2*STORY_WRITE_ROW
+	add ix,de		            ;4f19	dd 19   IX = STORY_ROW_POINTERS + 2*STORY_WRITE_ROW
+	ld e,(ix+0)		            ;4f1b	dd 5e 00
+	ld d,(ix+1)		            ;4f1e	dd 56 01
+	ex de,hl			        ;4f21	eb
+
+	ld a,(STORY_CHAR_OF_LINE_INDEX)		;4f22	3a 10 e0
+	ld e,a			                    ;4f25	5f
+	ld d,000h		                    ;4f26	16 00   DE = STORY_CHAR_OF_LINE_INDEX
+	add hl,de			                ;4f28	19      HL = STORY_ROW_POINTERS[2*STORY_WRITE_ROW] + STORY_CHAR_OF_LINE_INDEX
+
+	ld a,(STORY_MSG_INDEX)		;4f29	3a 11 e0
+	ld e,a			            ;4f2c	5f
+	ld d, 0		                ;4f2d	16 00   DE = STORY_MSG_INDEX
+	add iy,de		            ;4f2f	fd 19   Add STORY_MSG_INDEX to IY (pointer to the text)
+    ; Line done then arrived at char #32
+	ld a,(iy+000h)		        ;4f31	fd 7e 00
+	cp 32		                ;4f34	fe 20
+	jp z,l4f3ch		            ;4f36	ca 3c 4f    Jump if line done
+    ; Write the character on the screen
+	call WRTVRM		            ;4f39	cd 4d 00
 l4f3ch:
-	ld hl,STORY_MSG_INDEX		;4f3c	21 11 e0 	! . . 
-	inc (hl)			;4f3f	34 	4 
-	ld hl,STORY_CHAR_OF_LINE_INDEX		;4f40	21 10 e0 	! . . 
-	inc (hl)			;4f43	34 	4 
-l4f44h:
-	ld hl,STORY_CHARS_WRITTEN_TO_LINE		;4f44	21 12 e0 	! . . 
-	inc (hl)			;4f47	34 	4 
-	ld a,(hl)			;4f48	7e 	~ 
-	cp STORY_CHARS_PER_LINE		;4f49	fe 1a 	. . 
-	ret nz			;4f4b	c0 	. 
-	ld (hl),000h		;4f4c	36 00 	6 . 
-	xor a			;4f4e	af 	. 
-	ld (STORY_CHAR_OF_LINE_INDEX),a		;4f4f	32 10 e0 	2 . . 
+	; Next char
+    ld hl,STORY_MSG_INDEX		    ;4f3c	21 11 e0
+	inc (hl)			            ;4f3f	34
+    
+    ; Increment counter of chars in line
+	ld hl,STORY_CHAR_OF_LINE_INDEX	;4f40	21 10 e0
+	inc (hl)			            ;4f43	34
+    
+    ; Increment counter of chars written to line
+	ld hl,STORY_CHARS_WRITTEN_TO_LINE		;4f44	21 12 e0
+	inc (hl)			                    ;4f47	34
+    
+    ; Exit if we haven't done all the chars in the line
+	ld a,(hl)			        ;4f48	7e
+	cp STORY_CHARS_PER_LINE		;4f49	fe 1a
+	ret nz			            ;4f4b	c0
+
+    ; All chars in the line done
+
+    ; Reset STORY_CHARS_PER_LINE
+	ld (hl), 0 		;4f4c	36 00
+
+    ; Write next char at the beginning of the line
+	xor a			                    ;4f4e	af
+	ld (STORY_CHAR_OF_LINE_INDEX),a		;4f4f	32 10 e0
 
     ; Next row of the story.
     ; Exit if we've done already the STORY_NUM_LINES lines.
 	ld hl,STORY_WRITE_ROW		;4f52	21 0f e0
 	inc (hl)			        ;4f55	34
+
 	ld a,(hl)			        ;4f56	7e
 	cp STORY_NUM_LINES		    ;4f57	fe 09
 	ret nz			            ;4f59	c0
 
+    ; Notify we've already written all the story on the screen
 	ld hl,STORY_ALREADY_WRITTEN		;4f5a	21 13 e0
 	ld (hl), 1		                ;4f5d	36 01
 	ret			                    ;4f5f	c9
 
 l4f60h:
-	ld hl,0e014h		;4f60	21 14 e0 	! . . 
-	inc (hl)			;4f63	34 	4 
-	ld a,(hl)			;4f64	7e 	~ 
-	cp 078h		;4f65	fe 78 	. x 
-	ret nz			;4f67	c0 	. 
-	jp l4f7ah		;4f68	c3 7a 4f 	. z O 
+    ; Make a pause to see the text, before moving to the demo
+	ld hl,STORY_SHOWN_PAUSE		;4f60	21 14 e0
+	inc (hl)			        ;4f63	34
+	ld a,(hl)			        ;4f64	7e
+	cp 120		                ;4f65	fe 78
+	ret nz			            ;4f67	c0
+	jp l4f7ah		            ;4f68	c3 7a 4f
 l4f6bh:
-	ld hl,00000h		;4f6b	21 00 00 	! . . 
-	ld (BRICK_HIT_ROW),hl		;4f6e	22 3c e5 	" < . 
-	ld (VAUS_X2),hl		;4f71	22 3e e5 	" > . 
-	ld (0e540h),hl		;4f74	22 40 e5 	" @ . 
+	ld hl,0		                ;4f6b	21 00 00
+	ld (BRICK_HIT_ROW),hl		;4f6e	22 3c e5
+	ld (VAUS_X2),hl		        ;4f71	22 3e e5
+    
+    ; ToDo
+	ld (0e540h),hl		;4f74	22 40 e5
 	ld (0e542h),hl		;4f77	22 42 e5 	" B . 
 l4f7ah:
-    ; Clear some variables
-	ld hl,00000h		;4f7a	21 00 00 	! . . 
-	ld (IN_DEMO),hl		;4f7d	22 0d e0 	" . . 
-	ld (STORY_WRITE_ROW),hl		;4f80	22 0f e0 	" . . 
-	ld (STORY_MSG_INDEX),hl		;4f83	22 11 e0 	" . . 
-	ld (STORY_ALREADY_WRITTEN),hl		;4f86	22 13 e0 	" . . 
-	ret			;4f89	c9 	. 
+    ; Not in the demo anymore
+	ld hl, 0		                ;4f7a	21 00 00
+	ld (IN_DEMO),hl		            ;4f7d	22 0d e0
+
+    ; Clear story-writting variables
+	ld (STORY_WRITE_ROW),hl		    ;4f80	22 0f e0
+	ld (STORY_MSG_INDEX),hl		    ;4f83	22 11 e0
+	ld (STORY_ALREADY_WRITTEN),hl	;4f86	22 13 e0
+    
+    ; Done
+	ret			                    ;4f89	c9
 
 ; ToDo
 ENDING_TEXT_ANIMATION:
@@ -2834,7 +2873,8 @@ DRAW_UP_SCORES:
 STORY_STR:
     db "THE ERA AND TIME OF       THIS STORY IS UNKNOWN.    AFTER THE MOTHERSHIP      \"ARKANOID\" WAS DESTROYED, A SPACECRAFT \"VAUS\"       SCRAMBLED AWAY FROM IT.   BUT ONLY TO BE            TRAPPED IN SPACE WARPED   BY SOMEONE......          "
 
-l50efh:
+
+STORY_ROW_POINTERS:
 	ld b,e			;50ef	43 	C 
 l50f0h:
 	jr 0x5075		;50f0	18 83 	. . 

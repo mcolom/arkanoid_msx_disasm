@@ -1,4 +1,3 @@
-
 STORY_NUM_LINES: equ 9
 STORY_CHARS_PER_LINE: equ 26
 
@@ -19,3 +18,6 @@ STORY_CHARS_WRITTEN_TO_LINE: equ 0xe012
 
 ; Set when the whole story has been completely written on the screen
 STORY_ALREADY_WRITTEN: equ 0xe013
+
+; Counter to pause and show the story, before moving to the demo
+STORY_SHOWN_PAUSE: equ 0xe014
