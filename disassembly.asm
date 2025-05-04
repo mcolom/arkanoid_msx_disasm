@@ -472,7 +472,7 @@ CLEAR_SCREEN:
 
 VDP_HOOK_HANDLER:
 	call RDVDP		;424a	cd 3e 01
-	call sub_b594h	;424d	cd 94 b5
+	call sub_b594h_sound	;424d	cd 94 b5
     
     ; Read keyboard matrix and obtain these keys:
     ; STOP, GRAPH, STOP,  CURSOR RIGHT, CURSOR LEFT, CURSOR DOWN, CURSOR UP.    
@@ -6772,6 +6772,7 @@ l9677h:
 	ld a,(bc)			;9679	0a 	. 
 	dec bc			;967a	0b 	. 
 
+; ToDo
 sub_967bh:
 	ld a,(iy+000h)		;967b	fd 7e 00 	. ~ . 
 	or a			;967e	b7 	. 
@@ -10968,7 +10969,7 @@ lb3a7h:
 	nop			;b3ff	00 	. 
 
 	jp PLAY_SOUND		;b400	c3 e8 b4 	. . . 
-	jp sub_b594h		;b403	c3 94 b5 	. . . 
+	jp sub_b594h_sound		;b403	c3 94 b5 	. . . 
 
 ; Sound #0
 	db 0x22             ;b406	22
@@ -11142,8 +11143,9 @@ lb4aeh:
 	call z,02890h		;b4b0	cc 90 28 	. . ( 
 	adc a,c			;b4b3	89 	. 
 	db 0x28         ;b4b4   28
-    
-sub_b4b5:
+
+; ToDo
+sub_b4b5_sound:
 	ld a, (hl)		;b4b5	7e
 	and a		    ;b4b6	a7
 	ret z			;b4b7	c8
@@ -11222,13 +11224,13 @@ lb503h:
 	add a,a			;b509	87 	. 
 	add a,16		;b50a	c6 10 	. . 
 	push af			;b50c	f5 	. 
-	call sub_b51dh		;b50d	cd 1d b5 	. . . 
+	call sub_b51dh_sound		;b50d	cd 1d b5 	. . . 
 	pop af			;b510	f1 	. 
 	inc a			;b511	3c 	< 
 lb512h:
 	ld hl,0e5e9h		;b512	21 e9 e5 	! . . 
 lb515h:
-	call sub_b51dh		;b515	cd 1d b5 	. . . 
+	call sub_b51dh_sound		;b515	cd 1d b5 	. . . 
 lb518h:
 	pop af			;b518	f1 	. 
 	pop bc			;b519	c1 	. 
@@ -11238,7 +11240,7 @@ lb518h:
 
 ; Sound related...
 ; ToDo
-sub_b51dh:
+sub_b51dh_sound:
     ; BC = 0xb4.. , with A
 	ld b,0b4h		;b51d	06 b4 	. . 
 	ld c,a			;b51f	4f 	O 
@@ -11405,7 +11407,7 @@ write_E_to_PSG_reg_A:
 
 ; Sound related
 ; ToDo
-sub_b594h:
+sub_b594h_sound:
     ; Is the variable at SOUND_NUMBER+1 useless?
     ; It seems it's only checked here, but never written
 	ld a,(SOUND_NUMBER + 1)	;b594	3a c1 e5
@@ -11468,12 +11470,12 @@ lb5bch:
 	inc hl			;b5cc	23 	# 
 	ld bc,(0e5dah)		;b5cd	ed 4b da e5 	. K . . 
 
-	call sub_b4b5		;b5d1	cd b5 b4 	. . . 
+	call sub_b4b5_sound		;b5d1	cd b5 b4 	. . . 
 	
     jr nc,lb5e3h		;b5d4	30 0d 	0 . 
 	ld (0e5dch),a		;b5d6	32 dc e5 	2 . . 
 lb5d9h:
-	call sub_b63eh		;b5d9	cd 3e b6 	. > . 
+	call sub_b63eh_sound		;b5d9	cd 3e b6 	. > . 
 	jr lb5d9h		;b5dc	18 fb 	. . 
 lb5deh:
 	pop af			;b5de	f1 	. 
@@ -11481,11 +11483,11 @@ lb5deh:
 lb5e3h:
 	ld hl,0e5e9h		;b5e3	21 e9 e5 	! . . 
 	ld bc,(0e5f0h)		;b5e6	ed 4b f0 e5 	. K . . 
-	call sub_b4b5		;b5ea	cd b5 b4 	. . . 
+	call sub_b4b5_sound		;b5ea	cd b5 b4 	. . . 
 	jr nc,lb5fch		;b5ed	30 0d 	0 . 
 	ld (0e5f2h),a		;b5ef	32 f2 e5 	2 . . 
 lb5f2h:
-	call sub_b649h		;b5f2	cd 49 b6 	. I . 
+	call sub_b649h_sound		;b5f2	cd 49 b6 	. I . 
 	jr lb5f2h		;b5f5	18 fb 	. . 
 lb5f7h:
 	pop af			;b5f7	f1 	. 
@@ -11494,29 +11496,29 @@ lb5fch:
 	ld hl,0e5deh		;b5fc	21 de e5 	! . . 
 	ld d,001h		;b5ff	16 01 	. . 
 	ld bc,(SOUNDS_UNKNOWN_TYPE)		;b601	ed 4b c4 e5 	. K . . 
-	call sub_b77bh		;b605	cd 7b b7 	. { . 
+	call sub_b77bh_sound		;b605	cd 7b b7 	. { . 
 	ld (SOUNDS_UNKNOWN_TYPE),bc		;b608	ed 43 c4 e5 	. C . . 
 	ld hl,0e5e1h		;b60c	21 e1 e5 	! . . 
 	ld d,010h		;b60f	16 10 	. . 
 	ld a,(0e5cch)		;b611	3a cc e5 	: . . 
-	call sub_b79bh		;b614	cd 9b b7 	. . . 
-	call sub_b7cfh		;b617	cd cf b7 	. . . 
+	call sub_b79bh_sound		;b614	cd 9b b7 	. . . 
+	call sub_b7cfh_sound		;b617	cd cf b7 	. . . 
 	ld a,c			;b61a	79 	y 
 	ld (0e5cch),a		;b61b	32 cc e5 	2 . . 
 	ld hl,0e5f4h		;b61e	21 f4 e5 	! . . 
 	ld d,002h		;b621	16 02 	. . 
 	ld bc,(0e5c6h)		;b623	ed 4b c6 e5 	. K . . 
-	call sub_b77bh		;b627	cd 7b b7 	. { . 
+	call sub_b77bh_sound		;b627	cd 7b b7 	. { . 
 	ld (0e5c6h),bc		;b62a	ed 43 c6 e5 	. C . . 
 	ld hl,0e5f7h		;b62e	21 f7 e5 	! . . 
 	ld d,040h		;b631	16 40 	. @ 
 	ld a,(0e5ceh)		;b633	3a ce e5 	: . . 
-	call sub_b79bh		;b636	cd 9b b7 	. . . 
+	call sub_b79bh_sound		;b636	cd 9b b7 	. . . 
 	ld a,c			;b639	79 	y 
 	ld (0e5ceh),a		;b63a	32 ce e5 	2 . . 
 	ret			;b63d	c9 	. 
 
-sub_b63eh:
+sub_b63eh_sound:
 	inc bc			;b63e	03 	. 
 	ld a,(bc)			;b63f	0a 	. 
 	bit 7,a		;b640	cb 7f 	.  
@@ -11524,7 +11526,7 @@ sub_b63eh:
 	ld hl,TBL_b666		;b644	21 66 b6 	! f . 
 	jr lb652h		;b647	18 09 	. . 
 
-sub_b649h:
+sub_b649h_sound:
 	inc bc			;b649	03 	. 
 	ld a,(bc)			;b64a	0a 	. 
 	bit 7,a		;b64b	cb 7f 	.  
@@ -11702,7 +11704,7 @@ lb76fh:
 	call sub_b765h		;b776	cd 65 b7 	. e . 
 	jr lb753h		;b779	18 d8 	. . 
 
-sub_b77bh:
+sub_b77bh_sound:
 	ld e,(hl)			;b77b	5e 	^ 
 	bit 7,e		;b77c	cb 7b 	. { 
 	ret z			;b77e	c8 	. 
@@ -11730,7 +11732,7 @@ lb796h:
 	ld c,l			;b798	4d 	M 
 	jr lb759h		;b799	18 be 	. . 
 
-sub_b79bh:
+sub_b79bh_sound:
 	push hl			;b79b	e5 	. 
 	pop ix		;b79c	dd e1 	. . 
 	ld c,a			;b79e	4f 	O 
@@ -11774,7 +11776,7 @@ lb7c1h:
 	ld (ix+000h),000h		;b7ca	dd 36 00 00 	. 6 . . 
 	ret			;b7ce	c9 	. 
 
-sub_b7cfh:
+sub_b7cfh_sound:
 	ld a,c			;b7cf	79 	y 
 	and a			;b7d0	a7 	. 
 	ret z			;b7d1	c8 	. 
@@ -11886,6 +11888,7 @@ lb848h:
 	ret c			;b852	d8 	. 
 	pop af			;b853	f1 	. 
 	ret			;b854	c9 	. 
+
 	ld bc,la090h		;b855	01 90 a0 	. . . 
 	add a,b			;b858	80 	. 
 	nop			;b859	00 	. 
