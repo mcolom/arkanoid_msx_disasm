@@ -985,37 +985,40 @@ FILL_BRICK_ACTION_TABLE:
 	xor a			            ;43ff	af
 	ld (TITLE_SCREEN_ACTION),a	;4400	32 3c e5
 l4403h:
-	ld a,(TITLE_SCREEN_ACTION)		;4403	3a 3c e5 	: < . 
+	ld a,(TITLE_SCREEN_ACTION)	;4403	3a 3c e5
 l4406h:
-	ld l,a			;4406	6f 	o 
-	ld h,000h		;4407	26 00 	& . 
-	add hl,hl			;4409	29 	) 
-	push hl			;440a	e5 	. 
-	ld de,TBL_4445		;440b	11 45 44 	. E D 
-	add hl,de			;440e	19 	. 
-	ld e,(hl)			;440f	5e 	^ 
-	inc hl			;4410	23 	# 
-l4411h:
-	ld d,(hl)			;4411	56 	V 
-	pop hl			;4412	e1 	. 
-	ld bc,TBL_4485		;4413	01 85 44 	. . D 
-	add hl,bc			;4416	09 	. 
-	ld c,(hl)			;4417	4e 	N 
-	inc hl			;4418	23 	# 
-	ld b,(hl)			;4419	46 	F 
-	push bc			;441a	c5 	. 
-	pop hl			;441b	e1 	. 
+    ; DE = TBL_BRICK_ACTION_TABLE_OFFSETs_COPY[2*POS]
+	ld l,a		    ;4406	6f
+	ld h, 0		    ;4407	26 00
+	add hl,hl		;4409	29
+	push hl			;440a	e5
+	ld de,TBL_BRICK_ACTION_TABLE_OFFSETs_COPY	;440b	11 45 44
+	add hl,de		;440e	19
+	ld e,(hl)		;440f	5e
+	inc hl			;4410	23
+	ld d,(hl)		;4411	56
+	pop hl			;4412	e1
+
+    ; HL = TBL_4485[2*POS]
+	ld bc,TBL_4485		;4413	01 85 44
+	add hl,bc			;4416	09
+	ld c,(hl)			;4417	4e
+	inc hl			    ;4418	23
+	ld b,(hl)			;4419	46
+	push bc			    ;441a	c5
+	pop hl			    ;441b	e1
+
 l441ch:
-	ld a,(hl)			;441c	7e 	~ 
-	and 00fh		;441d	e6 0f 	. . 
-	ld b,a			;441f	47 	G 
-	ld a,(hl)			;4420	7e 	~ 
-	and 0f0h		;4421	e6 f0 	. . 
-	srl a		;4423	cb 3f 	. ? 
-l4425h:
-	srl a		;4425	cb 3f 	. ? 
-	srl a		;4427	cb 3f 	. ? 
-	srl a		;4429	cb 3f 	. ? 
+	ld a,(hl)		;441c	7e      V <-- read TBL_4485
+	and 00fh		;441d	e6 0f
+	ld b,a			;441f	47      B <-- V & 0x0f. We keep the 4 LSB 
+
+	ld a,(hl)	;4420	7e          V <-- read TBL_4485
+	and 0f0h	;4421	e6 f0       V <-- V & 0x0f
+	srl a		;4423	cb 3f
+	srl a		;4425	cb 3f
+	srl a		;4427	cb 3f
+	srl a		;4429	cb 3f       V <-- V \ 16. We keep the 4 MSB
 l442bh:
     ; This writes from 0xC000...
     ; 0xC000 is referenced in ;TBL_BRICK_ACTION_TABLE_OFFSETs:
@@ -1043,7 +1046,8 @@ l442bh:
 
 ; ToDo: what is this table?
 ; Related to function FILL_BRICK_ACTION_TABLE
-TBL_4445:
+; It's the same as TBL_BRICK_ACTION_TABLE_OFFSETs.
+TBL_BRICK_ACTION_TABLE_OFFSETs_COPY:
     dw 0xc000, 0xc084, 0xc108, 0xc18c, 0xc210, 0xc294, 0xc318, 0xc39c; 0x4445 - 0x4454
     dw 0xc420, 0xc4a4, 0xc528, 0xc5ac, 0xc630, 0xc6b4, 0xc738, 0xc7bc; 0x4455 - 0x4464
     dw 0xc840, 0xc8c4, 0xc948, 0xc9cc, 0xca50, 0xcad4, 0xcb58, 0xcbdc; 0x4465 - 0x4474
@@ -10507,6 +10511,7 @@ TBL_BRICK_ACTIONS:          ;aa52
 
 ; This points to tables with the bricks "unrolled".
 ; This is used to identify the brick type and take the appropriate action.
+; It's the same as TBL_BRICK_ACTION_TABLE_OFFSETs_COPY
 TBL_BRICK_ACTION_TABLE_OFFSETs: ;aa5c
     dw 0xc000, 0xc084, 0xc108, 0xc18c, 0xc210, 0xc294, 0xc318, 0xc39c; 0xaa5c - 0xaa6b
     dw 0xc420, 0xc4a4, 0xc528, 0xc5ac, 0xc630, 0xc6b4, 0xc738, 0xc7bc; 0xaa6c - 0xaa7b
