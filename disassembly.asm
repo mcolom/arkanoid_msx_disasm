@@ -2653,7 +2653,6 @@ l4eb4h:
 	call DELAY_HL_TICKS		;4ed9	cd 80 43
 	ret			            ;4edc	c9
 
-; ToDo, STORY_STR
 l4eddh:
     ; In demo
 
@@ -2790,59 +2789,87 @@ l4f7ah:
 
 ; ToDo
 ENDING_TEXT_ANIMATION:
+    ; This is called with:
+    ; 	ld iy, ENDING_STR
+	;   ld ix, TBL_VDP_POINTERS_LINE_ENDING_TEXT
+
 	call CLEAR_SCREEN		    ;4f8a	cd 27 42
     
-    ; Set TITLE_SCREEN_ACTION_GOTO_TITLE_SCREEN
-	xor a			            ;4f8d	af
+    ; They're reusing BRICK_HIT_ROW and BRICK_HIT_ROW.
+    ; Here BRICK_HIT_ROW is the row and
+    ; BRICK_HIT_ROW is the column.
+    
+    ; BRICK_HIT_ROW <-- 0
+	xor a			        ;4f8d	af
 	ld (BRICK_HIT_ROW),a	;4f8e	32 3c e5
 l4f91h:
-	push ix		;4f91	dd e5 	. . 
-	xor a			;4f93	af 	. 
-	ld (BRICK_HIT_COL),a		;4f94	32 3d e5 	2 = . 
-	ld a,(BRICK_HIT_ROW)		;4f97	3a 3c e5 	: < . 
-	ld e,a			;4f9a	5f 	_ 
-	sla e		;4f9b	cb 23 	. # 
-	ld d,000h		;4f9d	16 00 	. . 
-	add ix,de		;4f9f	dd 19 	. . 
-	ld e,(ix+000h)		;4fa1	dd 5e 00 	. ^ . 
-	ld d,(ix+001h)		;4fa4	dd 56 01 	. V . 
+	push ix		            ;4f91	dd e5
+	
+    ; BRICK_HIT_ROW <-- 0
+    xor a			        ;4f93	af
+	ld (BRICK_HIT_COL),a	;4f94	32 3d e5
+    
+	; IX = TBL_VDP_POINTERS_LINE_ENDING_TEXT  + 2*BRICK_HIT_ROW
+    ld a,(BRICK_HIT_ROW)	;4f97	3a 3c e5
+	ld e,a			        ;4f9a	5f
+	sla e		            ;4f9b	cb 23
+	ld d, 0		            ;4f9d	16 00
+	add ix,de		        ;4f9f	dd 19
+
+    ; HL = TBL_VDP_POINTERS_LINE_ENDING_TEXT[2*BRICK_HIT_ROW]
+	ld e,(ix+0)		;4fa1	dd 5e 00
+	ld d,(ix+1)		;4fa4	dd 56 01    
 	ex de,hl			;4fa7	eb 	. 
 l4fa8h:
-	ld a,(iy+000h)		;4fa8	fd 7e 00 	. ~ . 
-	cp 32		;4fab	fe 20 	.   
-	jp z,l4fbbh		;4fad	ca bb 4f 	. . O 
-	push hl			;4fb0	e5 	. 
-	call WRTVRM		;4fb1	cd 4d 00 	. M . 
+    ; Check if the caracter is a blank space
+	ld a,(iy+0)		;4fa8	fd 7e 00
+	cp " "	        ;4fab	fe 20
+    
+    ; If it's a space, neither write it nor make the pause
+	jp z,l4fbbh		;4fad	ca bb 4f
+
+	push hl			;4fb0	e5
+    ; Write the character and make the pause
+	call WRTVRM		;4fb1	cd 4d 00
 
     ; Wait 3 ticks
 	ld hl, 3		        ;4fb4	21 03 00
 	call DELAY_HL_TICKS		;4fb7	cd 80 43
-
 	pop hl			        ;4fba	e1
 l4fbbh:
-	inc hl			;4fbb	23 	# 
-	inc iy		;4fbc	fd 23 	. # 
-	ld a,(BRICK_HIT_COL)		;4fbe	3a 3d e5 	: = . 
-	inc a			;4fc1	3c 	< 
-	cp 26		;4fc2	fe 1a 	. . 
-	ld (BRICK_HIT_COL),a		;4fc4	32 3d e5 	2 = . 
-	jp nz,l4fa8h		;4fc7	c2 a8 4f 	. . O 
-	pop ix		;4fca	dd e1 	. . 
+    ; Next column
+	inc hl		;4fbb	23
+	inc iy		;4fbc	fd 23
+	
+    ld a,(BRICK_HIT_COL)	;4fbe	3a 3d e5
+	inc a			        ;4fc1	3c
+	cp 26		            ;4fc2	fe 1a
     
-    ; Here it's not BRICK_HIT_ROW, but most probably
-    ; it's reusing the var for something else
-	ld hl,BRICK_HIT_ROW		;4fcc	21 3c e5 	! < . 
-	inc (hl)			;4fcf	34 	4 
-	ld a,(hl)			;4fd0	7e 	~ 
-	cp 9		;4fd1	fe 09 	. . 
-	jp nz,l4f91h		;4fd3	c2 91 4f 	. . O 
+    ; Keep iterating columns if we haven't done 26
+	ld (BRICK_HIT_COL),a		;4fc4	32 3d e5
+	jp nz,l4fa8h		        ;4fc7	c2 a8 4f
+    
+    ; Row done
+	pop ix		                ;4fca	dd e1
+    
+    ; Increment row number
+	ld hl,BRICK_HIT_ROW		;4fcc	21 3c e5
+	inc (hl)			    ;4fcf	34 	4 
+    
+    ; Keep executing if row != 9
+	ld a,(hl)			;4fd0	7e
+	cp 9		        ;4fd1	fe 09
+	jp nz,l4f91h		;4fd3	c2 91 4f
+    
+    ; Done
 
-    ; Wait 1472 ticks
+    ; Pause for 1472 ticks
 	ld hl, 1472		        ;4fd6	21 c0 05
 	call DELAY_HL_TICKS		;4fd9	cd 80 43
 
-	call CLEAR_SCREEN		;4fdc	cd 27 42 	. ' B 
-	ret			;4fdf	c9 	. 
+    ; Clear screen and exit
+	call CLEAR_SCREEN		;4fdc	cd 27 42
+	ret			            ;4fdf	c9
 
 DRAW_UP_SCORES:
     ; Draw "SCORE    HIGH SCORE" at the top of the screen
@@ -7417,8 +7444,8 @@ ACTION_INC_LEVEL:
 	ei                      ;7bd7	fb
 
     ; Show the ending text animation
-	ld iy,ENDING_STR		        ;7bd8	fd 21 88 7c
-	ld ix,0x7d72		            ;7bdc	dd 21 72 7d
+	ld iy, ENDING_STR		        ;7bd8	fd 21 88 7c
+	ld ix, TBL_VDP_POINTERS_LINE_ENDING_TEXT		            ;7bdc	dd 21 72 7d
 	call ENDING_TEXT_ANIMATION		;7be0	cd 8a 4f
 
     ; Wait 30 ticks
@@ -7544,29 +7571,14 @@ l7c7dh:
 ENDING_STR:
     db "DIMENSION-CONTROLLING FORT\"DOH\" HAS NOW BEEN        DEMOLISHED, AND TIME      STARTED FLOWING REVERSELY.\"VAUS\" MANAGED TO ESCAPE  FROM THE DISTORTED SPACE. BUT THE REAL VOYAGE OF    \"ARKANOID\" IN THE GALAXY  HAS ONLY STARTED......    "
 
-	ld b,e			;7d72	43 	C 
-    db 0x18, 0x83
-    db 0x18, 0xc3
-	jr l7d7ch		;7d77	18 03 	. . 
-	add hl,de			;7d79	19 	. 
-	ld h,e			;7d7a	63 	c 
-	add hl,de			;7d7b	19 	. 
-l7d7ch:
-	and e			;7d7c	a3 	. 
-l7d7dh:
-	add hl,de			;7d7d	19 	. 
-	inc bc			;7d7e	03 	. 
-l7d7fh:
-	ld a,(de)			;7d7f	1a 	. 
-	ld b,e			;7d80	43 	C 
-	ld a,(de)			;7d81	1a 	. 
-	add a,e			;7d82	83 	. 
-	ld a,(de)			;7d83	1a 	. 
+; VDP addresses to locate the ending story text
+TBL_VDP_POINTERS_LINE_ENDING_TEXT:  ; 0x7d72
+    dw 0x1843, 0x1883, 0x18c3, 0x1903, 0x1963, 0x19a3, 0x1a03, 0x1a43, 0x1a83
 
 ; Patterns in game
 ; One third, 8*0x300/3 = 2048 bytes
 IN_GAME_TILES:
-include 'in_game_patterns.asm'
+include 'in_game_patterns.asm'  ; 0x7d84
 
 ; In-game compressed colors 
 ; One third, 8*0x300/3 = 2048 bytes
