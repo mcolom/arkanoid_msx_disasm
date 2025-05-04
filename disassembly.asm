@@ -4153,70 +4153,92 @@ EXECUTE_VAUS_ACTION_AND_LASERS_STEP_AND_PORTAL_ANIMATION:
 	ret			                ;683e	c9
 
 ; Animation of the open portal
-; ToDo
 PORTAL_ANIMATION:
     ; If the portal is closed, exit
 	ld a,(PORTAL_OPEN)		;683f	3a 26 e3
 	or a			        ;6842	b7
 	ret z			        ;6843	c8
 
-	ld a,(0e57ch)		;6844	3a 7c e5 	: | . 
-	cp 001h		;6847	fe 01 	. . 
-	jp z,l686fh		;6849	ca 6f 68 	. o h 
-	ld b,004h		;684c	06 04 	. . 
-	ld hl,TBL_68b8		;684e	21 b8 68 	! . h 
-	ld iy,01a98h		;6851	fd 21 98 1a 	. ! . . 
+    ; If the portal han been already drawn open, skip
+	ld a,(PORTAL_ALREADY_DRAWN_OPEN)	;6844	3a 7c e5
+	cp 1		                        ;6847	fe 01
+	jp z,l686fh		                    ;6849	ca 6f 68
+    
+    ; We need to write the portal open
+
+	ld b, 4		        ;684c	06 04
+	ld hl,OPEN_PORTAL_PATTERNS		;684e	21 b8 68
+	ld iy, 0x1800 + 24 + 20*32		;6851	fd 21 98 1a     Locate at [24, 20]
 l6855h:
-	push iy		;6855	fd e5 	. . 
-	pop de			;6857	d1 	. 
-	push bc			;6858	c5 	. 
-	push hl			;6859	e5 	. 
-	ld bc,00001h		;685a	01 01 00 	. . . 
-	call LDIRVM		;685d	cd 5c 00 	. \ . 
-	pop hl			;6860	e1 	. 
-	pop bc			;6861	c1 	. 
-	ld de,00020h		;6862	11 20 00 	.   . 
-	add iy,de		;6865	fd 19 	. . 
-	inc hl			;6867	23 	# 
-	djnz l6855h		;6868	10 eb 	. . 
-	ld a,001h		;686a	3e 01 	> . 
-	ld (0e57ch),a		;686c	32 7c e5 	2 | . 
+	push iy		    ;6855	fd e5
+	pop de			;6857	d1
+
+	push bc			;6858	c5
+	push hl			;6859	e5
+    ; Draw one char
+	ld bc, 1		;685a	01 01 00
+	call LDIRVM		;685d	cd 5c 00
+	pop hl			;6860	e1
+	pop bc			;6861	c1
+
+    ; Next line
+	ld de, 32		;6862	11 20 00
+	add iy,de		;6865	fd 19
+	inc hl			;6867	23
+	djnz l6855h		;6868	10 eb
+    
+    ; Portal open already drawn
+	ld a,1		                        ;686a	3e 01
+	ld (PORTAL_ALREADY_DRAWN_OPEN),a	;686c	32 7c e5
+;
 l686fh:
-	ld a,(0e57bh)		;686f	3a 7b e5 	: { . 
-	cp 009h		;6872	fe 09 	. . 
-	jr c,l687ah		;6874	38 04 	8 . 
-	ld a,000h		;6876	3e 00 	> . 
-	jr l687fh		;6878	18 05 	. . 
+    ; Check if we need to update the beam animation
+	ld a,(PORTAL_ANIMATION_BEAM_COUNTER)	;686f	3a 7b e5
+	cp 9		                            ;6872	fe 09
+	jr c,l687ah		                        ;6874	38 04 Jump if PORTAL_ANIMATION_BEAM_COUNTER < 9
+    
+    ; PORTAL_ANIMATION_BEAM_COUNTER >= 9
+	ld a, 0		;6876	3e 00
+	jr l687fh	;6878	18 05
 l687ah:
-	inc a			;687a	3c 	< 
-	ld (0e57bh),a		;687b	32 7b e5 	2 { . 
-	ret			;687e	c9 	. 
+    ; Increment PORTAL_ANIMATION_BEAM_COUNTER
+	inc a			                        ;687a	3c
+	ld (PORTAL_ANIMATION_BEAM_COUNTER),a	;687b	32 7b e5
+	ret			                            ;687e	c9
 ;
 l687fh:
-	ld (0e57bh),a		;687f	32 7b e5 	2 { . 
-	ld a,(0e576h)		;6882	3a 76 e5 	: v . 
-	cp 000h		;6885	fe 00 	. . 
-	jp z,l688fh		;6887	ca 8f 68 	. . h 
-	ld a,000h		;688a	3e 00 	> . 
-	jp l6891h		;688c	c3 91 68 	. . h 
+    ; Update PORTAL_ANIMATION_BEAM_COUNTER
+	ld (PORTAL_ANIMATION_BEAM_COUNTER),a	;687f	32 7b e5
+
+    ; A = inverted PORTAL_ANIMATION_BEAM_STEP
+	ld a,(PORTAL_ANIMATION_BEAM_STEP)		;6882	3a 76 e5
+	cp 0		                            ;6885	fe 00
+	jp z,l688fh		                        ;6887	ca 8f 68
+
+	ld a, 0		                            ;688a	3e 00
+	jp l6891h		                        ;688c	c3 91 68
 l688fh:
-	ld a,001h		;688f	3e 01 	> . 
+	ld a, 1		                            ;688f	3e 01
 l6891h:
-	ld (0e576h),a		;6891	32 76 e5 	2 v . 
-	sla a		;6894	cb 27 	. ' 
-	sla a		;6896	cb 27 	. ' 
-	ld l,a			;6898	6f 	o 
-	ld h,000h		;6899	26 00 	& . 
-	ld de,TBL_68bc		;689b	11 bc 68 	. . h 
-	add hl,de			;689e	19 	. 
-	push hl			;689f	e5 	. 
-	pop ix		;68a0	dd e1 	. . 
+    ; Update PORTAL_ANIMATION_BEAM_STEP
+	ld (PORTAL_ANIMATION_BEAM_STEP),a		;6891	32 76 e5
     
-    
+    ; Use the 4 patterns for the bean corresponding to the
+    ; PORTAL_ANIMATION_BEAM_STEP.
+    ; IX = PORTAL_BEAM_PATTERNS[2*PORTAL_ANIMATION_BEAM_STEP]
+	sla a		    ;6894	cb 27
+	sla a		    ;6896	cb 27
+	ld l,a			;6898	6f
+	ld h,000h		;6899	26 00
+	ld de,PORTAL_BEAM_PATTERNS	;689b	11 bc 68
+	add hl,de		;689e	19
+	push hl			;689f	e5
+	pop ix		    ;68a0	dd e1
+
     ; Animation of Vaus entering the portal.
     ; The portal opens as Vaus enters.
-	ld b, 4 		                                  ;68a2	06 04 Four steps
-    ld hl, 0x1800 + 24 + 20*32; Locate VRAM [24, 20]  ;68a4	21 98 1a
+	ld b, 4 		            ;68a2	06 04       Four steps
+    ld hl, 0x1800 + 24 + 20*32; ;68a4	21 98 1a    Locate VRAM [24, 20]
 l68a7h:
 	push hl			    ;68a7	e5
     ; Load and VRAM write portal pattern
@@ -4234,12 +4256,14 @@ l68a7h:
 	djnz l68a7h		    ;68b5	10 f0
 	ret			        ;68b7	c9
 
-TBL_68b8:
+; Pattern codes to write the portal open
+OPEN_PORTAL_PATTERNS:
     db 22, 23, 24, 25
 
-TBL_68bc:
-    db 26, 27, 28, 29, 30, 31
-    db 109, 33
+; Pattern codes to write the portal beamns
+PORTAL_BEAM_PATTERNS:
+    db 26, 27,  28, 29  ; State 0
+    db 30, 31, 109, 33  ; State 1
 
 ; Executes a Vaus action:
 ; - Follow the ball when in the demo 
