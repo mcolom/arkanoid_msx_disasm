@@ -4317,7 +4317,7 @@ TBL_INCREMENT_POS_VAUS_CONTROLS:
 	db 0		;6fff    
     db -4       ;7000   Left
     db 0        ;7001
-    db -4       ;7002   Left
+    db -4       ;7002   Left ; ** Trick: set -8 (0xf8) for Turbo Mode! ;) UP + LEFT **
 	db 0		;7003
     db -4       ;7004   Left
     db 0        ;7005
@@ -4325,7 +4325,7 @@ TBL_INCREMENT_POS_VAUS_CONTROLS:
 	db 0		;7007
 	db 4		;7008   Right
 	db 0		;7009
-	db 4		;700a   Right
+	db 4		;700a   Right   ; ** Trick: set 8 for Turbo Mode! ;) UP + RIGHT **
 	db 0		;700b
 	db 4		;700c   Right
 	db 0		;700d
@@ -4340,6 +4340,10 @@ TBL_INCREMENT_POS_VAUS_CONTROLS:
 	db 0		;7016
 	db 0		;7017
 	db 0		;7018
+; Turbo Mode:
+; POKE 0X7002 0xF8
+; POKE 0X700A 8
+
 
 l7019h:
 	db 0			;7019	00 	. 
