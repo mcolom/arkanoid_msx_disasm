@@ -2787,7 +2787,7 @@ l4f7ah:
     ; Done
 	ret			                    ;4f89	c9
 
-; ToDo
+; Show the animation with the ending text
 ENDING_TEXT_ANIMATION:
     ; This is called with:
     ; 	ld iy, ENDING_STR
@@ -3222,7 +3222,8 @@ l5310h:
 	pop hl		;5317	e1
 	ret			;5318	c9
 
-; ToDo: finish decoding this function
+; Updates the BCD scores and number of lives
+; Give a live when the points target is reached
 CHECK_SCORE_LIFE_TARGET:
     ; Compare the current score with the target to get a life
 	ld hl,SCORE_BCD+2	    ;5319	21 17 e0
@@ -3242,6 +3243,7 @@ CHECK_SCORE_LIFE_TARGET:
 	cp (hl)			        ;5331	be
 	jp c,l5336h		        ;5332	da 36 53
 	ret nz			        ;5335	c0
+;
 l5336h:
     ; Increment lives
 	ld hl,LIVES		    ;5336	21 1d e0
@@ -3256,25 +3258,26 @@ l5336h:
 	ld hl,SCORE_LIFE_BCD+3      ;5342	21 21 e0
 	inc (hl)			        ;5345	34
     
-    ; Set 40000 points
-	ld e,040h		;5346	1e 40 	. @ 
-	ld a,(hl)			;5348	7e 	~ 
-	cp 001h		;5349	fe 01 	. . 
-	jp z,l5350h		;534b	ca 50 53 	. P S 
+    ; Set next target to 40000 points
+	ld e,0x40		;5346	1e 40
+	ld a,(hl)		;5348	7e
+	cp 1		    ;5349	fe 01
+	jp z,l5350h		;534b	ca 50 53
     
-    ; Set 60000 points
-	ld e,060h		;534e	1e 60 	. ` 
+    ; Set next target to  60000 points
+	ld e,060h		;534e	1e 60
 l5350h:
-	ld a,(SCORE_LIFE_BCD+1)		;5350	3a 1f e0 	: . . 
-	add a,e			;5353	83 	. 
-	daa			;5354	27 	' 
-	ld (SCORE_LIFE_BCD+1),a		;5355	32 1f e0 	2 . . 
-	ret nc			;5358	d0 	. 
-	ld a,(SCORE_LIFE_BCD+2)		;5359	3a 20 e0 	:   . 
-	add a,001h		;535c	c6 01 	. . 
-	daa			;535e	27 	' 
-	ld (SCORE_LIFE_BCD+2),a		;535f	32 20 e0 	2   . 
-	ret			;5362	c9 	. 
+    ; Write the score, avoiding heading zeros
+	ld a,(SCORE_LIFE_BCD+1)		;5350	3a 1f e0
+	add a,e			            ;5353	83
+	daa			                ;5354	27
+	ld (SCORE_LIFE_BCD+1),a		;5355	32 1f e0
+	ret nc			            ;5358	d0
+	ld a,(SCORE_LIFE_BCD+2)		;5359	3a 20 e0
+	add a, 1		            ;535c	c6 01
+	daa			                ;535e
+	ld (SCORE_LIFE_BCD+2),a		;535f	32 20 e0
+	ret			                ;5362	c9
 
 POINTS_TABLE:
     db    5,    0, 0       ;  0
@@ -3294,40 +3297,40 @@ POINTS_TABLE:
 ; BDC-encode a score from HL after adding points from (IX+0), (IX+1), (IX+2), 
 BCD_UPDATE_SCORE_ADD_POINTS:
     ; Copy binary score to BCD buffer
-	ld de,SCORE_BCD_BUFFER		    ;538a	11 a0 e5
+	ld de,SCORE_BCD_BUFFER  ;538a	11 a0 e5
 	ld bc, 3		        ;538d	01 03 00
 	ldir		            ;5390	ed b0
 
     ; Decode SCORE_BCD_BUFFER in BCD
-	ld a,(SCORE_BCD_BUFFER)		;5392	3a a0 e5
+	ld a,(SCORE_BCD_BUFFER)	;5392	3a a0 e5
 	add a,(ix+0)		    ;5395	dd 86 00
 	daa			            ;5398	27
-	ld (SCORE_BCD_BUFFER),a		;5399	32 a0 e5
+	ld (SCORE_BCD_BUFFER),a	;5399	32 a0 e5
 
 	; Decode SCORE_BCD_BUFFER + 1 in BCD
     ld a,(SCORE_BCD_BUFFER + 1)	;539c	3a a1 e5
-	adc a,(ix+1)		    ;539f	dd 8e 01
-	daa			            ;53a2	27
+	adc a,(ix+1)		        ;539f	dd 8e 01
+	daa			                ;53a2	27
 	ld (SCORE_BCD_BUFFER + 1),a	;53a3	32 a1 e5
 
 	; Decode SCORE_BCD_BUFFER + 2 in BCD
     ld a,(SCORE_BCD_BUFFER + 2)	;53a6	3a a2 e5
-	adc a,(ix+2)		    ;53a9	dd 8e 02
-	daa			            ;53ac	27
+	adc a,(ix+2)		        ;53a9	dd 8e 02
+	daa			                ;53ac	27
 	ld (SCORE_BCD_BUFFER + 2),a	;53ad	32 a2 e5
 
-	ex de,hl			    ;53b0	eb
+	ex de,hl			        ;53b0	eb
     ; HL = SCORE_BCD_BUFFER
     ; DE = SCORE_BCD or 0xe018
     
-	dec hl			        ;53b1	2b
-	dec de			        ;53b2	1b
+	dec hl			            ;53b1	2b
+	dec de			            ;53b2	1b
 
     ; Copy BCD-encoded score
     ; Repeat 3 times (DE--) <-- (HL--) 
-	ld bc, 3		        ;53b3	01 03 00
-	lddr		            ;53b6	ed b8
-	ret			            ;53b8	c9
+	ld bc, 3		            ;53b3	01 03 00
+	lddr		                ;53b6	ed b8
+	ret			                ;53b8	c9
 
 ; Draws the score and the high score
 DRAW_SCORE_NUMBERS:
