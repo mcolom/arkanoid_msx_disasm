@@ -1044,46 +1044,15 @@ l442bh:
 ; ToDo: what is this table?
 ; Related to function FILL_BRICK_ACTION_TABLE
 TBL_4445:
-	nop			;4445	00 	. 
-	ret nz			;4446	c0 	. 
-	add a,h			;4447	84 	. 
-	ret nz			;4448	c0 	. 
-	ex af,af'			;4449	08 	. 
-	pop bc			;444a	c1 	. 
-	adc a,h			;444b	8c 	. 
-	pop bc			;444c	c1 	. 
-	djnz l4411h		;444d	10 c2 	. . 
-	sub h			;444f	94 	. 
-	jp nz,0c318h		;4450	c2 18 c3 	. . . 
-	sbc a,h			;4453	9c 	. 
-	jp 0c420h		;4454	c3 20 c4 	.   . 
-	and h			;4457	a4 	. 
-	call nz,0c528h		;4458	c4 28 c5 	. ( . 
-	xor h			;445b	ac 	. 
-	push bc			;445c	c5 	. 
-	jr nc,l4425h		;445d	30 c6 	0 . 
-	or h			;445f	b4 	. 
-	add a,038h		;4460	c6 38 	. 8 
-	rst 0			;4462	c7 	. 
-	cp h			;4463	bc 	. 
-	rst 0			;4464	c7 	. 
-	ld b,b			;4465	40 	@ 
-	ret z			;4466	c8 	. 
-	call nz,048c8h		;4467	c4 c8 48 	. . H 
-	ret			;446a	c9 	. 
-	call z,0x50c9		;446b	cc c9 50 	. . P 
-	jp z,0cad4h		;446e	ca d4 ca 	. . . 
-	ld e,b			;4471	58 	X 
-	set 3,h		;4472	cb dc 	. . 
-	bit 4,b		;4474	cb 60 	. ` 
-	call z,0cce4h		;4476	cc e4 cc 	. . . 
-	ld l,b			;4479	68 	h 
-	call 0cdech		;447a	cd ec cd 	. . . 
-	ld (hl),b			;447d	70 	p 
-	adc a,0f4h		;447e	ce f4 	. . 
-	adc a,078h		;4480	ce 78 	. x 
-	rst 8			;4482	cf 	. 
-    db 0xfc, 0xcf
+    db 0x0, 0xc0, 0x84, 0xc0, 0x8, 0xc1, 0x8c, 0xc1   ; 0x4445 - 0x444c
+    db 0x10, 0xc2, 0x94, 0xc2, 0x18, 0xc3, 0x9c, 0xc3 ; 0x444d - 0x4454
+    db 0x20, 0xc4, 0xa4, 0xc4, 0x28, 0xc5, 0xac, 0xc5 ; 0x4455 - 0x445c
+    db 0x30, 0xc6, 0xb4, 0xc6, 0x38, 0xc7, 0xbc, 0xc7 ; 0x445d - 0x4464
+    db 0x40, 0xc8, 0xc4, 0xc8, 0x48, 0xc9, 0xcc, 0xc9 ; 0x4465 - 0x446c
+    db 0x50, 0xca, 0xd4, 0xca, 0x58, 0xcb, 0xdc, 0xcb ; 0x446d - 0x4474
+    db 0x60, 0xcc, 0xe4, 0xcc, 0x68, 0xcd, 0xec, 0xcd ; 0x4475 - 0x447c
+    db 0x70, 0xce, 0xf4, 0xce, 0x78, 0xcf, 0xfc, 0xcf ; 0x447d - 0x4484
+
 
 ; ToDo: what is this table?
 ; Related to function FILL_BRICK_ACTION_TABLE
