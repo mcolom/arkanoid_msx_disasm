@@ -11521,7 +11521,7 @@ sub_b63eh:
 	ld a,(bc)			;b63f	0a 	. 
 	bit 7,a		;b640	cb 7f 	.  
 	jr z,lb5deh		;b642	28 9a 	( . 
-	ld hl,lb666h		;b644	21 66 b6 	! f . 
+	ld hl,TBL_b666		;b644	21 66 b6 	! f . 
 	jr lb652h		;b647	18 09 	. . 
 
 sub_b649h:
@@ -11529,7 +11529,7 @@ sub_b649h:
 	ld a,(bc)			;b64a	0a 	. 
 	bit 7,a		;b64b	cb 7f 	.  
 	jr z,lb5f7h		;b64d	28 a8 	( . 
-	ld hl,lb66eh		;b64f	21 6e b6 	! n . 
+	ld hl,TBL_b66e		;b64f	21 6e b6 	! n . 
 lb652h:
 	rrca			;b652	0f 	. 
 	rrca			;b653	0f 	. 
@@ -11540,31 +11540,22 @@ lb652h:
 	ld d,000h		;b659	16 00 	. . 
 	add hl,de			;b65b	19 	. 
 	ld e,(hl)			;b65c	5e 	^ 
-	ld hl,0b676h		;b65d	21 76 b6 	! v . 
+	ld hl, TBL_b676		;b65d	21 76 b6 	! v . 
 	add hl,de			;b660	19 	. 
 	ld a,(bc)			;b661	0a 	. 
 	and 00fh		;b662	e6 0f 	. . 
 	ld e,a			;b664	5f 	_ 
 	jp (hl)			;b665	e9 	. 
-lb666h:
-	nop			;b666	00 	. 
-	ld c,022h		;b667	0e 22 	. " 
-	jr c,lb6aeh		;b669	38 43 	8 C 
-	ld b,c			;b66b	41 	A 
-	ld d,b			;b66c	50 	P 
-	ld c,(hl)			;b66d	4e 	N 
-lb66eh:
-	ld l,e			;b66e	6b 	k 
-	and a			;b66f	a7 	. 
-	sbc a,d			;b670	9a 	. 
-	xor a			;b671	af 	. 
-	cp a			;b672	bf 	. 
-	rst 8			;b673	cf 	. 
-	defb 0ddh,0ebh,021h	;illegal sequence		;b674	dd eb 21 	. . ! 
-	push bc			;b677	c5 	. 
-	push hl			;b678	e5 	. 
-	ld d,001h		;b679	16 01 	. . 
-	call sub_b6e6h		;b67b	cd e6 b6 	. . . 
+
+TBL_b666:
+    db 0x0, 0xe, 0x22, 0x38, 0x43, 0x41, 0x50, 0x4e ; 0xb666 - 0xb66d
+
+TBL_b66e:
+    db 0x6b, 0xa7, 0x9a, 0xaf, 0xbf, 0xcf, 0xdd, 0xeb ; 0xb66e - 0xb675
+
+TBL_b676:
+    db 0x21, 0xc5, 0xe5, 0x16, 0x1, 0xcd, 0xe6, 0xb6 ; 0xb676 - 0xb67d
+
 lb67eh:
 	ld de,0e5e6h		;b67e	11 e6 e5 	. . . 
 	call sub_b7e6h		;b681	cd e6 b7 	. . . 
