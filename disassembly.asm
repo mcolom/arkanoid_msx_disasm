@@ -5389,6 +5389,7 @@ l75adh:
 	ret			    ;75c7	c9
 
 l75c8h:
+    ; ToDo
 	ld b,003h		;75c8	06 03 	. . 
 	ld ix,TBL_75ed		;75ca	dd 21 ed 75 	. ! . u 
 	ld iy,0190bh		;75ce	fd 21 0b 19 	. ! . . 
@@ -5407,6 +5408,8 @@ l75d2h:
 	add iy,de		;75e8	fd 19 	. . 
 	djnz l75d2h		;75ea	10 e6 	. . 
 	ret			;75ec	c9 	. 
+
+; ToDo
 TBL_75ed:
 	ret p			;75ed	f0 	. 
 	pop af			;75ee	f1 	. 
@@ -7222,6 +7225,7 @@ ACTION_9941:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
 
+    ; ToDo
 	call sub_99dfh		;9941	cd df 99 	. . . 
 
     ; Go on if the ball is active
@@ -7339,8 +7343,9 @@ CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS:
 	call CHANGE_BALLS_SKEWNESS		            ;99db	cd 38 ab
 	ret			                    ;99de	c9
 
+; ToDO
 sub_99dfh:
-	ld hl,l9a98h		;99df	21 98 9a 	! . . 
+	ld hl,TBL_9a98		;99df	21 98 9a 	! . . 
 	ld a,(iy+006h)		;99e2	fd 7e 06 	. ~ . 
 	bit 7,a		;99e5	cb 7f 	.  
 	jr z,l99ebh		;99e7	28 02 	( . 
@@ -7367,7 +7372,7 @@ l99ebh:
 	cp (iy+009h)		;9a0a	fd be 09 	. . . 
 	ret c			;9a0d	d8 	. 
 	ld (iy+005h),000h		;9a0e	fd 36 05 00 	. 6 . . 
-	ld hl,l9a78h		;9a12	21 78 9a 	! x . 
+	ld hl,TBL_9a78		;9a12	21 78 9a 	! x . 
 	ld a,(iy+006h)		;9a15	fd 7e 06 	. ~ . 
 	bit 7,a		;9a18	cb 7f 	.  
 	jp z,l9a22h		;9a1a	ca 22 9a 	. " . 
@@ -7419,7 +7424,8 @@ l9a60h:
 	pop ix		;9a73	dd e1 	. . 
 	pop iy		;9a75	fd e1 	. . 
 	ret			;9a77	c9 	. 
-l9a78h:
+
+TBL_9a78:
 	rst 38h			;9a78	ff 	. 
 	ld (bc),a			;9a79	02 	. 
 	rst 38h			;9a7a	ff 	. 
@@ -7441,7 +7447,8 @@ l9a78h:
 	ld bc,00101h		;9a91	01 01 01 	. . . 
 	ld bc,00102h		;9a94	01 02 01 	. . . 
 	ld (bc),a			;9a97	02 	. 
-l9a98h:
+
+TBL_9a98:
 	ret nc			;9a98	d0 	. 
 	sbc a,d			;9a99	9a 	. 
 	ret nc			;9a9a	d0 	. 
@@ -10959,9 +10966,16 @@ lb3a7h:
 	nop			;b3fd	00 	. 
 	nop			;b3fe	00 	. 
 	nop			;b3ff	00 	. 
+
 	jp PLAY_SOUND		;b400	c3 e8 b4 	. . . 
 	jp sub_b594h		;b403	c3 94 b5 	. . . 
-	ld (02c27h),hl		;b406	22 27 2c 	" ' , 
+
+; Sound #0
+	db 0x22             ;b406	22
+; Sound #1
+	db 0x27             ;b407	27
+; Sound #2
+	db 0x2c             ;b408	2c
 	ld sp,03b36h		;b409	31 36 3b 	1 6 ; 
 	ld b,b			;b40c	40 	@ 
 	ld b,l			;b40d	45 	E 
@@ -11172,7 +11186,7 @@ lb4d1h:
 lb4e1h:
 	ld (ix+000h),000h		;b4e1	dd 36 00 00 	. 6 . . 
 	ld (SOUND_NUMBER),a		;b4e5	32 c0 e5 	2 . . 
-
+; ToDo
 PLAY_SOUND:
 	push hl			;b4e8	e5 	. 
 	push de			;b4e9	d5 	. 
@@ -11186,8 +11200,9 @@ PLAY_SOUND:
     ld hl,0e5d3h		;b4f0	21 d3 e5 	! . . 
 	cp 128		        ;b4f3	fe 80 	. . 
 	jr nc,lb4fbh		;b4f5	30 04 	0 . 
+    
     ; SOUND_NUMBER <= 128
-	add a,006h		;b4f7	c6 06 	. . 
+	add a, 6		;b4f7	c6 06 	. .     A+6 ==> ptr 0xB407
 	jr lb515h		;b4f9	18 1a 	. . 
 lb4fbh:
     ; SOUND_NUMBER > 128
