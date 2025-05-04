@@ -5978,8 +5978,8 @@ DOH_UPDATE_COLOR:
 	ld (ix+TBL_DOH_HIT_IDX_DOH_BEEN_HIT), 0	 ;73df	dd 36 00 00
 	ld (ix+TBL_DOH_HIT_IDX_HIT_CYCLE_NUM), 0 ;73e3	dd 36 01 00
 	ld (ix+TBL_DOH_HIT_IDX_COLOR), 0	     ;73e7	dd 36 02 00
-    ; ToDo
-	ld (ix+003h),000h		                 ;73eb	dd 36 03 00
+    ; This is reset (address 0xe508), but actually never checked.
+	ld (ix+3), 0 		                     ;73eb	dd 36 03 00
 	ret			                             ;73ef	c9
 
 DOH_DEFEATED_ANIMATION:
