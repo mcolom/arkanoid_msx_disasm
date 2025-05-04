@@ -11327,18 +11327,37 @@ lb56ah:
 
 ; Sound related
 ; ToDo
-sub_b570h:
+write_E_to_PSG_reg_A_safe:
+    ; Select PSG register 7: voice and I/O port control register
 	ld a, 7		;b570	3e 07 PSG register 7
-	bit 7,e		;b572	cb 7b 	. { 
-	ret z			;b574	c8 	. 
-	res 7,e		;b575	cb bb 	. . 
-	ld (hl),e			;b577	73 	s 
-	call RDPSG		;b578	cd 96 00 	. . . 
-	and 0c0h		;b57b	e6 c0 	. . 
-	or e			;b57d	b3 	. 
-	ld e,a			;b57e	5f 	_ 
-	ld a,007h		;b57f	3e 07 	> . 
-	jr lb58ch		;b581	18 09 	. . 
+    
+    ; Exit is bit 7 in E is set
+	bit 7,e		;b572	cb 7b
+	ret z		;b574	c8
+    
+    ; Reset bit 7 in E
+	res 7,e		;b575	cb bb
+	
+    ; (HL) <-- E
+    ld (hl),e		;b577	73
+    
+    ; Read register 7
+	call RDPSG		;b578	cd 96 00
+    
+    ; A = (read & 0xc0) | E
+    ; We keep the 2 MSB in the read
+    ; Bits 7 and 6 can't be changed so the PSG works fine.
+	and 0xc0		;b57b	e6 c0   1100.0000
+	or e			;b57d	b3
+    
+    ; E = the value to write to the PSG
+	ld e,a			;b57e	5f
+
+    ; Write E to PSG register 7: voice and I/O port control register
+	ld a, 7		                ;b57f	3e 07
+	jr write_E_to_PSG_reg_A		;b581	18 09
+
+
 lb583h:
 	inc de			;b583	13 	. 
 	ld (de),a			;b584	12 	. 
@@ -11356,7 +11375,7 @@ WRITE_NEXT_REG_PSG:
 
     ; Read value from (HL) into E
 	ld e,(hl)			;b58b
-lb58ch:
+write_E_to_PSG_reg_A:
     ; Write value E to PSG register A
 
     ; Selected PSG register <-- A
@@ -11407,7 +11426,9 @@ lb5a3h:
 
 	inc hl			;b5b0	23 	# 
 	ld e,(hl)			;b5b1	5e 	^ 
-	call sub_b570h		;b5b2	cd 70 b5 	. p . 
+    
+    ; This call also updates (hl)
+	call write_E_to_PSG_reg_A_safe		;b5b2	cd 70 b5 	. p . 
     
 ; Write 3 more PSG registers
 	ld b,d			;b5b5	42 	B 
@@ -11426,7 +11447,7 @@ lb5bch:
 	inc hl			;b5c4	23 	# 
 
 	bit 3,(hl)		;b5c5	cb 5e 	. ^ 
-	call nz,lb58ch		;b5c7	c4 8c b5 	. . . 
+	call nz, write_E_to_PSG_reg_A		;b5c7	c4 8c b5    This call also updates (hl)
 
 	res 3,(hl)		;b5ca	cb 9e 	. . 
 	inc hl			;b5cc	23 	# 
@@ -11445,7 +11466,7 @@ lb5deh:
 lb5e3h:
 	ld hl,0e5e9h		;b5e3	21 e9 e5 	! . . 
 	ld bc,(0e5f0h)		;b5e6	ed 4b f0 e5 	. K . . 
-	call 0b4b5h		;b5ea	cd b5 b4 	. . . 
+	call sub_b4b5		;b5ea	cd b5 b4 	. . . 
 	jr nc,lb5fch		;b5ed	30 0d 	0 . 
 	ld (0e5f2h),a		;b5ef	32 f2 e5 	2 . . 
 lb5f2h:
@@ -11457,9 +11478,9 @@ lb5f7h:
 lb5fch:
 	ld hl,0e5deh		;b5fc	21 de e5 	! . . 
 	ld d,001h		;b5ff	16 01 	. . 
-	ld bc,(0e5c4h)		;b601	ed 4b c4 e5 	. K . . 
+	ld bc,(SOUNDS_UNKNOWN_TYPE)		;b601	ed 4b c4 e5 	. K . . 
 	call sub_b77bh		;b605	cd 7b b7 	. { . 
-	ld (0e5c4h),bc		;b608	ed 43 c4 e5 	. C . . 
+	ld (SOUNDS_UNKNOWN_TYPE),bc		;b608	ed 43 c4 e5 	. C . . 
 	ld hl,0e5e1h		;b60c	21 e1 e5 	! . . 
 	ld d,010h		;b60f	16 10 	. . 
 	ld a,(0e5cch)		;b611	3a cc e5 	: . . 
