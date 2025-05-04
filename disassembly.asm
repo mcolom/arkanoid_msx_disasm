@@ -3118,11 +3118,11 @@ l5241h:
 	ld ix,FRAME_LATERAL_CHARS	;5244	dd 21 89 52
 	ld a,(ix+000h)		        ;5248	dd 7e 00
 l524bh:
-	call WRTVRM		;524b	cd 4d 00 	. M . 
-	add hl,de			;524e	19 	. 
-	inc ix		;524f	dd 23 	. # 
-	ld a,(ix+000h)		;5251	dd 7e 00 	. ~ . 
-	djnz l524bh		;5254	10 f5 	. . 
+	call WRTVRM		            ;524b	cd 4d 00
+	add hl,de			        ;524e	19
+	inc ix		                ;524f	dd 23
+	ld a,(ix+000h)		        ;5251	dd 7e 00
+	djnz l524bh		            ;5254	10 f5
 
     ; Draw right frame
 	ld b, 23		            ;5256	06 17
