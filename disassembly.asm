@@ -1186,15 +1186,17 @@ l4c48h:
 	or a			            ;4c4b	b7
 	jp z,l4c5ah		            ;4c4c	ca 5a 4c    Jump if we're using the paddle
 
-	ld a,(PADDLE_STATUS+1)		;4c4f	3a c5 e0 	: . . 
-	bit 1,a		;4c52	cb 4f 	. O 
-	jp nz,l4c73h		;4c54	c2 73 4c 	. s L 
-	jp l4c62h		;4c57	c3 62 4c 	. b L 
+    ; Check if the paddle's button has been pressed
+	ld a,(PADDLE_STATUS+1)		;4c4f	3a c5 e0
+	bit 1,a		                ;4c52	cb 4f
+	jp nz,l4c73h		        ;4c54	c2 73 4c
+	jp start_game		            ;4c57	c3 62 4c
 l4c5ah:
-	ld a,(CONTROLS)		;4c5a	3a bf e0 	: . . 
-	bit 4,a		;4c5d	cb 67 	. g 
-	jp nz,l4c73h		;4c5f	c2 73 4c 	. s L 
-l4c62h:
+    ; Check if the space bar has been pressed
+	ld a,(CONTROLS)		        ;4c5a	3a bf e0
+	bit 4,a		                ;4c5d	cb 67
+	jp nz,l4c73h		        ;4c5f	c2 73 4c
+start_game:
     ; Increment the title's ticks
 	ld hl,(TITLE_TICKS)		;4c62	2a 3f e5
 	inc hl			        ;4c65	23
@@ -1210,7 +1212,7 @@ l4c62h:
 
 l4c73h:
 	ld a,TITLE_SCREEN_ACTION_START_GAME		;4c73	3e 02
-	ld (BRICK_HIT_ROW),a		        ;4c75	32 3c e5
+	ld (BRICK_HIT_ROW),a		            ;4c75	32 3c e5
 
     ; Print "GAME START"
 	ld hl,GAME_START_STR	    ;4c78	21 cc 54
@@ -1218,9 +1220,10 @@ l4c73h:
 	ld bc, 17		            ;4c7e	01 11 00
 	call LDIRVM		            ;4c81	cd 5c 00
 
-	ld a,SOUND_GAME_START_MUSIC		;4c84	3e c3 	> . 
-	ld (SOUND_NUMBER),a		;4c86	32 c0 e5 	2 . . 
-	call PLAY_SOUND		;4c89	cd e8 b4 	. . . 
+    ; Play the "game start" music
+	ld a,SOUND_GAME_START_MUSIC		;4c84	3e c3
+	ld (SOUND_NUMBER),a		        ;4c86	32 c0 e5
+	call PLAY_SOUND		            ;4c89	cd e8 b4
 
     ; Wait 256 ticks
 	ei			            ;4c8c	fb
@@ -1229,8 +1232,8 @@ l4c73h:
 	ret			            ;4c93	c9
 
 l4c94h:
-	ld a,TITLE_SCREEN_ACTION_DEMO		;4c94	3e 05 	> . 
-	ld (BRICK_HIT_ROW),a		;4c96	32 3c e5 	2 < . 
+	ld a,TITLE_SCREEN_ACTION_DEMO	;4c94	3e 05
+	ld (BRICK_HIT_ROW),a		    ;4c96	32 3c e5
 
 	; Set we're in the demo
     ld a, 1		        ;4c99	3e 01
@@ -1269,7 +1272,7 @@ l4ca2h:
     ; BRICK_REPAINT_INITIAL
 	xor a			            ;4cbb	af
 	ld (BRICK_REPAINT_TYPE),a	;4cbc	32 22 e0
-	jp l4d09h		;4cbf	c3 09 4d
+	jp l4d09h		            ;4cbf	c3 09 4d
 DEMO_LEVELS_TABLE:
     db 12, 3, 6, 1
 
@@ -1280,18 +1283,19 @@ l4cc6h:
 	ld a, 1		            ;4cc6	3e 01
 	ld (GAME_STATE),a		;4cc8	32 0b e0
 
+
+    ; Clear variables
 	ld hl,SCORE_BCD		;4ccb	21 15 e0
 	ld de,SCORE_BCD+1	;4cce	11 16 e0
-	ld bc,0059fh		;4cd1	01 9f 05
+	ld bc, 1439		    ;4cd1	01 9f 05
 	dec bc			    ;4cd4	0b
-	ld (hl),000h	    ;4cd5	36 00
+	ld (hl), 0	        ;4cd5	36 00
 	ldir		        ;4cd7	ed b0
     
     ; Set that next points objective for a life if 20000
 	ld a, 0x20		;4cd9	3e 20
 	ld (0e01fh),a	;4cdb	32 1f e0
-    
-    
+
     ; We start normally with 2 lives
 	ld c, 2		    ;4cde	0e 02
 
@@ -1334,14 +1338,14 @@ l4d09h:
 	jp z,l4d22h		                ;4d0e	ca 22 4d
 
     ; Clear variables
-	ld hl,BRICK_MAP		;4d11	21 27 e0 	! ' . 
-	ld de,0e028h		;4d14	11 28 e0 	. ( . 
-	ld bc,0058dh		;4d17	01 8d 05 	. . . 
-	dec bc			;4d1a	0b 	. 
-	ld (hl),000h		;4d1b	36 00 	6 . 
-	ldir		;4d1d	ed b0 	. . 
+	ld hl,BRICK_MAP		;4d11	21 27 e0
+	ld de,0e028h		;4d14	11 28 e0
+	ld bc,0058dh		;4d17	01 8d 05
+	dec bc			    ;4d1a	0b
+	ld (hl),000h		;4d1b	36 00
+	ldir		        ;4d1d	ed b0
 
-	jp l4d30h		;4d1f	c3 30 4d 	. 0 M 
+	jp l4d30h		    ;4d1f	c3 30 4d
 l4d22h:
     ; Clear variables
 	ld hl,CONTROLS		;4d22	21 bf e0
@@ -1349,53 +1353,53 @@ l4d22h:
 	ld bc,004f5h		            ;4d28	01 f5 04
 	dec bc			                ;4d2b	0b
 	ld (hl),0   		            ;4d2c	36 00
-	ldir		                    ;4d2e	ed b0 	. . 
+	ldir		                    ;4d2e	ed b0
 l4d30h:
-	call CLEAR_SCREEN		;4d30	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;4d30	cd 27 42
     
     ; Skip drawing scores and waiting if we're at the title screen
 	ld a,(GAME_STATE)		;4d33	3a 0b e0
 	or a			        ;4d36	b7
 	jp z,l4d46h		        ;4d37	ca 46 4d
 	
-    call DRAW_UP_SCORES		;4d3a	cd e0 4f 	. . O 
+    call DRAW_UP_SCORES		;4d3a	cd e0 4f
     ; Write "ROUND 1"
-	call DRAW_ROUND_MESSAGE		;4d3d	cd 01 51 	. . Q 
+	call DRAW_ROUND_MESSAGE ;4d3d	cd 01 51
 
     ; Wait 48 ticks
 	ld hl, 48		        ;4d40	21 30 00
 	call DELAY_HL_TICKS		;4d43	cd 80 43
 l4d46h:
-	ld a,001h		;4d46	3e 01 	> . 
-	ld (GAME_TRANSITION_ACTION),a		;4d48	32 0a e0 	2 . . 
+	ld a, GAME_TRANSITION_ACTION_PLAY_LEVEL		;4d46	3e 01
+	ld (GAME_TRANSITION_ACTION),a		        ;4d48	32 0a e0
 
     ; Load in-game patterns into VRAM
 
     ; Fill pattern table (1/3)
 	ld hl,IN_GAME_TILES		    ;4d4b	21 84 7d
-	ld de, 0 * 8*32*24/3	;4d4e	11 00 00
-	call LDIRVM_32x24_THIRD	;4d51	cd 20 42
+	ld de, 0 * 8*32*24/3	    ;4d4e	11 00 00
+	call LDIRVM_32x24_THIRD	    ;4d51	cd 20 42
 
 	; Fill pattern table (21/3)
     ld hl,IN_GAME_TILES		    ;4d54	21 84 7d
-	ld de, 1 * 8*32*24/3	;4d57	11 00 08
-	call LDIRVM_32x24_THIRD	;4d5a	cd 20 42
+	ld de, 1 * 8*32*24/3	    ;4d57	11 00 08
+	call LDIRVM_32x24_THIRD	    ;4d5a	cd 20 42
 
 	; Fill pattern table (3/3)
-    ld hl,IN_GAME_TILES		        ;4d5d	21 84 7d
+    ld hl,IN_GAME_TILES		    ;4d5d	21 84 7d
 	ld de, 2 * 8*32*24/3		;4d60	11 00 10
 	call LDIRVM_32x24_THIRD		;4d63	cd 20 42
 
     ; Decompress colors
-	ld de,IN_GAME_COLORS		            ;4d66	11 84 85
+	ld de,IN_GAME_COLORS		    ;4d66	11 84 85
 	ld hl,02000h + 0 * 8*32*24/3	;4d69	21 00 20
 	call DECOMPRESS_TILE_COLORS		;4d6c	cd 89 43
 
-	ld de,IN_GAME_COLORS		            ;4d6f	11 84 85
+	ld de,IN_GAME_COLORS		    ;4d6f	11 84 85
 	ld hl,02000h + 1 * 8*32*24/3	;4d72	21 00 28
 	call DECOMPRESS_TILE_COLORS		;4d75	cd 89 43
 
-	ld de,IN_GAME_COLORS		            ;4d78	11 84 85
+	ld de,IN_GAME_COLORS		    ;4d78	11 84 85
 	ld hl,02000h + 2 * 8*32*24/3	;4d7b	21 00 30
 	call DECOMPRESS_TILE_COLORS		;4d7e	cd 89 43
 
@@ -1442,11 +1446,11 @@ l4d46h:
 	ld a, "0"	                ;4dc6	3e 30
 	call WRTVRM		            ;4dc8	cd 4d 00
 
-	ld a, 0		                    ;4dcb	3e 00
+	ld a, 0		                ;4dcb	3e 00
 	ld (ROW_DRAW_COUNTER),a		;4dcd	32 6f e5
 
-	ld b, 23		                ;4dd0	06 17
-	ld iy,0x1800 + 2 + 1*32         ;4dd2	fd 21 22 18     Locate at [2, 1]
+	ld b, 23		            ;4dd0	06 17
+	ld iy,0x1800 + 2 + 1*32     ;4dd2	fd 21 22 18     Locate at [2, 1]
 l4dd6h:
     ; DE = 2*ROW
 	ld e,a			;4dd6	5f
@@ -1617,8 +1621,8 @@ l4ea5h:
 	call DELAY_HL_TICKS		;4eb1	cd 80 43
 l4eb4h:
     ; Set ball active
-	ld a,001h		                                ;4eb4	3e 01
-	ld (BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE),a		;4eb6	32 4e e2
+	ld a, 1		                                ;4eb4	3e 01
+	ld (BALL_TABLE1 + BALL_TABLE_IDX_ACTIVE),a  ;4eb6	32 4e e2
 
     ; Starting location of the ball in the demo
 	ld a, 104		        ;4eb9	3e 68
@@ -1630,7 +1634,7 @@ l4eb4h:
 
     ; Clear story-writting variables
 	ld (STORY_WRITE_ROW),hl		    ;4ec4	22 0f e0
-	ld (STORY_MSG_INDEX),hl	    ;4ec7	22 11 e0
+	ld (STORY_MSG_INDEX),hl	        ;4ec7	22 11 e0
 	ld (STORY_ALREADY_WRITTEN),hl	;4eca	22 13 e0
 
     ; Clear sound
@@ -1649,7 +1653,7 @@ l4eddh:
 
     ; IY points to the strings of the story
 	ld iy,STORY_STR		        ;4edd	fd 21 05 50
-	ld ix,STORY_ROW_POINTERS	;4ee1	dd 21 ef 50
+	ld ix,STORY_VDP_ROW_POINTERS	;4ee1	dd 21 ef 50
 
     ; Read controls or paddle
 	ld a,(USE_VAUS_PADDLE)		;4ee5	3a 0c e0
@@ -1658,12 +1662,12 @@ l4eddh:
 
 	ld a,(PADDLE_STATUS+1)		;4eec	3a c5 e0
 	bit 1,a		                ;4eef	cb 4f
-	jp nz,l4f6bh		        ;4ef1	c2 6b 4f
+	jp nz,l4f6bh		        ;4ef1	c2 6b 4f    Button pressed
 	jp l4effh		            ;4ef4	c3 ff 4e
 l4ef7h:
 	ld a,(CONTROLS)		        ;4ef7	3a bf e0
 	bit 4,a		                ;4efa	cb 67
-	jp nz,l4f6bh		        ;4efc	c2 6b 4f
+	jp nz,l4f6bh		        ;4efc	c2 6b 4f    Start pressed
 l4effh:
     ; If the story's text has been already written, done
 	ld hl,STORY_ALREADY_WRITTEN		;4eff	21 13 e0
@@ -1683,12 +1687,12 @@ l4effh:
     ; Reset STORY_CHAR_DELAY_COUNTER
 	ld (hl), 0		                    ;4f0f	36 00
 
-    ; HL = STORY_ROW_POINTERS[2*STORY_WRITE_ROW]
+    ; HL = STORY_VDP_ROW_POINTERS[2*STORY_WRITE_ROW]
 	ld a,(STORY_WRITE_ROW)		;4f11	3a 0f e0
 	ld e,a			            ;4f14	5f
 	sla e		                ;4f15	cb 23
 	ld d, 0		                ;4f17	16 00   DE = 2*STORY_WRITE_ROW
-	add ix,de		            ;4f19	dd 19   IX = STORY_ROW_POINTERS + 2*STORY_WRITE_ROW
+	add ix,de		            ;4f19	dd 19   IX = STORY_VDP_ROW_POINTERS + 2*STORY_WRITE_ROW
 	ld e,(ix+0)		            ;4f1b	dd 5e 00
 	ld d,(ix+1)		            ;4f1e	dd 56 01
 	ex de,hl			        ;4f21	eb
@@ -1696,7 +1700,7 @@ l4effh:
 	ld a,(STORY_CHAR_OF_LINE_INDEX)		;4f22	3a 10 e0
 	ld e,a			                    ;4f25	5f
 	ld d,000h		                    ;4f26	16 00   DE = STORY_CHAR_OF_LINE_INDEX
-	add hl,de			                ;4f28	19      HL = STORY_ROW_POINTERS[2*STORY_WRITE_ROW] + STORY_CHAR_OF_LINE_INDEX
+	add hl,de			                ;4f28	19      HL = STORY_VDP_ROW_POINTERS[2*STORY_WRITE_ROW] + STORY_CHAR_OF_LINE_INDEX
 
 	ld a,(STORY_MSG_INDEX)		;4f29	3a 11 e0
 	ld e,a			            ;4f2c	5f
@@ -1862,6 +1866,7 @@ l4fbbh:
 	call CLEAR_SCREEN		;4fdc	cd 27 42
 	ret			            ;4fdf	c9
 
+; Draw the scores at the top of the screen
 DRAW_UP_SCORES:
     ; Draw "SCORE    HIGH SCORE" at the top of the screen
 	ld hl,SCORE_HI_SCORE_STR		;4fe0	21 9e 54
@@ -1891,26 +1896,9 @@ DRAW_UP_SCORES:
 STORY_STR:
     db "THE ERA AND TIME OF       THIS STORY IS UNKNOWN.    AFTER THE MOTHERSHIP      \"ARKANOID\" WAS DESTROYED, A SPACECRAFT \"VAUS\"       SCRAMBLED AWAY FROM IT.   BUT ONLY TO BE            TRAPPED IN SPACE WARPED   BY SOMEONE......          "
 
-
-STORY_ROW_POINTERS:
-	ld b,e			;50ef	43 	C 
-l50f0h:
-	db 0x18, 0x83
-	db 0x18, 0xe3
-l50f4h:
-	jr 0x5119		;50f4	18 23 	. # 
-	add hl,de			;50f6	19 	. 
-	ld h,e			;50f7	63 	c 
-	add hl,de			;50f8	19 	. 
-	and e			;50f9	a3 	. 
-	add hl,de			;50fa	19 	. 
-	inc bc			;50fb	03 	. 
-	ld a,(de)			;50fc	1a 	. 
-	ld b,e			;50fd	43 	C 
-	ld a,(de)			;50fe	1a 	. 
-l50ffh:
-	add a,e			;50ff	83 	. 
-	ld a,(de)			;5100	1a 	. 
+; VDP pointers for the story rows
+STORY_VDP_ROW_POINTERS: ; 0x50ef
+    dw 0x1843, 0x1883, 0x18e3, 0x1923, 0x1963, 0x19a3, 0x1a03, 0x1a43, 0x1a83
 
 ; Draws the "ROUND x" message
 DRAW_ROUND_MESSAGE:
@@ -1965,7 +1953,6 @@ l5131h: ; It isn't a zero: write both numbers
 
 ROUND_STR:
     db "ROUND"
-
 
 ; Table with the Vaus sprite and sprites to write "READY"
 VAUS_AND_READY_SPRITE_TABLE:
@@ -2028,8 +2015,8 @@ l518bh:
 	ld d,0		            ;518e	16 00
 
     ; HL = DOH_ROW_POINTERS + 2*row
-	ld hl,DOH_ROW_POINTERS		;5190	21 b8 51 	! . Q 
-	add hl,de			;5193	19 	. 
+	ld hl,DOH_ROW_POINTERS		    ;5190	21 b8 51
+	add hl,de			            ;5193	19
 
 	; DE = DOH_ROW_POINTERS[2*row]
     ld e,(hl)			;5194	5e
@@ -2047,7 +2034,7 @@ l518bh:
 
     ; Increment row count
 	ld a,(ROW_DRAW_COUNTER)		;51a2	3a 6f e5
-	inc a			                ;51a5	3c
+	inc a			            ;51a5	3c
     
     ; Reset row index if we've done the last char
 	cp DOH_NUM_ROWS		;51a6	fe 0c
@@ -2193,7 +2180,7 @@ l52eah:
 	jp l5302h		    ;52f6	c3 02 53
 l52f9h:
 	ld a,(SCORE_BCD_BUFFER)		    ;52f9	3a a0 e5
-	cp (iy+000h)		            ;52fc	fd be 00 	. . . 
+	cp (iy+000h)		            ;52fc	fd be 00
 	jp c,l530dh		    ;52ff	da 0d 53
 l5302h:
     ; Update high score with the current
@@ -2317,6 +2304,8 @@ BCD_UPDATE_SCORE_ADD_POINTS:
 	dec hl			            ;53b1	2b
 	dec de			            ;53b2	1b
 
+    ; Update SCORE_BCD
+    ;
     ; Copy BCD-encoded score
     ; Repeat 3 times (DE--) <-- (HL--) 
 	ld bc, 3		            ;53b3	01 03 00
@@ -2445,20 +2434,18 @@ l5433h:
 
 ; The chars of the Arkanoid logo
 ARKANOID_LOGO_CHARS:
-db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x543e - 0x5445
-db 0x0, 0x4, 0x7, 0xa, 0xd, 0x10, 0x13, 0x16 ; 0x5446 - 0x544d
-db 0x19, 0x1c, 0x1f, 0x23, 0x26, 0x29, 0x5c, 0x60 ; 0x544e - 0x5455
-db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5456 - 0x545d
-db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x545e - 0x5465
-db 0x2, 0x5, 0x8, 0xb, 0xe, 0x11, 0x14, 0x17 ; 0x5466 - 0x546d
-db 0x1a, 0x1d, 0x1, 0x24, 0x27, 0x2a, 0x5d, 0x61 ; 0x546e - 0x5475
-db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5476 - 0x547d
-db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x547e - 0x5485
-db 0x3, 0x6, 0x9, 0xc, 0xf, 0x12, 0x15, 0x18 ; 0x5486 - 0x548d
-db 0x1b, 0x1e, 0x21, 0x25, 0x28, 0x5b, 0x5e, 0x62 ; 0x548e - 0x5495
-db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5496 - 0x549d
-
-
+    db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x543e - 0x5445
+    db 0x0, 0x4, 0x7, 0xa, 0xd, 0x10, 0x13, 0x16 ; 0x5446 - 0x544d
+    db 0x19, 0x1c, 0x1f, 0x23, 0x26, 0x29, 0x5c, 0x60 ; 0x544e - 0x5455
+    db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5456 - 0x545d
+    db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x545e - 0x5465
+    db 0x2, 0x5, 0x8, 0xb, 0xe, 0x11, 0x14, 0x17 ; 0x5466 - 0x546d
+    db 0x1a, 0x1d, 0x1, 0x24, 0x27, 0x2a, 0x5d, 0x61 ; 0x546e - 0x5475
+    db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5476 - 0x547d
+    db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x547e - 0x5485
+    db 0x3, 0x6, 0x9, 0xc, 0xf, 0x12, 0x15, 0x18 ; 0x5486 - 0x548d
+    db 0x1b, 0x1e, 0x21, 0x25, 0x28, 0x5b, 0x5e, 0x62 ; 0x548e - 0x5495
+    db 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 ; 0x5496 - 0x549d
 
 SCORE_HI_SCORE_STR:
     db "   ", 0x3a, 0x3b, 0x3c, 0x3d, 0x3e
@@ -2484,13 +2471,13 @@ ALL_RIGHTS_RESERVED_STR:
 
 ; First half parts of the chars of the TAITO logo
 TAITO_HALF1_LOGO_CHARS:
-db 0x63, 0x65, 0x67, 0x69, 0x6b, 0x6d, 0x6f, 0x71 ; 0x5509 - 0x5510
-db 0x73, 0x75, 0x77                               ; 0x5511 - 0x5513
+    db 0x63, 0x65, 0x67, 0x69, 0x6b, 0x6d, 0x6f, 0x71 ; 0x5509 - 0x5510
+    db 0x73, 0x75, 0x77                               ; 0x5511 - 0x5513
 
 ; Second half parts of the chars of the TAITO logo
 TAITO_HALF2_LOGO_CHARS:
-db 0x64, 0x66, 0x68, 0x6a, 0x6c, 0x6e, 0x70, 0x72 ; 0x5514 - 0x551b
-db 0x74, 0x76, 0x78                               ; 0x551c - 0x551e
+    db 0x64, 0x66, 0x68, 0x6a, 0x6c, 0x6e, 0x70, 0x72 ; 0x5514 - 0x551b
+    db 0x74, 0x76, 0x78                               ; 0x551c - 0x551e
 
 ; Red characters for "HIGH" and "SCORE"
 HIGH_LETTERS:
