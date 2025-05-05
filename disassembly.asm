@@ -5656,7 +5656,7 @@ TBL_ALIEN_LAST_FRAME:
 
 ; ALIEN_Y >= 64
 l77aeh:
-    ; Mark forever that this alien has gone as down as ALIEN_Y >= 64
+    ; Mark this alien if he's gone as down as ALIEN_Y >= 64
     ; Skip if already marked
 	ld a,(ix+11)		;77ae	dd 7e 0b
 	cp 1		        ;77b1	fe 01
@@ -5709,6 +5709,7 @@ l77e2h:
     ; ToDo
 	inc hl			;77ec	23 	# 
 	ld a,(hl)		;77ed	7e 	~ 
+
 	ld (ix+15),a	;77ee	dd 77 0f 	. w . 
 l77f1h:
     ; Update alien's vertical position according to his speed
@@ -6237,6 +6238,7 @@ TBL_ALIEN_VERT_SPEED:
 TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
     db 0x90, 0x94, 0x98, 0x9c     ;7b0c
 
+; V_SPEED, H_SPEED, ix+15
 TBL_7b10:
     db 1, 0, 40, 0
     db 1, 2, 24, 0
