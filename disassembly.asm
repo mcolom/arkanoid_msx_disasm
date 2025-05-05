@@ -4073,41 +4073,46 @@ l6e64h:
 	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6ed8	fd 36 17 0e     Red
 	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  8		;6edc	fd 36 1b 08     Red
 l6ee0h:
-	ld l,(ix+004h)		;6ee0	dd 6e 04 	. n . 
-	ld h,000h		;6ee3	26 00 	& . 
+	ld l,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6ee0	dd 6e 04 	. n . 
+	ld h, 0		;6ee3	26 00 	& . 
 	add hl,hl			;6ee5	29 	) 
-	ld de,l7019h		;6ee6	11 19 70 	. . p 
+	ld de, TBL_7019		;6ee6	11 19 70 	. . p 
 	add hl,de			;6ee9	19 	. 
 	ld e,(hl)			;6eea	5e 	^ 
 	inc hl			;6eeb	23 	# 
 	ld d,(hl)			;6eec	56 	V 
 	ex de,hl			;6eed	eb 	. 
+
 	push iy		;6eee	fd e5 	. . 
-	ld b,007h		;6ef0	06 07 	. . 
+	ld b, 7		;6ef0	06 07 	. . 
 l6ef2h:
 	ld a,(hl)			;6ef2	7e 	~ 
-	ld (iy+002h),a		;6ef3	fd 77 02 	. w . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM),a		;6ef3	fd 77 02 	. w . 
 	inc hl			;6ef6	23 	# 
-	ld de,00004h		;6ef7	11 04 00 	. . . 
+	ld de, SPR_PARAMS_LEN		;6ef7	11 04 00 	. . . 
 	add iy,de		;6efa	fd 19 	. . 
 	djnz l6ef2h		;6efc	10 f4 	. . 
 	pop iy		;6efe	fd e1 	. . 
-	ld a,(ix+004h)		;6f00	dd 7e 04 	. ~ . 
+
+	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6f00	dd 7e 04 	. ~ . 
 	cp 004h		;6f03	fe 04 	. . 
 	ret nz			;6f05	c0 	. 
-	ld (ix+004h),000h		;6f06	dd 36 04 00 	. 6 . . 
-	ld (ix+000h),000h		;6f0a	dd 36 00 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2), 0		;6f06	dd 36 04 00 	. 6 . . 
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_WAIT_READY		;6f0a	dd 36 00 00 	. 6 . . 
+
 	push iy		;6f0e	fd e5 	. . 
-	ld b,007h		;6f10	06 07 	. . 
+	ld b, 7		;6f10	06 07 	. . 
 l6f12h:
-	ld (iy+003h),000h		;6f12	fd 36 03 00 	. 6 . . 
-	ld de,00004h		;6f16	11 04 00 	. . . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 0		;6f12	fd 36 03 00 	. 6 . . 
+	ld de, SPR_PARAMS_LEN		;6f16	11 04 00 	. . . 
 	add iy,de		;6f19	fd 19 	. . 
 	djnz l6f12h		;6f1b	10 f5 	. . 
 	pop iy		;6f1d	fd e1 	. . 
-	ld a,000h		;6f1f	3e 00 	> . 
-	ld (VAUS_X2),a		;6f21	32 3e e5 	2 > . 
-	ld (ix+006h),000h		;6f24	dd 36 06 00 	. 6 . . 
+
+    ; No lasers
+	ld a, 0		                            ;6f1f	3e 00
+	ld (VAUS_X2),a		                    ;6f21	32 3e e5
+	ld (ix+VAUS_TABLE_IDX_HAS_LASER), 0		;6f24	dd 36 06 00
 
 	ld a,BRICK_REPAINT_REMAINING	;6f28	3e 02
 	ld (BRICK_REPAINT_TYPE),a		;6f2a	32 22 e0
@@ -4271,31 +4276,12 @@ TBL_INCREMENT_POS_VAUS_CONTROLS:
 ; POKE 0X700A 10
 
 
-l7019h:
-	db 0			;7019	00 	. 
-	db 0			;701a	00 	. 
-	db 0			;701b	00 	. 
-	db 0			;701c	00 	. 
-	dec hl			;701d	2b 	+ 
-	ld (hl),b			;701e	70 	p 
-	ld (02b70h),a		;701f	32 70 2b 	2 p + 
-	ld (hl),b			;7022	70 	p 
-	ld (02b70h),a		;7023	32 70 2b 	2 p + 
-	ld (hl),b			;7026	70 	p 
-	ld (02b70h),a		;7027	32 70 2b 	2 p + 
-	ld (hl),b			;702a	70 	p 
-	jr c,$+62		;702b	38 3c 	8 < 
-	ld b,b			;702d	40 	@ 
-	ld b,h			;702e	44 	D 
-	inc l			;702f	2c 	, 
-	jr nc,$+54		;7030	30 34 	0 4 
-	ld d,h			;7032	54 	T 
-	ld e,b			;7033	58 	X 
-	ld e,h			;7034	5c 	\ 
-	ld h,b			;7035	60 	` 
-	ld c,b			;7036	48 	H 
-	ld c,h			;7037	4c 	L 
-	ld d,b			;7038	50 	P 
+TBL_7019:
+    db 0x0, 0x0, 0x0, 0x0, 0x2b, 0x70, 0x32, 0x70       ; 0x7019 - 0x7020
+    db 0x2b, 0x70, 0x32, 0x70, 0x2b, 0x70, 0x32, 0x70   ; 0x7021 - 0x7028
+    db 0x2b, 0x70, 0x38, 0x3c, 0x40, 0x44, 0x2c, 0x30   ; 0x7029 - 0x7030
+    db 0x34, 0x54, 0x58, 0x5c, 0x60, 0x48, 0x4c, 0x50   ; 0x7031 - 0x7038
+
 
 ; Check if the lasers are active, and update them
 LASERS_STEP:
