@@ -3359,25 +3359,33 @@ l6a17h:
 	ld a, 130		;6a2b	3e 82
 	ld (VAUS_X2),a	;6a2d	32 3e e5
 l6a30h:
-	cp 0fah		;6a30	fe fa 	. . 
-	jp nc,l6a3fh		;6a32	d2 3f 6a 	. ? j 
-	cp 009h		;6a35	fe 09 	. . 
-	jp nc,l6a3fh		;6a37	d2 3f 6a 	. ? j 
-	ld a,008h		;6a3a	3e 08 	> . 
-	ld (VAUS_X2),a		;6a3c	32 3e e5 	2 > . 
+	cp -6		    ;6a30	fe fa
+	jp nc,l6a3fh	;6a32	d2 3f 6a    Jump if X < -6
+	cp 9		    ;6a35	fe 09
+	jp nc,l6a3fh	;6a37	d2 3f 6a    Jump if X >= 9
+    
+    ; -6 <= X < 9
+    
+    ; VAUS_X2 <-- 8
+	ld a,8 		    ;6a3a	3e 08 	> . 
+	ld (VAUS_X2),a	;6a3c	32 3e e5 	2 > . 
 l6a3fh:
-	ld a,(ix+006h)		;6a3f	dd 7e 06 	. ~ . 
-	cp 001h		;6a42	fe 01 	. . 
-	jp z,l6a72h		;6a44	ca 72 6a 	. r j 
-	ld a,(VAUS_X2)		;6a47	3a 3e e5 	: > . 
-	ld (iy+001h),a		;6a4a	fd 77 01 	. w . 
-	add a,010h		;6a4d	c6 10 	. . 
-	ld (iy+005h),a		;6a4f	fd 77 05 	. w . 
-	add a,008h		;6a52	c6 08 	. . 
-	ld (iy+009h),a		;6a54	fd 77 09 	. w . 
-	add a,008h		;6a57	c6 08 	. . 
-	ld (iy+00dh),a		;6a59	fd 77 0d 	. w . 
-	ret			;6a5c	c9 	. 
+    ; Jump if Vaus has lasers
+	ld a,(ix+VAUS_TABLE_IDX_HAS_LASER)		;6a3f	dd 7e 06
+	cp 1		                            ;6a42	fe 01
+	jp z,l6a72h		                        ;6a44	ca 72 6a
+    
+    ; Update the position of the 4 sprites
+	ld a,(VAUS_X2)		                    ;6a47	3a 3e e5
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a	;6a4a	fd 77 01
+	add a, 16		                                ;6a4d	c6 10
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a	;6a4f	fd 77 05
+	add a, 8		                                ;6a52	c6 08
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a	;6a54	fd 77 09
+	add a, 8		                                ;6a57	c6 08
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a	;6a59	fd 77 0d
+	ret			                                    ;6a5c	c9
 l6a5dh:
 	ld a,(VAUS_X2)		;6a5d	3a 3e e5 	: > . 
 	cp 092h		;6a60	fe 92 	. . 
