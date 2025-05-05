@@ -1,3 +1,5 @@
+
+
 ; Alien table
 ; Each entry is 20 positions
 ALIEN_TABLE: equ 0xe4c7
@@ -35,3 +37,6 @@ ALIEN_EXPLODING_FLAG: equ 1   ; Alien is exploding
 ; <UNKNOWN>
 ; <Active>
 ; <ACTION>: 0=not exploding, 1=exploding
+
+
+ALIEN_DOOR_TICKS: equ 0xe515

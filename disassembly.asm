@@ -19,7 +19,7 @@ include 'balls.asm'
 include 'lasers.asm'
 include 'aliens.asm'
 include 'sound.asm'
-include 'ticks.asm'
+include 'title.asm'
 include 'glue.asm'
 include 'sprites.asm'
 include 'keyboard.asm'
@@ -4630,40 +4630,50 @@ LIVES_VDP_ADDRESSES:
 
 ; Write "ROUND x"
 WRITE_ROUND_MSG:
-	ld hl,l723ch		;7204	21 3c 72 	! < r 
-	ld de,01adah		;7207	11 da 1a 	. . . 
-	ld bc,00005h		;720a	01 05 00 	. . . 
-	call LDIRVM		;720d	cd 5c 00 	. \ . 
-	ld a,(LEVEL_DISP)		;7210	3a 1c e0 	: . . 
-	add a,001h		;7213	c6 01 	. . 
-	daa			;7215	27 	' 
-	ld e,a			;7216	5f 	_ 
-	push de			;7217	d5 	. 
-	srl a		;7218	cb 3f 	. ? 
-	srl a		;721a	cb 3f 	. ? 
-	srl a		;721c	cb 3f 	. ? 
-	srl a		;721e	cb 3f 	. ? 
-	add a,030h		;7220	c6 30 	. 0 
-	cp 030h		;7222	fe 30 	. 0 
-	jp nz,l7229h		;7224	c2 29 72 	. ) r 
-	ld a,020h		;7227	3e 20 	>   
+    ; Write "ROUND"
+	ld hl,ROUND_STR2	            ;7204	21 3c 72
+	ld de, 0x1800 + 26 + 22*32		;7207	11 da 1a    Locate at [26, 22]
+	ld bc, 5		                ;720a	01 05 00    5 chars
+	call LDIRVM		                ;720d	cd 5c 00
+    
+	; A = LEVEL (starting at 1) in BCD
+    ld a,(LEVEL_DISP)		;7210	3a 1c e0
+	add a,1		            ;7213	c6 01
+	daa			            ;7215	27
+    
+    ; E = LEVEL >> 4 + 0x30
+    ; E is the first digit in ASCII
+	ld e,a		;7216	5f
+	push de		;7217	d5
+	srl a		;7218	cb 3f
+	srl a		;721a	cb 3f
+	srl a		;721c	cb 3f
+	srl a		;721e	cb 3f
+	add a,030h	;7220	c6 30
+    
+	; If it's a zero (0x30), draw a space instead to avoid the heading zero.
+    cp 030h		    ;7222	fe 30
+	jp nz,l7229h    ;7224	c2 29 72
+    
+	ld a, " "		;7227	3e 20
 l7229h:
-	ld hl,01afdh		;7229	21 fd 1a 	! . . 
-	call WRTVRM		;722c	cd 4d 00 	. M . 
-	pop de			;722f	d1 	. 
-	ld a,e			;7230	7b 	{ 
-	and 00fh		;7231	e6 0f 	. . 
-	add a,030h		;7233	c6 30 	. 0 
-	ld hl,01afeh		;7235	21 fe 1a 	! . . 
-	call WRTVRM		;7238	cd 4d 00 	. M . 
-	ret			;723b	c9 	. 
+    ; Write first digit
+	ld hl, 0x1800 + 29 + 23*32		;7229	21 fd 1a    Locate at [29, 23]
+	call WRTVRM		                ;722c	cd 4d 00
+	pop de			                ;722f	d1
+    
+    ; Write second digit
+	ld a,e			                ;7230	7b
+	and 00fh		                ;7231	e6 0f
+	add a,030h		                ;7233	c6 30
+	ld hl, 0x1800 + 30 + 23*32		;7235	21 fe 1a    Locate at [30, 23]
+	call WRTVRM		                ;7238	cd 4d 00
+	ret			                    ;723b	c9
 
-l723ch:
-	ld d,d			;723c	52 	R 
-	ld c,a			;723d	4f 	O 
-	ld d,l			;723e	55 	U 
-	ld c,(hl)			;723f	4e 	N 
-	ld b,h			;7240	44 	D 
+; A duplication of the "ROUND" string, since we already have ROUND_STR.
+; Perhaps at the beginning the strings were different?
+ROUND_STR2:
+    db "ROUND"
 
 ; Checks the demo's timeout and moves back to the title's screen
 ; when reached.
@@ -4779,9 +4789,9 @@ l72ceh:
 	inc (ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)		;72d4	dd 34 04
 	ld a,(ix+DOOR_TABLE_IDX_DOOR_OPEN_COUNTER)		;72d7	dd 7e 04
 	cp 3		                                    ;72da	fe 03
-	jp nz,l72e3h		;72dc	c2 e3 72 	. . r 
-	call SET_ALIEN_COLOR_BY_LEVEL		;72df	cd 77 73 	. w s 
-	ret			;72e2	c9 	. 
+	jp nz,l72e3h		                            ;72dc	c2 e3 72
+	call SET_ALIEN_COLOR_BY_LEVEL		            ;72df	cd 77 73
+	ret			                                    ;72e2	c9
 
 l72e3h:
     ; The door is open for 6 cycles.
@@ -4792,10 +4802,10 @@ l72e3h:
     ; Clear DOOR_TABLE
 	ld hl,DOOR_TABLE		;72e6	21 70 e5
 	ld de,DOOR_TABLE + 1	;72e9	11 71 e5
-	ld bc,DOOR_TABLE_LEN   ;72ec	01 06 00
-	ld (hl), 0  		            ;72ef	36 00
-	ldir		                    ;72f1	ed b0
-	ret			                    ;72f3	c9
+	ld bc,DOOR_TABLE_LEN    ;72ec	01 06 00
+	ld (hl), 0  		    ;72ef	36 00
+	ldir		            ;72f1	ed b0
+	ret			            ;72f3	c9
 
 ; Chars corresponding to the states door closed, opening, open, opening, closed.
 DOOR_CHARS:
@@ -4821,7 +4831,7 @@ DOOR_CHARS:
 ; right, depending on Vaus' position.
 UPDATE_ALIEN_APPEAR_FROM_DOOR:
     ; Increment number of ticks and return if it's not 240
-	ld ix,TICKS_240		;730c	dd 21 15 e5
+	ld ix,ALIEN_DOOR_TICKS	;730c	dd 21 15 e5
 	inc (ix+0)		;7310	dd 34 00
 	ld a,(ix+0)		;7313	dd 7e 00
 	cp 240		    ;7316	fe f0
