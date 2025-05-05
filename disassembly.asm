@@ -382,8 +382,8 @@ TRANSITION_PLAY_LEVEL:
 	jp go_on_after_transition	;41d1	c3 da 41
 
 TRANSITION_NEXT_LEVEL:
-	call NEXT_OR_SAME_LEVEL		;41d4	cd 94 7b 	. . { 
-	jp go_on_after_transition		;41d7	c3 da 41 	. . A 
+	call NEXT_OR_SAME_LEVEL		;41d4	cd 94 7b
+	jp go_on_after_transition	;41d7	c3 da 41
 
 go_on_after_transition:
     ; Read a sound number from the table
@@ -391,8 +391,8 @@ go_on_after_transition:
 	ld a,(hl)		        ;41dd	7e
     
     ; Done if it's zero
-	or a			                ;41de	b7
-	jp z,l40d7h		                ;41df	ca d7 40
+	or a			        ;41de	b7
+	jp z,l40d7h		        ;41df	ca d7 40
 
     ; Play the sound
 	ld (SOUND_NUMBER),a	    ;41e2	32 c0 e5
@@ -672,13 +672,16 @@ l427ch:
 
 ; The second cheat: hold LEFT and RIGHT and press GRAPH 4 times to continue from the last level
 l42bbh:
-    ; Check if LEFT key is pressed...
+    ;  7   6    5  4   3  2  1  0
+    ; (0, STOP, G, S,  R, L, D, U)
+    
+    ; Check if the LEFT key is pressed...
 	bit 2,b		    ;42bb	cb 50
 	jp z,l42d9h		;42bd	ca d9 42
-    ; Check if RIGHT key is pressed...
+    ; Check if the RIGHT key is pressed...
 	bit 3,b		    ;42c0	cb 58
 	jp z,l42d9h		;42c2	ca d9 42
-    ; Check if GRAPH key is pressed...
+    ; Check if the GRAPH key is pressed...
 	bit 5,b		    ;42c5	cb 68
 	jp z,l42d9h		;42c7	ca d9 42
     
@@ -694,22 +697,25 @@ l42bbh:
 	dec hl			;42d6	2b
 	ld (hl),1	    ;42d7	36 01
 l42d9h:
-	bit 4,b		;42d9	cb 60 	. ` 
-	jp z,l42fch		;42db	ca fc 42 	. . B 
+    ; Check if the SPACE key is pressed...
+	bit 4,b		    ;42d9	cb 60
+	jp z,l42fch		;42db	ca fc 42
 
-	ld a,(GAME_TRANSITION_ACTION)		;42de	3a 0a e0 	: . . 
-	or a			;42e1	b7 	. 
-	jp z,l42f6h		;42e2	ca f6 42 	. . B 
+    ; Jump if GAME_TRANSITION_ACTION == GAME_TRANSITION_ACTION_START_LEVEL
+	ld a,(GAME_TRANSITION_ACTION)		;42de	3a 0a e0
+	or a			                    ;42e1	b7
+	jp z,l42f6h		                    ;42e2	ca f6 42
 
-	xor a			;42e5	af 	. 
-	ld (GAME_TRANSITION_ACTION),a		;42e6	32 0a e0 	2 . . 
+    ; GAME_TRANSITION_ACTION <-- GAME_TRANSITION_ACTION_START_LEVEL
+	xor a			                    ;42e5	af
+	ld (GAME_TRANSITION_ACTION),a		;42e6	32 0a e0
 
     ; Clear memory
-	ld hl,BRICK_HIT_ROW		;42e9	21 3c e5
+	ld hl,BRICK_HIT_ROW		    ;42e9	21 3c e5
 	ld de,BRICK_HIT_ROW+1		;42ec	11 3d e5
-	ld (hl),000h		            ;42ef	36 00
-	ld bc,7		                    ;42f1	01 07 00
-	ldir		                    ;42f4	ed b0
+	ld (hl), 0		            ;42ef	36 00
+	ld bc,7		                ;42f1	01 07 00
+	ldir		                ;42f4	ed b0
 l42f6h:
     ; Use cursors, not the paddle
 	ld a, 0		                 ;42f6	3e 00
@@ -738,36 +744,36 @@ l4309h:
 	ld a,01eh		;430d	3e 1e
 	out (0a1h),a	;430f	d3 a1
 l4311h:
-	ld a,01fh		;4311	3e 1f 	> . 
-	out (0a1h),a		;4313	d3 a1 	. . 
+	ld a,01fh		;4311	3e 1f
+	out (0a1h),a	;4313	d3 a1
     
     ; Read the joystick port
 	ld a, 14		;4315	3e 0e
 	out (0a0h),a	;4317	d3 a0
 	in a,(0a2h)		;4319	db a2
 	
-    ld e,a			;431b	5f 	_ 
-	srl a		;431c	cb 3f 	. ? 
-	rl c		;431e	cb 11 	. . 
+    ld e,a		;431b	5f
+	srl a		;431c	cb 3f
+	rl c		;431e	cb 11
     ; Next bit
-	djnz l4309h		;4320	10 e7 	. . 
+	djnz l4309h		;4320	10 e7
 
 l4322h:
     ; Store paddle count (9 bits)
-	ld a,c			        ;4322	79 	y 
+	ld a,c			        ;4322	79
 	ld (PADDLE_COUNT),a		;4323	32 c1 e0
 	ld a,h			        ;4326	7c
 	and 1		            ;4327	e6 01
 	ld (PADDLE_COUNT+1),a	;4329	32 c2 e0    
     
-	ld a,00fh		;432c	3e 0f 	> . 
-	out (0a0h),a		;432e	d3 a0 	. . 
-	ld a,01fh		;4330	3e 1f 	> . 
-	out (0a1h),a		;4332	d3 a1 	. . 
-	ld a,00fh		;4334	3e 0f 	> . 
-	out (0a1h),a		;4336	d3 a1 	. . 
-	ld a,01fh		;4338	3e 1f 	> . 
-	out (0a1h),a		;433a	d3 a1 	. . 
+	ld a,00fh		;432c	3e 0f
+	out (0a0h),a	;432e	d3 a0
+	ld a,01fh		;4330	3e 1f
+	out (0a1h),a	;4332	d3 a1
+	ld a,00fh		;4334	3e 0f
+	out (0a1h),a	;4336	d3 a1
+	ld a,01fh		;4338	3e 1f
+	out (0a1h),a	;433a	d3 a1
 
     ; Read the joystick port
 	ld a, 14		;433c	3e 0e
@@ -778,30 +784,33 @@ l4322h:
     ; I think PADDLE_STATUS+1 this is used to know if it's the Vaus paddle or
     ; a normal joystick.
     ; And PADDLE_STATUS seems unused.
-	ld e,a			;4342	5f 	_ 
-	ld hl,PADDLE_STATUS		;4343	21 c4 e0 	! . . 
-	ld a,(hl)			;4346	7e 	~ 
-	ld (hl),e			;4347	73 	s 
-	and 00fh		;4348	e6 0f 	. . 
-	and e			;434a	a3 	. 
-	xor e			;434b	ab 	. 
-	ld (PADDLE_STATUS+1),a		;434c	32 c5 e0 	2 . . 
-	ld b,a			;434f	47 	G 
+	ld e,a			        ;4342	5f
+	ld hl,PADDLE_STATUS		;4343	21 c4 e0
+	ld a,(hl)			    ;4346	7e
+	ld (hl),e			    ;4347	73
+	and 00fh		        ;4348	e6 0f
+	and e			        ;434a	a3
+	xor e			        ;434b	ab
+	ld (PADDLE_STATUS+1),a	;434c	32 c5 e0
+	ld b,a			        ;434f	47
 
     ; Exit if we're not in the title screen
 	ld a,(GAME_STATE)		;4350	3a 0b e0
 	or a			        ;4353	b7
 	ret nz			        ;4354	c0
 
-	bit 1,b		;4355	cb 48 	. H 
-	ret z			;4357	c8 	. 
+    ; Exit depending on paddel status
+	bit 1,b		    ;4355	cb 48
+	ret z			;4357	c8
 
-	ld a,(GAME_TRANSITION_ACTION)		;4358	3a 0a e0 	: . . 
-	or a			;435b	b7 	. 
-	jp z,l4370h		;435c	ca 70 43 	. p C 
+    ; Jump if GAME_TRANSITION_ACTION == GAME_TRANSITION_ACTION_START_LEVEL
+	ld a,(GAME_TRANSITION_ACTION)		;4358	3a 0a e0
+	or a			                    ;435b	b7
+	jp z,l4370h		                    ;435c	ca 70 43
 
-	xor a			;435f	af 	. 
-	ld (GAME_TRANSITION_ACTION),a		;4360	32 0a e0 	2 . . 
+    ; GAME_TRANSITION_ACTION <-- GAME_TRANSITION_ACTION_START_LEVEL
+	xor a			                ;435f	af
+	ld (GAME_TRANSITION_ACTION),a	;4360	32 0a e0
 
     ; Reset variables
 	ld hl,BRICK_HIT_ROW		;4363	21 3c e5
