@@ -4517,6 +4517,7 @@ l715dh:
 	ret			                    ;716d	c9
 
 ; Speed up all active balls if the counter has reached its maximum
+; It begins with a 'ret' at 716e, so it's unused finally.
 UPDATE_SPEED_ALL_BALLS:
 	; It seems they decided not to implement this.
     ret			;716e	c9
@@ -4568,57 +4569,64 @@ l71a1h:
 
 ; Draw the lives
 DRAW_LIVES:
-	ld a,(LIVES)		;71b9	3a 1d e0 	: . . 
-	or a			;71bc	b7 	. 
-	ret z			;71bd	c8 	. 
-	ld a,(LIVES)		;71be	3a 1d e0 	: . . 
+    ; Leave if zero extra lives
+	ld a,(LIVES)	;71b9	3a 1d e0
+	or a			;71bc	b7
+	ret z			;71bd	c8
+    
+	ld a,(LIVES)	;71be	3a 1d e0
 l71c1h:
     ; Display only up to 6 lives
 	cp 6		    ;71c1	fe 06
 	jp c,l71c8h		;71c3	da c8 71
 	ld a, 6		    ;71c6	3e 06
 l71c8h:
-	ld (BRICK_HIT_ROW),a		;71c8	32 3c e5 	2 < . 
-	xor a			;71cb	af 	. 
-	ld (BRICK_HIT_COL),a		;71cc	32 3d e5 	2 = . 
-	ld iy,0197ah		;71cf	fd 21 7a 19 	. ! z . 
+	ld (BRICK_HIT_ROW),a		;71c8	32 3c e5    Remaining lives to draw
+	xor a			            ;71cb	af
+	ld (BRICK_HIT_COL),a		;71cc	32 3d e5    Index of the live being drawn
+    
+    ; Interesting: it seems they wanted to use IY as a VRAM pointer, but
+    ; later they decided to use table LIVES_VDP_ADDRESSES. And they forgot to
+    ; remove this instruction:
+	ld iy,0x1800 + 26 + 11*32   ;71cf	fd 21 7a 19     Locate at [26, 11]
 l71d3h:
-	ld a,(BRICK_HIT_COL)		;71d3	3a 3d e5 	: = . 
-	ld l,a			;71d6	6f 	o 
-	ld h,000h		;71d7	26 00 	& . 
-	add hl,hl			;71d9	29 	) 
-	ld de,l71f8h		;71da	11 f8 71 	. . q 
-	add hl,de			;71dd	19 	. 
-	ld e,(hl)			;71de	5e 	^ 
-	inc hl			;71df	23 	# 
-	ld d,(hl)			;71e0	56 	V 
-	ld hl,l71f6h		;71e1	21 f6 71 	! . q 
-	ld bc,00002h		;71e4	01 02 00 	. . . 
-l71e7h:
-	call LDIRVM		;71e7	cd 5c 00 	. \ . 
-	ld hl,BRICK_HIT_COL		;71ea	21 3d e5 	! = . 
-	inc (hl)			;71ed	34 	4 
-	ld hl,BRICK_HIT_ROW		;71ee	21 3c e5 	! < . 
-	dec (hl)			;71f1	35 	5 
-	jp nz,l71d3h		;71f2	c2 d3 71 	. . q 
-	ret			;71f5	c9 	. 
+    ; Get the address to write in VRAM
+    ; DE = LIVES_VDP_ADDRESSES[2*BRICK_HIT_COL]
+	ld a,(BRICK_HIT_COL)		;71d3	3a 3d e5
+	ld l,a			            ;71d6	6f
+	ld h,000h		            ;71d7	26 00
+	add hl,hl			        ;71d9	29
+	ld de, LIVES_VDP_ADDRESSES  ;71da	11 f8 71
+	add hl,de			        ;71dd	19
+	ld e,(hl)			        ;71de	5e
+	inc hl			            ;71df	23
+	ld d,(hl)			        ;71e0	56
 
-l71f6h:
-	ld l,c			;71f6	69 	i 
-	ld l,d			;71f7	6a 	j 
-l71f8h:
-	ld a,d			;71f8	7a 	z 
-	add hl,de			;71f9	19 	. 
-	ld a,h			;71fa	7c 	| 
-	add hl,de			;71fb	19 	. 
-	ld a,(hl)			;71fc	7e 	~ 
-	add hl,de			;71fd	19 	. 
-	sbc a,d			;71fe	9a 	. 
-	add hl,de			;71ff	19 	. 
-	sbc a,h			;7200	9c 	. 
-	add hl,de			;7201	19 	. 
-	sbc a,(hl)			;7202	9e 	. 
-	add hl,de			;7203	19 	. 
+    ; Write 2 patters for each life
+	ld hl,LIVE_PATTERNS		    ;71e1	21 f6 71
+	ld bc, 2		            ;71e4	01 02 00
+l71e7h:
+	call LDIRVM		            ;71e7	cd 5c 00
+
+    ; Incremente count of drawn lives
+	ld hl,BRICK_HIT_COL		    ;71ea	21 3d e5
+	inc (hl)			        ;71ed	34
+    
+    ; Decrement remaining lives
+	ld hl,BRICK_HIT_ROW		    ;71ee	21 3c e5
+	dec (hl)			        ;71f1	35
+
+	jp nz,l71d3h		        ;71f2	c2 d3 71
+	ret			                ;71f5	c9
+
+LIVE_PATTERNS:
+    db 0x69, 0x6a
+
+LIVES_VDP_ADDRESSES:
+    dw 0x197a, 0x197c, 0x197e, 0x199a, 0x199c, 0x199e   ; 0x71f8
+
+
+
 
 ; Write "ROUND x"
 WRITE_ROUND_MSG:
