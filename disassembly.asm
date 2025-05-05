@@ -4073,41 +4073,51 @@ l6e64h:
 	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6ed8	fd 36 17 0e     Red
 	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  8		;6edc	fd 36 1b 08     Red
 l6ee0h:
-	ld l,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6ee0	dd 6e 04 	. n . 
-	ld h, 0		;6ee3	26 00 	& . 
-	add hl,hl			;6ee5	29 	) 
-	ld de, TBL_7019		;6ee6	11 19 70 	. . p 
-	add hl,de			;6ee9	19 	. 
-	ld e,(hl)			;6eea	5e 	^ 
-	inc hl			;6eeb	23 	# 
-	ld d,(hl)			;6eec	56 	V 
-	ex de,hl			;6eed	eb 	. 
+    ; Point to Arkanoid-destroyed patterns
+    ; HL = TBL_7019[2*VAUS_TABLE_IDX_DESTRUCTION_STEP2]
+	ld l,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6ee0	dd 6e 04
+	ld h, 0		                                    ;6ee3	26 00
+	add hl,hl			                            ;6ee5	29
+	ld de, TBL_7019		                            ;6ee6	11 19 70
+	add hl,de			                            ;6ee9	19
+	ld e,(hl)			                            ;6eea	5e
+	inc hl			                                ;6eeb	23
+	ld d,(hl)			                            ;6eec	56
+	ex de,hl			                            ;6eed	eb
 
-	push iy		;6eee	fd e5 	. . 
-	ld b, 7		;6ef0	06 07 	. . 
+    ; Update the pattern code of 7 sprites
+	push iy		;6eee	fd e5
+	ld b, 7		;6ef0	06 07
 l6ef2h:
-	ld a,(hl)			;6ef2	7e 	~ 
-	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM),a		;6ef3	fd 77 02 	. w . 
-	inc hl			;6ef6	23 	# 
-	ld de, SPR_PARAMS_LEN		;6ef7	11 04 00 	. . . 
-	add iy,de		;6efa	fd 19 	. . 
-	djnz l6ef2h		;6efc	10 f4 	. . 
-	pop iy		;6efe	fd e1 	. . 
+	ld a,(hl)			                                        ;6ef2	7e
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_PATTERN_NUM),a		;6ef3	fd 77 02
+	inc hl			                                            ;6ef6	23
+	ld de, SPR_PARAMS_LEN		                                ;6ef7	11 04 00
+	add iy,de		                                            ;6efa	fd 19
+	djnz l6ef2h		                                            ;6efc	10 f4
+	pop iy		                                                ;6efe	fd e1
 
-	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6f00	dd 7e 04 	. ~ . 
-	cp 004h		;6f03	fe 04 	. . 
-	ret nz			;6f05	c0 	. 
-	ld (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2), 0		;6f06	dd 36 04 00 	. 6 . . 
-	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_WAIT_READY		;6f0a	dd 36 00 00 	. 6 . . 
+    ; Leave if VAUS_TABLE_IDX_DESTRUCTION_STEP2 != 4
+	ld a,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		            ;6f00	dd 7e 04
+	cp 4		                                                ;6f03	fe 04
+	ret nz			                                            ;6f05	c0
+    
+    ; VAUS_TABLE_IDX_DESTRUCTION_STEP2 == 4
 
-	push iy		;6f0e	fd e5 	. . 
-	ld b, 7		;6f10	06 07 	. . 
+    ; Reset destruction step
+	ld (ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2), 0		                    ;6f06	dd 36 04 00
+    
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_WAIT_READY	;6f0a	dd 36 00 00
+
+    ; Update the colors of 7 sprites as transparent (0)
+	push iy		                                            ;6f0e	fd e5
+	ld b, 7		                                            ;6f10	06 07
 l6f12h:
-	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 0		;6f12	fd 36 03 00 	. 6 . . 
-	ld de, SPR_PARAMS_LEN		;6f16	11 04 00 	. . . 
-	add iy,de		;6f19	fd 19 	. . 
-	djnz l6f12h		;6f1b	10 f5 	. . 
-	pop iy		;6f1d	fd e1 	. . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 0		;6f12	fd 36 03 00
+	ld de, SPR_PARAMS_LEN		                            ;6f16	11 04 00
+	add iy,de		                                        ;6f19	fd 19
+	djnz l6f12h		                                        ;6f1b	10 f5
+	pop iy		                                            ;6f1d	fd e1
 
     ; No lasers
 	ld a, 0		                            ;6f1f	3e 00
