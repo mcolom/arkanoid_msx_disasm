@@ -4910,7 +4910,7 @@ SET_ALIEN_COLOR_BY_LEVEL:
 	ld a,(LEVEL)                    ;7377	3a 1b e0
 	ld e,a			                ;737a	5f
 	ld d,000h		                ;737b	16 00   DE = LEVEL
-	ld hl,TABLE_ALIENS_PER_LEVEL	;737d	21 53 73 	! S s 
+	ld hl,TABLE_ALIENS_PER_LEVEL	;737d	21 53 73
 	add hl,de			            ;7380	19      HL = TABLE_ALIENS_PER_LEVEL + LEVEL
 	ld b,(hl)			            ;7381	46      B = TABLE_ALIENS_PER_LEVEL[LEVEL]
 
@@ -5004,7 +5004,7 @@ DOH_DEFEATED_ANIMATION:
     ; Execute the corresponding "postmorten" action
 	ld a,(ix+DOH_TABLE_IDX_POSTMORTEN_ACTION)	;73f9	dd 7e 01
 	cp 1		                                ;73fc	fe 01
-	jp z,remove_one_line_of_doh		                    ;73fe	ca 10 74
+	jp z,remove_one_line_of_doh		            ;73fe	ca 10 74
 	cp 2		                                ;7401	fe 02
 	jp z,delay_before_ending		            ;7403	ca 41 74
 
@@ -5041,8 +5041,8 @@ remove_one_line_of_doh:
 
 	inc (ix+DOH_TABLE_IDX_ROW)		;7433	dd 34 03
 	ld a,(ix+DOH_TABLE_IDX_ROW)		;7436	dd 7e 03
-	cp 12		                        ;7439	fe 0c
-	ret nz			                    ;743b	c0
+	cp 12		                    ;7439	fe 0c
+	ret nz			                ;743b	c0
 
     ; The next "postmorten" cycle is 2: delay and ending text
 	ld (ix+DOH_TABLE_IDX_POSTMORTEN_ACTION), 2		;743c	dd 36 01 02
@@ -5326,7 +5326,7 @@ l75adh:
 l75c8h:
     ; ToDo
 	ld b,003h		;75c8	06 03 	. . 
-	ld ix,TBL_75ed		;75ca	dd 21 ed 75 	. ! . u 
+	ld ix,CHARS_DOH_CLOSED_MOUTH		;75ca	dd 21 ed 75 	. ! . u 
 	ld iy,0190bh		;75ce	fd 21 0b 19 	. ! . . 
 l75d2h:
 	push ix		;75d2	dd e5 	. . 
@@ -5344,16 +5344,10 @@ l75d2h:
 	djnz l75d2h		;75ea	10 e6 	. . 
 	ret			;75ec	c9 	. 
 
-; ToDo
-TBL_75ed:
-	ret p			;75ed	f0 	. 
-	pop af			;75ee	f1 	. 
-	jp p,0f4f3h		;75ef	f2 f3 f4 	. . . 
-	push af			;75f2	f5 	. 
-	or 0f7h		;75f3	f6 f7 	. . 
-	ret m			;75f5	f8 	. 
-	ld sp,hl			;75f6	f9 	. 
-	db 0xfa, 0xfb   ;75f7
+CHARS_DOH_CLOSED_MOUTH: ;75ed
+    db 0xf0, 0xf1, 0xf2, 0xf3
+    db 0xf4, 0xf5, 0xf6, 0xf7
+    db 0xf8, 0xf9, 0xfa, 0xfb
 
 CHARS_DOH_OPEN_MOUTH: ;75f9
     db 0xba, 0xbb, 0xbc, 0xbd
