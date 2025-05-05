@@ -3387,77 +3387,91 @@ l6a3fh:
 	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a	;6a59	fd 77 0d
 	ret			                                    ;6a5c	c9
 l6a5dh:
-	ld a,(VAUS_X2)		;6a5d	3a 3e e5 	: > . 
-	cp 092h		;6a60	fe 92 	. . 
-	jp c,l6a30h		;6a62	da 30 6a 	. 0 j 
-	cp 0c8h		;6a65	fe c8 	. . 
-	jp nc,l6a30h		;6a67	d2 30 6a 	. 0 j 
-	ld a,0a0h		;6a6a	3e a0 	> . 
-	ld (VAUS_X2),a		;6a6c	32 3e e5 	2 > . 
-	jp l6a30h		;6a6f	c3 30 6a 	. 0 j 
+	ld a,(VAUS_X2)	;6a5d	3a 3e e5
+	cp 146		    ;6a60	fe 92       Jump if X < 146
+	jp c,l6a30h		;6a62	da 30 6a
+	cp 200		    ;6a65	fe c8
+	jp nc,l6a30h	;6a67	d2 30 6a    Jump if X >= 200
+    
+    ; 146 <= X < 200
+
+    ; VAUS_X2 <-- 160
+	ld a,160		;6a6a	3e a0
+	ld (VAUS_X2),a	;6a6c	32 3e e5
+    
+	jp l6a30h		;6a6f	c3 30 6a
 l6a72h:
-	ld a,(ix+VAUS_ACTION_STATE_THROUGH_PORTAL)		;6a72	dd 7e 07 	. ~ . 
-	cp 002h		;6a75	fe 02 	. . 
-	jp z,l6a9fh		;6a77	ca 9f 6a 	. . j 
-	cp 003h		;6a7a	fe 03 	. . 
-	jp z,l6ab3h		;6a7c	ca b3 6a 	. . j 
-	cp 004h		;6a7f	fe 04 	. . 
-	jp z,l6ac7h		;6a81	ca c7 6a 	. . j 
-	cp 005h		;6a84	fe 05 	. . 
-	jp z,l6a9eh		;6a86	ca 9e 6a 	. . j 
-	ld a,(VAUS_X2)		;6a89	3a 3e e5 	: > . 
-	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a8c	fd 77 01 	. w . 
-	add a,00ch		;6a8f	c6 0c 	. . 
-	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a91	fd 77 05 	. w . 
-	add a,00ch		;6a94	c6 0c 	. . 
-	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a96	fd 77 09 	. w . 
-	add a,0fch		;6a99	c6 fc 	. . 
-	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a9b	fd 77 0d 	. w . 
-l6a9eh:
-	ret			;6a9e	c9 	. 
-l6a9fh:
-	ld a,(VAUS_X2)		;6a9f	3a 3e e5 	: > . 
-	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aa2	fd 77 01 	. w . 
-	add a,006h		;6aa5	c6 06 	. . 
-	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aa7	fd 77 05 	. w . 
-	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aaa	fd 77 09 	. w . 
-	add a,006h		;6aad	c6 06 	. . 
-	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aaf	fd 77 0d 	. w . 
-	ret			;6ab2	c9 	. 
-l6ab3h:
-	ld a,(VAUS_X2)		;6ab3	3a 3e e5 	: > . 
-	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ab6	fd 77 01 	. w . 
-	add a,00ch		;6ab9	c6 0c 	. . 
-	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6abb	fd 77 05 	. w . 
-	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6abe	fd 77 09 	. w . 
-	add a,00ch		;6ac1	c6 0c 	. . 
-	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ac3	fd 77 0d 	. w . 
-	ret			;6ac6	c9 	. 
-l6ac7h:
-	ld a,(VAUS_X2)		;6ac7	3a 3e e5 	: > . 
-	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aca	fd 77 01 	. w . 
-	add a,008h		;6acd	c6 08 	. . 
-	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6acf	fd 77 05 	. w . 
-	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ad2	fd 77 09 	. w . 
-	add a,008h		;6ad5	c6 08 	. . 
-	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ad7	fd 77 0d 	. w . 
-	ret			;6ada	c9 	. 
+    ; Check cross-portal step
+	ld a,(ix+VAUS_ACTION_STATE_THROUGH_PORTAL)		;6a72	dd 7e 07
+	cp 2		                                    ;6a75	fe 02
+	jp z,vaus_crossing_portal_step_2		                                ;6a77	ca 9f 6a
+	cp 3		                                    ;6a7a	fe 03
+	jp z,vaus_crossing_portal_step_3		                                ;6a7c	ca b3 6a
+	cp 4		                                    ;6a7f	fe 04
+	jp z,vaus_crossing_portal_step_4		                                ;6a81	ca c7 6a
+	cp 5		                                    ;6a84	fe 05
+	jp z,vaus_crossing_portal_step_5		                                ;6a86	ca 9e 6a
+    
+    ; Update the position of the 4 sprites
+	ld a,(VAUS_X2)		                                ;6a89	3a 3e e5
+    
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a8c	fd 77 01
+	add a, 12		                                    ;6a8f	c6 0c
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a91	fd 77 05
+	add a, 12		                                    ;6a94	c6 0c
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a96	fd 77 09
+	add a, -4		                                    ;6a99	c6 fc
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a9b	fd 77 0d
+vaus_crossing_portal_step_5:
+	ret			                                        ;6a9e	c9
+vaus_crossing_portal_step_2:
+	; Update the position of the 4 sprites
+    ld a,(VAUS_X2)		                                ;6a9f	3a 3e e5
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aa2	fd 77 01
+	add a, 6		                                    ;6aa5	c6 06
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aa7	fd 77 05
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aaa	fd 77 09
+	add a, 6		                                    ;6aad	c6 06
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aaf	fd 77 0d
+	ret			                                        ;6ab2	c9
+vaus_crossing_portal_step_3:
+    ; Update the position of the 4 sprites
+	ld a,(VAUS_X2)		                                ;6ab3	3a 3e e5
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ab6	fd 77 01
+	add a, 12		                                    ;6ab9	c6 0c
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6abb	fd 77 05
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6abe	fd 77 09
+	add a, 12		                                    ;6ac1	c6 0c
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ac3	fd 77 0d
+	ret			                                        ;6ac6	c9
+vaus_crossing_portal_step_4:
+    ; Update the position of the 4 sprites
+	ld a,(VAUS_X2)		                                ;6ac7	3a 3e e5
+
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aca	fd 77 01
+	add a, 8		                                    ;6acd	c6 08
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6acf	fd 77 05
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ad2	fd 77 09
+	add a, 8		                                    ;6ad5	c6 08
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ad7	fd 77 0d
+	ret			                                        ;6ada	c9
 
 vaus_crosses_portal:
     ; VAUS_ACTION_STATE_THROUGH_PORTAL
 
     ; Increment portaling step counter
-    ; Leave if it's not zero yet
+    ; Leave if it's not 10 yet
 	ld ix,VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1		;6adb	dd 21 53 e5
 	inc (ix+000h)		;6adf	dd 34 00
 	ld a,(ix+000h)		;6ae2	dd 7e 00
 	cp 10		        ;6ae5	fe 0a
 	ret nz			    ;6ae7	c0
     
-    ; Reset counter
-	ld (ix+000h), 0		;6ae8	dd 36 00 00 Reset VAUS_TABLE_IDX_VAUS_PORTALING_STEP1
-    
-        
+    ; Reset VAUS_TABLE_IDX_VAUS_PORTALING_STEP1 counter
+	ld (ix+000h), 0		;6ae8	dd 36 00 00
+            
     ; Since ix = VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1 (idx 8),
     ; ix+001h is index 9 in VAUS_TABLE: VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
 
@@ -3465,17 +3479,16 @@ vaus_crosses_portal:
 	ld e,(ix+001h)		;6aec	dd 5e 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
 	sla e		        ;6aef	cb 23
     ld d, 0		        ;6af1	16 00
-
-	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)	;6af3	3a 51 e5
     
     ; Jump if Vaus has lasers
-	cp 1		    ;6af6	fe 01
-	jp z,vaus_goes_to_portal_with_lasers		;6af8	ca 48 6b
+	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_HAS_LASER)	;6af3	3a 51 e5
+	cp 1		                                    ;6af6	fe 01
+	jp z,vaus_goes_to_portal_with_lasers		    ;6af8	ca 48 6b
 
     ; Jump if it's resizing
 	ld a,(VAUS_TABLE + VAUS_TABLE_IDX_RESIZING)		;6afb	3a 50 e5
 	cp 0		                                    ;6afe	fe 00
-	jp nz,vaus_goes_to_portal_resizing		                            ;6b00	c2 2c 6b
+	jp nz,vaus_goes_to_portal_resizing              ;6b00	c2 2c 6b
 
     ; HL = TBL_VAUS_ENTERING_PORTAL_SPR_DATA[VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2]
 	ld hl,TBL_VAUS_ENTERING_PORTAL_SPR_DATA		;6b03	21 64 6b
@@ -3549,7 +3562,7 @@ vaus_goes_to_portal_with_lasers:
 	; Copy 4 sprites from TBL_VAUS_CROSSES_PORTAL_TRANSFORMED_SPR_DATA
     ; This makes the animation  
 	ld de,SPR_PARAMS_BASE		;6b50	11 cd e0
-	ld bc, 4 * SPR_PARAMS_LEN		        ;6b53	01 10 00
+	ld bc, 4 * SPR_PARAMS_LEN   ;6b53	01 10 00
 	ldir		                ;6b56	ed b0
 
     ; Next portaling step.
