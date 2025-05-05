@@ -3128,6 +3128,7 @@ EXECUTE_VAUS_ACTION:
     cp 1                             ;68c7  fe 01
 	jp z,l68dch		                 ;68c9	ca dc 68
 
+    ; Center Vaus
 	ld hl,SPR_DATA_ARKANOID_CENTERED		    ;68cc	21 e7 6f
 	ld de,SPR_PARAMS_BASE	                    ;68cf	11 cd e0
 	ld bc, 4*SPR_PARAMS_LEN                     ;68d2	01 10 00
@@ -4074,11 +4075,11 @@ l6e64h:
 	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),  8		;6edc	fd 36 1b 08     Red
 l6ee0h:
     ; Point to Arkanoid-destroyed patterns
-    ; HL = TBL_7019[2*VAUS_TABLE_IDX_DESTRUCTION_STEP2]
+    ; HL = VAUS_DESTROYED_PATTERNS[2*VAUS_TABLE_IDX_DESTRUCTION_STEP2]
 	ld l,(ix+VAUS_TABLE_IDX_DESTRUCTION_STEP2)		;6ee0	dd 6e 04
 	ld h, 0		                                    ;6ee3	26 00
 	add hl,hl			                            ;6ee5	29
-	ld de, TBL_7019		                            ;6ee6	11 19 70
+	ld de, VAUS_DESTROYED_PATTERNS		                            ;6ee6	11 19 70
 	add hl,de			                            ;6ee9	19
 	ld e,(hl)			                            ;6eea	5e
 	inc hl			                                ;6eeb	23
@@ -4233,11 +4234,12 @@ lasering_step_2_and_3:
 	jp vaus_follow_ball_demo_or_read_controls		                ;6fdd	c3 0f 69
 
 l6fe0h:
-	ld (ix+000h),003h		;6fe0	dd 36 00 03 	. 6 . . 
-	jp vaus_follow_ball_demo_or_read_controls		;6fe4	c3 0f 69 	. . i 
+    ; Set Vaus shrinking
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_SHRINKING		;6fe0	dd 36 00 03
+	jp vaus_follow_ball_demo_or_read_controls		                        ;6fe4	c3 0f 69
 
 SPR_DATA_ARKANOID_CENTERED:
-    ; (Y, X) position, sprite pattern number, and color
+    ; (Y, X) position, sprite pattern number, and color of centered Vaus
     db 174, 80,   8,  8
     db 174, 96,   4, 14
     db 174, 112, 12,  8
@@ -4285,8 +4287,8 @@ TBL_INCREMENT_POS_VAUS_CONTROLS:
 ; POKE 0X7002 0xF6
 ; POKE 0X700A 10
 
-
-TBL_7019:
+; Pattern codes of the destroyed Vaus
+VAUS_DESTROYED_PATTERNS:
     db 0x0, 0x0, 0x0, 0x0, 0x2b, 0x70, 0x32, 0x70       ; 0x7019 - 0x7020
     db 0x2b, 0x70, 0x32, 0x70, 0x2b, 0x70, 0x32, 0x70   ; 0x7021 - 0x7028
     db 0x2b, 0x70, 0x38, 0x3c, 0x40, 0x44, 0x2c, 0x30   ; 0x7029 - 0x7030
@@ -4322,19 +4324,19 @@ CHECK_START_LASERS:
 	jp z,l7074h		        ;7055	ca 74 70
 	
     ; Skip if we're using cursors
-    ld a,(USE_VAUS_PADDLE)		;7058	3a 0c e0 	: . . 
-	or a			;705b	b7 	. 
-	jp z,l706ah		;705c	ca 6a 70 	. j p 
+    ld a,(USE_VAUS_PADDLE)		;7058	3a 0c e0
+	or a			            ;705b	b7
+	jp z,l706ah		            ;705c	ca 6a 70
 
-    ; ToDo: what is this var?
-	ld a,(PADDLE_STATUS+1)		;705f	3a c5 e0 	: . . 
-	bit 1,a		;7062	cb 4f 	. O 
-	jp z,l70afh		;7064	ca af 70 	. . p 
-	jp l7072h		;7067	c3 72 70 	. r p 
+    ; Check if the paddle's button has been pressed
+	ld a,(PADDLE_STATUS+1)		;705f	3a c5 e0
+	bit 1,a		                ;7062	cb 4f
+	jp z,l70afh		            ;7064	ca af 70
+	jp l7072h		            ;7067	c3 72 70
 l706ah:
     ; Check if the fire button has been pressed
     ; If not, just exit
-	ld a,(CONTROLS)	;706a	3a bf e0
+	ld a,(CONTROLS)	                ;706a	3a bf e0
 	bit 4,a		                    ;706d	cb 67
 	jp z,l70afh		                ;706f	ca af 70
 l7072h:
@@ -4404,7 +4406,7 @@ l70bfh:
 	jp z,l715dh		;70c8	ca 5d 71
 
     ; Move up laser 5 pixels
-	ld a, -5h		                ;70cb	3e fb
+	ld a, -5		                ;70cb	3e fb
 	add a,(ix+SPR_PARAMS_IDX_Y)		;70cd	dd 86 00
 
     ; Check if the laser has reached the top of the playfield
@@ -4418,7 +4420,7 @@ l70bfh:
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;70d8	dd 7e 00
 	cp 23		                    ;70db	fe 17
 	jp c,l715dh		                ;70dd	da 5d 71
-	cp 077h		                    ;70e0	fe 77
+	cp 119		                    ;70e0	fe 77
 	jp nc,l715dh		            ;70e2	d2 5d 71
 
     ; A = (Y-23) / 8. It's looking ay Y-23 because the laser hits the brick above
@@ -4485,11 +4487,11 @@ l7118h:
 	ld (BRICK_HIT_ROW),a	;713c	32 3c e5
 
     ; Perform the corresponding brick action
-	call DO_BRICK_ACTION		;713f	cd 05 aa 	. . . 
+	call DO_BRICK_ACTION		;713f	cd 05 aa
 l7142h:
-	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5 	: < . 
-	or a			;7145	b7 	. 
-	jp z,l715dh		;7146	ca 5d 71 	. ] q 
+	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5
+	or a			            ;7145	b7
+	jp z,l715dh		            ;7146	ca 5d 71
     
     ; Set the laser's sprite invisible
 	ld (ix+SPR_PARAMS_IDX_Y), 192		    ;7149	dd 36 00 c0
@@ -4519,21 +4521,21 @@ UPDATE_SPEED_ALL_BALLS:
 	; It seems they decided not to implement this.
     ret			;716e	c9
 
-	push ix		;716f	dd e5 	. . 
-	push bc			;7171	c5 	. 
+	push ix		;716f	dd e5
+	push bc		;7171	c5
 
     ; Increase the counter
-	ld hl,SPEEDUP_ALL_BALLS_COUNTER		;7172	21 29 e5 	! ) . 
-	inc (hl)			;7175	34 	4 
-	ld a,(hl)			;7176	7e 	~ 
-	cp 008h		;7177	fe 08 	. . 
+	ld hl,SPEEDUP_ALL_BALLS_COUNTER		;7172	21 29 e5
+	inc (hl)			;7175	34
+	ld a,(hl)			;7176	7e
+	cp 008h		        ;7177	fe 08
     ; If less than 8, get out
-	jp c,l71a1h		;7179	da a1 71 	. . q 
+	jp c,l71a1h		    ;7179	da a1 71
     ; Reset counter
-	ld (hl),000h		;717c	36 00 	6 . 
+	ld (hl),000h		;717c	36 00
 
     ; Now a loop to increase the speed of all balls
-	ld ix,BALL_TABLE1		;717e	dd 21 4e e2 	. ! N . 
+	ld ix,BALL_TABLE1		;717e	dd 21 4e e2
 	ld de, BALL_TABLE_LEN	;7182	11 14 00
 	ld b, 3		            ;7185	06 03 Three balls
 l7187h:
@@ -4545,7 +4547,7 @@ l7187h:
     ; Increase the speed of the ball
 	ld a,(ix + BALL_TABLE_IDX_SPEED_POS)		;718d	dd 7e 07
 	inc a			                            ;7190	3c
-	ld (ix + BALL_TABLE_IDX_SPEED_POS),a		    ;7191	dd 77 07
+	ld (ix + BALL_TABLE_IDX_SPEED_POS),a		;7191	dd 77 07
 	cp 16		                                ;7194	fe 10
 	jp nz,l719dh		                        ;7196	c2 9d 71
     ; If the speed is over 15, set it to 15
@@ -4558,22 +4560,11 @@ l71a1h:
 	pop bc		;71a1	c1
 	pop ix		;71a2	dd e1
 	ret			;71a4	c9
-
-	jr $+26		;71a5	18 18 	. . 
-	jr l71c1h		;71a7	18 18 	. . 
-	jr l71e7h		;71a9	18 3c 	. < 
-	ld l,d			;71ab	6a 	j 
-	sbc a,c			;71ac	99 	. 
-	ld a,(hl)			;71ad	7e 	~ 
-	adc a,h			;71ae	8c 	. 
-	nop			;71af	00 	. 
-	dec b			;71b0	05 	. 
-	ld a,(hl)			;71b1	7e 	~ 
-	adc a,h			;71b2	8c 	. 
-	ld bc,07e05h		;71b3	01 05 7e 	. . ~ 
-	adc a,h			;71b6	8c 	. 
-	ld (bc),a			;71b7	02 	. 
-	dec b			;71b8	05 	. 
+    
+    ; Unused
+    db 0x18, 0x18, 0x18, 0x18, 0x18, 0x3c, 0x6a, 0x99   ; 0x71a5 - 0x71ac
+    db 0x7e, 0x8c, 0x0, 0x5, 0x7e, 0x8c, 0x1, 0x5       ; 0x71ad - 0x71b4
+    db 0x7e, 0x8c, 0x2, 0x5                             ; 0x71b5
 
 ; Draw the lives
 DRAW_LIVES:
