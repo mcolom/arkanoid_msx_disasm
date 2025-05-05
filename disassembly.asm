@@ -192,9 +192,8 @@ ROM_START:
 	ld bc, 0x800		                ;40ba	01 00 08
 	call LDIRVM		                    ;40bd	cd 5c 00
 
-    ; ToDo: what is this function?
-    ; Without it, it hangs when the ball hits a brick
-	call FILL_BRICK_ACTION_TABLE		;40c0	cd ff 43 	. . C 
+    ; Complete the unrolled tables of brick actions for all 32 levels.
+	call FILL_BRICK_ACTION_TABLE		;40c0	cd ff 43
 
 	ld a,SOUND_NOP		;40c3	3e f8
 	ld (SOUND_NUMBER),a	;40c5	32 c0 e5
@@ -978,9 +977,11 @@ l43f0h:
 	pop bc			;43fc	c1
 	jr l43cch		;43fd	18 cd
 
-; ToDo
+; Complete the unrolled tables of brick actions for all 32 levels
 FILL_BRICK_ACTION_TABLE:
-    ; Here BRICK_HIT_ROW is a level counter
+    ; Here BRICK_HIT_ROW is a LEVEL counter
+    
+    ; LEVEL <-- 0
 	xor a			        ;43ff	af
 	ld (BRICK_HIT_ROW),a	;4400	32 3c e5
 l4403h:
