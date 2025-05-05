@@ -2512,18 +2512,19 @@ l5bc3h:
 	ld c, 16*8+1		;5bc3	0e 81
 	ld a,(LEVEL)		;5bc5	3a 1b e0
 l5bc8h:
+    ; The final level is special
 	cp FINAL_LEVEL		;5bc8	fe 20
-	jp z,l5bd7h		;5bca	ca d7 5b 	. . [ 
-	and 3h		;   5bcd	e6 03
+	jp z,l5bd7h		    ;5bca	ca d7 5b
+	and 3h		        ;5bcd	e6 03
     
 	; HL = BACKGROUND_COLORS_TABLE + LEVEL & 3
-    ld e,a			        ;5bcf	5f
-	ld d,0  		        ;5bd0	16 00   ; DE = LEVEL & 3
+    ld e,a			                    ;5bcf	5f
+	ld d,0  		                    ;5bd0	16 00   ; DE = LEVEL & 3
 	ld hl,BACKGROUND_COLORS_TABLE		;5bd2	21 eb 5b
-	add hl,de			    ;5bd5	19
+	add hl,de			                ;5bd5	19
     
     ; C = BACKGROUND_COLORS_TABLE[LEVEL & 3]
-	ld c,(hl)			    ;5bd6	4e
+	ld c,(hl)	    ;5bd6	4e
 l5bd7h:
 	ld a,c			;5bd7	79  Byte to write to VRAM
 
@@ -2551,8 +2552,7 @@ ADD_SOUND:
 	push hl			;5bef	e5
 	push de			;5bf0	d5
 	push bc			;5bf1	c5
-
-	
+    
     ld c,a          ;5bf2	4f
     
     ; Exit if lasers are being fired. No sounds in that case.
@@ -2682,28 +2682,28 @@ l5c45h:
 	jp nz,l5c74h		            ;5c6e	c2 74 5c
 	ld hl,BRICK_MAP		            ;5c71	21 27 e0
 l5c74h:
-	ld b, BRICK_MAP_LEN		;5c74	06 11 	. . 
+	ld b, BRICK_MAP_LEN		;5c74	06 11
     
     ; Counter
-	xor a			        ;5c76	af 	. 
-	ld (BRICK_BIT_COUNT),a	        ;5c77	32 89 e4 	2 . . 
-	xor a			        ;5c7a	af 	. 
-	ld (BRICK_BLOCK),a	        ;5c7b	32 8a e4 	2 . . 
+	xor a			        ;5c76	af
+	ld (BRICK_BIT_COUNT),a	;5c77	32 89 e4
+	xor a			        ;5c7a	af
+	ld (BRICK_BLOCK),a	    ;5c7b	32 8a e4
 l5c7eh:
-	ld c, 8		    ;5c7e	0e 08
+	ld c, 8		            ;5c7e	0e 08
     ; Read a bitmask of bricks
-	ld a,(hl)	    ;5c80	7e
+	ld a,(hl)	            ;5c80	7e
 l5c81h:
     ; Check the MSB (a 1 indicates there's a brick)
-	rlca			    ;5c81	07
+	rlca			                    ;5c81	07
 	ld de,(BRICK_TILEMAP_OFFSET)	    ;5c82	ed 5b 86 e4
-	jr nc,l5c8dh		;5c86	30 05   Skip if there's no brick to draw
+	jr nc,l5c8dh		                ;5c86	30 05   Skip if there's no brick to draw
     
     ; This adds the brick as part of the background tilemap
     ; Reads from IY=LEVEL_COLORS_PTR_TABLE and writes to IX=BACKGROUND_TILEMAP
 	call ADD_BRICK_TO_TILEMAP		;5c88	cd 58 5d 
 	
-    jr l5cc6h		;5c8b	18 39 	. 9 
+    jr l5cc6h		;5c8b	18 39
 l5c8dh:
     ; No brick to draw.
 	push hl			;5c8d	e5
@@ -2796,6 +2796,8 @@ l5cc6h:
 	ret			                    ;5cef	c9
 
 ; Check bit jump table
+; IX points to the bitmask, and the jump table will check the
+; corresponding bit.
 CHECK_BIT_JUMP_TABLE:
     dw check_b7
     dw check_b6
@@ -2815,29 +2817,29 @@ BRICKS_PER_LEVEL:
     db 12, 64, 47, 53, 36, 10, 66, 45, 76, 55, 56, 26
 
 check_b7:
-	bit 7,(ix+000h)		;5d20	dd cb 00 7e 	. . . ~ 
-	jp l5cbdh		;5d24	c3 bd 5c 	. . \ 
+	bit 7,(ix+000h)	;5d20	dd cb 00 7e
+	jp l5cbdh		;5d24	c3 bd 5c
 check_b6:
-	bit 6,(ix+000h)		;5d27	dd cb 00 76 	. . . v 
-	jp l5cbdh		;5d2b	c3 bd 5c 	. . \ 
+	bit 6,(ix+000h)	;5d27	dd cb 00 76
+	jp l5cbdh		;5d2b	c3 bd 5c
 check_b5:
-	bit 5,(ix+000h)		;5d2e	dd cb 00 6e 	. . . n 
-	jp l5cbdh		;5d32	c3 bd 5c 	. . \ 
+	bit 5,(ix+000h)	;5d2e	dd cb 00 6e
+	jp l5cbdh		;5d32	c3 bd 5c
 check_b4:
-	bit 4,(ix+000h)		;5d35	dd cb 00 66 	. . . f 
-	jp l5cbdh		;5d39	c3 bd 5c 	. . \ 
+	bit 4,(ix+000h)	;5d35	dd cb 00 66
+	jp l5cbdh		;5d39	c3 bd 5c
 check_b3:
-	bit 3,(ix+000h)		;5d3c	dd cb 00 5e 	. . . ^ 
-	jp l5cbdh		;5d40	c3 bd 5c 	. . \ 
+	bit 3,(ix+000h)	;5d3c	dd cb 00 5e
+	jp l5cbdh		;5d40	c3 bd 5c
 check_b2:
-	bit 2,(ix+000h)		;5d43	dd cb 00 56 	. . . V 
-	jp l5cbdh		;5d47	c3 bd 5c 	. . \ 
+	bit 2,(ix+000h)	;5d43	dd cb 00 56
+	jp l5cbdh		;5d47	c3 bd 5c
 check_b1:
-	bit 1,(ix+000h)		;5d4a	dd cb 00 4e 	. . . N 
-	jp l5cbdh		;5d4e	c3 bd 5c 	. . \ 
+	bit 1,(ix+000h)	;5d4a	dd cb 00 4e
+	jp l5cbdh		;5d4e	c3 bd 5c
 check_b0:
-	bit 0,(ix+000h)		;5d51	dd cb 00 46 	. . . F 
-	jp l5cbdh		;5d55	c3 bd 5c 	. . \ 
+	bit 0,(ix+000h)	;5d51	dd cb 00 46
+	jp l5cbdh		;5d55	c3 bd 5c
 
 ; Add a brick as part of the background tilemap
 ;
@@ -3149,11 +3151,11 @@ l68dch:
 	cp VAUS_ACTION_STATE_LASER		            ;68f6	fe 04
 	jp z,vaus_gets_lasers		                ;68f8	ca 31 6f
 	cp VAUS_ACTION_STATE_UNLASER		        ;68fb	fe 05
-	jp z,vaus_unlaser		                            ;68fd	ca ce 6c
+	jp z,vaus_unlaser		                    ;68fd	ca ce 6c
 	cp VAUS_ACTION_STATE_EXPLODING		        ;6900	fe 06
-	jp z,vaus_destroyed		                            ;6902	ca 0e 6e
+	jp z,vaus_destroyed		                    ;6902	ca 0e 6e
 	cp VAUS_ACTION_STATE_THROUGH_PORTAL		    ;6905	fe 07
-	jp z,vaus_crosses_portal		                            ;6907	ca db 6a
+	jp z,vaus_crosses_portal		            ;6907	ca db 6a
     
     ; Transformation completed, keep current state
 	ld (ix+VAUS_TABLE_IDX_ACTION_STATE),VAUS_ACTION_STATE_KEEP		;690a	dd 36 00 01
@@ -3237,7 +3239,7 @@ l6965h:
 
 l6972h:
     ; Take the appropriate action if Vaus is changing its size
-	ld a,(ix+VAUS_TABLE_IDX_RESIZING)		;6972	dd 7e 05
+	ld a,(ix+VAUS_TABLE_IDX_RESIZING)	;6972	dd 7e 05
 	cp 1		                        ;6975	fe 01
 	jp z,l6a17h		                    ;6977	ca 17 6a
 	cp 2		                        ;697a	fe 02
@@ -3310,39 +3312,52 @@ l69d6h:
 	ret			                                        ;69e9	c9
 
 l69eah:
-	ld a,(VAUS_X2)		;69ea	3a 3e e5 	: > . 
-	cp 088h		;69ed	fe 88 	. . 
-	jp c,l69abh		;69ef	da ab 69 	. . i 
-	cp 0e6h		;69f2	fe e6 	. . 
-	jp nc,l69abh		;69f4	d2 ab 69 	. . i 
-	ld a,088h		;69f7	3e 88 	> . 
-	ld (VAUS_X2),a		;69f9	32 3e e5 	2 > . 
+	ld a,(VAUS_X2)		;69ea	3a 3e e5
+	cp 136		        ;69ed	fe 88
+	jp c,l69abh		    ;69ef	da ab 69    Jump if X < 136
+	cp 230		        ;69f2	fe e6
+	jp nc,l69abh		;69f4	d2 ab 69    Jump if X >= 230
+    
+    ; 136 <= X < 230
+    
+    ; VAUS_X2 <-- 136
+	ld a, 136		    ;69f7	3e 88
+	ld (VAUS_X2),a		;69f9	32 3e e5
     
     ; Check if the portal is closed and jump if so
 	ld a,(PORTAL_OPEN)		;69fc	3a 26 e3
 	or a			        ;69ff	b7
 	jp z,l69abh		        ;6a00	ca ab 69
 
-	ld (ix+000h),007h		;6a03	dd 36 00 07 	. 6 . . 
+    ; Set Vaus is crossing the protal
+	ld (ix+VAUS_TABLE_IDX_ACTION_STATE), VAUS_ACTION_STATE_THROUGH_PORTAL		;6a03	dd 36 00 07
 
+    ; Play the sound
 	ld a,SOUND_VAUS_GOES_THROUGH_PORTAL_H	;6a07	3e c1
 	call ADD_SOUND		                    ;6a09	cd ef 5b
 
-	ld a,00ch		;6a0c	3e 0c 	> . 
-	call ADD_POINTS_AND_UPDATE_SCORES		;6a0e	cd a0 52 	. . R 
-	call DEACTIVE_ALL_BALLS		;6a11	cd 10 97 	. . . 
-	jp l69bch		;6a14	c3 bc 69 	. . i 
+    ; Add points
+	ld a, 12		                        ;6a0c	3e 0c
+	call ADD_POINTS_AND_UPDATE_SCORES		;6a0e	cd a0 52
+	call DEACTIVE_ALL_BALLS		            ;6a11	cd 10 97
+	jp l69bch		                        ;6a14	c3 bc 69
 l6a17h:
-	ld a,(ix+006h)		;6a17	dd 7e 06 	. ~ . 
-	or a			;6a1a	b7 	. 
-	jp nz,l6a5dh		;6a1b	c2 5d 6a 	. ] j 
-	ld a,(VAUS_X2)		;6a1e	3a 3e e5 	: > . 
-	cp 083h		;6a21	fe 83 	. . 
-	jp c,l6a30h		;6a23	da 30 6a 	. 0 j 
-	cp 09eh		;6a26	fe 9e 	. . 
-	jp nc,l6a30h		;6a28	d2 30 6a 	. 0 j 
-	ld a,082h		;6a2b	3e 82 	> . 
-	ld (VAUS_X2),a		;6a2d	32 3e e5 	2 > . 
+	; Jump if Vaus has lasers
+    ld a,(ix+VAUS_TABLE_IDX_HAS_LASER)		;6a17	dd 7e 06
+	or a			                        ;6a1a	b7
+	jp nz,l6a5dh		                    ;6a1b	c2 5d 6a
+    
+	ld a,(VAUS_X2)	;6a1e	3a 3e e5
+	cp 131		    ;6a21	fe 83
+	jp c,l6a30h		;6a23	da 30 6a    Jump if X < 131
+	cp 158		    ;6a26	fe 9e
+	jp nc,l6a30h	;6a28	d2 30 6a    Jump if X >= 158
+    
+    ; 131 <= X < 158
+
+    ; VAUS_X2 <-- 130
+	ld a, 130		;6a2b	3e 82
+	ld (VAUS_X2),a	;6a2d	32 3e e5
 l6a30h:
 	cp 0fah		;6a30	fe fa 	. . 
 	jp nc,l6a3fh		;6a32	d2 3f 6a 	. ? j 
