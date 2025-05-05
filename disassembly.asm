@@ -5324,25 +5324,27 @@ l75adh:
 	ret			    ;75c7	c9
 
 l75c8h:
-    ; ToDo
-	ld b,003h		;75c8	06 03 	. . 
-	ld ix,CHARS_DOH_CLOSED_MOUTH		;75ca	dd 21 ed 75 	. ! . u 
-	ld iy,0190bh		;75ce	fd 21 0b 19 	. ! . . 
+    ; Closed Doh's mouth
+	ld b,003h		                ;75c8	06 03
+	ld ix,CHARS_DOH_CLOSED_MOUTH	;75ca	dd 21 ed 75
+	ld iy,0190bh		            ;75ce	fd 21 0b 19
 l75d2h:
-	push ix		;75d2	dd e5 	. . 
-	push iy		;75d4	fd e5 	. . 
-	pop de			;75d6	d1 	. 
-	pop hl			;75d7	e1 	. 
-	push bc			;75d8	c5 	. 
-	ld bc,00004h		;75d9	01 04 00 	. . . 
-	call LDIRVM		;75dc	cd 5c 00 	. \ . 
-	pop bc			;75df	c1 	. 
-	ld de,00004h		;75e0	11 04 00 	. . . 
-	add ix,de		;75e3	dd 19 	. . 
-	ld de,00020h		;75e5	11 20 00 	.   . 
-	add iy,de		;75e8	fd 19 	. . 
-	djnz l75d2h		;75ea	10 e6 	. . 
-	ret			;75ec	c9 	. 
+	push ix		    ;75d2	dd e5
+	push iy		    ;75d4	fd e5
+	pop de			;75d6	d1
+	pop hl			;75d7	e1
+	push bc			;75d8	c5
+	ld bc, 4		;75d9	01 04 00
+    ; Write to VRAM
+	call LDIRVM		;75dc	cd 5c 00
+	pop bc			;75df	c1
+    ; Next row
+	ld de, 4		;75e0	11 04 00
+	add ix,de		;75e3	dd 19
+	ld de, 32		;75e5	11 20 00
+	add iy,de		;75e8	fd 19
+	djnz l75d2h		;75ea	10 e6
+	ret			    ;75ec	c9
 
 CHARS_DOH_CLOSED_MOUTH: ;75ed
     db 0xf0, 0xf1, 0xf2, 0xf3
@@ -5362,25 +5364,25 @@ UPDATE_ALIENS:
     ld iy, SPR_13_SPR_PARAMS
     ld b, 3
 l760fh:
-	push bc			;760f	c5 	. 
+	push bc			                        ;760f	c5
     
     ; Skip if the alien is exploding
 	ld a,(ix+ALIEN_TABLE_IDX_EXPLODING)		;7610	dd 7e 02
 	cp 1		                            ;7613	fe 01
-	jp z,alien_exploding		                        ;7615	ca 22 77
+	jp z,alien_exploding                    ;7615	ca 22 77
 
     ; Check alien ticks
     ; We only execute every 5 ticks. Otherwise, move to the next alien
 	inc (ix+ALIEN_TABLE_IDX_TICKS)		;7618	dd 34 03
 	ld a,(ix+ALIEN_TABLE_IDX_TICKS)		;761b	dd 7e 03
 	cp 5		                        ;761e	fe 05       Already in the 5th tick?
-	jp nz,next_alien		                ;7620	c2 6d 78    No, next alien
+	jp nz,next_alien		            ;7620	c2 6d 78    No, next alien
 	ld (ix+ALIEN_TABLE_IDX_TICKS),0	    ;7623	dd 36 03 00
 
     ; If the alien is not active, move to the next
 	ld a,(ix+ALIEN_TABLE_IDX_ACTIVE)	;7627	dd 7e 01
 	or a			                    ;762a	b7
-	jp z,next_alien		                    ;762b	ca 6d 78
+	jp z,next_alien		                ;762b	ca 6d 78
 
     ; Check if the alien is in the door
 	ld a,(ix+ALIEN_TABLE_IDX_IN_DOOR)		;762e	dd 7e 07
@@ -5421,7 +5423,7 @@ l7647h:
 	ld bc,SPR_PARAMS_LEN	;7656	01 04 00
 	ldir		            ;7659	ed b0
 
-	; HL = ((VAUS_X - 8)\16) & 0xf0
+	; HL = ((VAUS_X - 8) >> 4) & 0xf0
     ld a,(VAUS_X)		;765b	3a ce e0
 	sub 008h		;765e	d6 08
 	and 0f0h		;7660	e6 f0
@@ -5432,7 +5434,7 @@ l7647h:
 	ld l,a			;766a	6f
 	ld h, 0		    ;766b	26 00
 
-    ; A = TBL[((VAUS_X - 8)\16) & 0xf0]
+    ; A = TBL[((VAUS_X - 8) >> 4) & 0xf0]
     ; Choose if the alien should move right or left
 	ld de,TBL_7aec		        ;766d	11 ec 7a
 	ld a,(iy+SPR_PARAMS_IDX_X)	;7670	fd 7e 01
@@ -5558,7 +5560,7 @@ alien_exploding:
 	inc (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7722	dd 34 04
 	ld a,(ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS)		;7725	dd 7e 04
 	cp 10		                                        ;7728	fe 0a
-	jp nz,next_alien		                                ;772a	c2 6d 78
+	jp nz,next_alien		                            ;772a	c2 6d 78
 
     ; Reset animation ticks
 	ld (ix+ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS), 0		;772d	dd 36 04 00
@@ -5663,38 +5665,51 @@ l77aeh:
 	; Mark the alien
     ld (ix+11),1		;77b6	dd 36 0b 01 	. 6 . . 
     
-    
-	ld a,(ix+12)		;77ba	dd 7e 0c 	. ~ . 
-	sla a		;77bd	cb 27 	. ' 
-	sla a		;77bf	cb 27 	. ' 
-	ld l,a			;77c1	6f 	o 
-	ld h, 0		;77c2	26 00 	& . 
-	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;77c4	dd 7e 00 	. ~ . 
-	ld de,l7b10h		;77c7	11 10 7b 	. . { 
-	cp 0		;77ca	fe 00 	. . 
-	jp z,l77e2h		;77cc	ca e2 77 	. . w 
-	ld de,l7b24h		;77cf	11 24 7b 	. $ { 
-	cp 1		;77d2	fe 01 	. . 
-	jp z,l77e2h		;77d4	ca e2 77 	. . w 
-	ld de,l7b38h		;77d7	11 38 7b 	. 8 { 
-	cp 2		;77da	fe 02 	. . 
-	jp z,l77e2h		;77dc	ca e2 77 	. . w 
-	ld de,l7b50h		;77df	11 50 7b 	. P { 
+    ; U = (ix+12)
+	; HL <-- 4*U
+    ld a,(ix+12)		;77ba	dd 7e 0c
+	sla a		        ;77bd	cb 27
+	sla a		        ;77bf	cb 27
+	ld l,a			    ;77c1	6f
+	ld h, 0		        ;77c2	26 00
+
+    ; Choose a table depending on the alien's type (or color)
+	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;77c4	dd 7e 00
+
+	ld de,TBL_7b10		                ;77c7	11 10 7b
+	cp 0		                        ;77ca	fe 00
+	jp z,l77e2h		                    ;77cc	ca e2 77
+
+	ld de,TBL_7b24		                ;77cf	11 24 7b
+	cp 1		                        ;77d2	fe 01
+	jp z,l77e2h		                    ;77d4	ca e2 77
+
+	ld de,TBL_7b38		                ;77d7	11 38 7b
+	cp 2		                        ;77da	fe 02
+	jp z,l77e2h		                    ;77dc	ca e2 77
+
+	ld de,TBL_7b50		                ;77df	11 50 7b
 l77e2h:
-	add hl,de			;77e2	19 	. 
-	ld a,(hl)			;77e3	7e 	~ 
+    ; HL <-- TBL + 4*U
+	add hl,de			                ;77e2	19
+    
+    ; A <-- TBL[4*U]
+	ld a,(hl)			                ;77e3	7e
     
     ; Set new vertical speed
+    ; SPEED_V <-- TBL[4*U]
 	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a	;77e4	dd 77 08
     
     ; Set new horizontal speed
+    ; SPEED_H <-- TBL[4*U + 1]
 	inc hl			                        ;77e7	23
 	ld a,(hl)			                    ;77e8	7e
 	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;77e9	dd 77 09
-    
+
+    ; ToDo
 	inc hl			;77ec	23 	# 
-	ld a,(hl)			;77ed	7e 	~ 
-	ld (ix+15),a		;77ee	dd 77 0f 	. w . 
+	ld a,(hl)		;77ed	7e 	~ 
+	ld (ix+15),a	;77ee	dd 77 0f 	. w . 
 l77f1h:
     ; Update alien's vertical position according to his speed
 	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)	;77f1	dd 7e 08
@@ -6221,21 +6236,15 @@ TBL_ALIEN_VERT_SPEED:
 ; Sprite pattern numbers for the exploding alien
 TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
     db 0x90, 0x94, 0x98, 0x9c     ;7b0c
-l7b10h:
-	ld bc,02800h		;7b10	01 00 28 	. . ( 
-	nop			;7b13	00 	. 
-	ld bc,01802h		;7b14	01 02 18 	. . . 
-	nop			;7b17	00 	. 
-	rst 38h			;7b18	ff 	. 
-	ld (bc),a			;7b19	02 	. 
-	jr l7b1ch		;7b1a	18 00 	. . 
-l7b1ch:
-	rst 38h			;7b1c	ff 	. 
-	cp 018h		;7b1d	fe 18 	. . 
-	nop			;7b1f	00 	. 
-	ld bc,018feh		;7b20	01 fe 18 	. . . 
-	nop			;7b23	00 	. 
-l7b24h:
+
+TBL_7b10:
+    db 1, 0, 40, 0
+    db 1, 2, 24, 0
+    db -1, 2, 24, 0
+    db -1, -2, 24, 0
+    db 1, -2, 24, 0
+
+TBL_7b24:
 	ld bc,03800h		;7b24	01 00 38 	. . 8 
 	nop			;7b27	00 	. 
 	ld (bc),a			;7b28	02 	. 
@@ -6248,7 +6257,8 @@ l7b24h:
 l7b34h:
 	ld (bc),a			;7b34	02 	. 
 	defb 0fdh,018h,000h	;illegal sequence		;7b35	fd 18 00 	. . . 
-l7b38h:
+
+TBL_7b38:
 	ld bc,02000h		;7b38	01 00 20 	. .   
 	nop			;7b3b	00 	. 
 	ld bc,00802h		;7b3c	01 02 08 	. . . 
@@ -6260,16 +6270,14 @@ l7b38h:
 	rst 38h			;7b44	ff 	. 
 	nop			;7b45	00 	. 
 	ex af,af'			;7b46	08 	. 
-l7b47h:
 	nop			;7b47	00 	. 
 	rst 38h			;7b48	ff 	. 
 	ld (bc),a			;7b49	02 	. 
-	jr l7b4ch		;7b4a	18 00 	. . 
-l7b4ch:
+	db 0x18, 0x00
 	ld bc,01802h		;7b4c	01 02 18 	. . . 
-l7b4fh:
 	nop			;7b4f	00 	. 
-l7b50h:
+
+TBL_7b50:
 	ld bc,02800h		;7b50	01 00 28 	. . ( 
 l7b53h:
 	nop			;7b53	00 	. 
@@ -6280,8 +6288,7 @@ l7b53h:
 	nop			;7b5b	00 	. 
 	rst 38h			;7b5c	ff 	. 
 	ld (bc),a			;7b5d	02 	. 
-	jr l7b60h		;7b5e	18 00 	. . 
-l7b60h:
+	db 0x18, 0x00		;7b5e	18 00 	. . 
 	ld bc,01802h		;7b60	01 02 18 	. . . 
 	nop			;7b63	00 	. 
 
