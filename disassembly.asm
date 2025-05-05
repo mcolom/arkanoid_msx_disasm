@@ -4010,51 +4010,64 @@ l6e64h:
     ; IX points to VAUS_TABLE
     ; IY points to SPR_PARAMS
     
-	ld a,(ix+VAUS_ACTION_STATE_LASER)		;6e64	dd 7e 04 	. ~ . 
-	cp 3		;6e67	fe 03 	. . 
-	jp nc,l6ee0h		;6e69	d2 e0 6e 	. . n 
-
-	ld a, -8		;6e6c	3e f8 	> . 
-	add a,(iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e6e	fd 86 05 	. . . 
-	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e71	fd 77 05 	. w . 
-	ld a, -8		;6e74	3e f8 	> . 
-	add a,(iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e76	fd 86 09 	. . . 
-	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e79	fd 77 09 	. w . 
-	ld a, -8		;6e7c	3e f8 	> . 
-	add a,(iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e7e	fd 86 0d 	. . . 
-	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e81	fd 77 0d 	. w . 
-	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR),008h		;6e84	fd 36 0f 08 	. 6 . . 
-
-	ld a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e88	fd 7e 01 	. ~ . 
-	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e8b	fd 77 11 	. w . 
-	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e8e	fd 77 15 	. w . 
-	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e91	fd 77 19 	. w . 
-
-	ld a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6e94	fd 7e 00 	. ~ . 
-	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6e97	fd 77 10 	. w . 
-	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6e9a	fd 77 14 	. w . 
-	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6e9d	fd 77 18 	. w . 
-
-	ld a, 8		;6ea0	3e 08 	> . 
-	add a,(iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6ea2	fd 86 11 	. . . 
-	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ea5	fd 77 11 	. w . 
-	ld a, -16		;6ea8	3e f0 	> . 
-	add a,(iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6eaa	fd 86 10 	. . . 
-	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6ead	fd 77 10 	. w . 
-	ld a, 24		;6eb0	3e 18 	> . 
-	add a,(iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6eb2	fd 86 15 	. . . 
-	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6eb5	fd 77 15 	. w . 
-	ld a, -16		;6eb8	3e f0 	> . 
-	add a,(iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6eba	fd 86 14 	. . . 
-	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6ebd	fd 77 14 	. w . 
-	ld a, 32		;6ec0	3e 20 	>   
-	add a,(iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6ec2	fd 86 19 	. . . 
-	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ec5	fd 77 19 	. w . 
-	ld a, -16		;6ec8	3e f0 	> . 
-	add a,(iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6eca	fd 86 18 	. . . 
-	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6ecd	fd 77 18 	. w . 
+    ; Leave if VAUS_ACTION_STATE_LASER >= 3
+	ld a,(ix+VAUS_ACTION_STATE_LASER)		            ;6e64	dd 7e 04
+	cp 3		                                        ;6e67	fe 03
+	jp nc,l6ee0h		                                ;6e69	d2 e0 6e
     
-    ; Colors: gray and red
+    ; VAUS_ACTION_STATE_LASER < 3
+
+    ; Update X of sprites #0, ..., #6
+	ld a, -8		                                    ;6e6c	3e f8
+	add a,(iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e6e	fd 86 05
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e71	fd 77 05
+
+	ld a, -8		                                    ;6e74	3e f8
+	add a,(iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e76	fd 86 09
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e79	fd 77 09
+
+	ld a, -8		                                    ;6e7c	3e f8
+	add a,(iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e7e	fd 86 0d
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e81	fd 77 0d
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 8	;6e84	fd 36 0f 08
+
+	ld a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6e88	fd 7e 01
+	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e8b	fd 77 11
+	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e8e	fd 77 15
+	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6e91	fd 77 19
+    
+    ; Update Y of sprites #0, #4, #5, and #6
+	ld a,(iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6e94	fd 7e 00
+	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6e97	fd 77 10
+	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6e9a	fd 77 14
+	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6e9d	fd 77 18
+
+    ; Update X and Y of sprites #4, #5, and #6
+	ld a, 8		                                        ;6ea0	3e 08
+	add a,(iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6ea2	fd 86 11
+	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ea5	fd 77 11
+
+	ld a, -16		                                    ;6ea8	3e f0
+	add a,(iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6eaa	fd 86 10
+	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6ead	fd 77 10
+
+	ld a, 24		                                    ;6eb0	3e 18
+	add a,(iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6eb2	fd 86 15
+	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6eb5	fd 77 15
+
+	ld a, -16		                                    ;6eb8	3e f0
+	add a,(iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6eba	fd 86 14
+	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6ebd	fd 77 14
+
+	ld a, 32		                                    ;6ec0	3e 20
+	add a,(iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X)		;6ec2	fd 86 19
+	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ec5	fd 77 19
+
+	ld a, -16		                                    ;6ec8	3e f0
+	add a,(iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y)		;6eca	fd 86 18
+	ld (iy+6*SPR_PARAMS_LEN + SPR_PARAMS_IDX_Y),a		;6ecd	fd 77 18
+    
+    ; Set colors: gray and red
 	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6ed0	fd 36 0b 0e     Gray
 	ld (iy+4*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6ed4	fd 36 13 0e     Red
 	ld (iy+5*SPR_PARAMS_LEN + SPR_PARAMS_IDX_COLOR), 14		;6ed8	fd 36 17 0e     Red
