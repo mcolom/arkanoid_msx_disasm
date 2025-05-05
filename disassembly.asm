@@ -3396,7 +3396,7 @@ l6a5dh:
 	ld (VAUS_X2),a		;6a6c	32 3e e5 	2 > . 
 	jp l6a30h		;6a6f	c3 30 6a 	. 0 j 
 l6a72h:
-	ld a,(ix+007h)		;6a72	dd 7e 07 	. ~ . 
+	ld a,(ix+VAUS_ACTION_STATE_THROUGH_PORTAL)		;6a72	dd 7e 07 	. ~ . 
 	cp 002h		;6a75	fe 02 	. . 
 	jp z,l6a9fh		;6a77	ca 9f 6a 	. . j 
 	cp 003h		;6a7a	fe 03 	. . 
@@ -3406,41 +3406,41 @@ l6a72h:
 	cp 005h		;6a84	fe 05 	. . 
 	jp z,l6a9eh		;6a86	ca 9e 6a 	. . j 
 	ld a,(VAUS_X2)		;6a89	3a 3e e5 	: > . 
-	ld (iy+001h),a		;6a8c	fd 77 01 	. w . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a8c	fd 77 01 	. w . 
 	add a,00ch		;6a8f	c6 0c 	. . 
-	ld (iy+005h),a		;6a91	fd 77 05 	. w . 
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a91	fd 77 05 	. w . 
 	add a,00ch		;6a94	c6 0c 	. . 
-	ld (iy+009h),a		;6a96	fd 77 09 	. w . 
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a96	fd 77 09 	. w . 
 	add a,0fch		;6a99	c6 fc 	. . 
-	ld (iy+00dh),a		;6a9b	fd 77 0d 	. w . 
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6a9b	fd 77 0d 	. w . 
 l6a9eh:
 	ret			;6a9e	c9 	. 
 l6a9fh:
 	ld a,(VAUS_X2)		;6a9f	3a 3e e5 	: > . 
-	ld (iy+001h),a		;6aa2	fd 77 01 	. w . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aa2	fd 77 01 	. w . 
 	add a,006h		;6aa5	c6 06 	. . 
-	ld (iy+005h),a		;6aa7	fd 77 05 	. w . 
-	ld (iy+009h),a		;6aaa	fd 77 09 	. w . 
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aa7	fd 77 05 	. w . 
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aaa	fd 77 09 	. w . 
 	add a,006h		;6aad	c6 06 	. . 
-	ld (iy+00dh),a		;6aaf	fd 77 0d 	. w . 
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aaf	fd 77 0d 	. w . 
 	ret			;6ab2	c9 	. 
 l6ab3h:
 	ld a,(VAUS_X2)		;6ab3	3a 3e e5 	: > . 
-	ld (iy+001h),a		;6ab6	fd 77 01 	. w . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ab6	fd 77 01 	. w . 
 	add a,00ch		;6ab9	c6 0c 	. . 
-	ld (iy+005h),a		;6abb	fd 77 05 	. w . 
-	ld (iy+009h),a		;6abe	fd 77 09 	. w . 
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6abb	fd 77 05 	. w . 
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6abe	fd 77 09 	. w . 
 	add a,00ch		;6ac1	c6 0c 	. . 
-	ld (iy+00dh),a		;6ac3	fd 77 0d 	. w . 
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ac3	fd 77 0d 	. w . 
 	ret			;6ac6	c9 	. 
 l6ac7h:
 	ld a,(VAUS_X2)		;6ac7	3a 3e e5 	: > . 
-	ld (iy+001h),a		;6aca	fd 77 01 	. w . 
+	ld (iy+0*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6aca	fd 77 01 	. w . 
 	add a,008h		;6acd	c6 08 	. . 
-	ld (iy+005h),a		;6acf	fd 77 05 	. w . 
-	ld (iy+009h),a		;6ad2	fd 77 09 	. w . 
+	ld (iy+1*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6acf	fd 77 05 	. w . 
+	ld (iy+2*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ad2	fd 77 09 	. w . 
 	add a,008h		;6ad5	c6 08 	. . 
-	ld (iy+00dh),a		;6ad7	fd 77 0d 	. w . 
+	ld (iy+3*SPR_PARAMS_LEN + SPR_PARAMS_IDX_X),a		;6ad7	fd 77 0d 	. w . 
 	ret			;6ada	c9 	. 
 
 vaus_crosses_portal:
