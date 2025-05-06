@@ -19,6 +19,12 @@ ALIEN_TABLE_IDX_HORIZ_SPEED: equ 9  ; 0xe4da Horizontal speed
 
 ALIEN_TABLE_IDX_FLYING_ANIM_NUM: equ 10 ;0xe4db Current pattern when the alien is flying
 
+; ix+11 in 0xe4dc
+; ix+12 in 0xe4dd
+; ix+13 in 0xe4de
+; ix+14 in 0xe4df
+; ix+15 in 0xe4e0
+
 
 ALIEN_TABLE_IDX_NEXT_ACTION: equ 16      ; 0xe4d7 Alien's next action
 ALIEN_TABLE_NEXT_FRAME_COUNTER: equ 17   ; 0xe4d8 Counter to update the alien's animation frame

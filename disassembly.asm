@@ -6019,7 +6019,8 @@ CHECK_ANY_BALL_HITS_ALIEN:
 
     ; Check if the first ball hit an alien
 	call CHECK_BALL_HITS_ALIEN		            ;79b0	cd fd 79
-	jp c,l79c2h		                            ;79b3	da c2 79
+	jp c,l79c2h		                            ;79b3	da c2 79    Jump if no alien hit
+    ; Alien's been hit
 	ld iy,BALL_TABLE1		                    ;79b6	fd 21 4e e2
 	call INVERT_BALL_VERTICAL_SKEWNESS		    ;79ba	cd 8a 9b
 
@@ -6035,6 +6036,7 @@ l79c2h:
     ; Check if the second ball hit an alien
 	call CHECK_BALL_HITS_ALIEN		            ;79cd	cd fd 79
 	jp c,l79dfh		                            ;79d0	da df 79
+    ; Alien's been hit
 	ld iy,BALL_TABLE2		                    ;79d3	fd 21 62 e2
 	call INVERT_BALL_VERTICAL_SKEWNESS		    ;79d7	cd 8a 9b
 
@@ -6049,6 +6051,7 @@ l79dfh:
     
     ; Check if the third ball hit an alien
 	call CHECK_BALL_HITS_ALIEN		            ;79ea	cd fd 79
+    ; Alien's been hit
 	jp c,l79fch		                            ;79ed	da fc 79
 	ld iy,BALL_TABLE3		                    ;79f0	fd 21 76 e2
 	call INVERT_BALL_VERTICAL_SKEWNESS		    ;79f4	cd 8a 9b
@@ -6058,71 +6061,98 @@ l79dfh:
 l79fch:
 	ret			                                ;79fc	c9
 
-; ToDo
+; Check if the ball has hit any of the aliens.
+; If so, clear the carry.
 CHECK_BALL_HITS_ALIEN:
     ; IX = BALL(i)_SPR_PARAMS
 	ld iy,SPR_13_SPR_PARAMS		;79fd	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;7a01	21 c8 e4
 	ld b, 3		                ;7a04	06 03
 l7a06h:
-	ld a,(hl)			;7a06	7e 	~ 
-	cp 001h		;7a07	fe 01 	. . 
-	jp nz,l7a5bh		;7a09	c2 5b 7a 	. [ z 
-	ld a,(iy+003h)		;7a0c	fd 7e 03 	. ~ . 
-	or a			;7a0f	b7 	. 
-	jp z,l7a5bh		;7a10	ca 5b 7a 	. [ z 
+    ; Check ALIEN_TABLE_IDX_ACTIVE
+    ; Next alien if not active
+	ld a,(hl)			;7a06	7e
+	cp 1		        ;7a07	fe 01
+	jp nz,l7a5bh		;7a09	c2 5b 7a
+    
+    ; Skip also if it's transparent now
+	ld a,(iy+SPR_PARAMS_IDX_COLOR)	;7a0c	fd 7e 03
+	or a			                ;7a0f	b7
+	jp z,l7a5bh		                ;7a10	ca 5b 7a
+
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;7a13	dd 7e 00
-	sub 16		                        ;7a16	d6 10
-	ld e,a			;7a18	5f 	_ 
-	ld a,(iy+000h)		;7a19	fd 7e 00 	. ~ . 
-	ld d,a			;7a1c	57 	W 
-	ld a,e			;7a1d	7b 	{ 
-	cp d			;7a1e	ba 	. 
-	jp nc,l7a5bh		;7a1f	d2 5b 7a 	. [ z 
+	sub 16		                    ;7a16	d6 10       A = BALL_Y - 16
+	ld e,a			                ;7a18	5f          E = BALL_Y - 16
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7a19	fd 7e 00    A = ALIEN_Y
+	ld d,a			                ;7a1c	57          D = ALIEN_Y
+	ld a,e			                ;7a1d	7b          A = BALL_Y - 16
+	cp d			                ;7a1e	ba          Compare BALL_Y - 16 with ALIEN_Y
+	jp nc,l7a5bh		            ;7a1f	d2 5b 7a    Leave if BALL_Y - 16 >= ALIEN_Y
+    ; ALIEN_Y <= BALL_Y - 16
+
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;7a22	dd 7e 00
-	add a,004h		;7a25	c6 04 	. . 
-	ld e,a			;7a27	5f 	_ 
-	ld a,(iy+000h)		;7a28	fd 7e 00 	. ~ . 
-	ld d,a			;7a2b	57 	W 
-	ld a,e			;7a2c	7b 	{ 
-	cp d			;7a2d	ba 	. 
-	jp c,l7a5bh		;7a2e	da 5b 7a 	. [ z 
+	add a, 4		                ;7a25	c6 04
+	ld e,a			                ;7a27	5f          E = BALL_Y + 4
+	ld a,(iy+SPR_PARAMS_IDX_Y)		;7a28	fd 7e 00
+	ld d,a                          ;7a2b	57          D = ALIEN_Y
+	ld a,e			                ;7a2c	7b          A = BALL_Y + 4
+	cp d			                ;7a2d	ba          Compare BALL_Y + 4 with ALIEN_Y
+	jp c,l7a5bh		                ;7a2e	da 5b 7a    Leave if ALIEN_Y > BALL_Y + 4    
+    ; ALIEN_Y > BALL_Y + 4
+    
+    ; So far:
+    ;  BALL_Y - 16 < ALIEN_Y <= BALL_Y + 4
+
+    ; Now check the X coordinates
+
 	ld a,(ix+SPR_PARAMS_IDX_X)		;7a31	dd 7e 01
-	sub 16		                        ;7a34	d6 10
-	ld e,a			;7a36	5f 	_ 
-	ld a,(iy+001h)		;7a37	fd 7e 01 	. ~ . 
-	ld d,a			;7a3a	57 	W 
-	ld a,e			;7a3b	7b 	{ 
-	cp d			;7a3c	ba 	. 
-	jp nc,l7a5bh		;7a3d	d2 5b 7a 	. [ z 
+	sub 16		                    ;7a34	d6 10
+	ld e,a			                ;7a36	5f          E = BALL_X - 16
+	ld a,(iy+SPR_PARAMS_IDX_X)		;7a37	fd 7e 01    A = ALIEN_X
+	ld d,a			                ;7a3a	57          D = ALIEN_X
+	ld a,e			                ;7a3b	7b          A = BALL_X - 16
+	cp d			                ;7a3c	ba          Compare BALL_X - 16 with ALIEN_X
+	jp nc,l7a5bh		            ;7a3d	d2 5b 7a    Leave if BALL_X - 16 >= ALIEN_X
+    ; ALIEN_X <= BALL_X - 16
+
 	ld a,(ix+SPR_PARAMS_IDX_X)		;7a40	dd 7e 01
-	add a,004h		;7a43	c6 04 	. . 
-	ld e,a			;7a45	5f 	_ 
-	ld a,(iy+001h)		;7a46	fd 7e 01 	. ~ . 
-	ld d,a			;7a49	57 	W 
-	ld a,e			;7a4a	7b 	{ 
-	cp d			;7a4b	ba 	. 
-	jp c,l7a5bh		;7a4c	da 5b 7a 	. [ z 
-	ld a,005h		;7a4f	3e 05 	> . 
-	call ADD_POINTS_AND_UPDATE_SCORES		;7a51	cd a0 52 	. . R 
+	add a, 4		                ;7a43	c6 04
+	ld e,a			                ;7a45	5f          E = BALL_X + 4
+	ld a,(iy+SPR_PARAMS_IDX_X)		;7a46	fd 7e 01
+	ld d,a			                ;7a49	57          D = ALIEN_X
+	ld a,e			                ;7a4a	7b          A = BALL_X + 4
+	cp d			                ;7a4b	ba          Compare BALL_X + 4 with ALIEN_X
+	jp c,l7a5bh		                ;7a4c	da 5b 7a    Leave if ALIEN_X > BALL_X + 4
+    ; ALIEN_X > BALL_Y + 4
+    
+    ; So far:
+    ;  BALL_Y - 16 < ALIEN_Y <= BALL_Y + 4
+    ;  BALL_X - 16 < ALIEN_X <= BALL_X + 4
+    ;
+    ; This means the alien's been hit by the ball
+    
+    ; Add points
+	ld a, 5		                            ;7a4f	3e 05
+	call ADD_POINTS_AND_UPDATE_SCORES		;7a51	cd a0 52
     
     ; Set ALIEN_EXPLODING in ALIEN_TABLE_IDX_ACTIVE
 	ld (hl),ALIEN_ACTIVE_EXPLODING		;7a54	36 02
-	inc hl			            ;7a56	23
+	inc hl			                    ;7a56	23
 
-    ; Set 
-    ld (hl),ALIEN_EXPLODING_FLAG		;7a57	36 01 	6 . 
-	xor a			;7a59	af 	. 
-	ret			;7a5a	c9 	. 
+    ; Set the alien is exploding
+    ld (hl),ALIEN_EXPLODING_FLAG	;7a57	36 01
+	xor a			                ;7a59	af  Clear CARRY: alien's been hit
+	ret			                    ;7a5a	c9
 
 l7a5bh:
-	ld de,00004h		;7a5b	11 04 00 	. . . 
-	add iy,de		;7a5e	fd 19 	. . 
-	ld de,00014h		;7a60	11 14 00 	. . . 
-	add hl,de			;7a63	19 	. 
-	djnz l7a06h		;7a64	10 a0 	. . 
-	scf			;7a66	37 	7 
-	ret			;7a67	c9 	. 
+    ; Next alien
+	ld de, SPR_PARAMS_LEN		;7a5b	11 04 00
+	add iy,de		            ;7a5e	fd 19
+	ld de, ALIEN_TABLE_LEN		;7a60	11 14 00
+	add hl,de			        ;7a63	19
+	djnz l7a06h		            ;7a64	10 a0
+	scf			                ;7a66	37      Set CARRY: no alien was harmed in this function
+	ret			                ;7a67	c9
 
 ; Checks if any of the bullets has touched Vaus
 ; If so, destroy Vaus
