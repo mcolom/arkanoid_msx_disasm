@@ -1338,10 +1338,10 @@ l4d09h:
 
     ; Clear variables
 	ld hl,BRICK_MAP		;4d11	21 27 e0
-	ld de,0e028h		;4d14	11 28 e0
+	ld de,BRICK_MAP+1	;4d14	11 28 e0
 	ld bc,0058dh		;4d17	01 8d 05
 	dec bc			    ;4d1a	0b
-	ld (hl),000h		;4d1b	36 00
+	ld (hl), 0		    ;4d1b	36 00
 	ldir		        ;4d1d	ed b0
 
 	jp l4d30h		    ;4d1f	c3 30 4d
@@ -5130,7 +5130,7 @@ l7483h:
     ; Now add bullets, using the inactive slots in the list
 	ld b, 3		                ;7493	06 03
 	ld ix,DOH_BULLETS_TABLE	    ;7495	dd 21 63 e5
-	ld iy,SPR_16_SPR_PARAMS	    ;7499	fd 21 0d e1
+	ld iy,DOH_BULLET_SPR_PARAMS	    ;7499	fd 21 0d e1
 add_new_bullet:
     ; Go to the next bullet if this one is already active
 	ld a,(ix+DOH_BULLETS_ACTIVE)	;749d	dd 7e 00
@@ -5161,7 +5161,7 @@ doh_goto_next_bullet:
 DOH_MOVE_BULLETS:
 	ld b, 3		                ;74c7	06 03
 	ld ix,DOH_BULLETS_TABLE		;74c9	dd 21 63 e5
-	ld iy,SPR_16_SPR_PARAMS		;74cd	fd 21 0d e1     Bullet
+	ld iy,DOH_BULLET_SPR_PARAMS		;74cd	fd 21 0d e1     Bullet
 l74d1h:
 	push bc			                    ;74d1
     
@@ -5787,14 +5787,14 @@ l785bh:
 	ldir		;786b	ed b0 	. . 
 ; Process next alien
 next_alien:
-	pop bc			;786d	c1 	. 
-	ld de,ALIEN_TABLE_LEN		;786e	11 14 00 	. . . 
-	add ix,de		;7871	dd 19 	. . 
-	ld de, SPR_PARAMS_LEN		;7873	11 04 00 	. . . 
-	add iy,de		;7876	fd 19 	. . 
-	dec b			;7878	05 	. 
-	jp nz,l760fh		;7879	c2 0f 76 	. . v 
-	ret			;787c	c9 	. 
+	pop bc			        ;786d	c1
+	ld de,ALIEN_TABLE_LEN	;786e	11 14 00
+	add ix,de		        ;7871	dd 19
+	ld de, SPR_PARAMS_LEN	;7873	11 04 00
+	add iy,de		        ;7876	fd 19
+	dec b			        ;7878	05
+	jp nz,l760fh		    ;7879	c2 0f 76
+	ret			            ;787c	c9
 
 l787dh:
 	inc (ix+12)		;787d	dd 34 0c 	. 4 . 
@@ -6170,7 +6170,7 @@ CHECK_VAUS_KILLED_BY_DOH:
 	ret z			                                    ;7a6d	c8
     
 	ld ix,SPR_PARAMS_BASE		;7a6e	dd 21 cd e0     Vaus
-	ld iy,SPR_16_SPR_PARAMS		;7a72	fd 21 0d e1     Bullet
+	ld iy,DOH_BULLET_SPR_PARAMS		;7a72	fd 21 0d e1     Bullet
 	ld hl,DOH_BULLETS_TABLE		;7a76	21 63 e5
 	ld b, 3		                ;7a79	06 03
 l7a7bh:
@@ -6330,7 +6330,7 @@ NEXT_OR_SAME_LEVEL:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;7b94	3a 0b e0
 	or a			        ;7b97	b7
-	jp z,brick_repaint_action_done		        ;7b98	ca 44 7c
+	jp z,brick_repaint_action_done  ;7b98	ca 44 7c
 
     ; HL = 2*BRICK_REPAINT_TYPE
 	ld a,(BRICK_REPAINT_TYPE)	;7b9b	3a 22 e0
@@ -6421,7 +6421,7 @@ ACTION_INC_LEVEL:
 
 ACTION_LIFE_LOST:
     ; Wait 48 ticks
-	ld hl,00030h		    ;7c07	21 30 00
+	ld hl, 48		    ;7c07	21 30 00
 	call DELAY_HL_TICKS		;7c0a	cd 80 43
 
 	; Decrement lives
@@ -6430,7 +6430,7 @@ ACTION_LIFE_LOST:
 
     ; Was it the last life?
     ld a,(hl)			;7c11	7e
-	cp 0ffh		        ;7c12	fe ff
+	cp -1		        ;7c12	fe ff
 	jp nz,l7c7dh		;7c14	c2 7d 7c    Jump to l7c7dh if more lives left
     
     ; It was the last life
@@ -6451,7 +6451,7 @@ l7c23h:
 	ei			            ;7c2e	fb
 
     ; Write "GAME OVER" with sprites
-	ld hl,l7c5dh		                ;7c2f	21 5d 7c
+	ld hl,GAME_OVER_SPR_PARAMS		                ;7c2f	21 5d 7c
 	ld de,VRAM_SPRITES_ATTRIB_TABLE	    ;7c32	11 00 1b
 	ld bc, 4*4		                    ;7c35	01 10 00 4 sprites
 	call LDIRVM		                    ;7c38	cd 5c 00
@@ -6460,15 +6460,16 @@ l7c23h:
 	ld hl, 240		        ;7c3b	21 f0 00
 	call DELAY_HL_TICKS		;7c3e	cd 80 43
 
-	call CLEAR_SCREEN		;7c41	cd 27 42 	. ' B 
+	call CLEAR_SCREEN		;7c41	cd 27 42
 
 brick_repaint_action_done:
-	ld hl,BRICK_MAP		;7c44	21 27 e0 	! ' . 
-	ld de,0e028h		;7c47	11 28 e0 	. ( . 
-	ld bc,0058dh		;7c4a	01 8d 05 	. . . 
-	dec bc			;7c4d	0b 	. 
-	ld (hl),000h		;7c4e	36 00 	6 . 
-	ldir		;7c50	ed b0 	. . 
+    ; Reset variables
+	ld hl,BRICK_MAP		;7c44	21 27 e0
+	ld de,BRICK_MAP+1	;7c47	11 28 e0
+	ld bc,0058dh		;7c4a	01 8d 05
+	dec bc			    ;7c4d	0b
+	ld (hl), 0		    ;7c4e	36 00
+	ldir		        ;7c50	ed b0
 
     ; Reset states
 	xor a			                ;7c52	af
@@ -6476,28 +6477,15 @@ brick_repaint_action_done:
     ; Set we're in the title screen
 	ld (GAME_STATE),a		        ;7c56	32 0b e0
     ; Reset Doh hits
-	ld (DOH_RECEIVED_HITS),a		            ;7c59	32 b3 e5
+	ld (DOH_RECEIVED_HITS),a		;7c59	32 b3 e5
 	ret			                    ;7c5c	c9
 
-l7c5dh:
-	adc a,b			;7c5d	88 	. 
-	ld b,h			;7c5e	44 	D 
-	ld (hl),b			;7c5f	70 	p 
-	rrca			;7c60	0f 	. 
-	adc a,b			;7c61	88 	. 
-	ld d,h			;7c62	54 	T 
-	ld (hl),h			;7c63	74 	t 
-	rrca			;7c64	0f 	. 
-	adc a,b			;7c65	88 	. 
-	ld l,h			;7c66	6c 	l 
-	ld a,b			;7c67	78 	x 
-	rrca			;7c68	0f 	. 
-	adc a,b			;7c69	88 	. 
-	ld a,h			;7c6a	7c 	| 
-	ld a,h			;7c6b	7c 	| 
-	rrca			;7c6c	0f 	. 
+; Sprite params. to write "GAME OVER"
+GAME_OVER_SPR_PARAMS:
+    db 0x88, 0x44, 0x70, 0xf, 0x88, 0x54, 0x74, 0xf ; 0x7c5d - 0x7c64
+    db 0x88, 0x6c, 0x78, 0xf, 0x88, 0x7c, 0x7c, 0xf ; 0x7c65 - 0x7c6c
 
-; Table to write "GAME OVER" with sprites
+; To write "GAME OVER" with sprites
 GAME_OVER_SPRITE_TABLE:
     ; V H P (EC, 0, 0, 0, C)
     db 0x4c, 0x5c, 0x70, 0x0f; "GA"
@@ -6507,8 +6495,8 @@ GAME_OVER_SPRITE_TABLE:
     db 0x4c, 0x94, 0x7c, 0x0f; "ER"
     
 l7c7dh:
-	xor a			;7c7d	af 	. 
-	ld (GAME_TRANSITION_ACTION),a		;7c7e	32 0a e0 	2 . . 
+	xor a			                ;7c7d	af
+	ld (GAME_TRANSITION_ACTION),a	;7c7e	32 0a e0
 
     ; Wait 60 ticks
 	ld hl, 60   		    ;7c81	21 3c 00
@@ -6573,12 +6561,12 @@ db 0xb7, 0
 
 ; Update capsules, ball, hard bricks, and aliens
 UPDATE_OBJECTS:
-	call CAPSULE_MOVE_DOWN_STEP		;95f4	cd 37 b1 	. 7 . 
-	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION		;95f7	cd 5c b1 	. \ . 
-	call BALL_MOVEMENT_STEP		;95fa	cd 72 98 	. r . 
-	call CHECK_HARD_BRICKS_HIT		;95fd	cd ea 97 	. . . 
-	call UPDATE_ALIEN_VERT_DIR_WHEN_BRICK		;9600	cd 26 97 	. & . 
-	ret			;9603	c9 	. 
+	call CAPSULE_MOVE_DOWN_STEP		            ;95f4	cd 37 b1
+	call CHECK_CAPSULE_CATCHED_AND_EXEC_ACTION	;95f7	cd 5c b1
+	call BALL_MOVEMENT_STEP		                ;95fa	cd 72 98
+	call CHECK_HARD_BRICKS_HIT		            ;95fd	cd ea 97
+	call UPDATE_ALIEN_VERT_DIR_WHEN_BRICK		;9600	cd 26 97
+	ret			                                ;9603	c9
     
 ; Give points according to the brick hit
 GIVE_BRICK_HIT_POINTS:
@@ -6631,18 +6619,18 @@ l9622h:
     ; A = BACKGROUND_TILEMAP[22*BRICK_ROW + 2*BRICK_COL]
 	ld a,(hl)			;962b	7e
 
-    ; White brick: no points!
+    ; Yellow brick: no points!
 	ld c, 0		;962c	0e 00
 	cp 023h		;962e	fe 23
 	jr z,l9672h	;9630	28 40
 
     ; Light red brick
-	ld c,006h	;9632	0e 06
+	ld c, 6	;9632	0e 06
 	cp 025h		;9634	fe 25
 	jr z,l9672h	;9636	28 3a
 
     ; Cyan brick
-	ld c,002h		;9638	0e 02
+	ld c, 2		;9638	0e 02
 	cp 027h		    ;963a	fe 27
 	jr z,l9672h		;963c	28 34
 
@@ -6652,22 +6640,22 @@ l9622h:
 	jr z,l9672h		;9642	28 2e
 
     ; Dark red brick
-	ld c,004h		;9644	0e 04
+	ld c, 4		;9644	0e 04
 	cp 05ch		    ;9646	fe 5c
 	jr z,l9672h		;9648	28 28
 
     ; Light blue brick
-	ld c,005h		;964a	0e 05
+	ld c, 5		;964a	0e 05
 	cp 05eh		    ;964c	fe 5e
 	jr z,l9672h		;964e	28 22
 
     ; Magenta brick
-	ld c,001h		;9650	0e 01
+	ld c, 1		;9650	0e 01
 	cp 061h		    ;9652	fe 61
 	jr z,l9672h		;9654	28 1c
 
     ; Light yellow
-	ld c,007h		;9656	0e 07
+	ld c, 7		;9656	0e 07
 	cp 063h		    ;9658	fe 63
 	jr z,l9672h		;965a	28 16
 
@@ -6688,12 +6676,12 @@ l9622h:
 	ld l,a			;966a	6f
 	ld h, 0		    ;966b	26 00
     
-    ; HL = LEVEL\8 + l9677h
-	ld de,l9677h	;966d	11 77 96
+    ; HL = LEVEL\8 + TBL_POINTS_PER_BRICK
+	ld de,TBL_POINTS_PER_BRICK	;966d	11 77 96
 	add hl,de		;9670	19
     
-    ; Obtain the points for the table l9677h.
-    ; C = l9677h[LEVEL\8]
+    ; Obtain the points for the table TBL_POINTS_PER_BRICK.
+    ; C = TBL_POINTS_PER_BRICK[LEVEL\8]
 	ld c,(hl)		;9671	4e
 l9672h:
     ; Add add the points
@@ -6701,46 +6689,75 @@ l9672h:
 	call ADD_POINTS_AND_UPDATE_SCORES	;9673	cd a0 52
 	ret			                        ;9676	c9
     
-
-l9677h:
-	ex af,af'			;9677	08 	. 
-	add hl,bc			;9678	09 	. 
-	ld a,(bc)			;9679	0a 	. 
-	dec bc			;967a	0b 	. 
+; Points per brick type
+TBL_POINTS_PER_BRICK:
+    db 8, 9, 10, 11
 
 ; ToDo
 sub_967bh:
-	ld a,(iy+000h)		;967b	fd 7e 00 	. ~ . 
-	or a			;967e	b7 	. 
-	ret z			;967f	c8 	. 
-	ld a,(ix+000h)		;9680	dd 7e 00 	. ~ . 
-	cp 013h		;9683	fe 13 	. . 
-	ret c			;9685	d8 	. 
-	cp 078h		;9686	fe 78 	. x 
-	ret nc			;9688	d0 	. 
-	ld a,(ix+001h)		;9689	dd 7e 01 	. ~ . 
-	cp 04ch		;968c	fe 4c 	. L 
-	ret c			;968e	d8 	. 
-	cp 081h		;968f	fe 81 	. . 
-	ret nc			;9691	d0 	. 
-	ld a,(ix+001h)		;9692	dd 7e 01 	. ~ . 
-	sub (iy+003h)		;9695	fd 96 03 	. . . 
-	cp 04dh		;9698	fe 4d 	. M 
-	jr c,l96b9h		;969a	38 1d 	8 . 
-	cp 080h		;969c	fe 80 	. . 
+    ; For info:
+    ; iy = BALL_TABLE1
+    ; ix = BALL1_SPR_PARAMS
+    
+    ; If the ball is not active, exit
+	ld a,(iy+BALL_TABLE_IDX_ACTIVE)	;967b	fd 7e 00
+	or a			                ;967e	b7
+	ret z			                ;967f	c8
+    
+    ; If BALL_Y < 19, exit
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9680	dd 7e 00
+	cp 19		                    ;9683	fe 13
+	ret c			                ;9685	d8
+    ; BALL_Y >= 19
+    
+    ; If BALL_Y <= 120, exit
+	cp 120		                    ;9686	fe 78
+	ret nc			                ;9688	d0
+    ; BALL_Y < 120
+    
+    ; 19 <= BALL_Y < 120
+    ; The Y coordinate of the ball is within Doh's range
+    
+	; If BALL_X < 76, exit
+    ld a,(ix+SPR_PARAMS_IDX_X)		;9689	dd 7e 01
+	cp 76		                    ;968c	fe 4c
+	ret c			                ;968e	d8
+    
+    ; If BALL_X <= 129, exit
+	cp 129		                    ;968f	fe 81
+	ret nc			                ;9691	d0
+
+    ; 76 <= BALL_Y < 129
+    ; The X coordinate of the ball is also within Doh's range
+
+    
+	; Jump if BALL_X - BULLET_X < 77
+	; BALL_X  < 77 + BULLET_X
+    ld a,(ix+SPR_PARAMS_IDX_X)		;9692	dd 7e 01
+	sub (iy+BALL_TABLE_IDX_HORIZ)   ;9695	fd 96 03
+	cp 77		                    ;9698	fe 4d
+	jr c,l96b9h		                ;969a	38 1d
+    ; BALL_X  >= 77 + BULLET_X
+
+	cp 128		;969c	fe 80 	. . 
 	jr nc,l96c8h		;969e	30 28 	0 ( 
-	ld a,(ix+000h)		;96a0	dd 7e 00 	. ~ . 
-	sub (iy+002h)		;96a3	fd 96 02 	. . . 
-	cp 013h		;96a6	fe 13 	. . 
+    ; BALL_X  < 128 + BULLET_X
+    
+    ; BULLET_X + 77 <= BALL_X < 128 + BULLET_X
+
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;96a0	dd 7e 00 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_VERT)		;96a3	fd 96 02 	. . . 
+	cp 19		;96a6	fe 13 	. . 
 	jr c,l96d7h		;96a8	38 2d 	8 - 
-	ld a,(iy+002h)		;96aa	fd 7e 02 	. ~ . 
+
+	ld a,(iy+BALL_TABLE_IDX_VERT)		;96aa	fd 7e 02 	. ~ . 
 	bit 7,a		;96ad	cb 7f 	.  
 	ret z			;96af	c8 	. 
 	call BALL_VERTICAL_BOUNCE		;96b0	cd 5b 9b 	. [ . 
-	ld (ix+000h),077h		;96b3	dd 36 00 77 	. 6 . w 
+	ld (ix+SPR_PARAMS_IDX_Y),119		;96b3	dd 36 00 77 	. 6 . w 
 	jr l96e4h		;96b7	18 2b 	. + 
 l96b9h:
-	ld a,(iy+003h)		;96b9	fd 7e 03 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_HORIZ)		;96b9	fd 7e 03 	. ~ . 
 	bit 7,a		;96bc	cb 7f 	.  
 	ret nz			;96be	c0 	. 
 	call BALL_HORIZONTAL_BOUNCE		;96bf	cd 80 9b 	. . . 
@@ -6751,26 +6768,26 @@ l96c8h:
 	bit 7,a		;96cb	cb 7f 	.  
 	ret z			;96cd	c8 	. 
 	call BALL_HORIZONTAL_BOUNCE		;96ce	cd 80 9b 	. . . 
-	ld (ix+001h),081h		;96d1	dd 36 01 81 	. 6 . . 
+	ld (ix+SPR_PARAMS_IDX_X), 129		;96d1	dd 36 01 81 	. 6 . . 
 	jr l96e4h		;96d5	18 0d 	. . 
 l96d7h:
-	ld a,(iy+002h)		;96d7	fd 7e 02 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_VERT)		;96d7	fd 7e 02 	. ~ . 
 	bit 7,a		;96da	cb 7f 	.  
 	ret nz			;96dc	c0 	. 
 	call BALL_VERTICAL_BOUNCE		;96dd	cd 5b 9b 	. [ . 
-	ld (ix+000h),012h		;96e0	dd 36 00 12 	. 6 . . 
+	ld (ix+SPR_PARAMS_IDX_Y), 18		;96e0	dd 36 00 12 	. 6 . . 
 l96e4h:
 	ld a, SOUND_DOH_HIT	;96e4	3e 08
 	call ADD_SOUND		;96e6	cd ef 5b
 
-	ld a,001h		;96e9	3e 01 	> . 
+	ld a, 1		;96e9	3e 01 	> . 
 	ld (DOH_H_IT_2),a		;96eb	32 b9 e2 	2 . . 
 
     ; Increment Doh hits
     ; Doh is defeated if hit 16 times
 	ld ix,DOH_RECEIVED_HITS		;96ee	dd 21 b3 e5
-	inc (ix+000h)		;96f2	dd 34 00
-	ld a,(ix+000h)		;96f5	dd 7e 00
+	inc (ix+SPR_PARAMS_IDX_Y)		;96f2	dd 34 00
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;96f5	dd 7e 00
 	cp 16		        ;96f8	fe 10
 	jr nz,l970ah		;96fa	20 0e
 
