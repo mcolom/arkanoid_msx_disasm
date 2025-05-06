@@ -7299,20 +7299,23 @@ CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS:
 
 ; ToDO
 sub_99dfh:
+    ; iy = BALL_TABLE1
+    ; ix = SPR_PARAMS_IDX_Y
+
 	ld hl,TBL_9a98		;99df	21 98 9a 	! . . 
-	ld a,(iy+006h)		;99e2	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;99e2	fd 7e 06 	. ~ . 
 	bit 7,a		;99e5	cb 7f 	.  
 	jr z,l99ebh		;99e7	28 02 	( . 
 	neg		;99e9	ed 44 	. D 
 l99ebh:
 	sla a		;99eb	cb 27 	. ' 
 	ld e,a			;99ed	5f 	_ 
-	ld d,000h		;99ee	16 00 	. . 
+	ld d, 0		;99ee	16 00 	. . 
 	add hl,de			;99f0	19 	. 
 	ld e,(hl)			;99f1	5e 	^ 
 	inc hl			;99f2	23 	# 
 	ld d,(hl)			;99f3	56 	V 
-	ld l,(iy+007h)		;99f4	fd 6e 07 	. n . 
+	ld l,(iy+BALL_TABLE_IDX_SPEED_POS)		;99f4	fd 6e 07
 	ld h,000h		;99f7	26 00 	& . 
 	add hl,hl			;99f9	29 	) 
 	add hl,de			;99fa	19 	. 
@@ -7327,7 +7330,7 @@ l99ebh:
 	ret c			;9a0d	d8 	. 
 	ld (iy+005h),000h		;9a0e	fd 36 05 00 	. 6 . . 
 	ld hl,TBL_9a78		;9a12	21 78 9a 	! x . 
-	ld a,(iy+006h)		;9a15	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;9a15	fd 7e 06 	. ~ . 
 	bit 7,a		;9a18	cb 7f 	.  
 	jp z,l9a22h		;9a1a	ca 22 9a 	. " . 
 	neg		;9a1d	ed 44 	. D 
@@ -7339,19 +7342,19 @@ l9a22h:
 	ld d,000h		;9a26	16 00 	. . 
 	add hl,de			;9a28	19 	. 
 	ld a,(hl)			;9a29	7e 	~ 
-	ld (iy+002h),a		;9a2a	fd 77 02 	. w . 
+	ld (iy+BALL_TABLE_IDX_VERT),a		;9a2a	fd 77 02 	. w . 
 	inc hl			;9a2d	23 	# 
 	ld a,(hl)			;9a2e	7e 	~ 
-	ld (iy+003h),a		;9a2f	fd 77 03 	. w . 
+	ld (iy+BALL_TABLE_IDX_HORIZ),a		;9a2f	fd 77 03 	. w . 
 	ld b,(iy+008h)		;9a32	fd 46 08 	. F . 
 	inc b			;9a35	04 	. 
 l9a36h:
-	ld a,(iy+002h)		;9a36	fd 7e 02 	. ~ . 
-	add a,(ix+000h)		;9a39	dd 86 00 	. . . 
-	ld (ix+000h),a		;9a3c	dd 77 00 	. w . 
-	ld a,(iy+003h)		;9a3f	fd 7e 03 	. ~ . 
-	add a,(ix+001h)		;9a42	dd 86 01 	. . . 
-	ld (ix+001h),a		;9a45	dd 77 01 	. w . 
+	ld a,(iy+BALL_TABLE_IDX_VERT)		;9a36	fd 7e 02 	. ~ . 
+	add a,(ix+SPR_PARAMS_IDX_Y)		;9a39	dd 86 00 	. . . 
+	ld (ix+SPR_PARAMS_IDX_Y),a		;9a3c	dd 77 00 	. w . 
+	ld a,(iy+BALL_TABLE_IDX_HORIZ)		;9a3f	fd 7e 03 	. ~ . 
+	add a,(ix+SPR_PARAMS_IDX_X)		;9a42	dd 86 01 	. . . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;9a45	dd 77 01 	. w . 
 	xor a			;9a48	af 	. 
 	ld (DOH_H_IT_2),a		;9a49	32 b9 e2 	2 . . 
 	push bc			;9a4c	c5 	. 
@@ -7742,66 +7745,82 @@ BALL_SKEWNESS_TABLE:                    ;9c27
     ; 2: most skewed, moving right
     db 7, 6, 5, 4, 3, 2
 
+; ToDo
+; Seguir: know what 0e58ah, 0e58bh, and 0e58ch mean
 sub_9c2dh:
+    ; iy = BALL_TABLE1
+    ; ix = SPR_PARAMS_IDX_Y
+
+    ; Exit if we're not in Doh's level
 	ld a,(LEVEL)		;9c2d	3a 1b e0
 	cp FINAL_LEVEL		;9c30	fe 20
-	ret nc			;9c32	d0 	. 
-	bit 7,(iy+002h)		;9c33	fd cb 02 7e 	. . . ~ 
+	ret nc			    ;9c32	d0 	. 
+
+	bit 7,(iy+BALL_TABLE_IDX_VERT)		;9c33	fd cb 02 7e 	. . . ~ 
 	jp z,l9dcfh		;9c37	ca cf 9d 	. . . 
-	bit 7,(iy+003h)		;9c3a	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_HORIZ)		;9c3a	fd cb 03 7e 	. . . ~ 
 	jp nz,l9dcfh		;9c3e	c2 cf 9d 	. . . 
-	ld a,(ix+000h)		;9c41	dd 7e 00 	. ~ . 
-	sub 018h		;9c44	d6 18 	. . 
+
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9c41	dd 7e 00 	. ~ . 
+	sub 24		;9c44	d6 18 	. . 
 	srl a		;9c46	cb 3f 	. ? 
 	srl a		;9c48	cb 3f 	. ? 
 	srl a		;9c4a	cb 3f 	. ? 
-	cp 00ch		;9c4c	fe 0c 	. . 
+	cp 12		;9c4c	fe 0c 	. . 
 	jp nc,l9dcfh		;9c4e	d2 cf 9d 	. . . 
 	ld (0e58ah),a		;9c51	32 8a e5 	2 . . 
-	ld a,(ix+001h)		;9c54	dd 7e 01 	. ~ . 
-	sub 00ch		;9c57	d6 0c 	. . 
+
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9c54	dd 7e 01 	. ~ . 
+	sub 12		;9c57	d6 0c 	. . 
 	srl a		;9c59	cb 3f 	. ? 
 	srl a		;9c5b	cb 3f 	. ? 
 	srl a		;9c5d	cb 3f 	. ? 
 	srl a		;9c5f	cb 3f 	. ? 
 	ld (0e58bh),a		;9c61	32 8b e5 	2 . . 
-	ld a,(ix+000h)		;9c64	dd 7e 00 	. ~ . 
-	sub (iy+002h)		;9c67	fd 96 02 	. . . 
+
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9c64	dd 7e 00 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_VERT)		;9c67	fd 96 02 	. . . 
 	ld (0e586h),a		;9c6a	32 86 e5 	2 . . 
-	sub 018h		;9c6d	d6 18 	. . 
+	sub 24		;9c6d	d6 18 	. . 
 	srl a		;9c6f	cb 3f 	. ? 
 	srl a		;9c71	cb 3f 	. ? 
 	srl a		;9c73	cb 3f 	. ? 
-	cp 00dh		;9c75	fe 0d 	. . 
+	cp 13		;9c75	fe 0d 	. . 
 	jp nc,l9dcfh		;9c77	d2 cf 9d 	. . . 
 	ld (0e58ch),a		;9c7a	32 8c e5 	2 . . 
-	ld a,(ix+001h)		;9c7d	dd 7e 01 	. ~ . 
-	sub (iy+003h)		;9c80	fd 96 03 	. . . 
+
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9c7d	dd 7e 01 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_HORIZ)		;9c80	fd 96 03 	. . . 
 	ld (0e587h),a		;9c83	32 87 e5 	2 . . 
-	sub 00ch		;9c86	d6 0c 	. . 
+	sub 12		;9c86	d6 0c 	. . 
 	srl a		;9c88	cb 3f 	. ? 
 	srl a		;9c8a	cb 3f 	. ? 
 	srl a		;9c8c	cb 3f 	. ? 
 	srl a		;9c8e	cb 3f 	. ? 
-	cp 00bh		;9c90	fe 0b 	. . 
+	cp 11		;9c90	fe 0b 	. . 
 	jp nc,l9dcfh		;9c92	d2 cf 9d 	. . . 
 	ld (0e58dh),a		;9c95	32 8d e5 	2 . . 
+
 	call sub_a29ah		;9c98	cd 9a a2 	. . . 
 	jp c,la299h		;9c9b	da 99 a2 	. . . 
+
 	ld a,(0e58bh)		;9c9e	3a 8b e5 	: . . 
-	cp 00bh		;9ca1	fe 0b 	. . 
+	cp 11		;9ca1	fe 0b 	. . 
 	jp nc,la299h		;9ca3	d2 99 a2 	. . . 
+
 	ld a,(0e58ah)		;9ca6	3a 8a e5 	: . . 
-	cp 00bh		;9ca9	fe 0b 	. . 
+	cp 11		;9ca9	fe 0b 	. . 
 	jp nz,l9cbch		;9cab	c2 bc 9c 	. . . 
+
 	ld a,(0e58ch)		;9cae	3a 8c e5 	: . . 
-	cp 00ch		;9cb1	fe 0c 	. . 
+	cp 12		;9cb1	fe 0c 	. . 
 	jp nz,l9cbch		;9cb3	c2 bc 9c 	. . . 
+
 	call sub_a328h		;9cb6	cd 28 a3 	. ( . 
 	jp la299h		;9cb9	c3 99 a2 	. . . 
 l9cbch:
 	ld a,(0e58ch)		;9cbc	3a 8c e5 	: . . 
-	cp 00ch		;9cbf	fe 0c 	. . 
+	cp 12		;9cbf	fe 0c 	. . 
 	jp nc,la299h		;9cc1	d2 99 a2 	. . . 
 	ld a,(0e58ch)		;9cc4	3a 8c e5 	: . . 
 	ld c,a			;9cc7	4f 	O 
