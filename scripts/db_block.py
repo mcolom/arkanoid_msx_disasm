@@ -58,7 +58,7 @@ start_addr = start
 for i, v in enumerate(datab):
 	values.append(v)
 	
-	if (i+1) % 8 == 0:
+	if (i+1) % 4 == 0:
 		string = get_db_line(values)
 		
 		end_addr = start_addr + len(values) - 1

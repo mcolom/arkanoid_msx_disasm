@@ -19,6 +19,7 @@ ALIEN_TABLE_IDX_HORIZ_SPEED: equ 9  ; 0xe4da Horizontal speed
 
 ALIEN_TABLE_IDX_FLYING_ANIM_NUM: equ 10 ;0xe4db Current pattern when the alien is flying
 
+; ToDo
 ; ix+11 in 0xe4dc
 ; ix+12 in 0xe4dd
 ; ix+13 in 0xe4de

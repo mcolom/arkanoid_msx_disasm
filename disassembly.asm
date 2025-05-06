@@ -5361,7 +5361,7 @@ CHARS_DOH_OPEN_MOUTH: ;75f9
 ; It'll be very useful to understand the alien's table
 UPDATE_ALIENS:
     ld ix, ALIEN_TABLE
-    ld iy, SPR_13_SPR_PARAMS
+    ld iy, ALIEN_SPR_PARAMS
     ld b, 3
 l760fh:
 	push bc			                        ;760f	c5
@@ -5415,11 +5415,11 @@ l7647h:
     ; HL = SPR_DOOR_x_TABLE[2*color]
     ex de,hl			;7652	eb
 	
-    ; DE = SPR_13_SPR_PARAMS
+    ; DE = ALIEN_SPR_PARAMS
     push iy		;7653	fd e5
 	pop de		;7655	d1
 
-    ; Copy sprite parameters SPR_13_SPR_PARAMS from SPR_DOOR_x_TABLE[2*color]
+    ; Copy sprite parameters ALIEN_SPR_PARAMS from SPR_DOOR_x_TABLE[2*color]
 	ld bc,SPR_PARAMS_LEN	;7656	01 04 00
 	ldir		            ;7659	ed b0
 
@@ -5436,11 +5436,11 @@ l7647h:
 
     ; A = TBL[((VAUS_X - 8) >> 4) & 0xf0]
     ; Choose if the alien should move left or right
-	ld de,TBL_ALIEN_DOOR_DIRECTION_X_40		        ;766d	11 ec 7a
+	ld de,TBL_ALIEN_INITIAL_SPEED_X_40		        ;766d	11 ec 7a
 	ld a,(iy+SPR_PARAMS_IDX_X)	;7670	fd 7e 01
 	cp 40		                ;7673	fe 28
 	jr z,l767ah		            ;7675	28 03
-	ld de,TBL_7af9		        ;7677	11 f9 7a
+	ld de,TBL_ALIEN_INITIAL_SPEED		        ;7677	11 f9 7a
 l767ah:
 	add hl,de			;767a
 	ld a,(hl)			;767b
@@ -5676,6 +5676,10 @@ l77aeh:
 	ld h, 0		        ;77c2	26 00
 
     ; Choose a table depending on the alien's type (or color)
+
+    ; ToDo: this part is not well understood, with indices 
+    ; ix+11, ix+12, ix+13, ix+14, and ix+15.
+
 	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;77c4	dd 7e 00
 
 	ld de,TBL_7b10		                ;77c7	11 10 7b
@@ -5711,7 +5715,6 @@ l77e2h:
     ; ToDo
 	inc hl			;77ec	23 	# 
 	ld a,(hl)		;77ed	7e 	~ 
-
 	ld (ix+15),a	;77ee	dd 77 0f 	. w . 
 l77f1h:
     ; Update alien's vertical position according to his speed
@@ -5748,6 +5751,7 @@ l7817h:
 	neg		                                ;7826	ed 44
 	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;7828	dd 77 09
 l782bh:
+    ; ToDo
 	ld a,(ix+15)		;782b	dd 7e 0f 	. ~ . 
 	dec a			;782e	3d 	= 
 	ld (ix+15),a		;782f	dd 77 0f 	. w . 
@@ -5839,10 +5843,11 @@ l78bah:
 l78d3h:
 	ret			                    ;78d3	c9
 
-; ToDo
+; Check if the alien was hit by a laser.
+; If so, clear the carry (carry set means no alien was hit)
 CHECK_ALIEN_HIT_BY_LASER:
     ; IX = LASER(i)_SPR_PARAMS
-	ld iy,SPR_13_SPR_PARAMS		;78d4	fd 21 01 e1
+	ld iy,ALIEN_SPR_PARAMS		;78d4	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;78d8	21 c8 e4
 	ld b, 3		                ;78db	06 03
 l78ddh:
@@ -5916,7 +5921,7 @@ l78ddh:
 	inc hl			                    ;7930	23
 	ld (hl), 1		                    ;7931	36 01
 
-	xor a			                    ;7933	af
+	xor a			                    ;7933	af  Clear carry: alien was hit
 	ret			                        ;7934	c9
 
 l7935h:
@@ -5926,13 +5931,13 @@ l7935h:
 	ld de, ALIEN_TABLE_LEN	;793a	11 14 00
 	add hl,de			    ;793d	19
 	djnz l78ddh		        ;793e	10 9d
-	scf			            ;7940	37
+	scf			            ;7940	37              Set carry: no alien was hiy
 	ret			            ;7941	c9
 
 ; Check if Vaus has hit the alien and give points
 CHECK_ALIEN_HIT_BY_VAUS:
 	ld ix,SPR_PARAMS_BASE		    ;7942	dd 21 cd e0
-	ld iy,SPR_13_SPR_PARAMS		    ;7946	fd 21 01 e1
+	ld iy,ALIEN_SPR_PARAMS		    ;7946	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		    ;794a	21 c8 e4
     
     ; Loop over 3 aliens
@@ -6067,7 +6072,7 @@ l79fch:
 ; If so, clear the carry.
 CHECK_BALL_HITS_ALIEN:
     ; IX = BALL(i)_SPR_PARAMS
-	ld iy,SPR_13_SPR_PARAMS		;79fd	fd 21 01 e1
+	ld iy,ALIEN_SPR_PARAMS		;79fd	fd 21 01 e1
 	ld hl,ALIEN_TABLE + 1		;7a01	21 c8 e4
 	ld b, 3		                ;7a04	06 03
 l7a06h:
@@ -6238,14 +6243,11 @@ alien_patterns_4:
     db 0xc8, 0xcc, 0xd0, 0xdc, 0xc0, 0xc4, 0xc8, 0xcc ; 0x7add - 0x7ae4
     db 0xd0, 0xdc, 0xd4, 0xd8, 0xd8, 0xd4, 0xd0       ; 0x7ae5 - 0x7aeb
 
-; alien exiting door direction
-; This table is used to decide if the alien should move left or right when
-; appearing from the door.
-;                                                   left (0) or right (2)
-TBL_ALIEN_DOOR_DIRECTION_X_40:  ; 7aec
+; The initial horizontal speed of the alien exiting the door.
+TBL_ALIEN_INITIAL_SPEED_X_40:  ; 7aec
     db 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2
 ;
-TBL_7af9:   ;7af9
+TBL_ALIEN_INITIAL_SPEED:   ;7af9
     db 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2
 
 TBL_ALIEN_VERT_SPEED:
@@ -6255,7 +6257,9 @@ TBL_ALIEN_VERT_SPEED:
 TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
     db 0x90, 0x94, 0x98, 0x9c     ;7b0c
 
+; ToDo
 ; V_SPEED, H_SPEED, ix+15
+;7b10
 TBL_7b10:
     db 1, 0, 40, 0
     db 1, 2, 24, 0
@@ -6263,53 +6267,30 @@ TBL_7b10:
     db -1, -2, 24, 0
     db 1, -2, 24, 0
 
+;7b24
 TBL_7b24:
-	ld bc,03800h		;7b24	01 00 38 	. . 8 
-	nop			;7b27	00 	. 
-	ld (bc),a			;7b28	02 	. 
-	inc bc			;7b29	03 	. 
-	ld e,000h		;7b2a	1e 00 	. . 
-	cp 003h		;7b2c	fe 03 	. . 
-	ld e,000h		;7b2e	1e 00 	. . 
-	cp 0fdh		;7b30	fe fd 	. . 
-	jr l7b34h		;7b32	18 00 	. . 
-l7b34h:
-	ld (bc),a			;7b34	02 	. 
-	defb 0fdh,018h,000h	;illegal sequence		;7b35	fd 18 00 	. . . 
+    db 1, 0, 56, 0 ; 0x7b24 - 0x7b27
+    db 2, 3, 30, 0 ; 0x7b28 - 0x7b2b
+    db -2, 3, 30, 0 ; 0x7b2c - 0x7b2f
+    db -2, -3, 24, 0 ; 0x7b30 - 0x7b33
+    db 2, -3, 24, 0 ; 0x7b34 - 0x7b37
 
+;7b38
 TBL_7b38:
-	ld bc,02000h		;7b38	01 00 20 	. .   
-	nop			;7b3b	00 	. 
-	ld bc,00802h		;7b3c	01 02 08 	. . . 
-	nop			;7b3f	00 	. 
-	rst 38h			;7b40	ff 	. 
-	ld (bc),a			;7b41	02 	. 
-	ex af,af'			;7b42	08 	. 
-	nop			;7b43	00 	. 
-	rst 38h			;7b44	ff 	. 
-	nop			;7b45	00 	. 
-	ex af,af'			;7b46	08 	. 
-	nop			;7b47	00 	. 
-	rst 38h			;7b48	ff 	. 
-	ld (bc),a			;7b49	02 	. 
-	db 0x18, 0x00
-	ld bc,01802h		;7b4c	01 02 18 	. . . 
-	nop			;7b4f	00 	. 
+    db 1, 0, 32, 0 ; 0x7b38 - 0x7b3b
+    db 1, 2, 0x8, 0 ; 0x7b3c - 0x7b3f
+    db -1, 2, 0x8, 0 ; 0x7b40 - 0x7b43
+    db -1, 0, 0x8, 0 ; 0x7b44 - 0x7b47
+    db -1, 2, 24, 0 ; 0x7b48 - 0x7b4b
+    db 1, 2, 24, 0 ; 0x7b4c - 0x7b4f
 
+;7b50
 TBL_7b50:
-	ld bc,02800h		;7b50	01 00 28 	. . ( 
-l7b53h:
-	nop			;7b53	00 	. 
-	ld bc,018feh		;7b54	01 fe 18 	. . . 
-	nop			;7b57	00 	. 
-	rst 38h			;7b58	ff 	. 
-	cp 018h		;7b59	fe 18 	. . 
-	nop			;7b5b	00 	. 
-	rst 38h			;7b5c	ff 	. 
-	ld (bc),a			;7b5d	02 	. 
-	db 0x18, 0x00		;7b5e	18 00 	. . 
-	ld bc,01802h		;7b60	01 02 18 	. . . 
-	nop			;7b63	00 	. 
+    db 1, 0, 40, 0 ; 0x7b50 - 0x7b53
+    db 1, -2, 24, 0 ; 0x7b54 - 0x7b57
+    db -1, -2, 24, 0 ; 0x7b58 - 0x7b5b
+    db -1, 2, 24, 0 ; 0x7b5c - 0x7b5f
+    db 1, 2, 24, 0 ; 0x7b60 - 0x7b63
 
 ; This are lookup tables for the parameters of the sprite of the
 ; alien exiting the door
@@ -6834,7 +6815,7 @@ UPDATE_ALIEN_VERT_DIR_WHEN_BRICK:
 	ld (BRICK_HIT_ROW),a	;972d	32 3c e5
     
 	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4
-	ld ix,SPR_13_SPR_PARAMS	;9734	dd 21 01 e1
+	ld ix,ALIEN_SPR_PARAMS	;9734	dd 21 01 e1
 l9738h:
     ; Skip if the alien isn't active
 	ld a,(iy+ALIEN_TABLE_IDX_ACTIVE)    ;9738	fd 7e 01
