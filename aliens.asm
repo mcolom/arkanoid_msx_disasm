@@ -11,7 +11,7 @@ ALIEN_TABLE_IDX_EXPLODING: equ 2                    ; 0xe4c9
 ALIEN_TABLE_IDX_TICKS: equ 3                        ; 0xe4ca
 ALIEN_TABLE_IDX_EXPLOSION_ANIM_TICKS: equ 4         ; 0xe4cb
 ALIEN_TABLE_IDX_EXPLOSION_ANIM_NUM: equ 5           ; 0xe4cc    Current pattern when the alien is exploding
-ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR: equ 6; 0xe4cd  The alien exits the door and goes left (0) or right (2)
+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_SPEED: equ 6        ; 0xe4cd    Initial speed horiz. speed of the alien exiting from the door
 ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield from the door
 
 ALIEN_TABLE_IDX_VERT_SPEED: equ 8   ; 0xe4cf Vertical speed

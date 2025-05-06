@@ -5425,7 +5425,7 @@ l7647h:
 
 	; HL = ((VAUS_X - 8) >> 4) & 0xf0
     ld a,(VAUS_X)		;765b	3a ce e0
-	sub 008h		;765e	d6 08
+	sub 8		;765e	d6 08
 	and 0f0h		;7660	e6 f0
 	srl a		    ;7662	cb 3f
 	srl a		    ;7664	cb 3f
@@ -5435,28 +5435,30 @@ l7647h:
 	ld h, 0		    ;766b	26 00
 
     ; A = TBL[((VAUS_X - 8) >> 4) & 0xf0]
-    ; Choose if the alien should move right or left
-	ld de,TBL_7aec		        ;766d	11 ec 7a
+    ; Choose if the alien should move left or right
+	ld de,TBL_ALIEN_DOOR_DIRECTION_X_40		        ;766d	11 ec 7a
 	ld a,(iy+SPR_PARAMS_IDX_X)	;7670	fd 7e 01
 	cp 40		                ;7673	fe 28
 	jr z,l767ah		            ;7675	28 03
-	ld de,l7af9h		        ;7677	11 f9 7a
+	ld de,TBL_7af9		        ;7677	11 f9 7a
 l767ah:
 	add hl,de			;767a
 	ld a,(hl)			;767b
 
-    ; Set direction
-	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR),a		;767c	dd 77 06
-	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_DIR)		;767f	dd 7e 06
+    ; Set initial speed from the door according to the position of the alien
+	ld (ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_SPEED),a		;767c	dd 77 06
+	ld a,(ix+ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_SPEED)		;767f	dd 7e 06
     
 	; Set vertical speed
-    ; ALIEN_VERT_SPEED = TBL_ALIEN_VERT_SPEED[2*(direction & 3)]
+    ; ALIEN_VERT_SPEED = TBL_ALIEN_VERT_SPEED[2*initial_speed]
     and 3		                                        ;7682	e6 03
 	ld l,a                                              ;7684	6f
 	ld h, 0		                                        ;7685	26 00
-	add hl,hl			                                ;7687	29
+	add hl,hl			                                ;7687	29      HL = 2*initial_speed
 	ld de,TBL_ALIEN_VERT_SPEED		                    ;7688	11 06 7b
-	add hl,de			                                ;768b	19
+	add hl,de			                                ;768b	19      HL = TBL_ALIEN_VERT_SPEED + 2*initial_speed
+    
+    ; ALIEN_VERT_SPEED = TBL_ALIEN_VERT_SPEED[2*initial_speed]
 	ld a,(hl)			                                ;768c	7e
 	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a		        ;768d	dd 77 08
 
@@ -6236,30 +6238,15 @@ alien_patterns_4:
     db 0xc8, 0xcc, 0xd0, 0xdc, 0xc0, 0xc4, 0xc8, 0xcc ; 0x7add - 0x7ae4
     db 0xd0, 0xdc, 0xd4, 0xd8, 0xd8, 0xd4, 0xd0       ; 0x7ae5 - 0x7aeb
 
-TBL_7aec:
-    db 0            ; 7aec
-    db 0            ; 7aed
-	ld bc,00201h		;7aee	01 01 02 	. . . 
-	ld (bc),a			;7af1	02 	. 
-	ld (bc),a			;7af2	02 	. 
-	ld (bc),a			;7af3	02 	. 
-	ld (bc),a			;7af4	02 	. 
-	ld (bc),a			;7af5	02 	. 
-	ld (bc),a			;7af6	02 	. 
-	ld (bc),a			;7af7	02 	. 
-	ld (bc),a			;7af8	02 	. 
-l7af9h:
-	nop			;7af9	00 	. 
-	nop			;7afa	00 	. 
-	nop			;7afb	00 	. 
-	nop			;7afc	00 	. 
-	nop			;7afd	00 	. 
-	nop			;7afe	00 	. 
-	ld bc,00101h		;7aff	01 01 01 	. . . 
-	ld (bc),a			;7b02	02 	. 
-	ld (bc),a			;7b03	02 	. 
-	ld (bc),a			;7b04	02 	. 
-	ld (bc),a			;7b05	02 	. 
+; alien exiting door direction
+; This table is used to decide if the alien should move left or right when
+; appearing from the door.
+;                                                   left (0) or right (2)
+TBL_ALIEN_DOOR_DIRECTION_X_40:  ; 7aec
+    db 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2
+;
+TBL_7af9:   ;7af9
+    db 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2
 
 TBL_ALIEN_VERT_SPEED:
     db 1, -1, 1, 0, 1, 1
