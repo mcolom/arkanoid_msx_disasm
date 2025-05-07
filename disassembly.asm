@@ -8584,7 +8584,7 @@ la407h:
 	sla a		;a408	cb 27 	. ' 
 	ld l,a			;a40a	6f 	o 
 	ld h,000h		;a40b	26 00 	& . 
-	ld de,la86ch		;a40d	11 6c a8 	. l . 
+	ld de,TBL_a86c		;a40d	11 6c a8 	. l . 
 	add hl,de			;a410	19 	. 
 	ld a,(hl)			;a411	7e 	~ 
 	bit 7,(iy+002h)		;a412	fd cb 02 7e 	. . . ~ 
@@ -8715,7 +8715,7 @@ la503h:
 	sla a		;a504	cb 27 	. ' 
 	ld l,a			;a506	6f 	o 
 	ld h,000h		;a507	26 00 	& . 
-	ld de,la86ch		;a509	11 6c a8 	. l . 
+	ld de,TBL_a86c		;a509	11 6c a8 	. l . 
 	add hl,de			;a50c	19 	. 
 	ld a,(hl)			;a50d	7e 	~ 
 	bit 7,(iy+002h)		;a50e	fd cb 02 7e 	. . . ~ 
@@ -8823,7 +8823,7 @@ la5c5h:
 	sla a		;a5c6	cb 27 	. ' 
 	ld l,a			;a5c8	6f 	o 
 	ld h,000h		;a5c9	26 00 	& . 
-	ld de,la86ch		;a5cb	11 6c a8 	. l . 
+	ld de,TBL_a86c		;a5cb	11 6c a8 	. l . 
 	add hl,de			;a5ce	19 	. 
 	ld a,(hl)			;a5cf	7e 	~ 
 	bit 7,(iy+002h)		;a5d0	fd cb 02 7e 	. . . ~ 
@@ -8942,7 +8942,7 @@ la6a4h:
 	sla a		;a6a5	cb 27 	. ' 
 	ld l,a			;a6a7	6f 	o 
 	ld h,000h		;a6a8	26 00 	& . 
-	ld de,la86ch		;a6aa	11 6c a8 	. l . 
+	ld de,TBL_a86c		;a6aa	11 6c a8 	. l . 
 	add hl,de			;a6ad	19 	. 
 	ld a,(hl)			;a6ae	7e 	~ 
 	bit 7,(iy+002h)		;a6af	fd cb 02 7e 	. . . ~ 
@@ -9178,7 +9178,7 @@ la844h:
 	sla a		;a845	cb 27 	. ' 
 	ld l,a			;a847	6f 	o 
 	ld h,000h		;a848	26 00 	& . 
-	ld de,la86ch		;a84a	11 6c a8 	. l . 
+	ld de,TBL_a86c		;a84a	11 6c a8 	. l . 
 	add hl,de			;a84d	19 	. 
 	ld a,(hl)			;a84e	7e 	~ 
 	bit 7,(iy+002h)		;a84f	fd cb 02 7e 	. . . ~ 
@@ -9193,8 +9193,9 @@ la858h:
 	neg		;a864	ed 44 	. D 
 la866h:
 	ld (0e543h),a		;a866	32 43 e5 	2 C . 
-	jp 0a87ch		;a869	c3 7c a8 	. | . 
-la86ch:
+	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
+
+TBL_a86c:
 	inc b			;a86c	04 	. 
 	rst 38h			;a86d	ff 	. 
 	ld (bc),a			;a86e	02 	. 
@@ -9204,9 +9205,10 @@ la86ch:
 	cp 0ffh		;a875	fe ff 	. . 
 	rst 38h			;a877	ff 	. 
 	cp 0ffh		;a878	fe ff 	. . 
-	call m,03affh		;a87a	fc ff 3a 	. . : 
-	ld b,e			;a87d	43 	C 
-	push hl			;a87e	e5 	. 
+    db 0xfc, 0xff
+
+la87ch:
+	ld a, (0xe543)      ;a87c    
 	ld b,a			;a87f	47 	G 
 	ld a,(0e586h)		;a880	3a 86 e5 	: . . 
 	ld hl,0e2c5h		;a883	21 c5 e2 	! . . 
@@ -9309,7 +9311,7 @@ la937h:
 la93ah:
 	ld l,a			;a93a	6f 	o 
 	ld h,000h		;a93b	26 00 	& . 
-	ld de,la86ch		;a93d	11 6c a8 	. l . 
+	ld de,TBL_a86c		;a93d	11 6c a8 	. l . 
 	add hl,de			;a940	19 	. 
 	ld a,(hl)			;a941	7e 	~ 
 	bit 7,(iy+002h)		;a942	fd cb 02 7e 	. . . ~ 
