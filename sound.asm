@@ -11,5 +11,7 @@ SOUND_PTR: equ 0xe5da
 ; How many sounds are being played
 SOUNDS_COUNT: equ 0xe51e
 
+; We see a lot of activity from 0xe5c3 to 0xe5bf when music is played
+
 ; ToDo
 SOUNDS_UNKNOWN_TYPE: equ 0xe5c4
