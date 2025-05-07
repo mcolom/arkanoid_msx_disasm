@@ -10035,94 +10035,94 @@ BRICK_BIT_CHECK_JUMP_TABLE:
 
 ; Bit 7
 br_b7:
-	cp 001h		;af81	fe 01 	. . 
-	jp z,laf8bh		;af83	ca 8b af 	. . . 
-	res 7,(iy+000h)		;af86	fd cb 00 be 	. . . . 
-	ret			;af8a	c9 	. 
+	cp 001h		    ;af81	fe 01
+	jp z,laf8bh		;af83	ca 8b af
+	res 7,(iy+000h)	;af86	fd cb 00 be
+	ret			    ;af8a	c9
 laf8bh:
-	bit 7,(iy+000h)		;af8b	fd cb 00 7e 	. . . ~ 
-	jp lb000h		;af8f	c3 00 b0 	. . . 
+	bit 7,(iy+000h)	;af8b	fd cb 00 7e
+	jp lb000h		;af8f	c3 00 b0
 
 ; Bit 6
 br_b6:
-	cp 001h		;af92	fe 01 	. . 
-	jp z,laf9ch		;af94	ca 9c af 	. . . 
-	res 6,(iy+000h)		;af97	fd cb 00 b6 	. . . . 
-	ret			;af9b	c9 	. 
+	cp 001h		    ;af92	fe 01
+	jp z,laf9ch		;af94	ca 9c af
+	res 6,(iy+000h)	;af97	fd cb 00 b6
+	ret			    ;af9b	c9
 laf9ch:
-	bit 6,(iy+000h)		;af9c	fd cb 00 76 	. . . v 
-	jr lb000h		;afa0	18 5e 	. ^ 
+	bit 6,(iy+000h)	;af9c	fd cb 00 76
+	jr lb000h		;afa0	18 5e
 
 ; Bit 5
 br_b5:
-	cp 001h		;afa2	fe 01 	. . 
-	jp z,lafach		;afa4	ca ac af 	. . . 
-	res 5,(iy+000h)		;afa7	fd cb 00 ae 	. . . . 
-	ret			;afab	c9 	. 
+	cp 001h		    ;afa2	fe 01
+	jp z,lafach		;afa4	ca ac af
+	res 5,(iy+000h)	;afa7	fd cb 00 ae
+	ret			    ;afab	c9
 lafach:
-	bit 5,(iy+000h)		;afac	fd cb 00 6e 	. . . n 
-	jr lb000h		;afb0	18 4e 	. N 
+	bit 5,(iy+000h)	;afac	fd cb 00 6e
+	jr lb000h		;afb0	18 4e
 
 ; Bit 4
 br_b4:
-	cp 001h		;afb2	fe 01 	. . 
-	jp z,lafbch		;afb4	ca bc af 	. . . 
-	res 4,(iy+000h)		;afb7	fd cb 00 a6 	. . . . 
-	ret			;afbb	c9 	. 
+	cp 001h		    ;afb2	fe 01
+	jp z,lafbch		;afb4	ca bc af
+	res 4,(iy+000h)	;afb7	fd cb 00 a6
+	ret			    ;afbb	c9
 lafbch:
-	bit 4,(iy+000h)		;afbc	fd cb 00 66 	. . . f 
-	jr lb000h		;afc0	18 3e 	. > 
+	bit 4,(iy+000h)	;afbc	fd cb 00 66
+	jr lb000h		;afc0	18 3e
 
 ; Bit 3
 br_b3:
-	cp 001h		;afc2	fe 01 	. . 
-	jp z,lafcch		;afc4	ca cc af 	. . . 
-	res 3,(iy+000h)		;afc7	fd cb 00 9e 	. . . . 
-	ret			;afcb	c9 	. 
+	cp 001h		    ;afc2	fe 01
+	jp z,lafcch		;afc4	ca cc af
+	res 3,(iy+000h)	;afc7	fd cb 00 9e
+	ret			    ;afcb	c9
 lafcch:
-	bit 3,(iy+000h)		;afcc	fd cb 00 5e 	. . . ^ 
-	jr lb000h		;afd0	18 2e 	. . 
+	bit 3,(iy+000h)	;afcc	fd cb 00 5e
+	jr lb000h		;afd0	18 2e
 
 ; Bit 2
 br_b2:
-	cp 001h		;afd2	fe 01 	. . 
-	jp z,lafdch		;afd4	ca dc af 	. . . 
-	res 2,(iy+000h)		;afd7	fd cb 00 96 	. . . . 
-	ret			;afdb	c9 	. 
+	cp 001h		    ;afd2	fe 01
+	jp z,lafdch		;afd4	ca dc af
+	res 2,(iy+000h)	;afd7	fd cb 00 96
+	ret			    ;afdb	c9
 lafdch:
-	bit 2,(iy+000h)		;afdc	fd cb 00 56 	. . . V 
-	jr lb000h		;afe0	18 1e 	. . 
+	bit 2,(iy+000h)	;afdc	fd cb 00 56. V 
+	jr lb000h		;afe0	18 1e
 
 ; Bit 1
 br_b1:
-	cp 001h		;afe2	fe 01 	. . 
-	jp z,lafech		;afe4	ca ec af 	. . . 
-	res 1,(iy+000h)		;afe7	fd cb 00 8e 	. . . . 
-	ret			;afeb	c9 	. 
+	cp 001h		    ;afe2	fe 01
+	jp z,lafech		;afe4	ca ec af
+	res 1,(iy+000h)	;afe7	fd cb 00 8e
+	ret			    ;afeb	c9
 lafech:
-	bit 1,(iy+000h)		;afec	fd cb 00 4e 	. . . N 
-	jr lb000h		;aff0	18 0e 	. . 
+	bit 1,(iy+000h)	;afec	fd cb 00 4e. N 
+	jr lb000h		;aff0	18 0e
 
 ; Bit 0
 br_b0:
-	cp 001h		;aff2	fe 01 	. . 
-	jp z,laffch		;aff4	ca fc af 	. . . 
-	res 0,(iy+000h)		;aff7	fd cb 00 86 	. . . . 
-	ret			;affb	c9 	. 
+	cp 001h		    ;aff2	fe 01
+	jp z,laffch		;aff4	ca fc af
+	res 0,(iy+000h)	;aff7	fd cb 00 86
+	ret			    ;affb	c9
 laffch:
-	bit 0,(iy+000h)		;affc	fd cb 00 46 	. . . F 
+	bit 0,(iy+000h)	;affc	fd cb 00 46 	
 
 lb000h:
-	pop iy		;b000	fd e1 	. . 
-	ld hl,DOH_H_IT_2		;b002	21 b9 e2 	! . . 
-	ld (hl),000h		;b005	36 00 	6 . 
-	jr z,lb00dh		;b007	28 04 	( . 
-	ld (hl),001h		;b009	36 01 	6 . 
-	scf			;b00b	37 	7 
-	ret			;b00c	c9 	. 
+	pop iy		        ;b000	fd e1
+	ld hl,DOH_H_IT_2	;b002	21 b9 e2
+	ld (hl),0		    ;b005	36 00
+	jr z,lb00dh		    ;b007	28 04
+	ld (hl),001h		;b009	36 01
+	scf			        ;b00b	37
+	ret			        ;b00c	c9
 lb00dh:
-	xor a			;b00d	af 	. 
-	ret			;b00e	c9 	. 
+	xor a		;b00d	af
+	ret			;b00e	c9
 
 ; Set a random capsule type if there are not extra balls.
 ; This is the function that prevents falling capsules when
@@ -10464,7 +10464,7 @@ lb18bh:
 	call ADD_POINTS_AND_UPDATE_SCORES		;b19d	cd a0 52
 
     ; Execute the corresponding action
-	call EXECUTE_CAPSULE_ACTION		;b1a0	cd a8 b1 	. . . 
+	call EXECUTE_CAPSULE_ACTION		;b1a0	cd a8 b1
     
     ; No capsule falling
 	xor a			                ;b1a3	af
@@ -10517,9 +10517,9 @@ CAPSULE_ACTION_TABLE:
 ; Decrement the speed of all balls
 CAPSULE_ACTION_YELLOW:
     ; Skip if Vaus is not sticky
-	ld a,(GLUING_STATUS)		;b1da	3a 24 e3 	: $ . 
-	or a			;b1dd	b7 	. 
-	jp z,lb1e6h		;b1de	ca e6 b1 	. . . 
+	ld a,(GLUING_STATUS)	;b1da	3a 24 e3
+	or a			        ;b1dd	b7
+	jp z,lb1e6h		        ;b1de	ca e6 b1
 
     ; Vaus is sticky, set GLUING_STATE_NO_LONGER_STICKY
 	ld a,GLUING_STATE_NO_LONGER_STICKY		;b1e1	3e 02
@@ -10778,8 +10778,8 @@ lb30fh:
 
     ; Update speed and its counter
 	ld a,(BRICK_HIT_ROW)		            ;b31b	3a 3c e5
-	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a		;b31e	fd 77 0d
-	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		    ;b321	fd 71 07
+	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a	;b31e	fd 77 0d
+	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		;b321	fd 71 07
     
     ; Next ball
 	inc hl			;b324	23
@@ -10846,92 +10846,14 @@ lb3a7h:
 	djnz lb39eh		;b3a7	10 f5
 	pop bc			;b3a9	c1
 	ret			    ;b3aa	c9
-
-	nop			;b3ab	00 	. 
-	nop			;b3ac	00 	. 
-	nop			;b3ad	00 	. 
-	nop			;b3ae	00 	. 
-	nop			;b3af	00 	. 
-	nop			;b3b0	00 	. 
-	nop			;b3b1	00 	. 
-	nop			;b3b2	00 	. 
-	nop			;b3b3	00 	. 
-	nop			;b3b4	00 	. 
-	nop			;b3b5	00 	. 
-	nop			;b3b6	00 	. 
-	nop			;b3b7	00 	. 
-	nop			;b3b8	00 	. 
-	nop			;b3b9	00 	. 
-	nop			;b3ba	00 	. 
-	nop			;b3bb	00 	. 
-	nop			;b3bc	00 	. 
-	nop			;b3bd	00 	. 
-	nop			;b3be	00 	. 
-	nop			;b3bf	00 	. 
-	nop			;b3c0	00 	. 
-	nop			;b3c1	00 	. 
-	nop			;b3c2	00 	. 
-	nop			;b3c3	00 	. 
-	nop			;b3c4	00 	. 
-	nop			;b3c5	00 	. 
-	nop			;b3c6	00 	. 
-	nop			;b3c7	00 	. 
-	nop			;b3c8	00 	. 
-	nop			;b3c9	00 	. 
-	nop			;b3ca	00 	. 
-	nop			;b3cb	00 	. 
-	nop			;b3cc	00 	. 
-	nop			;b3cd	00 	. 
-	nop			;b3ce	00 	. 
-	nop			;b3cf	00 	. 
-	nop			;b3d0	00 	. 
-	nop			;b3d1	00 	. 
-	nop			;b3d2	00 	. 
-	nop			;b3d3	00 	. 
-	nop			;b3d4	00 	. 
-	nop			;b3d5	00 	. 
-	nop			;b3d6	00 	. 
-	nop			;b3d7	00 	. 
-	nop			;b3d8	00 	. 
-	nop			;b3d9	00 	. 
-	nop			;b3da	00 	. 
-	nop			;b3db	00 	. 
-	nop			;b3dc	00 	. 
-	nop			;b3dd	00 	. 
-	nop			;b3de	00 	. 
-	nop			;b3df	00 	. 
-	nop			;b3e0	00 	. 
-	nop			;b3e1	00 	. 
-	nop			;b3e2	00 	. 
-	nop			;b3e3	00 	. 
-	nop			;b3e4	00 	. 
-	nop			;b3e5	00 	. 
-	nop			;b3e6	00 	. 
-	nop			;b3e7	00 	. 
-	nop			;b3e8	00 	. 
-	nop			;b3e9	00 	. 
-	nop			;b3ea	00 	. 
-	nop			;b3eb	00 	. 
-	nop			;b3ec	00 	. 
-	nop			;b3ed	00 	. 
-	nop			;b3ee	00 	. 
-	nop			;b3ef	00 	. 
-	nop			;b3f0	00 	. 
-	nop			;b3f1	00 	. 
-	nop			;b3f2	00 	. 
-	nop			;b3f3	00 	. 
-	nop			;b3f4	00 	. 
-	nop			;b3f5	00 	. 
-	nop			;b3f6	00 	. 
-	nop			;b3f7	00 	. 
-	nop			;b3f8	00 	. 
-	nop			;b3f9	00 	. 
-	nop			;b3fa	00 	. 
-	nop			;b3fb	00 	. 
-	nop			;b3fc	00 	. 
-	nop			;b3fd	00 	. 
-	nop			;b3fe	00 	. 
-	nop			;b3ff	00 	. 
+    
+    ; Unused, 85 zeros
+    ;b3ab
+    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    db 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    ;b3ff
 
 	jp PLAY_SOUND		;b400	c3 e8 b4 	. . . 
 	jp sub_b594h_sound		;b403	c3 94 b5 	. . . 
