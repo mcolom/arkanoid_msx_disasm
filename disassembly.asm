@@ -9195,17 +9195,8 @@ la866h:
 	ld (0e543h),a		;a866	32 43 e5 	2 C . 
 	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
 
-TBL_a86c:
-	inc b			;a86c	04 	. 
-	rst 38h			;a86d	ff 	. 
-	ld (bc),a			;a86e	02 	. 
-	rst 38h			;a86f	ff 	. 
-	ld bc,001ffh		;a870	01 ff 01 	. . . 
-	cp 0ffh		;a873	fe ff 	. . 
-	cp 0ffh		;a875	fe ff 	. . 
-	rst 38h			;a877	ff 	. 
-	cp 0ffh		;a878	fe ff 	. . 
-    db 0xfc, 0xff
+TBL_a86c:   ;a86c
+    db 4, -1, 2, -1, 1, -1, 1, -2, -1, -2, -1, -1, -2, -1,  -4, -1
 
 la87ch:
 	ld a, (0xe543)      ;a87c    
