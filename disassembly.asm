@@ -7325,8 +7325,10 @@ l99ebh:
 	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_X
 	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_X + TBL_9a98[skewness]
 
-	ld a,(hl)			                ;99fb	7e          A = 
+	ld a,(hl)			                ;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_X]  Double indirection
 	ld (iy+008h),a		;99fc	fd 77 08 	. w . 
+    
+    ; Seguir:
 	inc hl			;99ff	23 	# 
 	ld a,(hl)			;9a00	7e 	~ 
 	ld (iy+009h),a		;9a01	fd 77 09 	. w . 
@@ -7340,7 +7342,7 @@ l99ebh:
 	bit 7,a		;9a18	cb 7f 	.  
 	jp z,l9a22h		;9a1a	ca 22 9a 	. " . 
 	neg		;9a1d	ed 44 	. D 
-	ld hl,09a88h		;9a1f	21 88 9a 	! . . 
+	ld hl,TBL_9a88		;9a1f	21 88 9a 	! . . 
 l9a22h:
 	dec a			;9a22	3d 	= 
 	sla a		;9a23	cb 27 	. ' 
@@ -7389,28 +7391,11 @@ l9a60h:
 	pop iy		;9a75	fd e1 	. . 
 	ret			;9a77	c9 	. 
 
-TBL_9a78:
-	rst 38h			;9a78	ff 	. 
-	ld (bc),a			;9a79	02 	. 
-	rst 38h			;9a7a	ff 	. 
-	ld (bc),a			;9a7b	02 	. 
-	rst 38h			;9a7c	ff 	. 
-	ld bc,001feh		;9a7d	01 fe 01 	. . . 
-	cp 0ffh		;9a80	fe ff 	. . 
-	rst 38h			;9a82	ff 	. 
-	rst 38h			;9a83	ff 	. 
-	rst 38h			;9a84	ff 	. 
-	cp 0ffh		;9a85	fe ff 	. . 
-	cp 001h		;9a87	fe 01 	. . 
-	cp 001h		;9a89	fe 01 	. . 
-	cp 001h		;9a8b	fe 01 	. . 
-	rst 38h			;9a8d	ff 	. 
-	ld (bc),a			;9a8e	02 	. 
-	rst 38h			;9a8f	ff 	. 
-	ld (bc),a			;9a90	02 	. 
-	ld bc,00101h		;9a91	01 01 01 	. . . 
-	ld bc,00102h		;9a94	01 02 01 	. . . 
-	ld (bc),a			;9a97	02 	. 
+TBL_9a78: ;9a78
+    db -1, 2, -1 , 2, -1, 1, -2, 1, -2, -1, -1, -1, -1, -2, -1, -2
+	
+TBL_9a88: ;9a88
+    db 1, -2, 1, -2, 1, -1, 2, -1, 2, 1, 1, 1, 1, 2, 1, 2
 
 TBL_9a98: ; 0x9a98
     dw l9ad0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h
