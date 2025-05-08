@@ -7923,9 +7923,9 @@ l9d54h:
 	call THERE_IS_A_BRICK		;9d66	cd a8 ad 	. . . 
 	jp nc,l9d81h		;9d69	d2 81 9d 	. . . 
 	ld a,(BRICK_HIT_ROW)		;9d6c	3a 3c e5 	: < . 
-	ld (ix+000h),a		;9d6f	dd 77 00 	. w . 
+	ld (ix+SPR_PARAMS_IDX_Y),a		;9d6f	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;9d72	3a 3d e5 	: = . 
-	ld (ix+001h),a		;9d75	dd 77 01 	. w . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;9d75	dd 77 01 	. w . 
 	call BALL_VERTICAL_BOUNCE		;9d78	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9d7b	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9d7e	c3 99 a2 	. . . 
@@ -7959,11 +7959,11 @@ l9db7h:
 	call DO_BRICK_ACTION		;9dc9	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9dcc	c3 99 a2 	. . . 
 l9dcfh:
-	bit 7,(iy+002h)		;9dcf	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9dcf	fd cb 02 7e 	. . . ~ 
 	jp z,l9f6bh		;9dd3	ca 6b 9f 	. k . 
-	bit 7,(iy+003h)		;9dd6	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9dd6	fd cb 03 7e 	. . . ~ 
 	jp z,l9f6bh		;9dda	ca 6b 9f 	. k . 
-	ld a,(ix+000h)		;9ddd	dd 7e 00 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9ddd	dd 7e 00 	. ~ . 
 	sub 018h		;9de0	d6 18 	. . 
 	srl a		;9de2	cb 3f 	. ? 
 	srl a		;9de4	cb 3f 	. ? 
@@ -7971,15 +7971,15 @@ l9dcfh:
 	cp 00ch		;9de8	fe 0c 	. . 
 	jp nc,l9f6bh		;9dea	d2 6b 9f 	. k . 
 	ld (0e58ah),a		;9ded	32 8a e5 	2 . . 
-	ld a,(ix+001h)		;9df0	dd 7e 01 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9df0	dd 7e 01 	. ~ . 
 	sub 011h		;9df3	d6 11 	. . 
 	srl a		;9df5	cb 3f 	. ? 
 	srl a		;9df7	cb 3f 	. ? 
 	srl a		;9df9	cb 3f 	. ? 
 	srl a		;9dfb	cb 3f 	. ? 
 	ld (0e58bh),a		;9dfd	32 8b e5 	2 . . 
-	ld a,(ix+000h)		;9e00	dd 7e 00 	. ~ . 
-	sub (iy+002h)		;9e03	fd 96 02 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9e00	dd 7e 00 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;9e03	fd 96 02 	. . . 
 	ld (0e586h),a		;9e06	32 86 e5 	2 . . 
 	sub 018h		;9e09	d6 18 	. . 
 	srl a		;9e0b	cb 3f 	. ? 
@@ -7988,8 +7988,8 @@ l9dcfh:
 	cp 00dh		;9e11	fe 0d 	. . 
 	jp nc,l9f6bh		;9e13	d2 6b 9f 	. k . 
 	ld (0e58ch),a		;9e16	32 8c e5 	2 . . 
-	ld a,(ix+001h)		;9e19	dd 7e 01 	. ~ . 
-	sub (iy+003h)		;9e1c	fd 96 03 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9e19	dd 7e 01 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_X_SPEED)		;9e1c	fd 96 03 	. . . 
 	ld (0e587h),a		;9e1f	32 87 e5 	2 . . 
 	sub 011h		;9e22	d6 11 	. . 
 	srl a		;9e24	cb 3f 	. ? 
@@ -8087,9 +8087,9 @@ l9ef0h:
 	call THERE_IS_A_BRICK		;9f02	cd a8 ad 	. . . 
 	jp nc,l9f1dh		;9f05	d2 1d 9f 	. . . 
 	ld a,(BRICK_HIT_ROW)		;9f08	3a 3c e5 	: < . 
-	ld (ix+000h),a		;9f0b	dd 77 00 	. w . 
+	ld (ix+SPR_PARAMS_IDX_Y),a		;9f0b	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;9f0e	3a 3d e5 	: = . 
-	ld (ix+001h),a		;9f11	dd 77 01 	. w . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;9f11	dd 77 01 	. w . 
 	call BALL_VERTICAL_BOUNCE		;9f14	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9f17	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9f1a	c3 99 a2 	. . . 
@@ -8123,35 +8123,35 @@ l9f53h:
 	call DO_BRICK_ACTION		;9f65	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9f68	c3 99 a2 	. . . 
 l9f6bh:
-	bit 7,(iy+002h)		;9f6b	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9f6b	fd cb 02 7e 	. . . ~ 
 	jp nz,la102h		;9f6f	c2 02 a1 	. . . 
-	bit 7,(iy+003h)		;9f72	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9f72	fd cb 03 7e 	. . . ~ 
 	jp nz,la102h		;9f76	c2 02 a1 	. . . 
-	ld a,(ix+000h)		;9f79	dd 7e 00 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9f79	dd 7e 00 	. ~ . 
 	sub 013h		;9f7c	d6 13 	. . 
 	srl a		;9f7e	cb 3f 	. ? 
-	srl a		;9f80	cb 3f 	. ? 
+	srl a		;9f80	c0b 3f 	. ? 
 	srl a		;9f82	cb 3f 	. ? 
 	cp 00ch		;9f84	fe 0c 	. . 
 	jp nc,la102h		;9f86	d2 02 a1 	. . . 
 	ld (0e58ah),a		;9f89	32 8a e5 	2 . . 
-	ld a,(ix+001h)		;9f8c	dd 7e 01 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9f8c	dd 7e 01 	. ~ . 
 	sub 00ch		;9f8f	d6 0c 	. . 
 	srl a		;9f91	cb 3f 	. ? 
 	srl a		;9f93	cb 3f 	. ? 
 	srl a		;9f95	cb 3f 	. ? 
 	srl a		;9f97	cb 3f 	. ? 
 	ld (0e58bh),a		;9f99	32 8b e5 	2 . . 
-	ld a,(ix+000h)		;9f9c	dd 7e 00 	. ~ . 
-	sub (iy+002h)		;9f9f	fd 96 02 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9f9c	dd 7e 00 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;9f9f	fd 96 02 	. . . 
 	ld (0e586h),a		;9fa2	32 86 e5 	2 . . 
 	sub 013h		;9fa5	d6 13 	. . 
 	srl a		;9fa7	cb 3f 	. ? 
 	srl a		;9fa9	cb 3f 	. ? 
 	srl a		;9fab	cb 3f 	. ? 
 	ld (0e58ch),a		;9fad	32 8c e5 	2 . . 
-	ld a,(ix+001h)		;9fb0	dd 7e 01 	. ~ . 
-	sub (iy+003h)		;9fb3	fd 96 03 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;9fb0	dd 7e 01 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_X_SPEED)		;9fb3	fd 96 03 	. . . 
 	ld (0e587h),a		;9fb6	32 87 e5 	2 . . 
 	sub 00ch		;9fb9	d6 0c 	. . 
 	srl a		;9fbb	cb 3f 	. ? 
@@ -8250,9 +8250,9 @@ la090h:
 	call THERE_IS_A_BRICK		;a099	cd a8 ad 	. . . 
 	jp nc,la0b4h		;a09c	d2 b4 a0 	. . . 
 	ld a,(BRICK_HIT_ROW)		;a09f	3a 3c e5 	: < . 
-	ld (ix+000h),a		;a0a2	dd 77 00 	. w . 
+	ld (ix+SPR_PARAMS_IDX_Y),a		;a0a2	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;a0a5	3a 3d e5 	: = . 
-	ld (ix+001h),a		;a0a8	dd 77 01 	. w . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;a0a8	dd 77 01 	. w . 
 	call BALL_VERTICAL_BOUNCE		;a0ab	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a0ae	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0b1	c3 99 a2 	. . . 
@@ -8287,11 +8287,11 @@ la0eah:
 	call DO_BRICK_ACTION		;a0fc	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0ff	c3 99 a2 	. . . 
 la102h:
-	bit 7,(iy+002h)		;a102	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a102	fd cb 02 7e 	. . . ~ 
 	jp nz,brick_hit_check_done		;a106	c2 99 a2 	. . . 
-	bit 7,(iy+003h)		;a109	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a109	fd cb 03 7e 	. . . ~ 
 	jp z,brick_hit_check_done		;a10d	ca 99 a2 	. . . 
-	ld a,(ix+000h)		;a110	dd 7e 00 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;a110	dd 7e 00 	. ~ . 
 	sub 013h		;a113	d6 13 	. . 
 	srl a		;a115	cb 3f 	. ? 
 	srl a		;a117	cb 3f 	. ? 
@@ -8299,23 +8299,23 @@ la102h:
 	cp 00ch		;a11b	fe 0c 	. . 
 	jp nc,brick_hit_check_done		;a11d	d2 99 a2 	. . . 
 	ld (0e58ah),a		;a120	32 8a e5 	2 . . 
-	ld a,(ix+001h)		;a123	dd 7e 01 	. ~ . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;a123	dd 7e 01 	. ~ . 
 	sub 011h		;a126	d6 11 	. . 
 	srl a		;a128	cb 3f 	. ? 
 	srl a		;a12a	cb 3f 	. ? 
 	srl a		;a12c	cb 3f 	. ? 
 	srl a		;a12e	cb 3f 	. ? 
 	ld (0e58bh),a		;a130	32 8b e5 	2 . . 
-	ld a,(ix+000h)		;a133	dd 7e 00 	. ~ . 
-	sub (iy+002h)		;a136	fd 96 02 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;a133	dd 7e 00 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;a136	fd 96 02 	. . . 
 	ld (0e586h),a		;a139	32 86 e5 	2 . . 
 	sub 013h		;a13c	d6 13 	. . 
 	srl a		;a13e	cb 3f 	. ? 
 	srl a		;a140	cb 3f 	. ? 
 	srl a		;a142	cb 3f 	. ? 
 	ld (0e58ch),a		;a144	32 8c e5 	2 . . 
-	ld a,(ix+001h)		;a147	dd 7e 01 	. ~ . 
-	sub (iy+003h)		;a14a	fd 96 03 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_X)		;a147	dd 7e 01 	. ~ . 
+	sub (iy+BALL_TABLE_IDX_X_SPEED)		;a14a	fd 96 03 	. . . 
 	ld (0e587h),a		;a14d	32 87 e5 	2 . . 
 	sub 011h		;a150	d6 11 	. . 
 	srl a		;a152	cb 3f 	. ? 
@@ -8413,9 +8413,9 @@ la21eh:
 	call THERE_IS_A_BRICK		;a230	cd a8 ad 	. . . 
 	jp nc,la24bh		;a233	d2 4b a2 	. K . 
 	ld a,(BRICK_HIT_ROW)		;a236	3a 3c e5 	: < . 
-	ld (ix+000h),a		;a239	dd 77 00 	. w . 
+	ld (ix+SPR_PARAMS_IDX_Y),a		;a239	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;a23c	3a 3d e5 	: = . 
-	ld (ix+001h),a		;a23f	dd 77 01 	. w . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;a23f	dd 77 01 	. w . 
 	call BALL_VERTICAL_BOUNCE		;a242	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a245	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a248	c3 99 a2 	. . . 
