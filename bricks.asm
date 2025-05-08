@@ -52,4 +52,11 @@ BRICK_UNUSED_2: equ 0xe2bb
 
 BRICK_ACTION_TABLE_OFFSET: equ 0xe2bc
 
+; ToDO: these variables store BRICK_ROW AND BRICK_COL, but it's not clear how
+BRICK_COORD_A: equ 0e58ah
+BRICK_COORD_B: equ 0e58bh
+BRICK_COORD_C: equ 0e58ch
+BRICK_COORD_D: equ 0e58dh
 
+;ToDo:
+COMPUTED_BRICK_HIT_ROW: equ 0xe2c4

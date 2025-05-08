@@ -44,3 +44,11 @@ BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
 
+
+; ToDO
+; The games does
+;	ld a,(ix+SPR_PARAMS_IDX_Y)		;9c64
+;	sub (iy+BALL_TABLE_IDX_Y_SPEED)
+;	ld (0e586h),a
+BALL_Y_MINUS_SPEED: equ 0xe586
+BALL_X_MINUS_SPEED: equ 0xe587
