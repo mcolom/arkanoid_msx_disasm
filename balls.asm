@@ -23,12 +23,12 @@ BALL_TABLE_IDX_GLUE: equ 1
 ;
 ; 01, 02: ball going down
 ; FF, FE: ball going up
-BALL_TABLE_IDX_VERT:  equ 2
+BALL_TABLE_IDX_Y_SPEED:  equ 2
 
 ;BALL_TABLE_: equ 3
 ; 01, 02: ball going right
 ; FF, FE: ball going left
-BALL_TABLE_IDX_HORIZ: equ 3
+BALL_TABLE_IDX_X_SPEED: equ 3
 
 BALL_TABLE_IDX_SKEWNESS: equ 6
 
