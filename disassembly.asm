@@ -5996,8 +5996,7 @@ l797eh:
 	call ADD_POINTS_AND_UPDATE_SCORES	;798f	cd a0 52
 
     ; hl = ALIEN_TABLE + 1
-    ; ToDo: what is it accessing here?
-	push hl			;7992	e5 	. 
+	push hl			;7992
 	
     ; Set alien active = 2
     ld (hl),2	    ;7993	36 02   ALIEN_TABLE_IDX_ACTIVE
@@ -7081,25 +7080,26 @@ l987eh:
     ; Jump to ACTION_TABLE[2*BALL_X]
 	jp (hl)			    ;9897	e9
 ACTION_TABLE:
-    dw ACTION_989E
-    dw ACTION_BALL_FOLLOWS_VAUS_IF_STICKY
+    dw ACTION_INITIALIZE_GLUED_BALL
+    dw ACTION_BALL_FOLLOWS_VAUS_IF_GLUED
     dw ACTION_9941
 
 ; Initialize ball for the level start
-ACTION_989E:
+ACTION_INITIALIZE_GLUED_BALL:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
-	ld (ix+SPR_PARAMS_IDX_Y), 169		;                    989e	dd 36 00 a9
+	ld (ix+SPR_PARAMS_IDX_Y), 169		;   989e	dd 36 00 a9     Ball on Vaus
     ; The other two balls are invisible at row 192
 	ld (ix+SPR_PARAMS_IDX_Y + 1*SPR_PARAMS_LEN), 192  ;98a2	dd 36 04 c0
 	ld (ix+SPR_PARAMS_IDX_Y + 2*SPR_PARAMS_LEN), 192  ;98a6	dd 36 08 c0
 
-	ld (iy+16),  26  ;98aa	fd 36 10 1a
+	ld (iy+BALL_TABLE_IDX_VAUS_HIT_X),  26  ;98aa	fd 36 10 1a
 
     ; Configure sprite of the ball. Start as glued to Vaus.
 	ld (ix+SPR_PARAMS_IDX_PATTERN_NUM), 0x80   ;98ae	dd 36 02 80
 	ld (ix+SPR_PARAMS_IDX_COLOR), 15	       ;98b2	dd 36 03 0f     White color
 
+    ; Glued
 	ld (iy+BALL_TABLE_IDX_GLUE),1	           ;98b6	fd 36 01 01     Ball is glued
 	
     ; Initialize glue timer
@@ -7107,7 +7107,7 @@ ACTION_989E:
     
     ; Set direction
 	ld (iy+BALL_TABLE_IDX_SKEWNESS),3           ;98be	fd 36 06 03
-	ld (iy+BALL_TABLE_IDX_Y_SPEED), 0xff		    ;98c2	fd 36 02 ff     Ball moves UP
+	ld (iy+BALL_TABLE_IDX_Y_SPEED), -1		    ;98c2	fd 36 02 ff     Ball moves up
 
     ; A = SPEED_TABLE_POSITIONS[LEVEL]
 	ld a,(LEVEL)		            ;98c6	3a 1b e0
@@ -7128,7 +7128,7 @@ SPEED_TABLE_POSITIONS:
 ; If the ball is sticky, decrement the sticky counter and make the
 ; ball follow sticky Vaus.
 ; Otherwise, make it bounce normally.
-ACTION_BALL_FOLLOWS_VAUS_IF_STICKY:
+ACTION_BALL_FOLLOWS_VAUS_IF_GLUED:
     ; Skip the following if we're at the title screen
 	ld a,(GAME_STATE)		;98f8	3a 0b e0
 	or a			        ;98fb	b7
@@ -8736,7 +8736,7 @@ la4cch:
 	ld b,013h		;a4ee	06 13 	. . 
 la4f0h:
 	add a,b			;a4f0	80 	. 
-	ld (0e2c4h),a		;a4f1	32 c4 e2 	2 . . 
+	ld (COMPUTED_BRICK_HIT_ROW),a		;a4f1	32 c4 e2 	2 . . 
 	add a,007h		;a4f4	c6 07 	. . 
 	ld (0e2c5h),a		;a4f6	32 c5 e2 	2 . . 
 	ld a,(iy+006h)		;a4f9	fd 7e 06 	. ~ . 
@@ -8770,7 +8770,7 @@ la52fh:
 	ld hl,0e2c5h		;a52f	21 c5 e2 	! . . 
 	bit 7,(iy+002h)		;a532	fd cb 02 7e 	. . . ~ 
 	jp nz,la54eh		;a536	c2 4e a5 	. N . 
-	ld hl,0e2c4h		;a539	21 c4 e2 	! . . 
+	ld hl,COMPUTED_BRICK_HIT_ROW		;a539	21 c4 e2 	! . . 
 	inc (hl)			;a53c	34 	4 
 la53dh:
 	push af			;a53d	f5 	. 
@@ -8844,7 +8844,7 @@ sub_a591h:
 	ld b,013h		;a5b0	06 13 	. . 
 la5b2h:
 	add a,b			;a5b2	80 	. 
-	ld (0e2c4h),a		;a5b3	32 c4 e2 	2 . . 
+	ld (COMPUTED_BRICK_HIT_ROW),a		;a5b3	32 c4 e2 	2 . . 
 	add a,007h		;a5b6	c6 07 	. . 
 	ld (0e2c5h),a		;a5b8	32 c5 e2 	2 . . 
 	ld a,(iy+006h)		;a5bb	fd 7e 06 	. ~ . 
@@ -8877,7 +8877,7 @@ la5e7h:
 	ld hl,0e2c5h		;a5f1	21 c5 e2 	! . . 
 	bit 7,(iy+002h)		;a5f4	fd cb 02 7e 	. . . ~ 
 	jp nz,la610h		;a5f8	c2 10 a6 	. . . 
-	ld hl,0e2c4h		;a5fb	21 c4 e2 	! . . 
+	ld hl,COMPUTED_BRICK_HIT_ROW		;a5fb	21 c4 e2 	! . . 
 	inc (hl)			;a5fe	34 	4 
 la5ffh:
 	push af			;a5ff	f5 	. 
@@ -8939,7 +8939,7 @@ la656h:
 la65bh:
 	ld a,b			;a65b	78 	x 
 	ld (BRICK_HIT_COL),a		;a65c	32 3d e5 	2 = . 
-	ld a,(0e2c4h)		;a65f	3a c4 e2 	: . . 
+	ld a,(COMPUTED_BRICK_HIT_ROW)		;a65f	3a c4 e2 	: . . 
 	bit 7,(iy+002h)		;a662	fd cb 02 7e 	. . . ~ 
 	jp z,la66ch		;a666	ca 6c a6 	. l . 
 	ld a,(0e2c5h)		;a669	3a c5 e2 	: . . 
@@ -8967,7 +8967,7 @@ sub_a670h:
 	ld b, 24		;a68f	06 18 	. . 
 la691h:
 	add a,b			;a691	80 	. 
-	ld (0e2c4h),a		;a692	32 c4 e2 	2 . . 
+	ld (COMPUTED_BRICK_HIT_ROW),a		;a692	32 c4 e2 	2 . . 
 	add a, 7		;a695	c6 07 	. . 
 	ld (0e2c5h),a		;a697	32 c5 e2 	2 . . 
 
@@ -9003,7 +9003,7 @@ la6cch:
 	ld hl,0e2c5h		;a6d3	21 c5 e2 	! . . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a6d6	fd cb 02 7e 	. . . ~ 
 	jp nz,la6f2h		;a6da	c2 f2 a6 	. . . 
-	ld hl,0e2c4h		;a6dd	21 c4 e2 	! . . 
+	ld hl,COMPUTED_BRICK_HIT_ROW		;a6dd	21 c4 e2 	! . . 
 	inc (hl)			;a6e0	34 	4 
 la6e1h:
 	push af			;a6e1	f5 	. 
@@ -9072,10 +9072,10 @@ la750h:
 	or a			;a750	b7 	. 
 la751h:
     ; Set the row and col of the brick hit
-    ; Row: (0e2c4h)
+    ; Row: (COMPUTED_BRICK_HIT_ROW)
     ; col: reg. B
 	push af			;a751	f5 	. 
-	ld a,(0e2c4h)		;a752	3a c4 e2 	: . . 
+	ld a,(COMPUTED_BRICK_HIT_ROW)		;a752	3a c4 e2 	: . . 
 	ld (BRICK_HIT_ROW),a		;a755	32 3c e5 	2 < . 
 	ld a,b			;a758	78 	x 
 	ld (BRICK_HIT_COL),a		;a759	32 3d e5 	2 = . 
@@ -9110,8 +9110,11 @@ la77fh:
 la789h:
 	or a			;a789	b7 	. 
 la78ah:
+    ; Set the row and col of the brick hit
+    ; Row: (COMPUTED_BRICK_HIT_ROW)
+    ; col: reg. B
 	push af			;a78a	f5 	. 
-	ld a,(0e2c4h)		;a78b	3a c4 e2 	: . . 
+	ld a,(COMPUTED_BRICK_HIT_ROW)		;a78b	3a c4 e2 	: . . 
 	ld (BRICK_HIT_ROW),a		;a78e	32 3c e5 	2 < . 
 	ld a,b			;a791	78 	x 
 	ld (BRICK_HIT_COL),a		;a792	32 3d e5 	2 = . 
@@ -9207,7 +9210,7 @@ sub_a810h:
 	ld b,013h		;a82f	06 13 	. . 
 la831h:
 	add a,b			;a831	80 	. 
-	ld (0e2c4h),a		;a832	32 c4 e2 	2 . . 
+	ld (COMPUTED_BRICK_HIT_ROW),a		;a832	32 c4 e2 	2 . . 
 	add a,007h		;a835	c6 07 	. . 
 	ld (0e2c5h),a		;a837	32 c5 e2 	2 . . 
 	ld a,(iy+006h)		;a83a	fd 7e 06 	. ~ . 
@@ -9246,7 +9249,7 @@ la87ch:
 	ld hl,0e2c5h		;a883	21 c5 e2 	! . . 
 	bit 7,(iy+002h)		;a886	fd cb 02 7e 	. . . ~ 
 	jp nz,la8a2h		;a88a	c2 a2 a8 	. . . 
-	ld hl,0e2c4h		;a88d	21 c4 e2 	! . . 
+	ld hl,COMPUTED_BRICK_HIT_ROW		;a88d	21 c4 e2 	! . . 
 	inc (hl)			;a890	34 	4 
 la891h:
 	push af			;a891	f5 	. 
@@ -9305,7 +9308,7 @@ la8e6h:
 	ld b,a			;a8ec	47 	G 
 la8edh:
 	ld (ix+001h),b		;a8ed	dd 70 01 	. p . 
-	ld a,(0e2c4h)		;a8f0	3a c4 e2 	: . . 
+	ld a,(COMPUTED_BRICK_HIT_ROW)		;a8f0	3a c4 e2 	: . . 
 	bit 7,(iy+002h)		;a8f3	fd cb 02 7e 	. . . ~ 
 	jp z,la8fdh		;a8f7	ca fd a8 	. . . 
 	ld a,(0e2c5h)		;a8fa	3a c5 e2 	: . . 
