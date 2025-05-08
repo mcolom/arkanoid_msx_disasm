@@ -7298,28 +7298,34 @@ CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS:
 	ret			                    ;99de	c9
 
 ; ToDO
+; SEGUIR
 sub_99dfh:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
 
-	ld hl,TBL_9a98		;99df	21 98 9a 	! . . 
-	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;99e2	fd 7e 06 	. ~ . 
-	bit 7,a		;99e5	cb 7f 	.  
-	jr z,l99ebh		;99e7	28 02 	( . 
-	neg		;99e9	ed 44 	. D 
+	ld hl,TBL_9a98		                ;99df	21 98 9a
+    
+    ; If the ball's skewness is positive, invert it
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;99e2	fd 7e 06
+	bit 7,a		                        ;99e5	cb 7f
+	jr z,l99ebh		                    ;99e7	28 02   Jump if negative
+    ; It's positive: invert it
+	neg		                            ;99e9	ed 44
 l99ebh:
-	sla a		;99eb	cb 27 	. ' 
-	ld e,a			;99ed	5f 	_ 
-	ld d, 0		;99ee	16 00 	. . 
-	add hl,de			;99f0	19 	. 
-	ld e,(hl)			;99f1	5e 	^ 
-	inc hl			;99f2	23 	# 
-	ld d,(hl)			;99f3	56 	V 
-	ld l,(iy+BALL_TABLE_IDX_SPEED_POS)		;99f4	fd 6e 07
-	ld h,000h		;99f7	26 00 	& . 
-	add hl,hl			;99f9	29 	) 
-	add hl,de			;99fa	19 	. 
-	ld a,(hl)			;99fb	7e 	~ 
+	sla a		                        ;99eb	cb 27   A = skewness
+	ld e,a			                    ;99ed	5f
+	ld d, 0		                        ;99ee	16 00   DE = skewness
+	add hl,de			                ;99f0	19      HL = TBL_9a98 + skewness
+	ld e,(hl)			                ;99f1	5e
+	inc hl			                    ;99f2	23
+	ld d,(hl)			                ;99f3	56      DE = TBL_9a98[skewness]
+	
+    ld l,(iy+BALL_TABLE_IDX_SPEED_POS)	;99f4	fd 6e 07    HL = BALL_SPEED_X
+	ld h, 0		                        ;99f7	26 00
+	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_X
+	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_X + TBL_9a98[skewness]
+
+	ld a,(hl)			                ;99fb	7e          A = 
 	ld (iy+008h),a		;99fc	fd 77 08 	. w . 
 	inc hl			;99ff	23 	# 
 	ld a,(hl)			;9a00	7e 	~ 
@@ -7406,72 +7412,20 @@ TBL_9a78:
 	ld bc,00102h		;9a94	01 02 01 	. . . 
 	ld (bc),a			;9a97	02 	. 
 
-TBL_9a98:
-	ret nc			;9a98	d0 	. 
-	sbc a,d			;9a99	9a 	. 
-	ret nc			;9a9a	d0 	. 
-	sbc a,d			;9a9b	9a 	. 
-	ret nc			;9a9c	d0 	. 
-	sbc a,d			;9a9d	9a 	. 
-	or b			;9a9e	b0 	. 
-	sbc a,d			;9a9f	9a 	. 
-	ret nc			;9aa0	d0 	. 
-	sbc a,d			;9aa1	9a 	. 
-	ret nc			;9aa2	d0 	. 
-	sbc a,d			;9aa3	9a 	. 
-	or b			;9aa4	b0 	. 
-	sbc a,d			;9aa5	9a 	. 
-	ret nc			;9aa6	d0 	. 
-	sbc a,d			;9aa7	9a 	. 
-	ret nc			;9aa8	d0 	. 
-	sbc a,d			;9aa9	9a 	. 
-	ret nc			;9aaa	d0 	. 
-	sbc a,d			;9aab	9a 	. 
-	ret nc			;9aac	d0 	. 
-	sbc a,d			;9aad	9a 	. 
-	ret nc			;9aae	d0 	. 
-	sbc a,d			;9aaf	9a 	. 
-	nop			;9ab0	00 	. 
-	rrca			;9ab1	0f 	. 
-	nop			;9ab2	00 	. 
-	ld c,000h		;9ab3	0e 00 	. . 
-	dec c			;9ab5	0d 	. 
-	nop			;9ab6	00 	. 
-	inc c			;9ab7	0c 	. 
-	ld bc,0010fh		;9ab8	01 0f 01 	. . . 
-	ld c,001h		;9abb	0e 01 	. . 
-	dec c			;9abd	0d 	. 
-	ld bc,0000ch		;9abe	01 0c 00 	. . . 
-	inc b			;9ac1	04 	. 
-	ld (bc),a			;9ac2	02 	. 
-	ex af,af'			;9ac3	08 	. 
-	nop			;9ac4	00 	. 
-	ld (bc),a			;9ac5	02 	. 
-	ld (bc),a			;9ac6	02 	. 
-	inc b			;9ac7	04 	. 
-	nop			;9ac8	00 	. 
-	ld bc,00202h		;9ac9	01 02 02 	. . . 
-	ld bc,00201h		;9acc	01 01 02 	. . . 
-	ld bc,01700h		;9acf	01 00 17 	. . . 
-	nop			;9ad2	00 	. 
-	dec d			;9ad3	15 	. 
-	nop			;9ad4	00 	. 
-	inc d			;9ad5	14 	. 
-	nop			;9ad6	00 	. 
-	ld (de),a			;9ad7	12 	. 
-	ld bc,00117h		;9ad8	01 17 01 	. . . 
-	dec d			;9adb	15 	. 
-	ld bc,00114h		;9adc	01 14 01 	. . . 
-	ld (de),a			;9adf	12 	. 
-	nop			;9ae0	00 	. 
-	ld b,002h		;9ae1	06 02 	. . 
-	inc c			;9ae3	0c 	. 
-	nop			;9ae4	00 	. 
-	inc bc			;9ae5	03 	. 
-	ld bc,00104h		;9ae6	01 04 01 	. . . 
-	inc bc			;9ae9	03 	. 
-	ld bc,00002h		;9aea	01 02 00 	. . . 
-	ld bc,00101h		;9aed	01 01 01 	. . . 
+TBL_9a98: ; 0x9a98
+    dw l9ad0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h
+
+l9ab0h: ;9ab0
+    db 0x0, 0xf, 0x0, 0xe, 0x0, 0xd, 0x0, 0xc ; 0x9ab0 - 0x9ab7
+    db 0x1, 0xf, 0x1, 0xe, 0x1, 0xd, 0x1, 0xc ; 0x9ab8 - 0x9abf
+    db 0x0, 0x4, 0x2, 0x8, 0x0, 0x2, 0x2, 0x4 ; 0x9ac0 - 0x9ac7
+    db 0x0, 0x1, 0x2, 0x2, 0x1, 0x1, 0x2, 0x1 ; 0x9ac8 - 0x9acf
+
+l9ad0h: ;0x9ad0
+    db 0x0, 0x17, 0x0, 0x15, 0x0, 0x14, 0x0, 0x12 ; 0x9ad0 - 0x9ad7
+    db 0x1, 0x17, 0x1, 0x15, 0x1, 0x14, 0x1, 0x12 ; 0x9ad8 - 0x9adf
+    db 0x0, 0x6, 0x2, 0xc, 0x0, 0x3, 0x1, 0x4 ; 0x9ae0 - 0x9ae7
+    db 0x1, 0x3, 0x1, 0x2, 0x0, 0x1, 0x1, 0x1 ; 0x9ae8 - 0x9aef
 
 ; Update the speed of the ball according to counter and the values in BALL_TABLE1
 UPDATE_BALL_SPEED:
