@@ -7360,15 +7360,15 @@ l99ebh:
 
     ; Translate the skewness to an (X, Y) speed of the ball
 
-    ; Choose SKEWNESS_POS_TO_XY_SPEED or SKEWNESS_NEG_TO_XY_SPEED according to
+    ; Choose TBL_SKEWNESS_POS_TO_XY_SPEED or TBL_SKEWNESS_NEG_TO_XY_SPEED according to
     ; the sign of BALL_TABLE_IDX_SKEWNESS
-	ld hl,SKEWNESS_POS_TO_XY_SPEED	    ;9a12	21 78 9a
+	ld hl,TBL_SKEWNESS_POS_TO_XY_SPEED	    ;9a12	21 78 9a
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;9a15	fd 7e 06
 	bit 7,a		                        ;9a18	cb 7f
 	jp z,l9a22h		                    ;9a1a	ca 22 9a Jump if it's positive
     ; It's negative: invert it
 	neg		                            ;9a1d	ed 44
-	ld hl,SKEWNESS_NEG_TO_XY_SPEED		;9a1f	21 88 9a
+	ld hl,TBL_SKEWNESS_NEG_TO_XY_SPEED		;9a1f	21 88 9a
 
 l9a22h:
 	dec a		;9a22	3d      A = skewness - 1
@@ -7435,7 +7435,7 @@ l9a60h:
 	ret			;9a77	c9 	. 
 
 ; Positive skewness to (X, Y) speed
-SKEWNESS_POS_TO_XY_SPEED: ;9a78
+TBL_SKEWNESS_POS_TO_XY_SPEED: ;9a78
     ; (Y-speed, X-speed)
     db -1,  2
     db -1 , 2
@@ -7447,7 +7447,7 @@ SKEWNESS_POS_TO_XY_SPEED: ;9a78
     db -1, -2
 
 ; Negative skewness to (X, Y) ball speed
-SKEWNESS_NEG_TO_XY_SPEED: ;9a88
+TBL_SKEWNESS_NEG_TO_XY_SPEED: ;9a88
     ; (Y-speed, X-speed)
     db 1, -2
     db 1, -2
