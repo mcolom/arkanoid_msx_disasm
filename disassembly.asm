@@ -7967,7 +7967,7 @@ l9d18h:
 	ld (BRICK_COL),a		;9d21	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9d24	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;9d27	d2 99 a2 	. . . 
-	call la901h		;9d2a	cd 01 a9 	. . . 
+	call sub_a901h		;9d2a	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;9d2d	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9d30	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9d33	c3 99 a2 	. . . 
@@ -8003,7 +8003,7 @@ l9d81h:
 	ld (BRICK_COL),a		;9d84	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9d87	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;9d8a	d2 99 a2 	. . . 
-	call la901h		;9d8d	cd 01 a9 	. . . 
+	call sub_a901h		;9d8d	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;9d90	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9d93	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9d96	c3 99 a2 	. . . 
@@ -8014,7 +8014,7 @@ l9d99h:
 	ld (BRICK_COL),a		;9da2	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9da5	cd a8 ad 	. . . 
 	jp nc,l9db7h		;9da8	d2 b7 9d 	. . . 
-	call la901h		;9dab	cd 01 a9 	. . . 
+	call sub_a901h		;9dab	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;9dae	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9db1	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9db4	c3 99 a2 	. . . 
@@ -8131,7 +8131,7 @@ l9eb4h:
 	ld (BRICK_COL),a		;9ebd	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9ec0	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;9ec3	d2 99 a2 	. . . 
-	call la901h		;9ec6	cd 01 a9 	. . . 
+	call sub_a901h		;9ec6	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;9ec9	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9ecc	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9ecf	c3 99 a2 	. . . 
@@ -8167,7 +8167,7 @@ l9f1dh:
 	ld (BRICK_COL),a		;9f20	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9f23	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;9f26	d2 99 a2 	. . . 
-	call la901h		;9f29	cd 01 a9 	. . . 
+	call sub_a901h		;9f29	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;9f2c	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9f2f	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9f32	c3 99 a2 	. . . 
@@ -8178,7 +8178,7 @@ l9f35h:
 	ld (BRICK_COL),a		;9f3e	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;9f41	cd a8 ad 	. . . 
 	jp nc,l9f53h		;9f44	d2 53 9f 	. S . 
-	call la901h		;9f47	cd 01 a9 	. . . 
+	call sub_a901h		;9f47	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;9f4a	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;9f4d	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9f50	c3 99 a2 	. . . 
@@ -8293,7 +8293,7 @@ la04bh:
 	ld (BRICK_COL),a		;a054	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a057	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a05a	d2 99 a2 	. . . 
-	call la901h		;a05d	cd 01 a9 	. . . 
+	call sub_a901h		;a05d	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a060	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a063	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a066	c3 99 a2 	. . . 
@@ -8331,7 +8331,7 @@ la0b4h:
 	call THERE_IS_A_BRICK		;a0ba	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a0bd	d2 99 a2 	. . . 
 la0c0h:
-	call la901h		;a0c0	cd 01 a9 	. . . 
+	call sub_a901h		;a0c0	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a0c3	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a0c6	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0c9	c3 99 a2 	. . . 
@@ -8342,7 +8342,7 @@ la0cch:
 	ld (BRICK_COL),a		;a0d5	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a0d8	cd a8 ad 	. . . 
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
-	call la901h		;a0de	cd 01 a9 	. . . 
+	call sub_a901h		;a0de	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a0e1	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a0e4	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0e7	c3 99 a2 	. . . 
@@ -8457,7 +8457,7 @@ la1e2h:
 	ld (BRICK_COL),a		;a1eb	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a1ee	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a1f1	d2 99 a2 	. . . 
-	call la901h		;a1f4	cd 01 a9 	. . . 
+	call sub_a901h		;a1f4	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a1f7	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a1fa	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a1fd	c3 99 a2 	. . . 
@@ -8493,7 +8493,7 @@ la24bh:
 	ld (BRICK_COL),a		;a24e	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a251	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a254	d2 99 a2 	. . . 
-	call la901h		;a257	cd 01 a9 	. . . 
+	call sub_a901h		;a257	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a25a	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a25d	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a260	c3 99 a2 	. . . 
@@ -8504,7 +8504,7 @@ la263h:
 	ld (BRICK_COL),a		;a26c	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a26f	cd a8 ad 	. . . 
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
-	call la901h		;a275	cd 01 a9 	. . . 
+	call sub_a901h		;a275	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a278	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a27b	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a27e	c3 99 a2 	. . . 
@@ -8632,7 +8632,7 @@ la38eh:
 	ld (BRICK_COL),a		;a397	32 ab e2 	2 . . 
 	call THERE_IS_A_BRICK		;a39a	cd a8 ad 	. . . 
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
-	call la901h		;a3a0	cd 01 a9 	. . . 
+	call sub_a901h		;a3a0	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a3a3	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a3a6	cd 05 aa 	. . . 
 	jp la3d0h		;a3a9	c3 d0 a3 	. . . 
@@ -9383,7 +9383,7 @@ la8fdh:
 	ld (ix+000h),a		;a8fd	dd 77 00 	. w . 
 	ret			;a900	c9 	. 
 
-la901h:
+sub_a901h:
 	ld hl,0e541h		;a901	21 41 e5 	! A . 
 	ld (hl),000h		;a904	36 00 	6 . 
 	ld de,0e542h		;a906	11 42 e5 	. B . 
