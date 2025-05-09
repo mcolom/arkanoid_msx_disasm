@@ -52,6 +52,10 @@ ACTION_SKEWNESS_COUNTER: equ 0xe5ac
 
 ;
 BALL_TABLE_IDX_SPEED_POS: equ 7
+
+; The speed is added to the position BALL_TABLE_IDX_SPEED_MULTIPLIER+1 times
+BALL_TABLE_IDX_SPEED_MULTIPLIER: equ 8
+
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball

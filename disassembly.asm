@@ -7324,32 +7324,29 @@ l99ebh:
 	ld h, 0		                        ;99f7	26 00
 	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_POS
 	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_POS + TBL_9a98[skewness]
-
-
-
-    ; Seguir:
     
     ; We obtain from the double indirection TBL_9a98[skewness][2*BALL_SPEED_POS] two values:
-    ; (iy+008h)
+    ; BALL_TABLE_IDX_SPEED_MULTIPLIER
     ; BALL_TABLE_IDX_MOVE_TARGET
 
 	ld a,(hl)			;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_POS]  Double indirection!
-	ld (iy+008h),a		;99fc	fd 77 08 	. w . 
+	ld (iy+BALL_TABLE_IDX_SPEED_MULTIPLIER),a		;99fc	fd 77 08 	. w . 
     
 
-	inc hl			;99ff	23 	# 
-	ld a,(hl)			;9a00	7e 	~ 
-	ld (iy+BALL_TABLE_IDX_MOVE_TARGET),a		;9a01	fd 77 09 	. w . 
+    ; Set BALL_TABLE_IDX_MOVE_TARGET
+	inc hl			                            ;99ff	23
+	ld a,(hl)			                        ;9a00	7e
+	ld (iy+BALL_TABLE_IDX_MOVE_TARGET),a		;9a01	fd 77 09
 
     ; BALL_TABLE_IDX_MOVE_COUNTER is incremented and compared to BALL_TABLE_IDX_MOVE_TARGET
     ; When the objective is reached, BALL_TABLE_IDX_MOVE_COUNTER is reset.
     ;
     ; It's counter to update the position of the ball.
-    ; If BALL_TABLE_IDX_MOVE_COUNTER < BALL_TABLE_IDX_MOVE_TARGET, the ball don't move.
+    ; If BALL_TABLE_IDX_MOVE_COUNTER < BALL_TABLE_IDX_MOVE_TARGET, the ball doesn't move.
 	inc (iy+BALL_TABLE_IDX_MOVE_COUNTER)		;9a04	fd 34 05
 	ld a,(iy+BALL_TABLE_IDX_MOVE_COUNTER)		;9a07	fd 7e 05
 	cp (iy+BALL_TABLE_IDX_MOVE_TARGET)		    ;9a0a	fd be 09
-	ret c			                            ;9a0d	d8          The balls won't move
+	ret c			                            ;9a0d	d8  The balls won't move
 
 	ld (iy+BALL_TABLE_IDX_MOVE_COUNTER), 0		;9a0e	fd 36 05 00
     
@@ -7374,7 +7371,7 @@ l9a22h:
 	dec a		;9a22	3d      A = skewness - 1
 	sla a		;9a23	cb 27   A = 2*(skewness - 1)
 	ld e,a		;9a25	5f
-	ld d,000h	;9a26	16 00   DE = 2*(skewness - 1) 
+	ld d, 0	;9a26	16 00   DE = 2*(skewness - 1) 
 	add hl,de	;9a28	19      HL = TBL + 2*(skewness - 1)
     
     ; Set Y speed
@@ -7388,9 +7385,9 @@ l9a22h:
 	ld a,(hl)			                ;9a2e	7e
 	ld (iy+BALL_TABLE_IDX_X_SPEED),a	;9a2f	fd 77 03
     
-    ; ToDo: it's the count for the DJNZ l9a36h at 9a6a
-	ld b,(iy+008h)		;9a32	fd 46 08 	. F . 
-	inc b			;9a35	04 	. 
+    ; Apply the multiplier
+	ld b,(iy+BALL_TABLE_IDX_SPEED_MULTIPLIER)		;9a32	fd 46 08
+	inc b			                                ;9a35	04  Even if the value would be zero, loop at least once
 l9a36h:
     ; Update Y-position of the balla according to its speed
 	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)	;9a36	fd 7e 02
@@ -7458,48 +7455,53 @@ TBL_SKEWNESS_NEG_TO_XY_SPEED: ;9a88
     db 1,  2
     db 1,  2
 
+
+; This table is addressed as TBL_9a98[skewness][2*BALL_SPEED_POS]
+; And it gives two values:
+;   BALL_TABLE_IDX_SPEED_MULTIPLIER
+;   BALL_TABLE_IDX_MOVE_TARGET
 TBL_9a98: ; 0x9a98
     dw l9ad0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h
 
 ; These values contain two values per position:
-;   (iy+008h)
+;   BALL_TABLE_IDX_SPEED_MULTIPLIER
 ;   BALL_TABLE_IDX_MOVE_TARGET
 
 l9ab0h: ;9ab0
-    db 0x0, 0xf
-    db 0x0, 0xe
-    db 0x0, 0xd
-    db 0x0, 0xc
-    db 0x1, 0xf
-    db 0x1, 0xe
-    db 0x1, 0xd
-    db 0x1, 0xc
-    db 0x0, 0x4
-    db 0x2, 0x8
-    db 0x0, 0x2
-    db 0x2, 0x4
-    db 0x0, 0x1
-    db 0x2, 0x2
-    db 0x1, 0x1
-    db 0x2, 0x1
+    db 0, 15
+    db 0, 14
+    db 0, 13
+    db 0, 12
+    db 1, 15
+    db 1, 14
+    db 1, 13
+    db 1, 12
+    db 0,  4
+    db 2,  8
+    db 0,  2
+    db 2,  4
+    db 0,  1
+    db 2,  2
+    db 1,  1
+    db 2,  1
 
 l9ad0h: ;0x9ad0
-    db 0x0, 0x17
-    db 0x0, 0x15
-    db 0x0, 0x14
-    db 0x0, 0x12
-    db 0x1, 0x17
-    db 0x1, 0x15
-    db 0x1, 0x14
-    db 0x1, 0x12
-    db 0x0, 0x6
-    db 0x2, 0xc
-    db 0x0, 0x3
-    db 0x1, 0x4
-    db 0x1, 0x3
-    db 0x1, 0x2
-    db 0x0, 0x1
-    db 0x1, 0x1
+    db 0, 23
+    db 0, 21
+    db 0, 20
+    db 0, 18
+    db 1, 23
+    db 1, 21
+    db 1, 20
+    db 1, 18
+    db 0,  6
+    db 2, 12
+    db 0,  3
+    db 1,  4
+    db 1,  3
+    db 1,  2
+    db 0,  1
+    db 1,  1
 
 ; Update the speed of the ball according to counter and the values in BALL_TABLE1
 UPDATE_BALL_SPEED:
