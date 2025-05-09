@@ -9306,6 +9306,8 @@ la866h:
 	ld (0e543h),a		;a866	32 43 e5 	2 C . 
 	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
 
+; ToDo
+; Values are read and put at 0e542h
 TBL_a86c:   ;a86c
     db 4, -1, 2, -1, 1, -1, 1, -2, -1, -2, -1, -1, -2, -1,  -4, -1
 
