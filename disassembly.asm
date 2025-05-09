@@ -6780,7 +6780,7 @@ l96e4h:
 	call ADD_SOUND		;96e6	cd ef 5b
 
 	ld a, 1		;96e9	3e 01 	> . 
-	ld (DOH_H_IT_2),a		;96eb	32 b9 e2 	2 . . 
+	ld (DOH_BEEN_HIT),a		;96eb	32 b9 e2 	2 . . 
 
     ; Increment Doh hits
     ; Doh is defeated if hit 16 times
@@ -7400,7 +7400,7 @@ l9a36h:
 	ld (ix+SPR_PARAMS_IDX_X),a		    ;9a45	dd 77 01
 
 	xor a			;9a48	af 	. 
-	ld (DOH_H_IT_2),a		;9a49	32 b9 e2 	2 . . 
+	ld (DOH_BEEN_HIT),a		;9a49	32 b9 e2 	2 . . 
 
 	push bc			;9a4c	c5 	. 
 	push ix		;9a4d	dd e5 	. . 
@@ -7420,7 +7420,7 @@ l9a60h:
 	pop iy		;9a60	fd e1 	. . 
 	pop ix		;9a62	dd e1 	. . 
 	pop bc			;9a64	c1 	. 
-	ld a,(DOH_H_IT_2)		;9a65	3a b9 e2 	: . . 
+	ld a,(DOH_BEEN_HIT)		;9a65	3a b9 e2 	: . . 
 	or a			;9a68	b7 	. 
 	ret nz			;9a69	c0 	. 
 	djnz l9a36h		;9a6a	10 ca 	. . 
@@ -9993,7 +9993,7 @@ THERE_IS_A_BRICK:
     
     ; ToDo: what is this var?
 	ld a,0		        ;adaa	3e 00
-	ld (DOH_H_IT_2),a		;adac	32 b9 e2
+	ld (DOH_BEEN_HIT),a		;adac	32 b9 e2
     
     ; A <- BRICK_ROW
     ; If A < 11 then A = 11
@@ -10189,15 +10189,15 @@ laffch:
 
 lb000h:
 	pop iy		        ;b000	fd e1
-	ld hl,DOH_H_IT_2	;b002	21 b9 e2
+	ld hl,DOH_BEEN_HIT	;b002	21 b9 e2
 	ld (hl),0		    ;b005	36 00
 	jr z,lb00dh		    ;b007	28 04
 	ld (hl),001h		;b009	36 01
-	scf			        ;b00b	37
+	scf			        ;b00b	37      Set CARRY
 	ret			        ;b00c	c9
 lb00dh:
-	xor a		;b00d	af
-	ret			;b00e	c9
+	xor a		        ;b00d	af      Clear CARRY
+	ret			        ;b00e	c9
 
 ; Set a random capsule type if there are not extra balls.
 ; This is the function that prevents falling capsules when

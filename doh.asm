@@ -4,8 +4,7 @@ TBL_DOH_HIT_IDX_DOH_BEEN_HIT: equ 0  ; 1 when Doh is hit
 TBL_DOH_HIT_IDX_HIT_CYCLE_NUM: equ 1
 TBL_DOH_HIT_IDX_COLOR: equ 2
 
-; ToDo
-DOH_H_IT_2: equ 0xe2b9   ; 1 when Doh is hit
+DOH_BEEN_HIT: equ 0xe2b9   ; 1 when Doh is hit
 
 DOH_TABLE: equ 0xe50d
 ;
