@@ -6763,7 +6763,7 @@ l96b9h:
 	ld (ix+001h),04bh		;96c2	dd 36 01 4b 	. 6 . K 
 	jr l96e4h		;96c6	18 1c 	. . 
 l96c8h:
-	ld a,(iy+003h)		;96c8	fd 7e 03 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_X_SPEED)		;96c8	fd 7e 03 	. ~ . 
 	bit 7,a		;96cb	cb 7f 	.  
 	ret z			;96cd	c8 	. 
 	call BALL_HORIZONTAL_BOUNCE		;96ce	cd 80 9b 	. . . 
@@ -8450,19 +8450,19 @@ brick_hit_check_done:
 
 sub_a29ah:
 	ld a,(BRICK_COORD_B)		;a29a	3a 8b e5 	: . . 
-	cp 00bh		;a29d	fe 0b 	. . 
+	cp 11		;a29d	fe 0b 	. . 
 	jp nz,la324h		;a29f	c2 24 a3 	. $ . 
 	ld a,(BRICK_COORD_D)		;a2a2	3a 8d e5 	: . . 
-	cp 00ah		;a2a5	fe 0a 	. . 
+	cp 10		;a2a5	fe 0a 	. . 
 	jp nz,la324h		;a2a7	c2 24 a3 	. $ . 
 	jp la2bdh		;a2aa	c3 bd a2 	. . . 
 
 sub_a2adh:
 	ld a,(BRICK_COORD_B)		;a2ad	3a 8b e5 	: . . 
-	cp 00fh		;a2b0	fe 0f 	. . 
+	cp 15		;a2b0	fe 0f 	. . 
 	jp nz,la324h		;a2b2	c2 24 a3 	. $ . 
 	ld a,(BRICK_COORD_D)		;a2b5	3a 8d e5 	: . . 
-	cp 000h		;a2b8	fe 00 	. . 
+	cp 0		;a2b8	fe 00 	. . 
 	jp nz,la324h		;a2ba	c2 24 a3 	. $ . 
 la2bdh:
 	ld a,(BRICK_COORD_C)		;a2bd	3a 8c e5 	: . . 
@@ -8470,7 +8470,7 @@ la2bdh:
 	ld a,(BRICK_COORD_A)		;a2c1	3a 8a e5 	: . . 
 	cp c			;a2c4	b9 	. 
 	jp z,la2dfh		;a2c5	ca df a2 	. . . 
-	bit 7,(iy+002h)		;a2c8	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a2c8	fd cb 02 7e 	. . . ~ 
 	jp nz,la2d7h		;a2cc	c2 d7 a2 	. . . 
 	inc c			;a2cf	0c 	. 
 	cp c			;a2d0	b9 	. 
@@ -8497,9 +8497,9 @@ la2eeh:
 	call THERE_IS_A_BRICK		;a300	cd a8 ad 	. . . 
 	jp nc,la31bh		;a303	d2 1b a3 	. . . 
 	ld a,(BRICK_HIT_ROW)		;a306	3a 3c e5 	: < . 
-	ld (ix+000h),a		;a309	dd 77 00 	. w . 
+	ld (ix+SPR_PARAMS_IDX_Y),a		;a309	dd 77 00 	. w . 
 	ld a,(BRICK_HIT_COL)		;a30c	3a 3d e5 	: = . 
-	ld (ix+001h),a		;a30f	dd 77 01 	. w . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;a30f	dd 77 01 	. w . 
 	call BALL_VERTICAL_BOUNCE		;a312	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a315	cd 05 aa 	. . . 
 	jp la326h		;a318	c3 26 a3 	. & . 
@@ -8536,7 +8536,7 @@ la354h:
 	ld a,(BRICK_COORD_A)		;a354	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a357	32 aa e2 	2 . . 
 	ld a,(BRICK_COORD_D)		;a35a	3a 8d e5 	: . . 
-	bit 7,(iy+003h)		;a35d	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a35d	fd cb 03 7e 	. . . ~ 
 	jp z,la367h		;a361	ca 67 a3 	. g . 
 	ld a,(BRICK_COORD_B)		;a364	3a 8b e5 	: . . 
 la367h:
@@ -8588,21 +8588,22 @@ sub_a3d1h:
 	ld de,0e542h		;a3d6	11 42 e5 	. B . 
 	ld bc,00002h		;a3d9	01 02 00 	. . . 
 	ldir		;a3dc	ed b0 	. . 
+
 	ld a,(BRICK_COL)		;a3de	3a ab e2 	: . . 
 	sla a		;a3e1	cb 27 	. ' 
 	sla a		;a3e3	cb 27 	. ' 
 	sla a		;a3e5	cb 27 	. ' 
 	sla a		;a3e7	cb 27 	. ' 
-	ld b,010h		;a3e9	06 10 	. . 
-	bit 7,(iy+003h)		;a3eb	fd cb 03 7e 	. . . ~ 
+	ld b, 16		;a3e9	06 10 	. . 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a3eb	fd cb 03 7e 	. . . ~ 
 	jp nz,la3f4h		;a3ef	c2 f4 a3 	. . . 
-	ld b,00ch		;a3f2	06 0c 	. . 
+	ld b, 12		;a3f2	06 0c 	. . 
 la3f4h:
 	add a,b			;a3f4	80 	. 
 	ld (0e2c7h),a		;a3f5	32 c7 e2 	2 . . 
 	add a,00fh		;a3f8	c6 0f 	. . 
 	ld (0e2c6h),a		;a3fa	32 c6 e2 	2 . . 
-	ld a,(iy+006h)		;a3fd	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a3fd	fd 7e 06 	. ~ . 
 	bit 7,a		;a400	cb 7f 	.  
 	jp z,la407h		;a402	ca 07 a4 	. . . 
 	neg		;a405	ed 44 	. D 
@@ -8610,18 +8611,18 @@ la407h:
 	dec a			;a407	3d 	= 
 	sla a		;a408	cb 27 	. ' 
 	ld l,a			;a40a	6f 	o 
-	ld h,000h		;a40b	26 00 	& . 
+	ld h,0		;a40b	26 00 	& . 
 	ld de,TBL_a86c		;a40d	11 6c a8 	. l . 
 	add hl,de			;a410	19 	. 
 	ld a,(hl)			;a411	7e 	~ 
-	bit 7,(iy+002h)		;a412	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a412	fd cb 02 7e 	. . . ~ 
 	jp nz,la41bh		;a416	c2 1b a4 	. . . 
 	neg		;a419	ed 44 	. D 
 la41bh:
 	ld (0e542h),a		;a41b	32 42 e5 	2 B . 
 	inc hl			;a41e	23 	# 
 	ld a,(hl)			;a41f	7e 	~ 
-	bit 7,(iy+002h)		;a420	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a420	fd cb 02 7e 	. . . ~ 
 	jp nz,la429h		;a424	c2 29 a4 	. ) . 
 	neg		;a427	ed 44 	. D 
 la429h:
@@ -8630,7 +8631,7 @@ la429h:
 	ld b,a			;a42f	47 	G 
 	ld a,(BALL_X_MINUS_SPEED)		;a430	3a 87 e5 	: . . 
 	ld hl,0e2c6h		;a433	21 c6 e2 	! . . 
-	bit 7,(iy+003h)		;a436	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a436	fd cb 03 7e 	. . . ~ 
 	jp nz,la452h		;a43a	c2 52 a4 	. R . 
 	ld hl,0e2c7h		;a43d	21 c7 e2 	! . . 
 	inc (hl)			;a440	34 	4 
@@ -8669,20 +8670,20 @@ la46eh:
 	ld a,(BALL_Y_MINUS_SPEED)		;a472	3a 86 e5 	: . . 
 	add a,b			;a475	80 	. 
 	ld b,a			;a476	47 	G 
-	bit 7,(iy+002h)		;a477	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a477	fd cb 02 7e 	. . . ~ 
 	jp nz,la49ch		;a47b	c2 9c a4 	. . . 
 	ld a,(BRICK_ROW)		;a47e	3a aa e2 	: . . 
 	sla a		;a481	cb 27 	. ' 
 	sla a		;a483	cb 27 	. ' 
 	sla a		;a485	cb 27 	. ' 
-	add a,012h		;a487	c6 12 	. . 
+	add a, 18		;a487	c6 12 	. . 
 	cp b			;a489	b8 	. 
 	jp c,la492h		;a48a	da 92 a4 	. . . 
 	inc a			;a48d	3c 	< 
 	ld b,a			;a48e	47 	G 
 	jp la4bbh		;a48f	c3 bb a4 	. . . 
 la492h:
-	add a,008h		;a492	c6 08 	. . 
+	add a, 8		;a492	c6 08 	. . 
 	cp b			;a494	b8 	. 
 	jp nc,la4bbh		;a495	d2 bb a4 	. . . 
 	ld b,a			;a498	47 	G 
@@ -8692,13 +8693,13 @@ la49ch:
 	sla a		;a49f	cb 27 	. ' 
 	sla a		;a4a1	cb 27 	. ' 
 	sla a		;a4a3	cb 27 	. ' 
-	add a,01fh		;a4a5	c6 1f 	. . 
+	add a, 31		;a4a5	c6 1f 	. . 
 	cp b			;a4a7	b8 	. 
 	jp nc,la4afh		;a4a8	d2 af a4 	. . . 
 	ld b,a			;a4ab	47 	G 
 	jp la4bbh		;a4ac	c3 bb a4 	. . . 
 la4afh:
-	sub 008h		;a4af	d6 08 	. . 
+	sub 8		;a4af	d6 08 	. . 
 	cp b			;a4b1	b8 	. 
 	jp c,la4bah		;a4b2	da ba a4 	. . . 
 	inc a			;a4b5	3c 	< 
@@ -8710,7 +8711,7 @@ la4bbh:
 	ld b,a			;a4bb	47 	G 
 	ld (VAUS_X2),a		;a4bc	32 3e e5 	2 > . 
 	ld a,(0e2c7h)		;a4bf	3a c7 e2 	: . . 
-	bit 7,(iy+003h)		;a4c2	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a4c2	fd cb 03 7e 	. . . ~ 
 	jp z,la4cch		;a4c6	ca cc a4 	. . . 
 	ld a,(0e2c6h)		;a4c9	3a c6 e2 	: . . 
 la4cch:
@@ -8718,22 +8719,22 @@ la4cch:
 	ld hl,0e541h		;a4cf	21 41 e5 	! A . 
 	ld (hl),000h		;a4d2	36 00 	6 . 
 	ld de,0e542h		;a4d4	11 42 e5 	. B . 
-	ld bc,00002h		;a4d7	01 02 00 	. . . 
+	ld bc, 2		;a4d7	01 02 00 	. . . 
 	ldir		;a4da	ed b0 	. . 
 	ld a,(BRICK_ROW)		;a4dc	3a aa e2 	: . . 
 	sla a		;a4df	cb 27 	. ' 
 	sla a		;a4e1	cb 27 	. ' 
 	sla a		;a4e3	cb 27 	. ' 
-	ld b,018h		;a4e5	06 18 	. . 
-	bit 7,(iy+002h)		;a4e7	fd cb 02 7e 	. . . ~ 
+	ld b, 24		;a4e5	06 18 	. . 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a4e7	fd cb 02 7e 	. . . ~ 
 	jp nz,la4f0h		;a4eb	c2 f0 a4 	. . . 
-	ld b,013h		;a4ee	06 13 	. . 
+	ld b, 19		;a4ee	06 13 	. . 
 la4f0h:
 	add a,b			;a4f0	80 	. 
 	ld (COMPUTED_BRICK_HIT_ROW),a		;a4f1	32 c4 e2 	2 . . 
-	add a,007h		;a4f4	c6 07 	. . 
+	add a, 7		;a4f4	c6 07 	. . 
 	ld (0e2c5h),a		;a4f6	32 c5 e2 	2 . . 
-	ld a,(iy+006h)		;a4f9	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a4f9	fd 7e 06 	. ~ . 
 	bit 7,a		;a4fc	cb 7f 	.  
 	jp z,la503h		;a4fe	ca 03 a5 	. . . 
 	neg		;a501	ed 44 	. D 
@@ -8741,18 +8742,18 @@ la503h:
 	dec a			;a503	3d 	= 
 	sla a		;a504	cb 27 	. ' 
 	ld l,a			;a506	6f 	o 
-	ld h,000h		;a507	26 00 	& . 
+	ld h,0		;a507	26 00 	& . 
 	ld de,TBL_a86c		;a509	11 6c a8 	. l . 
 	add hl,de			;a50c	19 	. 
 	ld a,(hl)			;a50d	7e 	~ 
-	bit 7,(iy+002h)		;a50e	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a50e	fd cb 02 7e 	. . . ~ 
 	jp nz,la517h		;a512	c2 17 a5 	. . . 
 	neg		;a515	ed 44 	. D 
 la517h:
 	ld (0e542h),a		;a517	32 42 e5 	2 B . 
 	inc hl			;a51a	23 	# 
 	ld a,(hl)			;a51b	7e 	~ 
-	bit 7,(iy+002h)		;a51c	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a51c	fd cb 02 7e 	. . . ~ 
 	jp nz,la525h		;a520	c2 25 a5 	. % . 
 	neg		;a523	ed 44 	. D 
 la525h:
@@ -8762,7 +8763,7 @@ la525h:
 	ld a,(BALL_Y_MINUS_SPEED)		;a52c	3a 86 e5 	: . . 
 la52fh:
 	ld hl,0e2c5h		;a52f	21 c5 e2 	! . . 
-	bit 7,(iy+002h)		;a532	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a532	fd cb 02 7e 	. . . ~ 
 	jp nz,la54eh		;a536	c2 4e a5 	. N . 
 	ld hl,COMPUTED_BRICK_HIT_ROW		;a539	21 c4 e2 	! . . 
 	inc (hl)			;a53c	34 	4 
@@ -8803,9 +8804,9 @@ la56ah:
 	ld (BRICK_HIT_ROW),a		;a572	32 3c e5 	2 < . 
 	ld b,a			;a575	47 	G 
 	ld a,0bch		;a576	3e bc 	> . 
-	bit 7,(iy+003h)		;a578	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a578	fd cb 03 7e 	. . . ~ 
 	jp z,la589h		;a57c	ca 89 a5 	. . . 
-	ld a,00fh		;a57f	3e 0f 	> . 
+	ld a, 15		;a57f	3e 0f 	> . 
 	cp b			;a581	b8 	. 
 	jp c,la587h		;a582	da 87 a5 	. . . 
 	or a			;a585	b7 	. 
@@ -8832,16 +8833,16 @@ sub_a591h:
 	sla a		;a5a1	cb 27 	. ' 
 	sla a		;a5a3	cb 27 	. ' 
 	sla a		;a5a5	cb 27 	. ' 
-	ld b,018h		;a5a7	06 18 	. . 
-	bit 7,(iy+002h)		;a5a9	fd cb 02 7e 	. . . ~ 
+	ld b, 24		;a5a7	06 18 	. . 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5a9	fd cb 02 7e 	. . . ~ 
 	jp nz,la5b2h		;a5ad	c2 b2 a5 	. . . 
-	ld b,013h		;a5b0	06 13 	. . 
+	ld b, 19		;a5b0	06 13 	. . 
 la5b2h:
 	add a,b			;a5b2	80 	. 
 	ld (COMPUTED_BRICK_HIT_ROW),a		;a5b3	32 c4 e2 	2 . . 
 	add a,007h		;a5b6	c6 07 	. . 
 	ld (0e2c5h),a		;a5b8	32 c5 e2 	2 . . 
-	ld a,(iy+006h)		;a5bb	fd 7e 06 	. ~ . 
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a5bb	fd 7e 06 	. ~ . 
 	bit 7,a		;a5be	cb 7f 	.  
 	jp z,la5c5h		;a5c0	ca c5 a5 	. . . 
 	neg		;a5c3	ed 44 	. D 
@@ -8853,14 +8854,14 @@ la5c5h:
 	ld de,TBL_a86c		;a5cb	11 6c a8 	. l . 
 	add hl,de			;a5ce	19 	. 
 	ld a,(hl)			;a5cf	7e 	~ 
-	bit 7,(iy+002h)		;a5d0	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5d0	fd cb 02 7e 	. . . ~ 
 	jp nz,la5d9h		;a5d4	c2 d9 a5 	. . . 
 	neg		;a5d7	ed 44 	. D 
 la5d9h:
 	ld (0e542h),a		;a5d9	32 42 e5 	2 B . 
 	inc hl			;a5dc	23 	# 
 	ld a,(hl)			;a5dd	7e 	~ 
-	bit 7,(iy+002h)		;a5de	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5de	fd cb 02 7e 	. . . ~ 
 	jp nz,la5e7h		;a5e2	c2 e7 a5 	. . . 
 	neg		;a5e5	ed 44 	. D 
 la5e7h:
@@ -8869,7 +8870,7 @@ la5e7h:
 	ld b,a			;a5ed	47 	G 
 	ld a,(BALL_Y_MINUS_SPEED)		;a5ee	3a 86 e5 	: . . 
 	ld hl,0e2c5h		;a5f1	21 c5 e2 	! . . 
-	bit 7,(iy+002h)		;a5f4	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5f4	fd cb 02 7e 	. . . ~ 
 	jp nz,la610h		;a5f8	c2 10 a6 	. . . 
 	ld hl,COMPUTED_BRICK_HIT_ROW		;a5fb	21 c4 e2 	! . . 
 	inc (hl)			;a5fe	34 	4 
@@ -8908,10 +8909,10 @@ la62ch:
 	ld a,(BALL_X_MINUS_SPEED)		;a630	3a 87 e5 	: . . 
 	add a,b			;a633	80 	. 
 	ld b,a			;a634	47 	G 
-	ld a,0bch		;a635	3e bc 	> . 
-	bit 7,(iy+003h)		;a637	fd cb 03 7e 	. . . ~ 
+	ld a, -68		;a635	3e bc 	> . 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a637	fd cb 03 7e 	. . . ~ 
 	jp z,la64eh		;a63b	ca 4e a6 	. N . 
-	ld a,00fh		;a63e	3e 0f 	> . 
+	ld a, 15		;a63e	3e 0f 	> . 
 	cp b			;a640	b8 	. 
 	jp c,la64ah		;a641	da 4a a6 	. J . 
 	or a			;a644	b7 	. 
@@ -8934,7 +8935,7 @@ la65bh:
 	ld a,b			;a65b	78 	x 
 	ld (BRICK_HIT_COL),a		;a65c	32 3d e5 	2 = . 
 	ld a,(COMPUTED_BRICK_HIT_ROW)		;a65f	3a c4 e2 	: . . 
-	bit 7,(iy+002h)		;a662	fd cb 02 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a662	fd cb 02 7e 	. . . ~ 
 	jp z,la66ch		;a666	ca 6c a6 	. l . 
 	ld a,(0e2c5h)		;a669	3a c5 e2 	: . . 
 la66ch:
@@ -8973,7 +8974,7 @@ la6a4h:
 	dec a			;a6a4	3d 	= 
 	sla a		;a6a5	cb 27 	. ' 
 	ld l,a			;a6a7	6f 	o 
-	ld h,000h		;a6a8	26 00 	& . 
+	ld h, 0		;a6a8	26 00 	& . 
 	ld de,TBL_a86c		;a6aa	11 6c a8 	. l . 
 	add hl,de			;a6ad	19 	. 
 	ld a,(hl)			;a6ae	7e 	~ 
@@ -9043,21 +9044,21 @@ la70eh:
 	sla a		;a72a	cb 27 	. ' 
 	sla a		;a72c	cb 27 	. ' 
 	sla a		;a72e	cb 27 	. ' 
-	add a,00ch		;a730	c6 0c 	. . 
+	add a, 12		;a730	c6 0c 	. . 
 	cp b			;a732	b8 	. 
 	jp c,la73bh		;a733	da 3b a7 	. ; . 
 	ld b,a			;a736	47 	G 
 	scf			;a737	37 	7 
 	jp la751h		;a738	c3 51 a7 	. Q . 
 la73bh:
-	add a,01fh		;a73b	c6 1f 	. . 
+	add a, 31		;a73b	c6 1f 	. . 
 	cp b			;a73d	b8 	. 
 	jp nc,la746h		;a73e	d2 46 a7 	. F . 
 	ld b,a			;a741	47 	G 
 	or a			;a742	b7 	. 
 	jp la751h		;a743	c3 51 a7 	. Q . 
 la746h:
-	sub 010h		;a746	d6 10 	. . 
+	sub 16		;a746	d6 10 	. . 
 	cp b			;a748	b8 	. 
 	jp c,la750h		;a749	da 50 a7 	. P . 
 	scf			;a74c	37 	7 
@@ -9082,21 +9083,21 @@ la75eh:
 	sla a		;a763	cb 27 	. ' 
 	sla a		;a765	cb 27 	. ' 
 	sla a		;a767	cb 27 	. ' 
-	add a,010h		;a769	c6 10 	. . 
+	add a,16		;a769	c6 10 	. . 
 	cp b			;a76b	b8 	. 
 	jp c,la774h		;a76c	da 74 a7 	. t . 
 	ld b,a			;a76f	47 	G 
 	or a			;a770	b7 	. 
 	jp la78ah		;a771	c3 8a a7 	. . . 
 la774h:
-	add a,01fh		;a774	c6 1f 	. . 
+	add a, 31		;a774	c6 1f 	. . 
 	cp b			;a776	b8 	. 
 	jp nc,la77fh		;a777	d2 7f a7 	.  . 
 	ld b,a			;a77a	47 	G 
 	scf			;a77b	37 	7 
 	jp la78ah		;a77c	c3 8a a7 	. . . 
 la77fh:
-	sub 010h		;a77f	d6 10 	. . 
+	sub 16		;a77f	d6 10 	. . 
 	cp b			;a781	b8 	. 
 	jp c,la789h		;a782	da 89 a7 	. . . 
 	scf			;a785	37 	7 
@@ -9116,28 +9117,28 @@ la78ah:
 	ret			;a796	c9 	. 
 
 la797h:
-	bit 7,(iy+003h)		;a797	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a797	fd cb 03 7e 	. . . ~ 
 	jp nz,la7d7h		;a79b	c2 d7 a7 	. . . 
 	ld a,(BRICK_COL)		;a79e	3a ab e2 	: . . 
 	sla a		;a7a1	cb 27 	. ' 
 	sla a		;a7a3	cb 27 	. ' 
 	sla a		;a7a5	cb 27 	. ' 
 	sla a		;a7a7	cb 27 	. ' 
-	add a,00ch		;a7a9	c6 0c 	. . 
+	add a, 12		;a7a9	c6 0c 	. . 
 	cp b			;a7ab	b8 	. 
 	jp c,la7b4h		;a7ac	da b4 a7 	. . . 
 	ld b,a			;a7af	47 	G 
 	scf			;a7b0	37 	7 
 	jp la7cah		;a7b1	c3 ca a7 	. . . 
 la7b4h:
-	add a,01fh		;a7b4	c6 1f 	. . 
+	add a, 31		;a7b4	c6 1f 	. . 
 	cp b			;a7b6	b8 	. 
 	jp nc,la7bfh		;a7b7	d2 bf a7 	. . . 
 	ld b,a			;a7ba	47 	G 
 	or a			;a7bb	b7 	. 
 	jp la7cah		;a7bc	c3 ca a7 	. . . 
 la7bfh:
-	sub 010h		;a7bf	d6 10 	. . 
+	sub 16		;a7bf	d6 10 	. . 
 	cp b			;a7c1	b8 	. 
 	jp c,la7c9h		;a7c2	da c9 a7 	. . . 
 	scf			;a7c5	37 	7 
@@ -9158,21 +9159,21 @@ la7d7h:
 	sla a		;a7dc	cb 27 	. ' 
 	sla a		;a7de	cb 27 	. ' 
 	sla a		;a7e0	cb 27 	. ' 
-	add a,010h		;a7e2	c6 10 	. . 
+	add a, 16		;a7e2	c6 10 	. . 
 	cp b			;a7e4	b8 	. 
 	jp c,la7edh		;a7e5	da ed a7 	. . . 
 	ld b,a			;a7e8	47 	G 
 	or a			;a7e9	b7 	. 
 	jp la803h		;a7ea	c3 03 a8 	. . . 
 la7edh:
-	add a,01fh		;a7ed	c6 1f 	. . 
+	add a,31		;a7ed	c6 1f 	. . 
 	cp b			;a7ef	b8 	. 
 	jp nc,la7f8h		;a7f0	d2 f8 a7 	. . . 
 	ld b,a			;a7f3	47 	G 
 	scf			;a7f4	37 	7 
 	jp la803h		;a7f5	c3 03 a8 	. . . 
 la7f8h:
-	sub 010h		;a7f8	d6 10 	. . 
+	sub 16		;a7f8	d6 10 	. . 
 	cp b			;a7fa	b8 	. 
 	jp c,la802h		;a7fb	da 02 a8 	. . . 
 	scf			;a7fe	37 	7 
