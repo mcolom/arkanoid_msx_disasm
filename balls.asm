@@ -30,7 +30,19 @@ BALL_TABLE_IDX_Y_SPEED:  equ 2
 ; FF, FE: ball going left
 BALL_TABLE_IDX_X_SPEED: equ 3
 
+; The ball moves then the counter BALL_TABLE_IDX_MOVE_COUNTER reaches its
+; target BALL_TABLE_IDX_MOVE_TARGET.
+BALL_TABLE_IDX_MOVE_COUNTER: equ 5
+BALL_TABLE_IDX_MOVE_TARGET: equ 9
+
 BALL_TABLE_IDX_SKEWNESS: equ 6
+
+
+
+
+
+
+
 
 ; When this counter reaches 40, the skewness of the balls change
 BALL_BOUNCES_COUNTER: equ 0xe51c

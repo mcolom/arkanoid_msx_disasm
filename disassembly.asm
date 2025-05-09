@@ -7320,41 +7320,49 @@ l99ebh:
 	inc hl			                    ;99f2	23
 	ld d,(hl)			                ;99f3	56      DE = TBL_9a98[skewness]
 	
-    ld l,(iy+BALL_TABLE_IDX_SPEED_POS)	;99f4	fd 6e 07    HL = BALL_SPEED_X
+    ld l,(iy+BALL_TABLE_IDX_SPEED_POS)	;99f4	fd 6e 07    HL = BALL_SPEED_POS
 	ld h, 0		                        ;99f7	26 00
-	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_X
-	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_X + TBL_9a98[skewness]
+	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_POS
+	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_POS + TBL_9a98[skewness]
 
-	ld a,(hl)			                ;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_X]  Double indirection!
+	ld a,(hl)			                ;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_POS]  Double indirection!
 	ld (iy+008h),a		;99fc	fd 77 08 	. w . 
     
     ; Seguir:
+    
+    
 	inc hl			;99ff	23 	# 
 	ld a,(hl)			;9a00	7e 	~ 
-	ld (iy+009h),a		;9a01	fd 77 09 	. w . 
+	ld (iy+BALL_TABLE_IDX_MOVE_TARGET),a		;9a01	fd 77 09 	. w . 
 
+    ; BALL_TABLE_IDX_MOVE_COUNTER is incremented and compared to BALL_TABLE_IDX_MOVE_TARGET
+    ; When the objective is reached, BALL_TABLE_IDX_MOVE_COUNTER is reset.
+    ;
+    ; It's counter to update the position of the ball.
+    ; If BALL_TABLE_IDX_MOVE_COUNTER < BALL_TABLE_IDX_MOVE_TARGET, the ball don't move.
+	inc (iy+BALL_TABLE_IDX_MOVE_COUNTER)		;9a04	fd 34 05
+	ld a,(iy+BALL_TABLE_IDX_MOVE_COUNTER)		;9a07	fd 7e 05
+	cp (iy+BALL_TABLE_IDX_MOVE_TARGET)		    ;9a0a	fd be 09
+	ret c			                            ;9a0d	d8          The balls won't move
 
-
-    ; iy+5 is incremented and compared to iy+9
-    ; Then iy+5 is reset. It's some kind of counter to update the position of the ball
-	inc (iy+005h)		;9a04	fd 34 05 	. 4 . 
-	ld a,(iy+005h)		;9a07	fd 7e 05 	. ~ . 
-	cp (iy+009h)		;9a0a	fd be 09 	. . . 
-	ret c			;9a0d	d8 	. 
-
-	ld (iy+005h),000h		;9a0e	fd 36 05 00 	. 6 . . 
+	ld (iy+BALL_TABLE_IDX_MOVE_COUNTER), 0		;9a0e	fd 36 05 00
+    
+    ; Since the counter has reached its goal, now we'll read the skewness,
+    ; obtain the speed, and apply it to the ball so it moves
+    ;
+    ; Otherwise, the ball won't move.
 
     ; Translate the skewness to an (X, Y) speed of the ball
 
     ; Choose SKEWNESS_POS_TO_XY_SPEED or SKEWNESS_NEG_TO_XY_SPEED according to
     ; the sign of BALL_TABLE_IDX_SKEWNESS
-	ld hl,SKEWNESS_POS_TO_XY_SPEED		                ;9a12	21 78 9a
+	ld hl,SKEWNESS_POS_TO_XY_SPEED	    ;9a12	21 78 9a
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;9a15	fd 7e 06
 	bit 7,a		                        ;9a18	cb 7f
 	jp z,l9a22h		                    ;9a1a	ca 22 9a Jump if it's positive
     ; It's negative: invert it
 	neg		                            ;9a1d	ed 44
-	ld hl,SKEWNESS_NEG_TO_XY_SPEED		                ;9a1f	21 88 9a
+	ld hl,SKEWNESS_NEG_TO_XY_SPEED		;9a1f	21 88 9a
 
 l9a22h:
 	dec a		;9a22	3d      A = skewness - 1
@@ -7374,6 +7382,7 @@ l9a22h:
 	ld a,(hl)			                ;9a2e	7e
 	ld (iy+BALL_TABLE_IDX_X_SPEED),a	;9a2f	fd 77 03
     
+    ; ToDo
 	ld b,(iy+008h)		;9a32	fd 46 08 	. F . 
 	inc b			;9a35	04 	. 
 l9a36h:
@@ -7397,9 +7406,11 @@ l9a36h:
 	cp FINAL_LEVEL		;9a54	fe 20
 	jr nz,l9a5dh		;9a56	20 05 	  . 
 
+    ; Final level
 	call sub_967bh		;9a58	cd 7b 96 	. { . 
 	jr l9a60h		;9a5b	18 03 	. . 
 l9a5dh:
+    ; Not final level
     ; ToDo: check and process ball bounces from bricks
 	call sub_9c2dh		;9a5d	cd 2d 9c 	. - . 
 l9a60h:
