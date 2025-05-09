@@ -7325,52 +7325,78 @@ l99ebh:
 	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_X
 	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_X + TBL_9a98[skewness]
 
-	ld a,(hl)			                ;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_X]  Double indirection
+	ld a,(hl)			                ;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_X]  Double indirection!
 	ld (iy+008h),a		;99fc	fd 77 08 	. w . 
     
     ; Seguir:
 	inc hl			;99ff	23 	# 
 	ld a,(hl)			;9a00	7e 	~ 
 	ld (iy+009h),a		;9a01	fd 77 09 	. w . 
+
+
+
+    ; iy+5 is incremented and compared to iy+9
+    ; Then iy+5 is reset. It's some kind of counter to update the position of the ball
 	inc (iy+005h)		;9a04	fd 34 05 	. 4 . 
 	ld a,(iy+005h)		;9a07	fd 7e 05 	. ~ . 
 	cp (iy+009h)		;9a0a	fd be 09 	. . . 
 	ret c			;9a0d	d8 	. 
+
 	ld (iy+005h),000h		;9a0e	fd 36 05 00 	. 6 . . 
-	ld hl,TBL_9a78		;9a12	21 78 9a 	! x . 
-	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;9a15	fd 7e 06 	. ~ . 
-	bit 7,a		;9a18	cb 7f 	.  
-	jp z,l9a22h		;9a1a	ca 22 9a 	. " . 
-	neg		;9a1d	ed 44 	. D 
-	ld hl,TBL_9a88		;9a1f	21 88 9a 	! . . 
+
+    ; Translate the skewness to an (X, Y) speed of the ball
+
+    ; Choose SKEWNESS_POS_TO_XY_SPEED or SKEWNESS_NEG_TO_XY_SPEED according to
+    ; the sign of BALL_TABLE_IDX_SKEWNESS
+	ld hl,SKEWNESS_POS_TO_XY_SPEED		                ;9a12	21 78 9a
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;9a15	fd 7e 06
+	bit 7,a		                        ;9a18	cb 7f
+	jp z,l9a22h		                    ;9a1a	ca 22 9a Jump if it's positive
+    ; It's negative: invert it
+	neg		                            ;9a1d	ed 44
+	ld hl,SKEWNESS_NEG_TO_XY_SPEED		                ;9a1f	21 88 9a
+
 l9a22h:
-	dec a			;9a22	3d 	= 
-	sla a		;9a23	cb 27 	. ' 
-	ld e,a			;9a25	5f 	_ 
-	ld d,000h		;9a26	16 00 	. . 
-	add hl,de			;9a28	19 	. 
-	ld a,(hl)			;9a29	7e 	~ 
-	ld (iy+BALL_TABLE_IDX_Y_SPEED),a		;9a2a	fd 77 02 	. w . 
-	inc hl			;9a2d	23 	# 
-	ld a,(hl)			;9a2e	7e 	~ 
-	ld (iy+BALL_TABLE_IDX_X_SPEED),a		;9a2f	fd 77 03 	. w . 
+	dec a		;9a22	3d      A = skewness - 1
+	sla a		;9a23	cb 27   A = 2*(skewness - 1)
+	ld e,a		;9a25	5f
+	ld d,000h	;9a26	16 00   DE = 2*(skewness - 1) 
+	add hl,de	;9a28	19      HL = TBL + 2*(skewness - 1)
+    
+    ; Set Y speed
+    ; The value is stored at TBL[2*(skewness - 1)]
+	ld a,(hl)			                ;9a29	7e
+	ld (iy+BALL_TABLE_IDX_Y_SPEED),a	;9a2a	fd 77 02
+    
+    ; Set X speed
+    ; The value is stored at TBL[2*(skewness - 1)+1]
+	inc hl			                    ;9a2d	23
+	ld a,(hl)			                ;9a2e	7e
+	ld (iy+BALL_TABLE_IDX_X_SPEED),a	;9a2f	fd 77 03
+    
 	ld b,(iy+008h)		;9a32	fd 46 08 	. F . 
 	inc b			;9a35	04 	. 
 l9a36h:
-	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)		;9a36	fd 7e 02 	. ~ . 
-	add a,(ix+SPR_PARAMS_IDX_Y)		;9a39	dd 86 00 	. . . 
-	ld (ix+SPR_PARAMS_IDX_Y),a		;9a3c	dd 77 00 	. w . 
-	ld a,(iy+BALL_TABLE_IDX_X_SPEED)		;9a3f	fd 7e 03 	. ~ . 
-	add a,(ix+SPR_PARAMS_IDX_X)		;9a42	dd 86 01 	. . . 
-	ld (ix+SPR_PARAMS_IDX_X),a		;9a45	dd 77 01 	. w . 
+    ; Update Y-position of the balla according to its speed
+	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)	;9a36	fd 7e 02
+	add a,(ix+SPR_PARAMS_IDX_Y)		    ;9a39	dd 86 00
+	ld (ix+SPR_PARAMS_IDX_Y),a		    ;9a3c	dd 77 00
+
+    ; Update X-position of the balla according to its speed
+	ld a,(iy+BALL_TABLE_IDX_X_SPEED)	;9a3f	fd 7e 03
+	add a,(ix+SPR_PARAMS_IDX_X)		    ;9a42	dd 86 01
+	ld (ix+SPR_PARAMS_IDX_X),a		    ;9a45	dd 77 01
+
 	xor a			;9a48	af 	. 
 	ld (DOH_H_IT_2),a		;9a49	32 b9 e2 	2 . . 
+
 	push bc			;9a4c	c5 	. 
 	push ix		;9a4d	dd e5 	. . 
 	push iy		;9a4f	fd e5 	. . 
 	ld a,(LEVEL)		;9a51	3a 1b e0
 	cp FINAL_LEVEL		;9a54	fe 20
 	jr nz,l9a5dh		;9a56	20 05 	  . 
+
 	call sub_967bh		;9a58	cd 7b 96 	. { . 
 	jr l9a60h		;9a5b	18 03 	. . 
 l9a5dh:
@@ -7391,11 +7417,29 @@ l9a60h:
 	pop iy		;9a75	fd e1 	. . 
 	ret			;9a77	c9 	. 
 
-TBL_9a78: ;9a78
-    db -1, 2, -1 , 2, -1, 1, -2, 1, -2, -1, -1, -1, -1, -2, -1, -2
-	
-TBL_9a88: ;9a88
-    db 1, -2, 1, -2, 1, -1, 2, -1, 2, 1, 1, 1, 1, 2, 1, 2
+; Positive skewness to (X, Y) speed
+SKEWNESS_POS_TO_XY_SPEED: ;9a78
+    ; (Y-speed, X-speed)
+    db -1,  2
+    db -1 , 2
+    db -1,  1
+    db -2,  1
+    db -2, -1
+    db -1, -1
+    db -1, -2
+    db -1, -2
+
+; Negative skewness to (X, Y) ball speed
+SKEWNESS_NEG_TO_XY_SPEED: ;9a88
+    ; (Y-speed, X-speed)
+    db 1, -2
+    db 1, -2
+    db 1, -1
+    db 2, -1
+    db 2,  1
+    db 1,  1
+    db 1,  2
+    db 1,  2
 
 TBL_9a98: ; 0x9a98
     dw l9ad0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h
