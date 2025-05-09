@@ -7840,14 +7840,13 @@ sub_9c2dh:
 	jp nc,l9dcfh		        ;9c4e	d2 cf 9d
     
     ; We'll consider 2 X-Y coordinates:
-    ; BRICK_COORD_Y1 = (BALL_Y - 24) \ 8                     Y
-    ; BRICK_COORD_X1 = (BALL_X - 12) \ 16                    X
+    ; BRICK_COORD_Y1 = (BALL_Y - 24) \ 8
+    ; BRICK_COORD_X1 = (BALL_X - 12) \ 16
     ;
-    ; BRICK_COORD_Y2 = (BALL_Y - BALL_Y_SPEED - 24) \ 8      Y
-    ; BRICK_COORD_X2 = (BALL_X - SPEED_X - 12) \ 16          X
+    ; BRICK_COORD_Y2 = (BALL_Y - BALL_Y_SPEED - 24) \ 8
+    ; BRICK_COORD_X2 = (BALL_X - SPEED_X - 12) \ 16
 
     ; Store (BALL_Y - 24) \ 8
-    ; *** A is an Y coordinate
 	ld (BRICK_COORD_Y1),a		        ;9c51	32 8a e5
 
 	ld a,(ix+SPR_PARAMS_IDX_X)	;9c54	dd 7e 01
@@ -7858,7 +7857,6 @@ sub_9c2dh:
 	srl a		                ;9c5f	cb 3f   A = (BALL_X - 12) \ 16
     
     ; Store (BALL_X - 12) \ 16
-    ; *** B is an X coordinate
 	ld (BRICK_COORD_X1),a		        ;9c61	32 8b e5
 
     ; Subtract Y speed to the ball
@@ -7879,7 +7877,6 @@ sub_9c2dh:
 	jp nc,l9dcfh		;9c77	d2 cf 9d
     
     ; Store (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
-    ; *** C is an Y coordinate
 	ld (BRICK_COORD_Y2),a		;9c7a	32 8c e5
 
     ; A = BALL_X - SPEED_X
@@ -7887,7 +7884,7 @@ sub_9c2dh:
 	sub (iy+BALL_TABLE_IDX_X_SPEED)	;9c80	fd 96 03
 
     ; Store BALL_X - SPEED_X
-	ld (BALL_X_MINUS_SPEED),a		            ;9c83	32 87 e5
+	ld (BALL_X_MINUS_SPEED),a		;9c83	32 87 e5
     
 	sub 12		                    ;9c86	d6 0c
 	srl a		                    ;9c88	cb 3f
@@ -7901,7 +7898,6 @@ sub_9c2dh:
 	jp nc,l9dcfh		            ;9c92	d2 cf 9d
     
     ; Store (BALL_X - SPEED_X - 12) \ 16, an X coordinate
-    ; *** D is an X coordinate
 	ld (BRICK_COORD_X2),a		            ;9c95	32 8d e5
 
 	call sub_a29ah		;9c98	cd 9a a2 	. . . 
