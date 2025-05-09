@@ -6692,10 +6692,11 @@ l9672h:
 TBL_POINTS_PER_BRICK:
     db 8, 9, 10, 11
 
-; ToDo
-sub_967bh:
+; If so, detect at which of the four sides and perform the
+; corresponding ball bounce.
+CHECK_DOH_HIT_AND_BOUNCE_BALL:
     ; For info:
-    ; iy = BALL_TABLE1
+    ; iy = BALL_TABLE1 ; E24E
     ; ix = BALL1_SPR_PARAMS
     
     ; If the ball is not active, exit
@@ -6728,54 +6729,80 @@ sub_967bh:
 
     ; 76 <= BALL_Y < 129
     ; The X coordinate of the ball is also within Doh's range
-
     
-	; Jump if BALL_X - BULLET_X < 77
-	; BALL_X  < 77 + BULLET_X
+    ; At this point the ball has entered the Doh's area
+    ; The next step is to know at which side happened the hit
+    
+	; Jump if BALL_X - SPEED < 77 --> On the left on Doh
+	; BALL_X  < 77 + SPEED
     ld a,(ix+SPR_PARAMS_IDX_X)		;9692	dd 7e 01
 	sub (iy+BALL_TABLE_IDX_X_SPEED)   ;9695	fd 96 03
 	cp 77		                    ;9698	fe 4d
-	jr c,l96b9h		                ;969a	38 1d
-    ; BALL_X  >= 77 + BULLET_X
+	jr c,doh_hit_left		                ;969a	38 1d
+    ; BALL_X - SPEED >= 77
 
-	cp 128		;969c	fe 80 	. . 
-	jr nc,l96c8h		;969e	30 28 	0 ( 
-    ; BALL_X  < 128 + BULLET_X
+    ; Jump if BALL_X - SPEED >= 128
+	cp 128		        ;969c	fe 80
+	jr nc,doh_hit_right		;969e	30 28
+    ; BALL_X - SPEED < 128
     
-    ; BULLET_X + 77 <= BALL_X < 128 + BULLET_X
+    ; So (neglecting the speed):
+    ; 77 <= BALL_X < 128
+    
+    ; This means we're in Doh's X area
+    ; Now we'll do the same checks for the Y axis
 
-	ld a,(ix+SPR_PARAMS_IDX_Y)		;96a0	dd 7e 00 	. ~ . 
-	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;96a3	fd 96 02 	. . . 
-	cp 19		;96a6	fe 13 	. . 
-	jr c,l96d7h		;96a8	38 2d 	8 - 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		    ;96a0	dd 7e 00
+	sub (iy+BALL_TABLE_IDX_Y_SPEED)	    ;96a3	fd 96 02
+	cp 19		                        ;96a6	fe 13
+	jr c,l96d7h		                    ;96a8	38 2d
+    ; BALL_Y - SPEED > 19
 
-	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)		;96aa	fd 7e 02 	. ~ . 
-	bit 7,a		;96ad	cb 7f 	.  
-	ret z			;96af	c8 	. 
-	call BALL_VERTICAL_BOUNCE		;96b0	cd 5b 9b 	. [ . 
-	ld (ix+SPR_PARAMS_IDX_Y),119		;96b3	dd 36 00 77 	. 6 . w 
-	jr l96e4h		;96b7	18 2b 	. + 
-l96b9h:
-	ld a,(iy+BALL_TABLE_IDX_X_SPEED)		;96b9	fd 7e 03 	. ~ . 
-	bit 7,a		;96bc	cb 7f 	.  
-	ret nz			;96be	c0 	. 
-	call BALL_HORIZONTAL_BOUNCE		;96bf	cd 80 9b 	. . . 
-	ld (ix+001h),04bh		;96c2	dd 36 01 4b 	. 6 . K 
-	jr l96e4h		;96c6	18 1c 	. . 
-l96c8h:
-	ld a,(iy+BALL_TABLE_IDX_X_SPEED)		;96c8	fd 7e 03 	. ~ . 
-	bit 7,a		;96cb	cb 7f 	.  
-	ret z			;96cd	c8 	. 
-	call BALL_HORIZONTAL_BOUNCE		;96ce	cd 80 9b 	. . . 
-	ld (ix+SPR_PARAMS_IDX_X), 129		;96d1	dd 36 01 81 	. 6 . . 
-	jr l96e4h		;96d5	18 0d 	. . 
+    ; If we're hitting on the bottom and moving down, exit
+    ; Indeed, we won't hit him it at the bottom we're moving down.
+	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)	;96aa	fd 7e 02
+	bit 7,a		                        ;96ad	cb 7f
+	ret z			                    ;96af	c8  Exit if positive
+
+    ; Hitting at the bottom and moving up ==>
+    ; ==> vertical bounce and locate the ball at the bottom
+	call BALL_VERTICAL_BOUNCE		;96b0	cd 5b 9b
+	ld (ix+SPR_PARAMS_IDX_Y), 119	;96b3	dd 36 00 77
+	jr doh_hit_ball_bounces		                ;96b7	18 2b
+
+; We hit Doh on the left
+doh_hit_left:
+    ; Note: I don't understand the reason this check: if you're
+    ; hitting on the left, your X speed must be always positive.
+    ; Perhaps a "corner case"... when you actually hit the corner :)
+	ld a,(iy+BALL_TABLE_IDX_X_SPEED)		;96b9	fd 7e 03
+	bit 7,a		                            ;96bc	cb 7f
+	ret nz			                        ;96be	c0  ret if negative
+    ; The speed is positive: do the bounce
+	call BALL_HORIZONTAL_BOUNCE		        ;96bf	cd 80 9b
+	ld (ix+001h),04bh		                ;96c2	dd 36 01 4b
+	jr doh_hit_ball_bounces		                        ;96c6	18 1c
+
+; We hit Doh on the right
+doh_hit_right:
+	ld a,(iy+BALL_TABLE_IDX_X_SPEED)	;96c8	fd 7e 03
+	bit 7,a		                        ;96cb	cb 7f
+	ret z			                    ;96cd	c8
+    ; The speed is negative: do the bounce
+	call BALL_HORIZONTAL_BOUNCE		    ;96ce	cd 80 9b
+	ld (ix+SPR_PARAMS_IDX_X), 129		;96d1	dd 36 01 81
+	jr doh_hit_ball_bounces		                    ;96d5	18 0d
+
+; We hit Doh on the top
 l96d7h:
-	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)		;96d7	fd 7e 02 	. ~ . 
-	bit 7,a		;96da	cb 7f 	.  
-	ret nz			;96dc	c0 	. 
-	call BALL_VERTICAL_BOUNCE		;96dd	cd 5b 9b 	. [ . 
-	ld (ix+SPR_PARAMS_IDX_Y), 18		;96e0	dd 36 00 12 	. 6 . . 
-l96e4h:
+	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)		;96d7	fd 7e 02
+	bit 7,a		                            ;96da	cb 7f
+	ret nz			                        ;96dc	c0
+    ; The speed is positive: do the bounce
+	call BALL_VERTICAL_BOUNCE		        ;96dd	cd 5b 9b
+	ld (ix+SPR_PARAMS_IDX_Y), 18		    ;96e0	dd 36 00 12
+
+doh_hit_ball_bounces:
 	ld a, SOUND_DOH_HIT	;96e4	3e 08
 	call ADD_SOUND		;96e6	cd ef 5b
 
@@ -6791,7 +6818,7 @@ l96e4h:
 	jr nz,l970ah		;96fa	20 0e
 
     ; Doh has been defeated!
-	ld a, 1		            ;96fc	3e 01 	> . 
+	ld a, 1		            ;96fc	3e 01
 	ld (DOH_TABLE),a		;96fe	32 0d e5
 	call DEACTIVE_ALL_BALLS	;9701	cd 10 97
 
@@ -6800,9 +6827,9 @@ l96e4h:
 	ret			            ;9709	c9
 
 l970ah:
-	ld a, 1		    ;970a	3e 01
+	ld a, 1		        ;970a	3e 01
 	ld (TBL_DOH_HIT),a	;970c	32 05 e5
-	ret			    ;970f	c9
+	ret			        ;970f	c9
 
 ; Deactivate all the balls and set the sprites invisible
 DEACTIVE_ALL_BALLS:
@@ -7410,26 +7437,26 @@ l9a36h:
 	jr nz,l9a5dh		;9a56	20 05 	  . 
 
     ; Final level
-	call sub_967bh		;9a58	cd 7b 96 	. { . 
+	call CHECK_DOH_HIT_AND_BOUNCE_BALL		;9a58	cd 7b 96 	. { . 
 	jr l9a60h		;9a5b	18 03 	. . 
 l9a5dh:
     ; Not final level
     ; ToDo: check and process ball bounces from bricks
-	call sub_9c2dh		;9a5d	cd 2d 9c 	. - . 
+	call sub_9c2dh		;9a5d	cd 2d 9c
 l9a60h:
-	pop iy		;9a60	fd e1 	. . 
-	pop ix		;9a62	dd e1 	. . 
-	pop bc			;9a64	c1 	. 
-	ld a,(DOH_BEEN_HIT)		;9a65	3a b9 e2 	: . . 
-	or a			;9a68	b7 	. 
-	ret nz			;9a69	c0 	. 
-	djnz l9a36h		;9a6a	10 ca 	. . 
-	push iy		;9a6c	fd e5 	. . 
-	push ix		;9a6e	dd e5 	. . 
-	call CHECK_ANY_BALL_HITS_ALIEN		;9a70	cd a5 79 	. . y 
-	pop ix		;9a73	dd e1 	. . 
-	pop iy		;9a75	fd e1 	. . 
-	ret			;9a77	c9 	. 
+	pop iy		;9a60	fd e1
+	pop ix		;9a62	dd e1
+	pop bc		;9a64	c1
+	ld a,(DOH_BEEN_HIT)		;9a65	3a b9 e2
+	or a			;9a68	b7
+	ret nz			;9a69	c0
+	djnz l9a36h		;9a6a	10 ca
+	push iy		;9a6c	fd e5
+	push ix		;9a6e	dd e5
+	call CHECK_ANY_BALL_HITS_ALIEN		;9a70	cd a5 79
+	pop ix		;9a73	dd e1
+	pop iy		;9a75	fd e1
+	ret			;9a77	c9
 
 ; Positive skewness to (X, Y) speed
 TBL_SKEWNESS_POS_TO_XY_SPEED: ;9a78
