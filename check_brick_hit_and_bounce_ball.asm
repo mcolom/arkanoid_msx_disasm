@@ -932,7 +932,7 @@ la3d0h:
 	ret			;a3d0	c9 	. 
 
 sub_a3d1h:
-	ld hl,0e541h		;a3d1	21 41 e5 	! A . 
+	ld hl,COMPUTED_HIT_COUNTER		;a3d1	21 41 e5 	! A . 
 	ld (hl),000h		;a3d4	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a3d6	11 42 e5 	. B . 
 	ld bc,00002h		;a3d9	01 02 00 	. . . 
@@ -987,19 +987,19 @@ la429h:
 	inc (hl)			;a440	34 	4 
 la441h:
 	push af			;a441	f5 	. 
-	ld a,(0e541h)		;a442	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a442	3a 41 e5 	: A . 
 	inc a			;a445	3c 	< 
-	ld (0e541h),a		;a446	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a446	32 41 e5 	2 A . 
 	pop af			;a449	f1 	. 
 	add a,b			;a44a	80 	. 
-	cp (hl)			;a44b	be 	. 
+	cp (hl)			;a44b	be  Compare with COMPUTED_HIT_X
 	jp nc,la463h		;a44c	d2 63 a4 	. c . 
 	jp la441h		;a44f	c3 41 a4 	. A . 
 la452h:
 	push af			;a452	f5 	. 
-	ld a,(0e541h)		;a453	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a453	3a 41 e5 	: A . 
 	inc a			;a456	3c 	< 
-	ld (0e541h),a		;a457	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a457	32 41 e5 	2 A . 
 	pop af			;a45a	f1 	. 
 	add a,b			;a45b	80 	. 
 	cp (hl)			;a45c	be 	. 
@@ -1007,28 +1007,36 @@ la452h:
 	jp la452h		;a460	c3 52 a4 	. R . 
 la463h:
 	dec (hl)			;a463	35 	5 
+
 la464h:
-	ld a,(0e541h)		;a464	3a 41 e5 	: A . 
-	ld b,a			;a467	47 	G 
-	ld a,(COMPUTED_Y_SPEED)		;a468	3a 43 e5 	: C . 
-	ld c,a			;a46b	4f 	O 
-	neg		;a46c	ed 44 	. D 
+	ld a,(COMPUTED_HIT_COUNTER)	            ;a464	3a 41 e5
+	ld b,a			            ;a467	47 	G       B = counter
+	ld a,(COMPUTED_Y_SPEED)		;a468	3a 43 e5
+	ld c,a			            ;a46b	4f          C = COMPUTED_Y_SPEED
+	neg		                    ;a46c	ed 44       A = -COMPUTED_Y_SPEED
+
+; A = -COMPUTED_Y_SPEED + counter * COMPUTED_Y_SPEED = (counter - 1) * COMPUTED_Y_SPEED
 la46eh:
-	add a,c			;a46e	81 	. 
-	djnz la46eh		;a46f	10 fd 	. . 
-	ld b,a			;a471	47 	G 
-	ld a,(BALL_Y_MINUS_SPEED)		;a472	3a 86 e5 	: . . 
-	add a,b			;a475	80 	. 
-	ld b,a			;a476	47 	G 
+	add a,c         ;a46e	81
+	djnz la46eh		;a46f	10 fd
+
+	ld b,a			                ;a471	47          B = (counter - 1) * COMPUTED_Y_SPEED
+	ld a,(BALL_Y_MINUS_SPEED)		;a472	3a 86 e5    A = BALL_Y_MINUS_SPEED
+	add a,b			                ;a475	80          A = BALL_Y_MINUS_SPEED + (counter - 1) * COMPUTED_Y_SPEED
+    
+	ld b,a			                ;a476	47          B = BALL_Y_MINUS_SPEED + (counter - 1) * COMPUTED_Y_SPEED
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a477	fd cb 02 7e 	. . . ~ 
 	jp nz,la49ch		;a47b	c2 9c a4 	. . . 
-	ld a,(BRICK_ROW)		;a47e	3a aa e2 	: . . 
-	sla a		;a481	cb 27 	. ' 
-	sla a		;a483	cb 27 	. ' 
-	sla a		;a485	cb 27 	. ' 
-	add a, 18		;a487	c6 12 	. . 
-	cp b			;a489	b8 	. 
-	jp c,la492h		;a48a	da 92 a4 	. . . 
+
+	ld a,(BRICK_ROW)    ;a47e	3a aa e2
+	sla a		        ;a481	cb 27
+	sla a		        ;a483	cb 27
+	sla a		        ;a485	cb 27
+	add a, 18		    ;a487	c6 12   A = 8*BRICK_ROW + 18
+    
+	cp b			    ;a489	b8      Compare with BALL_Y_MINUS_SPEED + (counter - 1) * COMPUTED_Y_SPEED
+	jp c,la492h		    ;a48a	da 92 a4
+
 	inc a			;a48d	3c 	< 
 	ld b,a			;a48e	47 	G 
 	jp la4bbh		;a48f	c3 bb a4 	. . . 
@@ -1067,7 +1075,7 @@ la4bbh:
 	ld a,(COMPUTED_HIT_X_NEG)		            ;a4c9	3a c6 e2
 la4cch:
 	ld (BRICK_HIT_COL),a		;a4cc	32 3d e5 	2 = . 
-	ld hl,0e541h		;a4cf	21 41 e5 	! A . 
+	ld hl,COMPUTED_HIT_COUNTER		;a4cf	21 41 e5 	! A . 
 	ld (hl),000h		;a4d2	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a4d4	11 42 e5 	. B . 
 	ld bc, 2		;a4d7	01 02 00 	. . . 
@@ -1120,19 +1128,19 @@ la52fh:
 	inc (hl)			;a53c	34 	4 
 la53dh:
 	push af			;a53d	f5 	. 
-	ld a,(0e541h)		;a53e	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a53e	3a 41 e5 	: A . 
 	inc a			;a541	3c 	< 
-	ld (0e541h),a		;a542	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a542	32 41 e5 	2 A . 
 	pop af			;a545	f1 	. 
 	add a,b			;a546	80 	. 
-	cp (hl)			;a547	be 	. 
+	cp (hl)			;a547	be  Compare with COMPUTED_HIT_Y_NEG
 	jp nc,la55fh		;a548	d2 5f a5 	. _ . 
 	jp la53dh		;a54b	c3 3d a5 	. = . 
 la54eh:
 	push af			;a54e	f5 	. 
-	ld a,(0e541h)		;a54f	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a54f	3a 41 e5 	: A . 
 	inc a			;a552	3c 	< 
-	ld (0e541h),a		;a553	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a553	32 41 e5 	2 A . 
 	pop af			;a556	f1 	. 
 	add a,b			;a557	80 	. 
 	cp (hl)			;a558	be 	. 
@@ -1141,7 +1149,7 @@ la54eh:
 la55fh:
 	dec (hl)			;a55f	35 	5 
 la560h:
-	ld a,(0e541h)		;a560	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a560	3a 41 e5 	: A . 
 	ld b,a			;a563	47 	G 
 	ld a,(COMPUTED_X_SPEED)		;a564	3a 42 e5 	: B . 
 	ld c,a			;a567	4f 	O 
@@ -1175,7 +1183,7 @@ la58fh:
 	ret			;a590	c9 	. 
 
 sub_a591h:
-	ld hl,0e541h		;a591	21 41 e5 	! A . 
+	ld hl,COMPUTED_HIT_COUNTER		;a591	21 41 e5 	! A . 
 	ld (hl),000h		;a594	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a596	11 42 e5 	. B . 
 	ld bc,00002h		;a599	01 02 00 	. . . 
@@ -1227,9 +1235,9 @@ la5e7h:
 	inc (hl)			;a5fe	34 	4 
 la5ffh:
 	push af			;a5ff	f5 	. 
-	ld a,(0e541h)		;a600	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a600	3a 41 e5 	: A . 
 	inc a			;a603	3c 	< 
-	ld (0e541h),a		;a604	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a604	32 41 e5 	2 A . 
 	pop af			;a607	f1 	. 
 	add a,b			;a608	80 	. 
 	cp (hl)			;a609	be 	. 
@@ -1237,9 +1245,9 @@ la5ffh:
 	jp la5ffh		;a60d	c3 ff a5 	. . . 
 la610h:
 	push af			;a610	f5 	. 
-	ld a,(0e541h)		;a611	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a611	3a 41 e5 	: A . 
 	inc a			;a614	3c 	< 
-	ld (0e541h),a		;a615	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a615	32 41 e5 	2 A . 
 	pop af			;a618	f1 	. 
 	add a,b			;a619	80 	. 
 	cp (hl)			;a61a	be 	. 
@@ -1248,7 +1256,7 @@ la610h:
 la621h:
 	dec (hl)			;a621	35 	5 
 la622h:
-	ld a,(0e541h)		;a622	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a622	3a 41 e5 	: A . 
 	ld b,a			;a625	47 	G 
 	ld a,(COMPUTED_X_SPEED)		;a626	3a 42 e5 	: B . 
 	ld c,a			;a629	4f 	O 
@@ -1297,7 +1305,7 @@ sub_a670h:
     ; IY: BALL_TABLE
     
     ; Clear 2 variables
-	ld hl,0e541h		;a670	21 41 e5 	! A . 
+	ld hl,COMPUTED_HIT_COUNTER		;a670	21 41 e5 	! A . 
 	ld (hl),000h		;a673	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a675	11 42 e5 	. B . 
 	ld bc, 2		    ;a678	01 02 00 	. . . 
@@ -1353,9 +1361,9 @@ la6cch:
 	inc (hl)			;a6e0	34 	4 
 la6e1h:
 	push af			;a6e1	f5 	. 
-	ld a,(0e541h)		;a6e2	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a6e2	3a 41 e5 	: A . 
 	inc a			;a6e5	3c 	< 
-	ld (0e541h),a		;a6e6	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a6e6	32 41 e5 	2 A . 
 	pop af			;a6e9	f1 	. 
 	add a,b			;a6ea	80 	. 
 	cp (hl)			;a6eb	be 	. 
@@ -1363,9 +1371,9 @@ la6e1h:
 	jp la6e1h		;a6ef	c3 e1 a6 	. . . 
 la6f2h:
 	push af			;a6f2	f5 	. 
-	ld a,(0e541h)		;a6f3	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a6f3	3a 41 e5 	: A . 
 	inc a			;a6f6	3c 	< 
-	ld (0e541h),a		;a6f7	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a6f7	32 41 e5 	2 A . 
 	pop af			;a6fa	f1 	. 
 	add a,b			;a6fb	80 	. 
 	cp (hl)			;a6fc	be 	. 
@@ -1374,7 +1382,7 @@ la6f2h:
 la703h:
 	dec (hl)			;a703	35 	5 
 la704h:
-	ld a,(0e541h)		;a704	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a704	3a 41 e5 	: A . 
 	ld b,a			;a707	47 	G 
 	ld a,(COMPUTED_X_SPEED)		;a708	3a 42 e5 	: B . 
 	ld c,a			;a70b	4f 	O 
@@ -1541,7 +1549,7 @@ la803h:
 	ret			;a80f	c9 	. 
 
 sub_a810h:
-	ld hl,0e541h		;a810	21 41 e5 	! A . 
+	ld hl,COMPUTED_HIT_COUNTER		;a810	21 41 e5 	! A . 
 	ld (hl),000h		;a813	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a815	11 42 e5 	. B . 
 	ld bc,00002h		;a818	01 02 00 	. . . 
@@ -1601,9 +1609,9 @@ la87ch:
 	inc (hl)			;a890	34 	4 
 la891h:
 	push af			;a891	f5 	. 
-	ld a,(0e541h)		;a892	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a892	3a 41 e5 	: A . 
 	inc a			;a895	3c 	< 
-	ld (0e541h),a		;a896	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a896	32 41 e5 	2 A . 
 	pop af			;a899	f1 	. 
 	add a,b			;a89a	80 	. 
 	cp (hl)			;a89b	be 	. 
@@ -1611,9 +1619,9 @@ la891h:
 	jp la891h		;a89f	c3 91 a8 	. . . 
 la8a2h:
 	push af			;a8a2	f5 	. 
-	ld a,(0e541h)		;a8a3	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a8a3	3a 41 e5 	: A . 
 	inc a			;a8a6	3c 	< 
-	ld (0e541h),a		;a8a7	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a8a7	32 41 e5 	2 A . 
 	pop af			;a8aa	f1 	. 
 	add a,b			;a8ab	80 	. 
 	cp (hl)			;a8ac	be 	. 
@@ -1622,7 +1630,7 @@ la8a2h:
 la8b3h:
 	dec (hl)			;a8b3	35 	5 
 la8b4h:
-	ld a,(0e541h)		;a8b4	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a8b4	3a 41 e5 	: A . 
 	ld b,a			;a8b7	47 	G 
 	ld a,(COMPUTED_X_SPEED)		;a8b8	3a 42 e5 	: B . 
 	ld c,a			;a8bb	4f 	O 
@@ -1667,7 +1675,7 @@ la8fdh:
 ; SEGUIR
 sub_a901h:
     ; Clear two variables
-	ld hl,0e541h		;a901	21 41 e5
+	ld hl,COMPUTED_HIT_COUNTER		;a901	21 41 e5
 	ld (hl),000h		;a904	36 00
 	ld de,COMPUTED_X_SPEED		;a906	11 42 e5
 	ld bc, 2		    ;a909	01 02 00
@@ -1688,13 +1696,13 @@ sub_a901h:
 	jp nz,la924h		                ;a91f	c2 24 a9    Jump if negative
 	ld b, 12		                    ;a922	06 0c
 la924h:
-    ; Store A = 16*BRICK_COL + B = 2*8*BRICK_COL + B
+    ; COMPUTED_HIT_X <-- 16*BRICK_COL + B = 2*8*BRICK_COL + B
     ; This is in char coordinates.
-	add a,b			;a924	80
+	add a,b			        ;a924	80
 	ld (COMPUTED_HIT_X),a	;a925	32 c7 e2
 
-	add a, 15		;a928	c6 0f 	. . 
-	ld (COMPUTED_HIT_X_NEG),a		;a92a	32 c6 e2 	2 . . 
+	add a, 15		                ;a928	c6 0f
+	ld (COMPUTED_HIT_X_NEG),a		;a92a	32 c6 e2
 
     ; A = |skewness|
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a92d	fd 7e 06
@@ -1716,9 +1724,9 @@ la93ah:
 	neg		            ;a949	ed 44
     ; A = TBL_a86c[2*(skewness - 1)]
 la94bh:
-	; Store 1st value
+	; Set COMPUTED_X_SPEED
     ld (COMPUTED_X_SPEED),a		;a94b	32 42 e5 	2 B . 
-    
+
     ; Read next value
 	inc hl			                        ;a94e	23
 	ld a,(hl)			                    ;a94f	7e
@@ -1726,7 +1734,7 @@ la94bh:
 	jp nz,la959h		                    ;a954	c2 59 a9
 	neg		                                ;a957	ed 44
 la959h:
-    ; Store 2nd value
+    ; Set COMPUTED_Y_SPEED
 	ld (COMPUTED_Y_SPEED),a		;a959	32 43 e5
     
 	ld a,(COMPUTED_X_SPEED)		            ;a95c	3a 42 e5
@@ -1739,9 +1747,9 @@ la959h:
 	inc (hl)			;a970	34 	4 
 la971h:
 	push af			;a971	f5 	. 
-	ld a,(0e541h)		;a972	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a972	3a 41 e5 	: A . 
 	inc a			;a975	3c 	< 
-	ld (0e541h),a		;a976	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a976	32 41 e5 	2 A . 
 	pop af			;a979	f1 	. 
 	add a,b			;a97a	80 	. 
 	cp (hl)			;a97b	be 	. 
@@ -1749,9 +1757,9 @@ la971h:
 	jp la971h		;a97f	c3 71 a9 	. q . 
 la982h:
 	push af			;a982	f5 	. 
-	ld a,(0e541h)		;a983	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a983	3a 41 e5 	: A . 
 	inc a			;a986	3c 	< 
-	ld (0e541h),a		;a987	32 41 e5 	2 A . 
+	ld (COMPUTED_HIT_COUNTER),a		;a987	32 41 e5 	2 A . 
 	pop af			;a98a	f1 	. 
 	add a,b			;a98b	80 	. 
 	cp (hl)			;a98c	be 	. 
@@ -1760,7 +1768,7 @@ la982h:
 la993h:
 	dec (hl)			;a993	35 	5 
 la994h:
-	ld a,(0e541h)		;a994	3a 41 e5 	: A . 
+	ld a,(COMPUTED_HIT_COUNTER)		;a994	3a 41 e5 	: A . 
 	ld b,a			;a997	47 	G 
 	ld a,(COMPUTED_Y_SPEED)		;a998	3a 43 e5 	: C . 
 	ld c,a			;a99b	4f 	O 
@@ -1768,6 +1776,7 @@ la994h:
 la99eh:
 	add a,c			;a99e	81 	. 
 	djnz la99eh		;a99f	10 fd 	. . 
+
 	ld b,a			;a9a1	47 	G 
 	ld a,(BALL_Y_MINUS_SPEED)		;a9a2	3a 86 e5 	: . . 
 	add a,b			;a9a5	80 	. 
@@ -1815,11 +1824,12 @@ la9ebh:
 la9f0h:
 	ld b,a			;a9f0	47 	G 
 la9f1h:
-	ld (ix+000h),b		;a9f1	dd 70 00 	. p . 
+	ld (ix+SPR_PARAMS_IDX_Y),b		;a9f1	dd 70 00 	. p . 
+
 	ld a,(COMPUTED_HIT_X)		;a9f4	3a c7 e2 	: . . 
-	bit 7,(iy+003h)		;a9f7	fd cb 03 7e 	. . . ~ 
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a9f7	fd cb 03 7e 	. . . ~ 
 	jp z,laa01h		;a9fb	ca 01 aa 	. . . 
 	ld a,(COMPUTED_HIT_X_NEG)		;a9fe	3a c6 e2 	: . . 
 laa01h:
-	ld (ix+001h),a		;aa01	dd 77 01 	. w . 
+	ld (ix+SPR_PARAMS_IDX_X),a		;aa01	dd 77 01 	. w . 
 	ret			;aa04	c9 	. 

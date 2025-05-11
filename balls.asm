@@ -20,32 +20,29 @@ BALL_TABLE_IDX_ACTIVE: equ 0
 ; 1: ball is glued
 ; 2: ball moves normally
 BALL_TABLE_IDX_GLUE: equ 1
-;
-; 01, 02: ball going down
-; FF, FE: ball going up
-BALL_TABLE_IDX_Y_SPEED:  equ 2
 
-;BALL_TABLE_: equ 3
-; 01, 02: ball going right
-; FF, FE: ball going left
+; Vertical and horizontal speed
+BALL_TABLE_IDX_Y_SPEED:  equ 2
 BALL_TABLE_IDX_X_SPEED: equ 3
 
 ; The ball moves then the counter BALL_TABLE_IDX_MOVE_COUNTER reaches its
 ; target BALL_TABLE_IDX_MOVE_TARGET.
 BALL_TABLE_IDX_MOVE_COUNTER: equ 5
-BALL_TABLE_IDX_MOVE_TARGET: equ 9
 BALL_TABLE_IDX_SKEWNESS: equ 6
 BALL_TABLE_IDX_SPEED_POS: equ 7
 ; The speed is added to the position BALL_TABLE_IDX_SPEED_MULTIPLIER+1 times
 BALL_TABLE_IDX_SPEED_MULTIPLIER: equ 8
+BALL_TABLE_IDX_MOVE_TARGET: equ 9
 BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
 
 
-;ToDo
+;ToDo: this in incremented and compared to the COMPUTED_X_SPEED OR COMPUTED_Y_SPEED
+COMPUTED_HIT_COUNTER: equ 0xe541
 ; After each brick hit, this contains the new ball's X speed
 COMPUTED_X_SPEED: equ 0xe542
+; After each brick hit, this contains the new ball's Y speed
 COMPUTED_Y_SPEED: equ 0xe543
 
 
