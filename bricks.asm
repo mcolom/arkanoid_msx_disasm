@@ -52,11 +52,19 @@ BRICK_UNUSED_2: equ 0xe2bb
 
 BRICK_ACTION_TABLE_OFFSET: equ 0xe2bc
 
-; ToDO: these variables store BRICK_ROW AND BRICK_COL, but it's not clear how
-BRICK_COORD_Y1: equ 0e58ah
-BRICK_COORD_X1: equ 0e58bh
-BRICK_COORD_Y2: equ 0e58ch
-BRICK_COORD_X2: equ 0e58dh
+; Position of the ball in the brick coordinate space
+; BRS = "brick space"
+BALL_BRS_Y2: equ 0xe58a
+BALL_BRS_X2: equ 0xe58b
+BALL_BRS_Y1: equ 0xe58c
+BALL_BRS_X1: equ 0xe58d
 
 ;ToDo:
-COMPUTED_BRICK_HIT_ROW: equ 0xe2c4
+; These are assigned when the ball collides at something and
+; it'll bounce. Depending on the speed of the ball it stores the
+; value in a negative o positive variable.
+COMPUTED_HIT_Y_NEG: equ 0xe2c4
+COMPUTED_HIT_Y:     equ 0xe2c5
+;
+COMPUTED_HIT_X_NEG:  equ 0xe2c6
+COMPUTED_HIT_X:      equ 0xe2c7

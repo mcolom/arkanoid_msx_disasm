@@ -5475,7 +5475,7 @@ l7695h:
     ; Update vertical position according to the speed
     ; SPR_PARAMS_IDX_Y += ALIEN_TABLE_IDX_VERT_SPEED
 	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)	;769d	dd 7e 08
-	add a,(iy+SPR_PARAMS_IDX_X)		        ;76a0	fd 86 00
+	add a,(iy+SPR_PARAMS_IDX_Y)		        ;76a0	fd 86 00
 	ld (iy+SPR_PARAMS_IDX_Y),a		        ;76a3	fd 77 00
     
     ; Update horizontal position according to the speed
