@@ -166,7 +166,8 @@ l9cfdh:
 	call DO_BRICK_ACTION		;9d12	cd 05 aa
 	jp brick_hit_check_done		;9d15	c3 99 a2
 
-; ; Brick check (X2, Y1) and vertical bounce
+; Brick check (X2, Y1) and vertical bounce
+; With sub_a901h
 l9d18h:
 	ld a,(BALL_BRS_Y1)		;9d18	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;9d1b	32 aa e2 	2 . . 
@@ -179,6 +180,7 @@ l9d18h:
 	call DO_BRICK_ACTION		;9d30	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9d33	c3 99 a2 	. . . 
 
+; Brick check (X1, Y2) and vertical bounce
 l9d36h:
 	ld a,(BALL_BRS_Y2)		;9d36	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;9d39	32 aa e2 	2 . . 
@@ -932,7 +934,7 @@ la3d0h:
 sub_a3d1h:
 	ld hl,0e541h		;a3d1	21 41 e5 	! A . 
 	ld (hl),000h		;a3d4	36 00 	6 . 
-	ld de,0e542h		;a3d6	11 42 e5 	. B . 
+	ld de,COMPUTED_X_SPEED		;a3d6	11 42 e5 	. B . 
 	ld bc,00002h		;a3d9	01 02 00 	. . . 
 	ldir		;a3dc	ed b0 	. . 
 
@@ -966,15 +968,15 @@ la407h:
 	jp nz,la41bh		;a416	c2 1b a4 	. . . 
 	neg		;a419	ed 44 	. D 
 la41bh:
-	ld (0e542h),a		;a41b	32 42 e5 	2 B . 
+	ld (COMPUTED_X_SPEED),a		;a41b	32 42 e5 	2 B . 
 	inc hl			;a41e	23 	# 
 	ld a,(hl)			;a41f	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a420	fd cb 02 7e 	. . . ~ 
 	jp nz,la429h		;a424	c2 29 a4 	. ) . 
 	neg		;a427	ed 44 	. D 
 la429h:
-	ld (0e543h),a		;a429	32 43 e5 	2 C . 
-	ld a,(0e542h)		;a42c	3a 42 e5 	: B . 
+	ld (COMPUTED_Y_SPEED),a		;a429	32 43 e5 	2 C . 
+	ld a,(COMPUTED_X_SPEED)		;a42c	3a 42 e5 	: B . 
 	ld b,a			;a42f	47 	G 
 	ld a,(BALL_X_MINUS_SPEED)		;a430	3a 87 e5 	: . . 
     
@@ -1008,7 +1010,7 @@ la463h:
 la464h:
 	ld a,(0e541h)		;a464	3a 41 e5 	: A . 
 	ld b,a			;a467	47 	G 
-	ld a,(0e543h)		;a468	3a 43 e5 	: C . 
+	ld a,(COMPUTED_Y_SPEED)		;a468	3a 43 e5 	: C . 
 	ld c,a			;a46b	4f 	O 
 	neg		;a46c	ed 44 	. D 
 la46eh:
@@ -1067,7 +1069,7 @@ la4cch:
 	ld (BRICK_HIT_COL),a		;a4cc	32 3d e5 	2 = . 
 	ld hl,0e541h		;a4cf	21 41 e5 	! A . 
 	ld (hl),000h		;a4d2	36 00 	6 . 
-	ld de,0e542h		;a4d4	11 42 e5 	. B . 
+	ld de,COMPUTED_X_SPEED		;a4d4	11 42 e5 	. B . 
 	ld bc, 2		;a4d7	01 02 00 	. . . 
 	ldir		;a4da	ed b0 	. . 
 	ld a,(BRICK_ROW)		;a4dc	3a aa e2 	: . . 
@@ -1099,15 +1101,15 @@ la503h:
 	jp nz,la517h		;a512	c2 17 a5 	. . . 
 	neg		;a515	ed 44 	. D 
 la517h:
-	ld (0e542h),a		;a517	32 42 e5 	2 B . 
+	ld (COMPUTED_X_SPEED),a		;a517	32 42 e5 	2 B . 
 	inc hl			;a51a	23 	# 
 	ld a,(hl)			;a51b	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a51c	fd cb 02 7e 	. . . ~ 
 	jp nz,la525h		;a520	c2 25 a5 	. % . 
 	neg		;a523	ed 44 	. D 
 la525h:
-	ld (0e543h),a		;a525	32 43 e5 	2 C . 
-	ld a,(0e543h)		;a528	3a 43 e5 	: C . 
+	ld (COMPUTED_Y_SPEED),a		;a525	32 43 e5 	2 C . 
+	ld a,(COMPUTED_Y_SPEED)		;a528	3a 43 e5 	: C . 
 	ld b,a			;a52b	47 	G 
 	ld a,(BALL_Y_MINUS_SPEED)		;a52c	3a 86 e5 	: . . 
 la52fh:
@@ -1141,7 +1143,7 @@ la55fh:
 la560h:
 	ld a,(0e541h)		;a560	3a 41 e5 	: A . 
 	ld b,a			;a563	47 	G 
-	ld a,(0e542h)		;a564	3a 42 e5 	: B . 
+	ld a,(COMPUTED_X_SPEED)		;a564	3a 42 e5 	: B . 
 	ld c,a			;a567	4f 	O 
 	neg		;a568	ed 44 	. D 
 la56ah:
@@ -1175,7 +1177,7 @@ la58fh:
 sub_a591h:
 	ld hl,0e541h		;a591	21 41 e5 	! A . 
 	ld (hl),000h		;a594	36 00 	6 . 
-	ld de,0e542h		;a596	11 42 e5 	. B . 
+	ld de,COMPUTED_X_SPEED		;a596	11 42 e5 	. B . 
 	ld bc,00002h		;a599	01 02 00 	. . . 
 	ldir		;a59c	ed b0 	. . 
 	ld a,(BRICK_ROW)		;a59e	3a aa e2 	: . . 
@@ -1207,15 +1209,15 @@ la5c5h:
 	jp nz,la5d9h		;a5d4	c2 d9 a5 	. . . 
 	neg		;a5d7	ed 44 	. D 
 la5d9h:
-	ld (0e542h),a		;a5d9	32 42 e5 	2 B . 
+	ld (COMPUTED_X_SPEED),a		;a5d9	32 42 e5 	2 B . 
 	inc hl			;a5dc	23 	# 
 	ld a,(hl)			;a5dd	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5de	fd cb 02 7e 	. . . ~ 
 	jp nz,la5e7h		;a5e2	c2 e7 a5 	. . . 
 	neg		;a5e5	ed 44 	. D 
 la5e7h:
-	ld (0e543h),a		;a5e7	32 43 e5 	2 C . 
-	ld a,(0e543h)		;a5ea	3a 43 e5 	: C . 
+	ld (COMPUTED_Y_SPEED),a		;a5e7	32 43 e5 	2 C . 
+	ld a,(COMPUTED_Y_SPEED)		;a5ea	3a 43 e5 	: C . 
 	ld b,a			;a5ed	47 	G 
 	ld a,(BALL_Y_MINUS_SPEED)		;a5ee	3a 86 e5 	: . . 
 	ld hl,COMPUTED_HIT_Y		;a5f1	21 c5 e2 	! . . 
@@ -1248,7 +1250,7 @@ la621h:
 la622h:
 	ld a,(0e541h)		;a622	3a 41 e5 	: A . 
 	ld b,a			;a625	47 	G 
-	ld a,(0e542h)		;a626	3a 42 e5 	: B . 
+	ld a,(COMPUTED_X_SPEED)		;a626	3a 42 e5 	: B . 
 	ld c,a			;a629	4f 	O 
 	neg		;a62a	ed 44 	. D 
 la62ch:
@@ -1297,7 +1299,7 @@ sub_a670h:
     ; Clear 2 variables
 	ld hl,0e541h		;a670	21 41 e5 	! A . 
 	ld (hl),000h		;a673	36 00 	6 . 
-	ld de,0e542h		;a675	11 42 e5 	. B . 
+	ld de,COMPUTED_X_SPEED		;a675	11 42 e5 	. B . 
 	ld bc, 2		    ;a678	01 02 00 	. . . 
 	ldir		        ;a67b	ed b0 	. . 
 
@@ -1331,17 +1333,17 @@ la6a4h:
 	jp nz,la6b8h		;a6b3	c2 b8 a6 	. . . 
 	neg		;a6b6	ed 44 	. D 
 la6b8h:
-	ld (0e542h),a		;a6b8	32 42 e5 	2 B . 
+	ld (COMPUTED_X_SPEED),a		;a6b8	32 42 e5 	2 B . 
 	inc hl			;a6bb	23 	# 
 	ld a,(hl)			;a6bc	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a6bd	fd cb 02 7e 	. . . ~ 
 	jp nz,la6c6h		;a6c1	c2 c6 a6 	. . . 
 	neg		;a6c4	ed 44 	. D 
 la6c6h:
-	ld (0e543h),a		;a6c6	32 43 e5 	2 C . 
+	ld (COMPUTED_Y_SPEED),a		;a6c6	32 43 e5 	2 C . 
 	jp la6cch		;a6c9	c3 cc a6 	. . . 
 la6cch:
-	ld a,(0e543h)		;a6cc	3a 43 e5 	: C . 
+	ld a,(COMPUTED_Y_SPEED)		;a6cc	3a 43 e5 	: C . 
 	ld b,a			;a6cf	47 	G 
 	ld a,(BALL_Y_MINUS_SPEED)		;a6d0	3a 86 e5 	: . . 
 	ld hl,COMPUTED_HIT_Y		;a6d3	21 c5 e2 	! . . 
@@ -1374,7 +1376,7 @@ la703h:
 la704h:
 	ld a,(0e541h)		;a704	3a 41 e5 	: A . 
 	ld b,a			;a707	47 	G 
-	ld a,(0e542h)		;a708	3a 42 e5 	: B . 
+	ld a,(COMPUTED_X_SPEED)		;a708	3a 42 e5 	: B . 
 	ld c,a			;a70b	4f 	O 
 	neg		;a70c	ed 44 	. D 
 la70eh:
@@ -1541,7 +1543,7 @@ la803h:
 sub_a810h:
 	ld hl,0e541h		;a810	21 41 e5 	! A . 
 	ld (hl),000h		;a813	36 00 	6 . 
-	ld de,0e542h		;a815	11 42 e5 	. B . 
+	ld de,COMPUTED_X_SPEED		;a815	11 42 e5 	. B . 
 	ld bc,00002h		;a818	01 02 00 	. . . 
 	ldir		;a81b	ed b0 	. . 
 	ld a,(BRICK_ROW)		;a81d	3a aa e2 	: . . 
@@ -1573,18 +1575,18 @@ la844h:
 	jp nz,la858h		;a853	c2 58 a8 	. X . 
 	neg		;a856	ed 44 	. D 
 la858h:
-	ld (0e542h),a		;a858	32 42 e5 	2 B . 
+	ld (COMPUTED_X_SPEED),a		;a858	32 42 e5 	2 B . 
 	inc hl			;a85b	23 	# 
 	ld a,(hl)			;a85c	7e 	~ 
 	bit 7,(iy+002h)		;a85d	fd cb 02 7e 	. . . ~ 
 	jp nz,la866h		;a861	c2 66 a8 	. f . 
 	neg		;a864	ed 44 	. D 
 la866h:
-	ld (0e543h),a		;a866	32 43 e5 	2 C . 
+	ld (COMPUTED_Y_SPEED),a		;a866	32 43 e5 	2 C . 
 	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
 
 ; ToDo
-; Values are read and put at 0e542h
+; Values are read and put at COMPUTED_X_SPEED
 TBL_a86c:   ;a86c
     db 4, -1, 2, -1, 1, -1, 1, -2, -1, -2, -1, -1, -2, -1,  -4, -1
 
@@ -1622,7 +1624,7 @@ la8b3h:
 la8b4h:
 	ld a,(0e541h)		;a8b4	3a 41 e5 	: A . 
 	ld b,a			;a8b7	47 	G 
-	ld a,(0e542h)		;a8b8	3a 42 e5 	: B . 
+	ld a,(COMPUTED_X_SPEED)		;a8b8	3a 42 e5 	: B . 
 	ld c,a			;a8bb	4f 	O 
 	neg		;a8bc	ed 44 	. D 
 la8beh:
@@ -1667,7 +1669,7 @@ sub_a901h:
     ; Clear two variables
 	ld hl,0e541h		;a901	21 41 e5
 	ld (hl),000h		;a904	36 00
-	ld de,0e542h		;a906	11 42 e5
+	ld de,COMPUTED_X_SPEED		;a906	11 42 e5
 	ld bc, 2		    ;a909	01 02 00
 	ldir		        ;a90c	ed b0
     
@@ -1715,7 +1717,7 @@ la93ah:
     ; A = TBL_a86c[2*(skewness - 1)]
 la94bh:
 	; Store 1st value
-    ld (0e542h),a		;a94b	32 42 e5 	2 B . 
+    ld (COMPUTED_X_SPEED),a		;a94b	32 42 e5 	2 B . 
     
     ; Read next value
 	inc hl			                        ;a94e	23
@@ -1725,9 +1727,9 @@ la94bh:
 	neg		                                ;a957	ed 44
 la959h:
     ; Store 2nd value
-	ld (0e543h),a		;a959	32 43 e5
+	ld (COMPUTED_Y_SPEED),a		;a959	32 43 e5
     
-	ld a,(0e542h)		            ;a95c	3a 42 e5
+	ld a,(COMPUTED_X_SPEED)		            ;a95c	3a 42 e5
 	ld b,a			                ;a95f	47
 	ld a,(BALL_X_MINUS_SPEED)		;a960	3a 87 e5 	: . . 
 	ld hl,COMPUTED_HIT_X_NEG		;a963	21 c6 e2 	! . . 
@@ -1760,7 +1762,7 @@ la993h:
 la994h:
 	ld a,(0e541h)		;a994	3a 41 e5 	: A . 
 	ld b,a			;a997	47 	G 
-	ld a,(0e543h)		;a998	3a 43 e5 	: C . 
+	ld a,(COMPUTED_Y_SPEED)		;a998	3a 43 e5 	: C . 
 	ld c,a			;a99b	4f 	O 
 	neg		;a99c	ed 44 	. D 
 la99eh:

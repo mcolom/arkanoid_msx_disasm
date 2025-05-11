@@ -34,14 +34,19 @@ BALL_TABLE_IDX_X_SPEED: equ 3
 ; target BALL_TABLE_IDX_MOVE_TARGET.
 BALL_TABLE_IDX_MOVE_COUNTER: equ 5
 BALL_TABLE_IDX_MOVE_TARGET: equ 9
-
 BALL_TABLE_IDX_SKEWNESS: equ 6
+BALL_TABLE_IDX_SPEED_POS: equ 7
+; The speed is added to the position BALL_TABLE_IDX_SPEED_MULTIPLIER+1 times
+BALL_TABLE_IDX_SPEED_MULTIPLIER: equ 8
+BALL_TABLE_IDX_SPEED_COUNTER: equ 13
+BALL_TABLE_IDX_GLUE_COUNTER: equ 14
+BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
 
 
-
-
-
-
+;ToDo
+; After each brick hit, this contains the new ball's X speed
+COMPUTED_X_SPEED: equ 0xe542
+COMPUTED_Y_SPEED: equ 0xe543
 
 
 ; When this counter reaches 40, the skewness of the balls change
@@ -49,16 +54,6 @@ BALL_BOUNCES_COUNTER: equ 0xe51c
 
 ; Counter to change the ball skewness
 ACTION_SKEWNESS_COUNTER: equ 0xe5ac
-
-;
-BALL_TABLE_IDX_SPEED_POS: equ 7
-
-; The speed is added to the position BALL_TABLE_IDX_SPEED_MULTIPLIER+1 times
-BALL_TABLE_IDX_SPEED_MULTIPLIER: equ 8
-
-BALL_TABLE_IDX_SPEED_COUNTER: equ 13
-BALL_TABLE_IDX_GLUE_COUNTER: equ 14
-BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
 
 
 ; ToDO

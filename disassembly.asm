@@ -1767,7 +1767,7 @@ l4f6bh:
     
     ; ToDo
 	ld (0e540h),hl		;4f74	22 40 e5
-	ld (0e542h),hl		;4f77	22 42 e5 	" B . 
+	ld (COMPUTED_X_SPEED),hl		;4f77	22 42 e5 	" B . 
 l4f7ah:
     ; Not in the demo anymore
 	ld hl, 0		                ;4f7a	21 00 00
