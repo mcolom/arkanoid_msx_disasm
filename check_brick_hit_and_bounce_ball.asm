@@ -632,7 +632,6 @@ la087h:
 	ld a,(BALL_BRS_Y2)		;a087	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a08a	32 aa e2 	2 . . 
 	ld a,(BALL_BRS_X1)		;a08d	3a 8d e5 	: . . 
-la090h:
 	ld (BRICK_COL),a		;a090	32 ab e2 	2 . . 
 	call CHECK_DOUBLE_IMPACT		;a093	cd 70 a6 	. p . 
 	jp nc,la0cch		;a096	d2 cc a0 	. . . 
@@ -824,7 +823,6 @@ la21eh:
 	ld a,(BALL_BRS_X1)		;a224	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a227	32 ab e2 	2 . . 
 
-    ; ToDo
 	call CHECK_DOUBLE_IMPACT		;a22a	cd 70 a6 	. p . 
 	jp nc,la263h		;a22d	d2 63 a2 	. c . 
 
@@ -1344,7 +1342,8 @@ la58fh:
 	or a			;a58f	b7 	. 
 	ret			;a590	c9 	. 
 
-; Caso pared izquierda/derecha y ... (???)
+; Probably this is almost equivalent to sub_a29ah.
+; Called after hitting the left or right walls.
 sub_a591h:
 	ld hl,COMPUTED_HIT_COUNTER		;a591	21 41 e5 	! A . 
 	ld (hl), 0		;a594	36 00 	6 . 
