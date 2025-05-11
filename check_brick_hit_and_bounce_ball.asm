@@ -321,7 +321,7 @@ l9dcfh:
 	cp 11		;9e2c	fe 0b 	. . 
 	jp nc,l9f6bh		;9e2e	d2 6b 9f 	. k . 
 	ld (BALL_BRS_X1),a		;9e31	32 8d e5 	2 . . 
-	call sub_a2adh		;9e34	cd ad a2 	. . . 
+	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;9e34	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;9e37	da 99 a2 	. . . 
 	ld a,(BALL_BRS_X2)		;9e3a	3a 8b e5 	: . . 
 	cp 11		;9e3d	fe 0b 	. . 
@@ -724,7 +724,7 @@ la102h:
 	cp 11		;a15a	fe 0b 	. . 
 	jp nc,brick_hit_check_done		;a15c	d2 99 a2 	. . . 
 	ld (BALL_BRS_X1),a		;a15f	32 8d e5 	2 . . 
-	call sub_a2adh		;a162	cd ad a2 	. . . 
+	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;a162	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;a165	da 99 a2 	. . . 
 	ld a,(BALL_BRS_X2)		;a168	3a 8b e5 	: . . 
 	cp 11		;a16b	fe 0b 	. . 
@@ -901,7 +901,10 @@ sub_a29ah:
     ; This means we're at the right border and starting to move left    
 	jp la2bdh		            ;a2aa	c3 bd a2
 
-sub_a2adh:
+; This funtions seems to check a very rare or probably
+; impossible situation to set the carry flag.
+; In practice it simply resets the carry.
+CHECK_RARE_OR_IMPOSSIBLE_CASE:
 	; If X1 != 15, clear_carry_and_exit
     ld a,(BALL_BRS_X2)		;a2ad	3a 8b e5
 	cp 15		                ;a2b0	fe 0f
@@ -927,6 +930,9 @@ la2bdh:
 	cp c			                        ;a2d0	b9  Jump if Y1 == Y2 + 1
 	jp z,la2eeh		                        ;a2d1	ca ee a2
     ; Y1 != Y2 + 1
+    
+    ; A really rare case? Impossible?
+    ; I've never seen the code arriving at here...
 	jp set_carry_and_exit		            ;a2d4	c3 26 a3
 la2d7h:
 	dec c			            ;a2d7	0d
@@ -953,6 +959,7 @@ la2dfh:
 la2eeh:
 	ld a,(BALL_BRS_Y2)		;a2ee	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a2f1	32 aa e2 	2 . . 
+
 	call sub_a591h		;a2f4	cd 91 a5 	. . . 
 	jp nc,la2dfh		;a2f7	d2 df a2 	. . . 
 
@@ -1337,6 +1344,7 @@ la58fh:
 	or a			;a58f	b7 	. 
 	ret			;a590	c9 	. 
 
+; Caso pared izquierda/derecha y ... (???)
 sub_a591h:
 	ld hl,COMPUTED_HIT_COUNTER		;a591	21 41 e5 	! A . 
 	ld (hl), 0		;a594	36 00 	6 . 
