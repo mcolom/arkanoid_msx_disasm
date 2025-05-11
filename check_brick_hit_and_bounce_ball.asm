@@ -190,6 +190,7 @@ l9d36h:
 	call BALL_VERTICAL_BOUNCE		;9d4b	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;9d4e	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;9d51	c3 99 a2 	. . . 
+
 l9d54h:
 	ld a,(BALL_BRS_Y2)		;9d54	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;9d57	32 aa e2 	2 . . 
