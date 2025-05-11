@@ -207,12 +207,12 @@ l9d36h:
 	jp brick_hit_check_done		;9d51	c3 99 a2
 
 l9d54h:
-    ; Call sub_a670h with (X1, Y2)
+    ; Call CHECK_DOUBLE_IMPACT with (X1, Y2)
 	ld a,(BALL_BRS_Y2)		;9d54	3a 8a e5
 	ld (BRICK_ROW),a		;9d57	32 aa e2
 	ld a,(BALL_BRS_X1)		;9d5a	3a 8d e5
 	ld (BRICK_COL),a		;9d5d	32 ab e2
-	call sub_a670h		    ;9d60	cd 70 a6
+	call CHECK_DOUBLE_IMPACT		    ;9d60	cd 70 a6
 	jp nc,l9d99h		    ;9d63	d2 99 9d
 
     ; Check for a brick in (X1, Y2)
@@ -422,9 +422,9 @@ l9ef0h:
 	ld a,(BALL_BRS_X1)		;9ef6	3a 8d e5
 	ld (BRICK_COL),a		;9ef9	32 ab e2
     
-    ; Additional call to sub_a670h
+    ; Additional call to CHECK_DOUBLE_IMPACT
     ; ToDo
-	call sub_a670h		    ;9efc	cd 70 a6
+	call CHECK_DOUBLE_IMPACT		    ;9efc	cd 70 a6
 	jp nc,l9f35h		    ;9eff	d2 35 9f
 
     ; Check for brick
@@ -529,8 +529,10 @@ l9f6bh:
 	cp 11		;9fc3	fe 0b 	. . 
 	jp nc,la102h		;9fc5	d2 02 a1 	. . . 
 	ld (BALL_BRS_X1),a		;9fc8	32 8d e5 	2 . . 
+
 	call sub_a29ah		;9fcb	cd 9a a2 	. . . 
 	jp c,brick_hit_check_done		;9fce	da 99 a2 	. . . 
+
 	ld a,(BALL_BRS_X2)		;9fd1	3a 8b e5 	: . . 
 	cp 11		;9fd4	fe 0b 	. . 
 	jp nc,brick_hit_check_done		;9fd6	d2 99 a2 	. . . 
@@ -625,7 +627,7 @@ la087h:
 	ld a,(BALL_BRS_X1)		;a08d	3a 8d e5 	: . . 
 la090h:
 	ld (BRICK_COL),a		;a090	32 ab e2 	2 . . 
-	call sub_a670h		;a093	cd 70 a6 	. p . 
+	call CHECK_DOUBLE_IMPACT		;a093	cd 70 a6 	. p . 
 	jp nc,la0cch		;a096	d2 cc a0 	. . . 
 	call THERE_IS_A_BRICK		;a099	cd a8 ad 	. . . 
 	jp nc,la0b4h		;a09c	d2 b4 a0 	. . . 
@@ -770,8 +772,10 @@ la1c7h:
 	ld (BRICK_ROW),a		;a1ca	32 aa e2 	2 . . 
 	ld a,(BALL_BRS_X2)		;a1cd	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a1d0	32 ab e2 	2 . . 
-	call THERE_IS_A_BRICK		;a1d3	cd a8 ad 	. . . 
+
+	call THERE_IS_A_BRICK		;a1d3	cd a8 ad
 	jp nc,brick_hit_check_done		;a1d6	d2 99 a2 	. . . 
+
 	call BALL_VERTICAL_BOUNCE		;a1d9	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a1dc	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a1df	c3 99 a2 	. . . 
@@ -781,6 +785,7 @@ la1e2h:
 	ld (BRICK_ROW),a		;a1e5	32 aa e2 	2 . . 
 	ld a,(BALL_BRS_X2)		;a1e8	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a1eb	32 ab e2 	2 . . 
+
 	call THERE_IS_A_BRICK		;a1ee	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a1f1	d2 99 a2 	. . . 
 
@@ -813,7 +818,7 @@ la21eh:
 	ld (BRICK_COL),a		;a227	32 ab e2 	2 . . 
 
     ; ToDo
-	call sub_a670h		;a22a	cd 70 a6 	. p . 
+	call CHECK_DOUBLE_IMPACT		;a22a	cd 70 a6 	. p . 
 	jp nc,la263h		;a22d	d2 63 a2 	. c . 
 
 	call THERE_IS_A_BRICK		;a230	cd a8 ad 	. . . 
@@ -876,7 +881,7 @@ brick_hit_check_done:
 ; Carry set: nothing to do, ball goes on normally
 sub_a29ah:
     ; If X1 != 11, clear_carry_and_exit
-	ld a,(BALL_BRS_X2)		;a29a	3a 8b e5
+	ld a,(BALL_BRS_X2)		    ;a29a	3a 8b e5
 	cp 11		                ;a29d	fe 0b
 	jp nz,clear_carry_and_exit	;a29f	c2 24 a3
 
@@ -885,7 +890,8 @@ sub_a29ah:
 	cp 10		                ;a2a5	fe 0a
 	jp nz,clear_carry_and_exit	;a2a7	c2 24 a3
 
-    ; X1 == 11 && X2 == 10
+    ; X1 == 11 && X2 == 10 --> moving left
+    ; This means we're at the right border and starting to move left    
 	jp la2bdh		            ;a2aa	c3 bd a2
 
 sub_a2adh:
@@ -925,15 +931,11 @@ la2d7h:
 ; Ball hitting the left wall, moving left-down
 ; Ball hitting the left wall, moving left-up
 la2dfh:
+    ; Set BRICK_ROW
 	ld a,(BALL_BRS_Y1)		;a2df	3a 8c e5
-	ld (BRICK_ROW),a		    ;a2e2	32 aa e2
+	ld (BRICK_ROW),a		;a2e2	32 aa e2
 	
-    ; Writes 4 values at:
-    ; 0xe2c4    --> COMPUTED_HIT_Y_NEG
-    ; 0xe2c5
-    ; 0xe2c6
-    ; 0xe2c7
-    call sub_a3d1h		        ;a2e5	cd d1 a3
+    call GET_COMPUTED_VARS		        ;a2e5	cd d1 a3
     
     ; Horizontal bounce and exit with carry set
 	call BALL_HORIZONTAL_BOUNCE	;a2e8	cd 80 9b
@@ -958,11 +960,12 @@ la2eeh:
 	ld (ix+SPR_PARAMS_IDX_X),a		;a30f	dd 77 01 	. w . 
 
 	call BALL_VERTICAL_BOUNCE		;a312	cd 5b 9b 	. [ . 
+
 	call DO_BRICK_ACTION		;a315	cd 05 aa 	. . . 
 	jp set_carry_and_exit		;a318	c3 26 a3 	. & . 
 
 no_brick_do_horizontal_bounce_set_carry:
-	call sub_a3d1h		;a31b	cd d1 a3 	. . . 
+	call GET_COMPUTED_VARS		;a31b	cd d1 a3 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a31e	cd 80 9b 	. . . 
 	jp set_carry_and_exit		;a321	c3 26 a3 	. & . 
 clear_carry_and_exit:
@@ -981,22 +984,23 @@ sub_a328h:
 	cp b			;a32f	b8 	. 
 	jp nz,la354h		;a330	c2 54 a3 	. T . 
 
-	ld a,(BALL_BRS_Y2)		;a333	3a 8a e5 	: . . 
-	ld (BRICK_ROW),a		;a336	32 aa e2 	2 . . 
-	ld a,(BALL_BRS_X2)		;a339	3a 8b e5 	: . . 
-	ld (BRICK_COL),a		;a33c	32 ab e2 	2 . . 
+    ; Set BRICK_ROW and BRICK_COL
+	ld a,(BALL_BRS_Y2)		;a333	3a 8a e5
+	ld (BRICK_ROW),a		;a336	32 aa e2
+	ld a,(BALL_BRS_X2)		;a339	3a 8b e5
+	ld (BRICK_COL),a		;a33c	32 ab e2
 
-	call THERE_IS_A_BRICK		;a33f	cd a8 ad 	. . . 
-	jp nc,la351h		;a342	d2 51 a3 	. Q . 
+	call THERE_IS_A_BRICK	;a33f	cd a8 ad
+	jp nc,la351h		    ;a342	d2 51 a3
 
     ; Double impact
 	call DOUBLE_BRICK_IMPACT_2		;a345	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a348	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a34b	cd 05 aa 	. . . 
-	jp la3d0h		;a34e	c3 d0 a3 	. . . 
+	jp all_done		;a34e	c3 d0 a3 	. . . 
 la351h:
-	jp la3d0h		;a351	c3 d0 a3 	. . . 
+	jp all_done		;a351	c3 d0 a3 	. . . 
 
 la354h:
 	ld a,(BALL_BRS_Y2)		;a354	3a 8a e5 	: . . 
@@ -1007,24 +1011,29 @@ la354h:
 	ld a,(BALL_BRS_X2)		;a364	3a 8b e5 	: . . 
 la367h:
 	ld (BRICK_COL),a		;a367	32 ab e2 	2 . . 
-	call sub_a670h		;a36a	cd 70 a6 	. p . 
+
+	call CHECK_DOUBLE_IMPACT		;a36a	cd 70 a6 	. p . 
 	jp nc,la3afh		;a36d	d2 af a3 	. . . 
+
 	ld a,(BALL_BRS_Y2)		;a370	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a373	32 aa e2 	2 . . 
 	ld a,(BALL_BRS_X1)		;a376	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a379	32 ab e2 	2 . . 
+
 	call THERE_IS_A_BRICK		;a37c	cd a8 ad 	. . . 
 	jp nc,la38eh		;a37f	d2 8e a3 	. . . 
+
 	call DOUBLE_BRICK_IMPACT_2		;a382	cd 10 a8 	. . . 
 	call BALL_VERTICAL_BOUNCE		;a385	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a388	cd 05 aa 	. . . 
-	jp la3d0h		;a38b	c3 d0 a3 	. . . 
+	jp all_done		;a38b	c3 d0 a3 	. . . 
 
 la38eh:
 	ld a,(BALL_BRS_Y2)		;a38e	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a391	32 aa e2 	2 . . 
 	ld a,(BALL_BRS_X2)		;a394	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a397	32 ab e2 	2 . . 
+
 	call THERE_IS_A_BRICK		;a39a	cd a8 ad 	. . . 
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
     
@@ -1033,9 +1042,9 @@ la38eh:
 
 	call BALL_HORIZONTAL_BOUNCE		;a3a3	cd 80 9b 	. . . 
 	call DO_BRICK_ACTION		;a3a6	cd 05 aa 	. . . 
-	jp la3d0h		;a3a9	c3 d0 a3 	. . . 
+	jp all_done		;a3a9	c3 d0 a3 	. . . 
 la3ach:
-	jp la3d0h		;a3ac	c3 d0 a3 	. . . 
+	jp all_done		;a3ac	c3 d0 a3 	. . . 
 
 la3afh:
 	ld a,(BALL_BRS_Y2)		;a3af	3a 8a e5 	: . . 
@@ -1051,13 +1060,21 @@ la3afh:
 
 	call BALL_VERTICAL_BOUNCE		;a3c4	cd 5b 9b 	. [ . 
 	call DO_BRICK_ACTION		;a3c7	cd 05 aa 	. . . 
-	jp la3d0h		;a3ca	c3 d0 a3 	. . . 
+	jp all_done		;a3ca	c3 d0 a3 	. . . 
 la3cdh:
-	jp la3d0h		;a3cd	c3 d0 a3 	. . . 
-la3d0h:
+	jp all_done		;a3cd	c3 d0 a3 	. . . 
+all_done:
 	ret			;a3d0	c9 	. 
 
-sub_a3d1h:
+; ToDo
+; Among other things, this function writes:
+;   COMPUTED_HIT_Y_NEG
+;   COMPUTED_HIT_Y
+;   COMPUTED_HIT_X_NEG
+;   COMPUTED_HIT_X
+;   COMPUTED_Y_SPEED
+;   COMPUTED_X_SPEED
+GET_COMPUTED_VARS:
 	ld hl,COMPUTED_HIT_COUNTER		;a3d1	21 41 e5 	! A . 
 	ld (hl), 0		;a3d4	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a3d6	11 42 e5 	. B . 
@@ -1427,7 +1444,8 @@ la66ch:
 	ld (BRICK_HIT_ROW),a		;a66c	32 3c e5 	2 < . 
 	ret			;a66f	c9 	. 
 
-sub_a670h:
+; Check for an incoming double impact of the ball at two bricks
+CHECK_DOUBLE_IMPACT:
     ; IY: BALL_TABLE
     
     ; Clear 2 variables
