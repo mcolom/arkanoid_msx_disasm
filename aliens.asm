@@ -15,17 +15,15 @@ ALIEN_TABLE_IDX_FROM_DOOR_HORIZ_SPEED: equ 6        ; 0xe4cd    Initial speed ho
 ALIEN_TABLE_IDX_IN_DOOR: equ 7      ; 0xe4ce The alien is entering the playfield from the door
 
 ALIEN_TABLE_IDX_VERT_SPEED: equ 8   ; 0xe4cf Vertical speed
-ALIEN_TABLE_IDX_HORIZ_SPEED: equ 9  ; 0xe4da Horizontal speed
+ALIEN_TABLE_IDX_HORIZ_SPEED: equ 9  ; 0xe4d0 Horizontal speed
 
-ALIEN_TABLE_IDX_FLYING_ANIM_NUM: equ 10 ;0xe4db Current pattern when the alien is flying
+ALIEN_TABLE_IDX_FLYING_ANIM_NUM: equ 10 ;0xe4d1 Current pattern when the alien is flying
 
-ALIEN_TABLE_IDX_PERFORMING_WALK: equ 11 ;0xe4dc The alien is performing it's circular walk
-ALIEN_TABLE_IDX_WALK_STEP: equ 12       ;0xe4dd Which step of the circular walk
-ALIEN_TABLE_IDX_WALK_NUM_TICKS: equ 15  ;0xe4dd Number of ticks for that particular step
+ALIEN_TABLE_IDX_PERFORMING_WALK: equ 11 ;0xe4d2 The alien is performing it's circular walk
+ALIEN_TABLE_IDX_WALK_STEP: equ 12       ;0xe4d3 Which step of the circular walk
+ALIEN_TABLE_IDX_WALK_NUM_TICKS: equ 15  ;0xe4d6 Number of ticks for that particular step
 
-; ix+13 in 0xe4de
-; ix+14 in 0xe4df
-
+; ix+13 and ix+14 seem to be unused
 
 ALIEN_TABLE_IDX_NEXT_ACTION: equ 16      ; 0xe4d7 Alien's next action
 ALIEN_TABLE_NEXT_FRAME_COUNTER: equ 17   ; 0xe4d8 Counter to update the alien's animation frame
@@ -33,9 +31,9 @@ ALIEN_TABLE_NEXT_FRAME_COUNTER: equ 17   ; 0xe4d8 Counter to update the alien's 
 ; 2: alien_inv_horiz_speed
 ; 3: set_alien_exploding
 
-ALIEN_TABLE_IDX_CAN_CROSS_BRICKS: equ 19      ; 0xe4da The alien can travel through the bricks
-; [ToDo] Incomplete table
+; ix+18 seems to be unused
 
+ALIEN_TABLE_IDX_CAN_CROSS_BRICKS: equ 19      ; 0xe4da The alien can travel through the bricks
 
 
 ALIEN_ACTIVE_EXPLODING: equ 2 ; Alien is active and exploding
