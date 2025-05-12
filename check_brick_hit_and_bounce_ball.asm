@@ -1,7 +1,15 @@
 ; Function CHECK_BRICK_HIT_AND_BOUNCE_BALL is so large and complex, that I
 ; though it merits to be in its own file.
 
-; Seguir: know what BALL_BRS_Y2, BALL_BRS_X2, and BALL_BRS_Y1 mean
+; The logic in this part is very complicated and it's taking care of
+; many different cases by checking several conditions.
+
+; This is not perfectly understood and it requires a deeper analysis.
+
+; Check if the ball has hit a brick and do several actions such as:
+; - Adjust the position of the ball sprite
+; - Take care of special cases, such as hitting two bricks at the same time
+; - Others
 CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
@@ -100,7 +108,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; Store (BALL_X - SPEED_X - 12) \ 16, an X coordinate
 	ld (BALL_BRS_X1),a           ;9c95	32 8d e5
 
-	call sub_a29ah		            ;9c98	cd 9a a2
+	call CHECK_BALL_REACHES_RIGHT_BORDER		            ;9c98	cd 9a a2
 	jp c,brick_hit_check_done		;9c9b	da 99 a2 	. . . 
 
 	ld a,(BALL_BRS_X2)		;9c9e	3a 8b e5 	: . . 
@@ -537,7 +545,7 @@ l9f6bh:
 	jp nc,la102h		;9fc5	d2 02 a1 	. . . 
 	ld (BALL_BRS_X1),a		;9fc8	32 8d e5 	2 . . 
 
-	call sub_a29ah		;9fcb	cd 9a a2 	. . . 
+	call CHECK_BALL_REACHES_RIGHT_BORDER		;9fcb	cd 9a a2 	. . . 
 	jp c,brick_hit_check_done		;9fce	da 99 a2 	. . . 
 
 	ld a,(BALL_BRS_X2)		;9fd1	3a 8b e5 	: . . 
@@ -881,10 +889,8 @@ la281h:
 brick_hit_check_done:
 	ret			;a299	c9 	. 
 
-; Check "something" (ToDo) and set/clear the carry
-; Carry reset: it's hit something
-; Carry set: nothing to do, ball goes on normally
-sub_a29ah:
+; Check when the ball reaches the right wall
+CHECK_BALL_REACHES_RIGHT_BORDER:
     ; If X1 != 11, clear_carry_and_exit
 	ld a,(BALL_BRS_X2)		    ;a29a	3a 8b e5
 	cp 11		                ;a29d	fe 0b
@@ -915,10 +921,10 @@ CHECK_RARE_OR_IMPOSSIBLE_CASE:
     ; X1 == 15 && X2 == 0
 la2bdh:
 	ld a,(BALL_BRS_Y1)		;a2bd	3a 8c e5
-	ld c,a			            ;a2c0	4f          C = Y2
-	ld a,(BALL_BRS_Y2)		;a2c1	3a 8a e5    A = Y1
-	cp c			            ;a2c4	b9
-	jp z,la2dfh		            ;a2c5	ca df a2    Jump if Y1 == Y2
+	ld c,a			        ;a2c0	4f          C = Y1
+	ld a,(BALL_BRS_Y2)		;a2c1	3a 8a e5    A = Y2
+	cp c			        ;a2c4	b9
+	jp z,la2dfh		        ;a2c5	ca df a2    Jump if Y1 == Y2
     
     ; Y1 != Y2
 
@@ -958,7 +964,7 @@ la2eeh:
 	ld a,(BALL_BRS_Y2)		;a2ee	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a2f1	32 aa e2 	2 . . 
 
-	call sub_a591h		;a2f4	cd 91 a5 	. . . 
+	call CHECK_EXTERNAL_CHANGE_PARAMS_BALL		;a2f4	cd 91 a5 	. . . 
 	jp nc,la2dfh		;a2f7	d2 df a2 	. . . 
 
 	ld a,(BALL_BRS_X1)		;a2fa	3a 8d e5 	: . . 
@@ -1083,7 +1089,6 @@ la3cdh:
 all_done:
 	ret			;a3d0	c9 	. 
 
-; ToDo
 ; Among other things, this function writes:
 ;   COMPUTED_HIT_Y_NEG
 ;   COMPUTED_HIT_Y
@@ -1342,18 +1347,22 @@ la58fh:
 	or a			;a58f	b7 	. 
 	ret			;a590	c9 	. 
 
-; Probably this is almost equivalent to sub_a29ah.
+
+; This seems to check for a external collision that changes the
+; parameters of the ball.
 ; Called after hitting the left or right walls.
-sub_a591h:
+CHECK_EXTERNAL_CHANGE_PARAMS_BALL:
 	ld hl,COMPUTED_HIT_COUNTER		;a591	21 41 e5 	! A . 
 	ld (hl), 0		;a594	36 00 	6 . 
 	ld de,COMPUTED_X_SPEED		;a596	11 42 e5 	. B . 
 	ld bc, 2		;a599	01 02 00 	. . . 
 	ldir		;a59c	ed b0 	. . 
+
 	ld a,(BRICK_ROW)		;a59e	3a aa e2 	: . . 
 	sla a		;a5a1	cb 27 	. ' 
 	sla a		;a5a3	cb 27 	. ' 
 	sla a		;a5a5	cb 27 	. ' 
+
 	ld b, 24		;a5a7	06 18 	. . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5a9	fd cb 02 7e 	. . . ~ 
 	jp nz,la5b2h		;a5ad	c2 b2 a5 	. . . 
@@ -1361,14 +1370,17 @@ sub_a591h:
 la5b2h:
 	add a,b			;a5b2	80 	. 
 	ld (COMPUTED_HIT_Y_NEG),a		;a5b3	32 c4 e2 	2 . . 
+
 	add a, 7		;a5b6	c6 07 	. . 
 	ld (COMPUTED_HIT_Y),a		;a5b8	32 c5 e2 	2 . . 
+
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a5bb	fd 7e 06 	. ~ . 
 	bit 7,a		;a5be	cb 7f 	. ␡ 
 	jp z,la5c5h		;a5c0	ca c5 a5 	. . . 
 	neg		;a5c3	ed 44 	. D 
 la5c5h:
 	dec a			;a5c5	3d 	= 
+
 	sla a		;a5c6	cb 27 	. ' 
 	ld l,a			;a5c8	6f 	o 
 	ld h, 0		;a5c9	26 00 	& . 
