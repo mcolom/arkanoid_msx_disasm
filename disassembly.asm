@@ -5470,7 +5470,7 @@ l7695h:
     ; Skip if ALIEN_Y >= 64
 	ld a,(iy+SPR_PARAMS_IDX_Y)		;7695	fd 7e 00
 	cp 64		                    ;7698	fe 40
-	jp nc,l77aeh		            ;769a	d2 ae 77
+	jp nc,alien_walk		            ;769a	d2 ae 77
 
     ; Update vertical position according to the speed
     ; SPR_PARAMS_IDX_Y += ALIEN_TABLE_IDX_VERT_SPEED
@@ -5657,65 +5657,64 @@ TBL_ALIEN_LAST_FRAME:
     db 8, 8, 6, 17
 
 ; ALIEN_Y >= 64
-l77aeh:
+; Each alien has a 5-step predefined set of speeds and ticks, that we
+; shall call his "walk".
+alien_walk:
     ; Mark this alien if he's gone as down as ALIEN_Y >= 64
     ; Skip if already marked
-	ld a,(ix+11)		;77ae	dd 7e 0b
+	ld a,(ix+ALIEN_TABLE_IDX_PERFORMING_WALK)		;77ae	dd 7e 0b
 	cp 1		        ;77b1	fe 01
 	jp z,l77f1h		    ;77b3	ca f1 77
     
 	; Mark the alien
-    ld (ix+11),1		;77b6	dd 36 0b 01 	. 6 . . 
+    ld (ix+ALIEN_TABLE_IDX_PERFORMING_WALK), 1		;77b6	dd 36 0b 01
     
-    ; U = (ix+12)
-	; HL <-- 4*U
-    ld a,(ix+12)		;77ba	dd 7e 0c
+    ; U = (ix+ALIEN_TABLE_IDX_WALK_STEP)
+	; HL <-- 4*WALK_STEP
+    ; It's multiplied by 4 because each entry is 4 bytes.
+    ld a,(ix+ALIEN_TABLE_IDX_WALK_STEP)		;77ba	dd 7e 0c
 	sla a		        ;77bd	cb 27
 	sla a		        ;77bf	cb 27
 	ld l,a			    ;77c1	6f
 	ld h, 0		        ;77c2	26 00
 
-    ; Choose a table depending on the alien's type (or color)
-
-    ; ToDo: this part is not well understood, with indices 
-    ; ix+11, ix+12, ix+13, ix+14, and ix+15.
-
+    ; Choose a walk table depending on the alien's type (or color)
 	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;77c4	dd 7e 00
 
-	ld de,TBL_7b10		                ;77c7	11 10 7b
+	ld de,TBL_ALIEN_TYPE_0_SPEED		;77c7	11 10 7b
 	cp 0		                        ;77ca	fe 00
 	jp z,l77e2h		                    ;77cc	ca e2 77
 
-	ld de,TBL_7b24		                ;77cf	11 24 7b
+	ld de,TBL_ALIEN_TYPE_1_WALK		    ;77cf	11 24 7b
 	cp 1		                        ;77d2	fe 01
 	jp z,l77e2h		                    ;77d4	ca e2 77
 
-	ld de,TBL_7b38		                ;77d7	11 38 7b
+	ld de,TBL_ALIEN_TYPE_2_WALK         ;77d7	11 38 7b
 	cp 2		                        ;77da	fe 02
 	jp z,l77e2h		                    ;77dc	ca e2 77
 
-	ld de,TBL_7b50		                ;77df	11 50 7b
+	ld de,TBL_ALIEN_TYPE_3_WALK		    ;77df	11 50 7b
 l77e2h:
-    ; HL <-- TBL + 4*U
+    ; HL <-- TBL + 4*WALK_STEP
 	add hl,de			                ;77e2	19
     
-    ; A <-- TBL[4*U]
+    ; A <-- TBL[4*WALK_STEP]
 	ld a,(hl)			                ;77e3	7e
     
     ; Set new vertical speed
-    ; SPEED_V <-- TBL[4*U]
+    ; SPEED_V <-- TBL[4*WALK_STEP]
 	ld (ix+ALIEN_TABLE_IDX_VERT_SPEED),a	;77e4	dd 77 08
     
     ; Set new horizontal speed
-    ; SPEED_H <-- TBL[4*U + 1]
+    ; SPEED_H <-- TBL[4*WALK_STEP + 1]
 	inc hl			                        ;77e7	23
 	ld a,(hl)			                    ;77e8	7e
 	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;77e9	dd 77 09
 
-    ; ToDo
-	inc hl			;77ec	23 	# 
-	ld a,(hl)		;77ed	7e 	~ 
-	ld (ix+15),a	;77ee	dd 77 0f 	. w . 
+    ; Increment ticks for this step of the walk
+	inc hl			;77ec	23
+	ld a,(hl)		;77ed	7e
+	ld (ix+ALIEN_TABLE_IDX_WALK_NUM_TICKS),a	;77ee	dd 77 0f
 l77f1h:
     ; Update alien's vertical position according to his speed
 	ld a,(ix+ALIEN_TABLE_IDX_VERT_SPEED)	;77f1	dd 7e 08
@@ -5751,15 +5750,16 @@ l7817h:
 	neg		                                ;7826	ed 44
 	ld (ix+ALIEN_TABLE_IDX_HORIZ_SPEED),a	;7828	dd 77 09
 l782bh:
-    ; ToDo
-	ld a,(ix+15)		;782b	dd 7e 0f 	. ~ . 
-	dec a			;782e	3d 	= 
-	ld (ix+15),a		;782f	dd 77 0f 	. w . 
-	jp nz,l7763h		;7832	c2 63 77 	. c w 
+    ; We've done one more tick
+    ; If no more ticks, get back to "not performing walk" state
+	ld a,(ix+ALIEN_TABLE_IDX_WALK_NUM_TICKS)		;782b	dd 7e 0f
+	dec a			                                ;782e	3d
+	ld (ix+ALIEN_TABLE_IDX_WALK_NUM_TICKS),a		;782f	dd 77 0f
+	jp nz,l7763h		                            ;7832	c2 63 77
 
-	ld (ix+11), 0		;7835	dd 36 0b 00 	. 6 . . 
+	ld (ix+ALIEN_TABLE_IDX_PERFORMING_WALK), 0		;7835	dd 36 0b 00
 
-    ; Skip if Y >= 174
+    ; Skip if Y >= 174 (the bottom of the screen)
 	ld a,(iy+SPR_PARAMS_IDX_Y)		;7839	fd 7e 00
 	cp 174		                    ;783c	fe ae
 	jp nc,l785bh		            ;783e	d2 5b 78    
@@ -5767,24 +5767,27 @@ l782bh:
 
 	ld a,(ix+ALIEN_TABLE_IDX_COLOR)		;7841	dd 7e 00
 	cp 2		                        ;7844	fe 02
-	jp z,l787dh		;7846	ca 7d 78 	. } x 
-	inc (ix+12)		;7849	dd 34 0c 	. 4 . 
-	ld a,(ix+12)		;784c	dd 7e 0c 	. ~ . 
-	cp 5		;784f	fe 05 	. . 
+	jp z,l787dh		                    ;7846	ca 7d 78
+
+    ; Increment walk step. Reset if it's already 5.
+	inc (ix+ALIEN_TABLE_IDX_WALK_STEP)		;7849	dd 34 0c
+	ld a,(ix+ALIEN_TABLE_IDX_WALK_STEP)		;784c	dd 7e 0c
+	cp 5		                            ;784f	fe 05
 l7851h:
-	jp nz,l7763h		;7851	c2 63 77 	. c w 
-	ld (ix+12),0	;7854	dd 36 0c 00 	. 6 . . 
-	jp next_alien		;7858	c3 6d 78 	. m x 
+	jp nz,l7763h		                ;7851	c2 63 77
+	ld (ix+ALIEN_TABLE_IDX_WALK_STEP),0	;7854	dd 36 0c 00
+	jp next_alien		                ;7858	c3 6d 78
 l785bh:
-	ld (iy+SPR_PARAMS_IDX_Y), 192		;785b	fd 36 00 c0 	. 6 . . 
-	push ix		;785f	dd e5 	. . 
-	push ix		;7861	dd e5 	. . 
-	pop hl			;7863	e1 	. 
-	pop de			;7864	d1 	. 
-	inc de			;7865	13 	. 
-	ld (hl), 0		;7866	36 00 	6 . 
-	ld bc, 19		;7868	01 13 00 	. . . 
-	ldir		;786b	ed b0 	. . 
+    ; Remove alien
+	ld (iy+SPR_PARAMS_IDX_Y), 192		;785b	fd 36 00 c0
+	push ix		    ;785f	dd e5
+	push ix		    ;7861	dd e5
+	pop hl			;7863	e1
+	pop de			;7864	d1
+	inc de			;7865	13
+	ld (hl), 0		;7866	36 00
+	ld bc, 19		;7868	01 13 00
+	ldir		    ;786b	ed b0
 ; Process next alien
 next_alien:
 	pop bc			        ;786d	c1
@@ -5797,10 +5800,12 @@ next_alien:
 	ret			            ;787c	c9
 
 l787dh:
-	inc (ix+12)		;787d	dd 34 0c 	. 4 . 
-	ld a,(ix+12)		;7880	dd 7e 0c 	. ~ . 
-	cp 6		;7883	fe 06 	. . 
-	jp l7851h		;7885	c3 51 78 	. Q x 
+    ; Increment walk step.
+    ; If it's 6, it's done.
+	inc (ix+ALIEN_TABLE_IDX_WALK_STEP)		;787d	dd 34 0c
+	ld a,(ix+ALIEN_TABLE_IDX_WALK_STEP)		;7880	dd 7e 0c
+	cp 6		                            ;7883	fe 06
+	jp l7851h		                        ;7885	c3 51 78
 
 ; Check if any of the 3 lasers hit an alien.
 ; If so, update points and deactivate that laser.
@@ -6257,9 +6262,9 @@ TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
     db 0x90, 0x94, 0x98, 0x9c     ;7b0c
 
 ; ToDo
-; V_SPEED, H_SPEED, ix+15
+; V_SPEED, H_SPEED, NUM_TICKS
 ;7b10
-TBL_7b10:
+TBL_ALIEN_TYPE_0_SPEED:
     db 1, 0, 40, 0
     db 1, 2, 24, 0
     db -1, 2, 24, 0
@@ -6267,7 +6272,7 @@ TBL_7b10:
     db 1, -2, 24, 0
 
 ;7b24
-TBL_7b24:
+TBL_ALIEN_TYPE_1_WALK:
     db 1, 0, 56, 0 ; 0x7b24 - 0x7b27
     db 2, 3, 30, 0 ; 0x7b28 - 0x7b2b
     db -2, 3, 30, 0 ; 0x7b2c - 0x7b2f
@@ -6275,7 +6280,7 @@ TBL_7b24:
     db 2, -3, 24, 0 ; 0x7b34 - 0x7b37
 
 ;7b38
-TBL_7b38:
+TBL_ALIEN_TYPE_2_WALK:
     db 1, 0, 32, 0 ; 0x7b38 - 0x7b3b
     db 1, 2, 0x8, 0 ; 0x7b3c - 0x7b3f
     db -1, 2, 0x8, 0 ; 0x7b40 - 0x7b43
@@ -6284,7 +6289,7 @@ TBL_7b38:
     db 1, 2, 24, 0 ; 0x7b4c - 0x7b4f
 
 ;7b50
-TBL_7b50:
+TBL_ALIEN_TYPE_3_WALK:
     db 1, 0, 40, 0 ; 0x7b50 - 0x7b53
     db 1, -2, 24, 0 ; 0x7b54 - 0x7b57
     db -1, -2, 24, 0 ; 0x7b58 - 0x7b5b
