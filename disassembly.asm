@@ -1766,10 +1766,9 @@ l4f6bh:
 	ld hl,0		                ;4f6b	21 00 00
 	ld (BRICK_HIT_ROW),hl		;4f6e	22 3c e5
 	ld (VAUS_X2),hl		        ;4f71	22 3e e5
-    
-    ; ToDo
-	ld (0e540h),hl		;4f74	22 40 e5
-	ld (COMPUTED_X_SPEED),hl		;4f77	22 42 e5 	" B . 
+
+	ld (TITLE_TICKS+1),hl		;4f74	22 40 e5
+    ld (COMPUTED_X_SPEED),hl	;4f77	22 42 e5
 l4f7ah:
     ; Not in the demo anymore
 	ld hl, 0		                ;4f7a	21 00 00
