@@ -179,16 +179,19 @@ lb4aeh:
 
 ; ToDo
 sub_b4b5_sound:
+    ; Exit if no sound need to be played
 	ld a, (hl)		;b4b5	7e
 	and a		    ;b4b6	a7
 	ret z			;b4b7	c8
 
-	push hl			;b4b8	e5 	. 
-	pop ix		;b4b9	dd e1 	. . 
-	dec (ix+009h)		;b4bb	dd 35 09 	. 5 . 
-	ret nz			;b4be	c0 	. 
+    ; IX points to the structure 0xE5D3
+	push hl			;b4b8	e5
+	pop ix		    ;b4b9	dd e1
     
-    
+    ; Exit if not zero yet
+	dec (ix+009h)	;b4bb	dd 35 09
+	ret nz			;b4be	c0
+
     ; The first value at 0xb855 was read here at b4bf, when it
     ; played the level start song.
     
