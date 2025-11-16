@@ -8034,10 +8034,6 @@ lab10h:
     ; HL = 32*BRICK_ROW + 0x1842 + 2*BRICK_COL
 	ld d, 0		        ;ab1f	16 00
 	add hl,de			;ab21	19
-    
-    ; This assignment to HL needs to be done.
-    ; Otherwise the hard bricks are drawn again, in the first column.
-    ; ToDo: understand this better...
 
     ; BRICK_HIT_ROW <-- BRICK_ROW
 	ld a,(BRICK_ROW)		;ab22	3a aa e2
