@@ -129,11 +129,11 @@ ROM_START:
 	ld a, 1		        ;4058	3e 01
 	call CHGCAP		    ;405a	cd 32 01    
 
-	ld a,0ffh		;405d	3e ff 	> . 
-	ld (0e5c3h),a		;405f	32 c3 e5 	2 . . 
+	ld a,0ffh		    ;405d	3e ff
+	ld (SOUND_REG_MASK),a	;405f	32 c3 e5
 
 	ld a,0bfh		;4062	3e bf 	> . 
-	ld (0e5cbh),a		;4064	32 cb e5 	2 . . 
+	ld (SOUND_VOICE_CONTROL),a		;4064	32 cb e5 	2 . . 
 
     ; Configure VDP TABLES
 	ld hl,VDP_BASE_POINTERS		;4067	21 76 43

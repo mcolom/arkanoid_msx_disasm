@@ -380,7 +380,7 @@ sound_more_eq_240:
 	rra			;b560	1f 	. 
 	jr nc,lb56ah		;b561	30 07 	0 . 
 	ld (de),a			;b563	12 	. 
-	ld hl,0e5cbh		;b564	21 cb e5 	! . . 
+	ld hl,SOUND_VOICE_CONTROL		;b564	21 cb e5 	! . . 
 	set 7,(hl)		;b567	cb fe 	. . 
 	ret			;b569	c9 	. 
 
@@ -429,12 +429,17 @@ lb583h:
 	ret			;b585	c9 	. 
 
 ; Write the next value from (HL) to the next PSG register in A
+; Exit if bit 0 of C is 0
 WRITE_NEXT_REG_PSG:
     ; Point to the next PSG register and next position in the HL buffer
 	inc a			;b586	3c
 	inc hl			;b587	23
 
-    ; Exit if bit 0 of C is not 0
+    ; Exit if bit 0 of C is 0
+    ;
+    ; Cette instruction permet d'effectuer une rotation du registre en
+    ; 8 bits vers la droite et le bit sortant de la droite est copié dans
+    ; le drapeau de retenue et dans le bit 7.
 	rrc c		     ;b588	cb 09
 	ret nc			 ;b58a	d0
 
@@ -456,50 +461,66 @@ write_E_to_PSG_reg_A:
 ; Sound related
 ; ToDo
 sub_b594h_sound:
-    ; Is the variable at SOUND_NUMBER+1 useless?
-    ; It seems it's only checked here, but never written
-	ld a,(SOUND_NUMBER + 1)	;b594	3a c1 e5
+    ; Get out if sound in inhibited.
+    ; However, the game nevers inhibits the sound.
+	ld a, (SOUND_INHIBIT)	;b594	3a c1 e5
 	and a			;b597	a7
 	ret nz			;b598	c0
+
+    ; Read the SOUND_REG_MASK.
+    ; This PSG reg mask indicates if each of the registers should be
+    ; written or not.
+    ; C = SOUND_REG_MASK
+	ld hl, SOUND_REG_MASK	;b599	21 c3 e5
+	ld c,(hl)		    ;b59c	4e
+
+    ; A = 0
+	sub a			        ;b59d	97
     
-    ; C = V
-	ld hl,SOUND_NUMBER + 3		;b599	21 c3 e5 	! . . 
-	ld c,(hl)			;b59c	4e 	N 
+    ; (HL) <-- 0
+	ld (hl),a			    ;b59e	77
     
-    ; C = V - A
-	sub a			;b59d	97 	. 
-    
-    ; V = V - A
-	ld (hl),a			;b59e	77 	w 
-    
-    ; A--
-	dec a			;b59f	3d 	= 
+    ; Decrement A (register number), because
+    ; WRITE_NEXT_REG_PSG considers A+1
+    ; Actually, this simple sets A=-1 so A+1=0.    
+	dec a			        ;b59f	3d
     
     ; B = D = 3
 	ld d, 3		    ;b5a0	16 03
 	ld b,d			;b5a2	42
 
-; Write 3 PSG registers
+; Write PSG registers
+; Here we have HL=SOUNDS_REGS_BUFFER-1 and WRITE_NEXT_REG_PSG will
+; consider HL+1 = SOUNDS_REGS_BUFFER.
 lb5a3h:
-	call WRITE_NEXT_REG_PSG		;b5a3	cd 86 b5 	. . . 
-	rlc c		;b5a6	cb 01 	. . 
-	call WRITE_NEXT_REG_PSG		;b5a8	cd 86 b5 	. . . 
-	djnz lb5a3h		;b5ab	10 f6 	. . 
-
-    ; Another PSG write
-	call WRITE_NEXT_REG_PSG		;b5ad	cd 86 b5 	. . . 
-
-	inc hl			;b5b0	23 	# 
-	ld e,(hl)			;b5b1	5e 	^ 
+    ; Repeat B=3 times
+    ; This will write voice frequency 1, 2, and 3.
     
+    ; Write the next value from (HL) to the next PSG register in A
+    ; Write voice frequency, 8 LSB
+	call WRITE_NEXT_REG_PSG		;b5a3	cd 86 b5
+    ; Undue the rrc in WRITE_NEXT_REG_PSG
+	rlc c		                ;b5a6	cb 01
+
+    ; Write voice frequency, 4 MSB
+	call WRITE_NEXT_REG_PSG		;b5a8	cd 86 b5
+	djnz lb5a3h		            ;b5ab	10 f6
+
+    ; Write register 6: enable or disable the noise generator
+	call WRITE_NEXT_REG_PSG		;b5ad	cd 86 b5
+
+    ; Point to voice control (SOUND_VOICE_CONTROL) and write
+	inc hl			            ;b5b0	23
+	ld e,(hl)			        ;b5b1	5e
+    ;
     ; This call also updates (hl)
 	call write_E_to_PSG_reg_A_safe		;b5b2	cd 70 b5 	. p . 
     
-; Write 3 more PSG registers
-	ld b,d			;b5b5	42 	B 
+; Write the amplitudes 1, 2, 3 by repeating 3 times
+	ld b,d			            ;b5b5	42 B=3
 lb5b6h:
-	call WRITE_NEXT_REG_PSG		;b5b6	cd 86 b5 	. . . 
-	djnz lb5b6h		;b5b9	10 fb 	. . 
+	call WRITE_NEXT_REG_PSG		;b5b6	cd 86 b5
+	djnz lb5b6h		            ;b5b9	10 fb
 
 ; Write 3 more PSG registers
 	ld b,d			;b5bb	42 	B 
@@ -645,7 +666,7 @@ lb6c0h:
 	ld (0e5e7h),a		;b6c0	32 e7 e5 	2 . . 
 	ret			;b6c3	c9 	. 
 	or 010h		;b6c4	f6 10 	. . 
-	ld (0e5cah),a		;b6c6	32 ca e5 	2 . . 
+	ld (SOUND_NOISE),a		;b6c6	32 ca e5 	2 . . 
 	ld d,008h		;b6c9	16 08 	. . 
 	jr lb70eh		;b6cb	18 41 	. A 
 lb6cdh:
@@ -738,9 +759,9 @@ lb753h:
 	ld a,e			;b755	7b 	{ 
 	ld (0e5ceh),a		;b756	32 ce e5 	2 . . 
 lb759h:
-	ld a,(0e5c3h)		;b759	3a c3 e5 	: . . 
+	ld a,(SOUND_REG_MASK)		;b759	3a c3 e5 	: . . 
 	or d			;b75c	b2 	. 
-	ld (0e5c3h),a		;b75d	32 c3 e5 	2 . . 
+	ld (SOUND_REG_MASK),a		;b75d	32 c3 e5 	2 . . 
 	ret			;b760	c9 	. 
 
 	bit 3,a		;b761	cb 5f 	. _ 
@@ -916,7 +937,7 @@ lb82ch:
 sub_b82dh:
 	ld (ix+00bh),000h		;b82d	dd 36 0b 00 	. 6 . . 
 sub_b831h:
-	ld a,(0e5cbh)		;b831	3a cb e5 	: . . 
+	ld a,(SOUND_VOICE_CONTROL)		;b831	3a cb e5 	: . . 
 	ld l,a			;b834	6f 	o 
 	ld a,(bc)			;b835	0a 	. 
 	rrca			;b836	0f 	. 
@@ -939,7 +960,7 @@ lb83eh:
 lb848h:
 	or l			;b848	b5 	. 
 	or 080h		;b849	f6 80 	. . 
-	ld (0e5cbh),a		;b84b	32 cb e5 	2 . . 
+	ld (SOUND_VOICE_CONTROL),a		;b84b	32 cb e5 	2 . . 
 	ld e,010h		;b84e	1e 10 	. . 
 	srl h		;b850	cb 3c 	. < 
 	ret c			;b852	d8 	. 
