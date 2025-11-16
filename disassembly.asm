@@ -5792,7 +5792,7 @@ l785bh:
 	pop de			;7864	d1
 	inc de			;7865	13
 	ld (hl), 0		;7866	36 00
-	ld bc, 19		;7868	01 13 00
+	ld bc, ALIEN_TABLE_LEN-1	;7868	01 13 00
 	ldir		    ;786b	ed b0
 ; Process next alien
 next_alien:
