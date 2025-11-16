@@ -782,7 +782,7 @@ l4322h:
 	in a,(0a2h)		;4340	db a2
 
     ; ToDO
-    ; I think PADDLE_STATUS+1 this is used to know if it's the Vaus paddle or
+    ; I think PADDLE_STATUS+1 is used to know if it's the Vaus paddle or
     ; a normal joystick.
     ; And PADDLE_STATUS seems unused.
 	ld e,a			        ;4342	5f
@@ -5439,10 +5439,11 @@ l7647h:
 	ld l,a			;766a	6f
 	ld h, 0		    ;766b	26 00
 
-    ; A = TBL[((VAUS_X - 8) >> 4) & 0xf0]
+    ; HL = TBL[((VAUS_X - 8) >> 4) & 0xf0]
     ; Choose if the alien should move left or right
-	ld de,TBL_ALIEN_INITIAL_SPEED_X_40		        ;766d	11 ec 7a
+	ld de,TBL_ALIEN_INITIAL_SPEED_X_LEFT_DOOR		        ;766d	11 ec 7a
 	ld a,(iy+SPR_PARAMS_IDX_X)	;7670	fd 7e 01
+    ; 40 is the position of the alien when it's on the left door
 	cp 40		                ;7673	fe 28
 	jr z,l767ah		            ;7675	28 03
 	ld de,TBL_ALIEN_INITIAL_SPEED		        ;7677	11 f9 7a
@@ -6253,7 +6254,7 @@ alien_patterns_4:
     db 0xd0, 0xdc, 0xd4, 0xd8, 0xd8, 0xd4, 0xd0       ; 0x7ae5 - 0x7aeb
 
 ; The initial horizontal speed of the alien exiting the door.
-TBL_ALIEN_INITIAL_SPEED_X_40:  ; 7aec
+TBL_ALIEN_INITIAL_SPEED_X_LEFT_DOOR:  ; 7aec
     db 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2
 ;
 TBL_ALIEN_INITIAL_SPEED:   ;7af9
