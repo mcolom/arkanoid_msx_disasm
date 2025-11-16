@@ -6267,7 +6267,6 @@ TBL_ALIEN_VERT_SPEED:
 TBL_SPR_PATTERN_NUMS_EXPLODING_ALIEN:
     db 0x90, 0x94, 0x98, 0x9c     ;7b0c
 
-; ToDo
 ; V_SPEED, H_SPEED, NUM_TICKS
 ;7b10
 TBL_ALIEN_TYPE_0_SPEED:
@@ -7221,7 +7220,7 @@ ACTION_9941:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
 
-    ; ToDo
+    ; Update ball's position
 	call UPDATE_BALL_POSITION		;9941	cd df 99 	. . . 
 
     ; Go on if the ball is active
@@ -8323,8 +8322,7 @@ TABLE_BACKGROUND_ENTRY4:
 ; Result in carry
 THERE_IS_A_BRICK:
 	push iy		;ada8	fd e5
-    
-    ; ToDo: what is this var?
+
 	ld a,0		        ;adaa	3e 00
 	ld (DOH_BEEN_HIT),a		;adac	32 b9 e2
     
