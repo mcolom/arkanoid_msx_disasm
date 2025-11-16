@@ -7345,7 +7345,7 @@ sub_99dfh:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
 
-	ld hl,TBL_9a98		                ;99df	21 98 9a
+	ld hl,TBL_PTR_BALL_SPEED_PER_SKEWNESS		                ;99df	21 98 9a
     
     ; If the ball's skewness is positive, invert it
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;99e2	fd 7e 06
@@ -7357,21 +7357,21 @@ l99ebh:
 	sla a		                        ;99eb	cb 27   A = skewness
 	ld e,a			                    ;99ed	5f
 	ld d, 0		                        ;99ee	16 00   DE = skewness
-	add hl,de			                ;99f0	19      HL = TBL_9a98 + skewness
+	add hl,de			                ;99f0	19      HL = TBL_PTR_BALL_SPEED_PER_SKEWNESS + skewness
 	ld e,(hl)			                ;99f1	5e
 	inc hl			                    ;99f2	23
-	ld d,(hl)			                ;99f3	56      DE = TBL_9a98[skewness]
+	ld d,(hl)			                ;99f3	56      DE = TBL_PTR_BALL_SPEED_PER_SKEWNESS[skewness]
 	
     ld l,(iy+BALL_TABLE_IDX_SPEED_POS)	;99f4	fd 6e 07    HL = BALL_SPEED_POS
 	ld h, 0		                        ;99f7	26 00
 	add hl,hl			                ;99f9	29          HL = 2*BALL_SPEED_POS
-	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_POS + TBL_9a98[skewness]
+	add hl,de			                ;99fa	19          HL = 2*BALL_SPEED_POS + TBL_PTR_BALL_SPEED_PER_SKEWNESS[skewness]
     
-    ; We obtain from the double indirection TBL_9a98[skewness][2*BALL_SPEED_POS] two values:
+    ; We obtain from the double indirection TBL_PTR_BALL_SPEED_PER_SKEWNESS[skewness][2*BALL_SPEED_POS] two values:
     ; BALL_TABLE_IDX_SPEED_MULTIPLIER
     ; BALL_TABLE_IDX_MOVE_TARGET
 
-	ld a,(hl)			;99fb	7e          A = TBL_9a98[skewness][2*BALL_SPEED_POS]  Double indirection!
+	ld a,(hl)			;99fb	7e          A = TBL_PTR_BALL_SPEED_PER_SKEWNESS[skewness][2*BALL_SPEED_POS]  Double indirection!
 	ld (iy+BALL_TABLE_IDX_SPEED_MULTIPLIER),a		;99fc	fd 77 08 	. w . 
     
 
@@ -7498,11 +7498,11 @@ TBL_SKEWNESS_NEG_TO_XY_SPEED: ;9a88
     db 1,  2
 
 
-; This table is addressed as TBL_9a98[skewness][2*BALL_SPEED_POS]
+; This table is addressed as TBL_PTR_BALL_SPEED_PER_SKEWNESS[skewness][2*BALL_SPEED_POS]
 ; And it gives two values:
 ;   BALL_TABLE_IDX_SPEED_MULTIPLIER
 ;   BALL_TABLE_IDX_MOVE_TARGET
-TBL_9a98: ; 0x9a98
+TBL_PTR_BALL_SPEED_PER_SKEWNESS: ; 0x9a98
     dw l9ad0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ab0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h, l9ad0h
 
 ; These values contain two values per position:
