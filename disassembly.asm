@@ -4535,11 +4535,11 @@ UPDATE_SPEED_ALL_BALLS:
 	ld hl,SPEEDUP_ALL_BALLS_COUNTER		;7172	21 29 e5
 	inc (hl)			;7175	34
 	ld a,(hl)			;7176	7e
-	cp 008h		        ;7177	fe 08
+	cp 8		        ;7177	fe 08
     ; If less than 8, get out
 	jp c,l71a1h		    ;7179	da a1 71
     ; Reset counter
-	ld (hl),000h		;717c	36 00
+	ld (hl), 0		    ;717c	36 00
 
     ; Now a loop to increase the speed of all balls
 	ld ix,BALL_TABLE1		;717e	dd 21 4e e2
@@ -6514,7 +6514,11 @@ l7c7dh:
 	ret			            ;7c87	c9
 
 ENDING_STR:
-    db "DIMENSION-CONTROLLING FORT\"DOH\" HAS NOW BEEN        DEMOLISHED, AND TIME      STARTED FLOWING REVERSELY.\"VAUS\" MANAGED TO ESCAPE  FROM THE DISTORTED SPACE. BUT THE REAL VOYAGE OF    \"ARKANOID\" IN THE GALAXY  HAS ONLY STARTED......    "
+    db "DIMENSION-CONTROLLING FORT\"DOH\" HAS NOW BEEN        "
+    db "DEMOLISHED, AND TIME      STARTED FLOWING REVERSELY.\"VAUS\" "
+    db "MANAGED TO ESCAPE  FROM THE DISTORTED SPACE. BUT THE REAL "
+    db "VOYAGE OF    \"ARKANOID\" IN THE GALAXY  HAS "
+    db "ONLY STARTED......    "
 
 ; VDP addresses to locate the ending story text
 TBL_VDP_POINTERS_LINE_ENDING_TEXT:  ; 0x7d72
