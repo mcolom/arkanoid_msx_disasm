@@ -237,7 +237,7 @@ PLAY_SOUND:
 	; A = SOUND_NUMBER
     ld de,SOUND_NUMBER	;b4ec	11 c0 e5
 	ld a,(de)			;b4ef	1a
-	
+
     ; Jump if [0xe5d3] >= 128
     ld hl,0e5d3h		;b4f0	21 d3 e5
 	cp 128		        ;b4f3	fe 80
@@ -283,35 +283,38 @@ lb518h:
 
 ; Sound related...
 ; ToDo
+
+; Input: A, related to the SOUND_NUMBER
+; Input HL: pointer, it can be 0xe5d3 or 0xe5e9
 sub_b51dh_sound:
     ; BC = 0xb4.. , with A
-	ld b,0b4h		;b51d	06 b4 	. . 
-	ld c,a			;b51f	4f 	O 
-    
-    
+	ld b,0xb4		;b51d	06 b4
+	ld c,a			;b51f	4f
+
 	; C = [0xb4..]
-    ld a,(bc)			;b520	0a 	. 
+    ld a,(bc)		;b520	0a
     ld c,a			;b521	4f 	O 
     
-	; Exit if [0e5c2h] = 0
-    ld a,(0e5c2h)		;b522	3a c2 e5 	: . . 
-	and a			;b525	a7 	. 
-	ret z			;b526	c8 	. 
+	; Check if we can add a sound now
+    ld a,(CAN_ADD_SOUND)	;b522	3a c2 e5
+	and a			;b525	a7
+	ret z			;b526	c8
 
-	di			;b527	f3 	. 
+	di			    ;b527	f3
 	
-    ; Write at 0xe5d3
-    ld a,(hl)			;b528	7e 	~ 
-	ld (hl), 1		;b529	36 01 	6 . 
-    inc hl			;b52b	23 	#
     
-	and a			;b52c	a7 	. 
-	jr z,lb534h		;b52d	28 05 	( . 
+    ld a,(hl)		;b528	7e          A <-- (hl)
+	ld (hl), 1		;b529	36 01       (hl) <-- 1
+    inc hl			;b52b	23          hl++
+    
+	and a			;b52c	a7
+	jr z,lb534h		;b52d	28 05       Jump if A == 0
 	
-    ld a,(bc)			;b52f	0a 	. 
-	and 0f0h		;b530	e6 f0 	. . 
-	cp (hl)			;b532	be 	. 
-	ret c			;b533	d8 	. 
+    ; A != 0
+    ld a,(bc)		;b52f	0a
+	and 0f0h		;b530	e6 f0       A <-- (BC) & 0xf0
+	cp (hl)			;b532	be          Compare (BC) & 0xf0 with (hl)
+	ret c			;b533	d8          Return if (BC) & 0xf0 < (hl)
 lb534h:
     ; Read in D
 	ld a,(bc)			;b534	0a 	. 

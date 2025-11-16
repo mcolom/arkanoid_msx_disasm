@@ -15,3 +15,6 @@ SOUNDS_COUNT: equ 0xe51e
 
 ; ToDo
 SOUNDS_UNKNOWN_TYPE: equ 0xe5c4
+
+
+CAN_ADD_SOUND: equ 0xe5c2

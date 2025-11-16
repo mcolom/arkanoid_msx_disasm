@@ -743,6 +743,8 @@ l4309h:
 	ld a,01eh		;430d	3e 1e
 	out (0a1h),a	;430f	d3 a1
 l4311h:
+    ; Write value 0x1f to register 15
+    ; 0x1e = 0001.1111
 	ld a,01fh		;4311	3e 1f
 	out (0a1h),a	;4313	d3 a1
     
