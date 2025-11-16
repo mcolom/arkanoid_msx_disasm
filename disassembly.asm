@@ -7222,7 +7222,7 @@ ACTION_9941:
     ; ix = SPR_PARAMS_IDX_Y
 
     ; ToDo
-	call sub_99dfh		;9941	cd df 99 	. . . 
+	call UPDATE_BALL_POSITION		;9941	cd df 99 	. . . 
 
     ; Go on if the ball is active
 	ld a,(iy+BALL_TABLE_IDX_ACTIVE)		;9944	fd 7e 00
@@ -7339,9 +7339,8 @@ CHECK_BALL_BOUNCES_AND_CHANGE_SKEWNESS:
 	call CHANGE_BALLS_SKEWNESS		            ;99db	cd 38 ab
 	ret			                    ;99de	c9
 
-; ToDO
-; SEGUIR
-sub_99dfh:
+; Update the ball's position according to its skewness
+UPDATE_BALL_POSITION: ; 99df
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
 
@@ -7372,7 +7371,7 @@ l99ebh:
     ; BALL_TABLE_IDX_MOVE_TARGET
 
 	ld a,(hl)			;99fb	7e          A = TBL_PTR_BALL_SPEED_PER_SKEWNESS[skewness][2*BALL_SPEED_POS]  Double indirection!
-	ld (iy+BALL_TABLE_IDX_SPEED_MULTIPLIER),a		;99fc	fd 77 08 	. w . 
+	ld (iy+BALL_TABLE_IDX_SPEED_MULTIPLIER),a	;99fc	fd 77 08
     
 
     ; Set BALL_TABLE_IDX_MOVE_TARGET
@@ -7401,13 +7400,13 @@ l99ebh:
 
     ; Choose TBL_SKEWNESS_POS_TO_XY_SPEED or TBL_SKEWNESS_NEG_TO_XY_SPEED according to
     ; the sign of BALL_TABLE_IDX_SKEWNESS
-	ld hl,TBL_SKEWNESS_POS_TO_XY_SPEED	    ;9a12	21 78 9a
+	ld hl,TBL_SKEWNESS_POS_TO_XY_SPEED	;9a12	21 78 9a
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)	;9a15	fd 7e 06
 	bit 7,a		                        ;9a18	cb 7f
 	jp z,l9a22h		                    ;9a1a	ca 22 9a Jump if it's positive
     ; It's negative: invert it
 	neg		                            ;9a1d	ed 44
-	ld hl,TBL_SKEWNESS_NEG_TO_XY_SPEED		;9a1f	21 88 9a
+	ld hl,TBL_SKEWNESS_NEG_TO_XY_SPEED	;9a1f	21 88 9a
 
 l9a22h:
 	dec a		;9a22	3d      A = skewness - 1
@@ -7431,12 +7430,12 @@ l9a22h:
 	ld b,(iy+BALL_TABLE_IDX_SPEED_MULTIPLIER)		;9a32	fd 46 08
 	inc b			                                ;9a35	04  Even if the value would be zero, loop at least once
 l9a36h:
-    ; Update Y-position of the balla according to its speed
+    ; Update Y-position of the ball according to its speed
 	ld a,(iy+BALL_TABLE_IDX_Y_SPEED)	;9a36	fd 7e 02
 	add a,(ix+SPR_PARAMS_IDX_Y)		    ;9a39	dd 86 00
 	ld (ix+SPR_PARAMS_IDX_Y),a		    ;9a3c	dd 77 00
 
-    ; Update X-position of the balla according to its speed
+    ; Update X-position of the ball according to its speed
 	ld a,(iy+BALL_TABLE_IDX_X_SPEED)	;9a3f	fd 7e 03
 	add a,(ix+SPR_PARAMS_IDX_X)		    ;9a42	dd 86 01
 	ld (ix+SPR_PARAMS_IDX_X),a		    ;9a45	dd 77 01
