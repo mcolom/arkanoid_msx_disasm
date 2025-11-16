@@ -8,7 +8,11 @@ SOUND_NUMBER: equ 0xe5c0
 ; The game nevers inhibits the sounds
 SOUND_INHIBIT: equ 0xe5c1
 
+; Bitmask indicating which voices to activate
 SOUND_REG_MASK: equ 0xe5c3
+
+; Actually unused
+SOUND_PARALLEL: equ 0xe5d2
 
 ; Noise generation
 SOUND_NOISE: equ 0xe5ca

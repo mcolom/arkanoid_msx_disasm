@@ -517,26 +517,38 @@ lb5a3h:
 	call write_E_to_PSG_reg_A_safe		;b5b2	cd 70 b5 	. p . 
     
 ; Write the amplitudes 1, 2, 3 by repeating 3 times
+; This writes to registers 8, 9, and 10.
 	ld b,d			            ;b5b5	42 B=3
 lb5b6h:
 	call WRITE_NEXT_REG_PSG		;b5b6	cd 86 b5
 	djnz lb5b6h		            ;b5b9	10 fb
 
-; Write 3 more PSG registers
-	ld b,d			;b5bb	42 	B 
+; Write the envelope period and shape
+; This writes to registers 11, 12, and 13.
+	ld b,d			            ;b5bb	42  B=3
 lb5bch:
-	call WRITE_NEXT_REG_PSG		;b5bc	cd 86 b5 	. . . 
-	rlc c		;b5bf	cb 01 	. . 
-	djnz lb5bch		;b5c1	10 f9 	. . 
+	call WRITE_NEXT_REG_PSG		;b5bc	cd 86 b5
+    ; Undue the rrc in WRITE_NEXT_REG_PSG
+	rlc c		                ;b5bf	cb 01
+	djnz lb5bch		            ;b5c1	10 f9
 
-	ld e,(hl)			;b5c3	5e 	^ 
-	inc hl			;b5c4	23 	# 
+    ; Read value in E
+	ld e,(hl)			        ;b5c3	5e
+	inc hl			            ;b5c4	23
 
-	bit 3,(hl)		;b5c5	cb 5e 	. ^ 
+    ; Write reg 14 is bit 3 of (HL) is not zero
+    ; Reg. 14 is the "Parallel Port Registers", so probably never used
+    ;
+	bit 3,(hl)		                    ;b5c5	cb 5e
 	call nz, write_E_to_PSG_reg_A		;b5c7	c4 8c b5    This call also updates (hl)
 
-	res 3,(hl)		;b5ca	cb 9e 	. . 
-	inc hl			;b5cc	23 	# 
+    ; Reset parallel port flag
+	res 3,(hl)		                    ;b5ca	cb 9e
+	inc hl			                    ;b5cc	23
+    
+    ; Now the PSG is configured
+    ; Play the actual sound
+    
 	ld bc,(SOUND_PTR)		;b5cd	ed 4b da e5 	. K . . 
 
 	call sub_b4b5_sound		;b5d1	cd b5 b4 	. . . 
@@ -710,7 +722,7 @@ lb700h:
 	ld a,(bc)			;b702	0a 	. 
 	dec hl			;b703	2b 	+ 
 	ld (hl),a			;b704	77 	w 
-	ld hl,0e5d2h		;b705	21 d2 e5 	! . . 
+	ld hl, SOUND_PARALLEL		;b705	21 d2 e5
 	ld a,(hl)			;b708	7e 	~ 
 	and d			;b709	a2 	. 
 	jr z,lb759h		;b70a	28 4d 	( M 
@@ -729,7 +741,7 @@ lb70eh:
 	bit 3,a		;b725	cb 5f 	. _ 
 	jr nz,lb72eh		;b727	20 05 	  . 
 	rlca			;b729	07 	. 
-	ld (0e5d2h),a		;b72a	32 d2 e5 	2 . . 
+	ld (SOUND_PARALLEL),a		;b72a	32 d2 e5 	2 . . 
 	ret			;b72d	c9 	. 
 
 lb72eh:
