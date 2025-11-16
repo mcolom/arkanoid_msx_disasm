@@ -1895,7 +1895,11 @@ DRAW_UP_SCORES:
 	ret			                    ;5004	c9
 
 STORY_STR:
-    db "THE ERA AND TIME OF       THIS STORY IS UNKNOWN.    AFTER THE MOTHERSHIP      \"ARKANOID\" WAS DESTROYED, A SPACECRAFT \"VAUS\"       SCRAMBLED AWAY FROM IT.   BUT ONLY TO BE            TRAPPED IN SPACE WARPED   BY SOMEONE......          "
+    db "THE ERA AND TIME OF       THIS STORY IS UNKNOWN.    AFTER THE "
+    db "MOTHERSHIP      \"ARKANOID\" WAS DESTROYED, "
+    db "A SPACECRAFT \"VAUS\"       SCRAMBLED AWAY FROM IT.   "
+    db "BUT ONLY TO BE            TRAPPED IN SPACE WARPED   BY "
+    db "SOMEONE......          "
 
 ; VDP pointers for the story rows
 STORY_VDP_ROW_POINTERS: ; 0x50ef
