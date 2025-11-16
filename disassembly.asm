@@ -5446,7 +5446,7 @@ l7647h:
     ; 40 is the position of the alien when it's on the left door
 	cp 40		                ;7673	fe 28
 	jr z,l767ah		            ;7675	28 03
-	ld de,TBL_ALIEN_INITIAL_SPEED		        ;7677	11 f9 7a
+	ld de,TBL_ALIEN_INITIAL_SPEED_X_RIGHT_DOOR		        ;7677	11 f9 7a
 l767ah:
 	add hl,de			;767a
 	ld a,(hl)			;767b
@@ -6253,11 +6253,12 @@ alien_patterns_4:
     db 0xc8, 0xcc, 0xd0, 0xdc, 0xc0, 0xc4, 0xc8, 0xcc ; 0x7add - 0x7ae4
     db 0xd0, 0xdc, 0xd4, 0xd8, 0xd8, 0xd4, 0xd0       ; 0x7ae5 - 0x7aeb
 
-; The initial horizontal speed of the alien exiting the door.
+; The initial horizontal speed of the alien exiting the
+; left or right doors.
 TBL_ALIEN_INITIAL_SPEED_X_LEFT_DOOR:  ; 7aec
     db 0, 0, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2
 ;
-TBL_ALIEN_INITIAL_SPEED:   ;7af9
+TBL_ALIEN_INITIAL_SPEED_X_RIGHT_DOOR:   ;7af9
     db 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 2, 2, 2
 
 TBL_ALIEN_VERT_SPEED:
