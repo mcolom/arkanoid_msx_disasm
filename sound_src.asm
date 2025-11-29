@@ -463,6 +463,7 @@ write_E_to_PSG_reg_A:
 
 ; Sound related
 ; ToDo
+; This is called from the interrupt handler
 sub_b594h_sound:
     ; Get out if sound in inhibited.
     ; However, the game nevers inhibits the sound.
@@ -567,9 +568,14 @@ lb5deh:
 lb5e3h:
 	ld hl,0e5e9h		;b5e3	21 e9 e5 	! . . 
 	ld bc,(0e5f0h)		;b5e6	ed 4b f0 e5 	. K . . 
+    
+    
+    ; If no sound is being played, it'll jump to lb5fch
 	call sub_b4b5_sound		;b5ea	cd b5 b4 	. . . 
 	jr nc,lb5fch		;b5ed	30 0d 	0 . 
-	ld (0e5f2h),a		;b5ef	32 f2 e5 	2 . . 
+	
+    ; It reaches here when a sound is being played
+    ld (0e5f2h),a		;b5ef	32 f2 e5 	2 . . 
 lb5f2h:
 	call sub_b649h_sound		;b5f2	cd 49 b6 	. I . 
 	jr lb5f2h		;b5f5	18 fb 	. . 
