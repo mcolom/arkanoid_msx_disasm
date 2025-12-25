@@ -27,8 +27,8 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)	;9c3a	fd cb 03 7e
 	jp nz,l9dcfh		                ;9c3e	c2 cf 9d
     
-    ; Horizontal speed positive
     ; Vertical speed negative
+    ; Horizontal speed positive
 
 	ld a,(ix+SPR_PARAMS_IDX_Y)	;9c41	dd 7e 00    A = BALL_Y
 	sub 24		                ;9c44	d6 18       A = BALL_Y - 24
@@ -81,8 +81,10 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 	srl a		;9c73	cb 3f   A = (BALL_Y - BALL_Y_SPEED - 24) \ 8
     
     ; Jump if (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
+    ; No bricks that low?
 	cp 13		        ;9c75	fe 0d
 	jp nc,l9dcfh		;9c77	d2 cf 9d
+    ; (BALL_Y - BALL_Y_SPEED - 24) \ 8 < 13
     
     ; Store (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
 	ld (BALL_BRS_Y1),a		;9c7a	32 8c e5
@@ -289,6 +291,7 @@ l9db7h:
 	jp brick_hit_check_done		;9dcc	c3 99 a2
 
 l9dcfh:
+    ; Horizontal speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9dcf	fd cb 02 7e 	. . . ~ 
 	jp z,l9f6bh		;9dd3	ca 6b 9f 	. k . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9dd6	fd cb 03 7e 	. . . ~ 
