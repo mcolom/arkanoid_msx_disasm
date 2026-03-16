@@ -38,6 +38,19 @@
 
 ; BRICK_ROW, BRICK_COL are checked by BRICK_EXISTS_AT_ROWCOL.
 
+
+
+; The offsets.
+; The code considers four offsets: 24, 19 for vertical directions, and 12, 17 for the horizontal.
+; This is because it considers the contact point of the ball with a brick.
+;
+; If it's going up, you check Y - 24
+; If it's going down, you check Y - 19
+; If it's going right, you check X - 12
+; If it's going left, you check X - 17
+
+
+
 CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
@@ -49,14 +62,15 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 
     ; Jump if the ball's vertical speed is positive
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)	;9c33	fd cb 02 7e
-	jp z,l9dcfh		                    ;9c37	ca cf 9d
+	jp z,check_second_quadrant		                    ;9c37	ca cf 9d
     
     ; Jump if the ball's horizontal speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)	;9c3a	fd cb 03 7e
-	jp nz,l9dcfh		                ;9c3e	c2 cf 9d
+	jp nz,check_second_quadrant		                ;9c3e	c2 cf 9d
     
-    ; Vertical speed negative
-    ; Horizontal speed positive
+    ; *** First quadrant: the ball goes up right
+    ;   Vertical speed negative
+    ;   Horizontal speed positive
 
 	ld a,(ix+SPR_PARAMS_IDX_Y)	;9c41	dd 7e 00    A = BALL_Y
 	sub 24		                ;9c44	d6 18       A = BALL_Y - 24
@@ -67,7 +81,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     
     ; Jump if (BALL_Y - 24) \ 8 >= 12
 	cp 12		                ;9c4c	fe 0c
-	jp nc,l9dcfh		        ;9c4e	d2 cf 9d
+	jp nc,check_second_quadrant		        ;9c4e	d2 cf 9d
     ; (BALL_Y - 24) \ 8 < 12
     
     ; We'll consider 2 X-Y coordinates of the ball in brick space ("BRS")
@@ -111,7 +125,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; Jump if (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
     ; No bricks that low?
 	cp 13		        ;9c75	fe 0d
-	jp nc,l9dcfh		;9c77	d2 cf 9d
+	jp nc,check_second_quadrant		;9c77	d2 cf 9d
     ; (BALL_Y - BALL_Y_SPEED - 24) \ 8 < 13
     
     ; Store (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
@@ -133,7 +147,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; Jump if (BALL_X - SPEED_X - 12) \ 16 >= 11
     ; It's divided by 16 because a brick is made of 2 chars horizontally
 	cp 11		                    ;9c90	fe 0b
-	jp nc,l9dcfh		            ;9c92	d2 cf 9d
+	jp nc,check_second_quadrant		            ;9c92	d2 cf 9d
     
     ; Store (BALL_X - SPEED_X - 12) \ 16, an X coordinate
 	ld (PREV_BRICK_X),a           ;9c95	32 8d e5
@@ -320,19 +334,22 @@ l9db7h:
 	call APPLY_BRICK_HIT_EFFECT		;9dc9	cd 05 aa
 	jp brick_hit_check_done		;9dcc	c3 99 a2
 
-l9dcfh:
-    ; Horizontal speed is negative
+check_second_quadrant:
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9dcf	fd cb 02 7e 	. . . ~ 
-	jp z,l9f6bh		;9dd3	ca 6b 9f 	. k . 
+	jp z,check_third_quadrant		;9dd3	ca 6b 9f 	. k . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9dd6	fd cb 03 7e 	. . . ~ 
-	jp z,l9f6bh		;9dda	ca 6b 9f 	. k . 
+	jp z,check_third_quadrant		;9dda	ca 6b 9f 	. k . 
+
+    ; *** Second quadrant: the ball goes up left
+    ;   Vertical speed negative
+    ;   Horizontal speed negative
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;9ddd	dd 7e 00 	. ~ . 
 	sub 018h		;9de0	d6 18 	. . 
 	srl a		;9de2	cb 3f 	. ? 
 	srl a		;9de4	cb 3f 	. ? 
 	srl a		;9de6	cb 3f 	. ? 
 	cp 12		;9de8	fe 0c 	. . 
-	jp nc,l9f6bh		;9dea	d2 6b 9f 	. k . 
+	jp nc,check_third_quadrant		;9dea	d2 6b 9f 	. k . 
 	ld (PREV_CURR_Y),a		;9ded	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9df0	dd 7e 01 	. ~ . 
 	sub 17		;9df3	d6 11 	. . 
@@ -349,7 +366,7 @@ l9dcfh:
 	srl a		;9e0d	cb 3f 	. ? 
 	srl a		;9e0f	cb 3f 	. ? 
 	cp 00dh		;9e11	fe 0d 	. . 
-	jp nc,l9f6bh		;9e13	d2 6b 9f 	. k . 
+	jp nc,check_third_quadrant		;9e13	d2 6b 9f 	. k . 
 	ld (PREV_BRICK_Y),a		;9e16	32 8c e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9e19	dd 7e 01 	. ~ . 
 	sub (iy+BALL_TABLE_IDX_X_SPEED)		;9e1c	fd 96 03 	. . . 
@@ -360,7 +377,7 @@ l9dcfh:
 	srl a		;9e28	cb 3f 	. ? 
 	srl a		;9e2a	cb 3f 	. ? 
 	cp 11		;9e2c	fe 0b 	. . 
-	jp nc,l9f6bh		;9e2e	d2 6b 9f 	. k . 
+	jp nc,check_third_quadrant		;9e2e	d2 6b 9f 	. k . 
 	ld (PREV_BRICK_X),a		;9e31	32 8d e5 	2 . . 
 	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;9e34	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;9e37	da 99 a2 	. . . 
@@ -538,18 +555,27 @@ l9f53h:
 	call APPLY_BRICK_HIT_EFFECT		;9f65	cd 05 aa
 	jp brick_hit_check_done		;9f68	c3 99 a2
 
-l9f6bh:
+; The X, Y speeds are not both negative here
+check_third_quadrant:
+    ; Jump if the Y speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9f6b	fd cb 02 7e 	. . . ~ 
-	jp nz,la102h		;9f6f	c2 02 a1 	. . . 
+	jp nz,check_fourth_quadrant		;9f6f	c2 02 a1 	. . . 
+
+    ; Jump if the X speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9f72	fd cb 03 7e 	. . . ~ 
-	jp nz,la102h		;9f76	c2 02 a1 	. . . 
+	jp nz,check_fourth_quadrant		;9f76	c2 02 a1 	. . . 
+    
+    ; *** Third quadrant: the ball goes down right
+    ;   Vertical speed positive
+    ;   Horizontal speed positive
+
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;9f79	dd 7e 00 	. ~ . 
 	sub 19		;9f7c	d6 13 	. . 
 	srl a		;9f7e	cb 3f 	. ? 
 	srl a		;9f80	c0b 3f 	. ? 
 	srl a		;9f82	cb 3f 	. ? 
 	cp 12		;9f84	fe 0c 	. . 
-	jp nc,la102h		;9f86	d2 02 a1 	. . . 
+	jp nc,check_fourth_quadrant		;9f86	d2 02 a1 	. . . 
 	ld (PREV_CURR_Y),a		;9f89	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9f8c	dd 7e 01 	. ~ . 
 	sub 12		;9f8f	d6 0c 	. . 
@@ -575,7 +601,7 @@ l9f6bh:
 	srl a		;9fbf	cb 3f 	. ? 
 	srl a		;9fc1	cb 3f 	. ? 
 	cp 11		;9fc3	fe 0b 	. . 
-	jp nc,la102h		;9fc5	d2 02 a1 	. . . 
+	jp nc,check_fourth_quadrant		;9fc5	d2 02 a1 	. . . 
 	ld (PREV_BRICK_X),a		;9fc8	32 8d e5 	2 . . 
 
 	call CHECK_BALL_REACHES_RIGHT_BORDER		;9fcb	cd 9a a2 	. . . 
@@ -725,11 +751,16 @@ la0eah:
 	call APPLY_BRICK_HIT_EFFECT		;a0fc	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0ff	c3 99 a2 	. . . 
 
-la102h:
+check_fourth_quadrant:
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a102	fd cb 02 7e 	. . . ~ 
 	jp nz,brick_hit_check_done		;a106	c2 99 a2 	. . . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a109	fd cb 03 7e 	. . . ~ 
 	jp z,brick_hit_check_done		;a10d	ca 99 a2 	. . . 
+
+    ; *** Fourth quadrant: the ball goes down left
+    ;   Vertical speed positive
+    ;   Horizontal speed negative
+
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;a110	dd 7e 00 	. ~ . 
 	sub 19		;a113	d6 13 	. . 
 	srl a		;a115	cb 3f 	. ? 
