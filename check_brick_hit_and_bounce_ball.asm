@@ -328,11 +328,11 @@ up_right_resolve_ambiguous_corner:
 	ld (BRICK_COL),a		;9d5d	32 ab e2
     
 	call RESOLVE_CORNER_COLLISION    ;9d60	cd 70 a6
-	jp nc,l9d99h		        ;9d63	d2 99 9d
+	jp nc,resolved_check_brick_at_X2_Y1		        ;9d63	d2 99 9d
 
     ; Check for a brick in (X1, Y2)
 	call BRICK_EXISTS_AT_ROWCOL	;9d66	cd a8 ad
-	jp nc,l9d81h		    ;9d69	d2 81 9d
+	jp nc,up_right_no_brick		    ;9d69	d2 81 9d
 
     ; Adjust the location of the ball sprite
 	ld a,(BRICK_HIT_Y_PIXEL)		;9d6c	3a 3c e5
@@ -345,7 +345,7 @@ up_right_resolve_ambiguous_corner:
 	call BALL_VERTICAL_BOUNCE	;9d78	cd 5b 9b
 	call APPLY_BRICK_HIT_EFFECT		;9d7b	cd 05 aa
 	jp brick_hit_check_done		;9d7e	c3 99 a2
-l9d81h:
+up_right_no_brick:
     ; Check for brick
 	ld a,(CURR_BRICK_X)		    ;9d81	3a 8b e5
 	ld (BRICK_COL),a		    ;9d84	32 ab e2
@@ -360,7 +360,7 @@ l9d81h:
 	call APPLY_BRICK_HIT_EFFECT		;9d93	cd 05 aa
 	jp brick_hit_check_done		;9d96	c3 99 a2
 
-l9d99h:
+resolved_check_brick_at_X2_Y1:
     ; Check for brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9d99	3a 8c e5
 	ld (BRICK_ROW),a		;9d9c	32 aa e2
@@ -368,7 +368,7 @@ l9d99h:
 	ld (BRICK_COL),a		;9da2	32 ab e2
 
 	call BRICK_EXISTS_AT_ROWCOL	;9da5	cd a8 ad
-	jp nc,l9db7h		    ;9da8	d2 b7 9d
+	jp nc,check_brick_at_X2_Y1		    ;9da8	d2 b7 9d
 
     ; Double impact
 	call HANDLE_CORNER_CASE_HORIZONTAL		    ;9dab	cd 01 a9
@@ -378,7 +378,7 @@ l9d99h:
 	call APPLY_BRICK_HIT_EFFECT		;9db1	cd 05 aa
 	jp brick_hit_check_done		;9db4	c3 99 a2
 
-l9db7h:
+check_brick_at_X2_Y1:
     ; Check for brick
 	ld a,(CURR_BRICK_Y)		    ;9db7	3a 8a e5
 	ld (BRICK_ROW),a		    ;9dba	32 aa e2
@@ -396,9 +396,9 @@ l9db7h:
 
 check_case_up_left:
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9dcf	fd cb 02 7e 	. . . ~ 
-	jp z,check_case_down_right		;9dd3	ca 6b 9f 	. k . 
+	jp z,down_right_main_compare		;9dd3	ca 6b 9f 	. k . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9dd6	fd cb 03 7e 	. . . ~ 
-	jp z,check_case_down_right		;9dda	ca 6b 9f 	. k . 
+	jp z,down_right_main_compare		;9dda	ca 6b 9f 	. k . 
 
     ; *** Second case: the ball goes up left
     ;   Vertical speed negative
@@ -409,7 +409,7 @@ check_case_up_left:
 	srl a		;9de4	cb 3f 	. ? 
 	srl a		;9de6	cb 3f 	. ? 
 	cp 12		;9de8	fe 0c 	. . 
-	jp nc,check_case_down_right		;9dea	d2 6b 9f 	. k . 
+	jp nc,down_right_main_compare		;9dea	d2 6b 9f 	. k . 
 	ld (CURR_BRICK_Y),a		;9ded	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9df0	dd 7e 01 	. ~ . 
 	sub 17		;9df3	d6 11 	. . 
@@ -426,7 +426,7 @@ check_case_up_left:
 	srl a		;9e0d	cb 3f 	. ? 
 	srl a		;9e0f	cb 3f 	. ? 
 	cp 00dh		;9e11	fe 0d 	. . 
-	jp nc,check_case_down_right		;9e13	d2 6b 9f 	. k . 
+	jp nc,down_right_main_compare		;9e13	d2 6b 9f 	. k . 
 	ld (PREV_BRICK_Y),a		;9e16	32 8c e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9e19	dd 7e 01 	. ~ . 
 	sub (iy+BALL_TABLE_IDX_X_SPEED)		;9e1c	fd 96 03 	. . . 
@@ -437,7 +437,7 @@ check_case_up_left:
 	srl a		;9e28	cb 3f 	. ? 
 	srl a		;9e2a	cb 3f 	. ? 
 	cp 11		;9e2c	fe 0b 	. . 
-	jp nc,check_case_down_right		;9e2e	d2 6b 9f 	. k . 
+	jp nc,down_right_main_compare		;9e2e	d2 6b 9f 	. k . 
 	ld (PREV_BRICK_X),a		;9e31	32 8d e5 	2 . . 
 	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;9e34	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;9e37	da 99 a2 	. . . 
@@ -446,14 +446,14 @@ check_case_up_left:
 	jp nc,brick_hit_check_done		;9e3f	d2 99 a2 	. . . 
 	ld a,(CURR_BRICK_Y)		;9e42	3a 8a e5 	: . . 
 	cp 11		;9e45	fe 0b 	. . 
-	jp nz,l9e58h		;9e47	c2 58 9e 	. X . 
+	jp nz,up_left_main_compare		;9e47	c2 58 9e 	. X . 
 	ld a,(PREV_BRICK_Y)		;9e4a	3a 8c e5 	: . . 
 	cp 12		;9e4d	fe 0c 	. . 
-	jp nz,l9e58h		;9e4f	c2 58 9e 	. X . 
+	jp nz,up_left_main_compare		;9e4f	c2 58 9e 	. X . 
 	call CHECK_VERTICAL_DOUBLE_IMPACT		;9e52	cd 28 a3 	. ( . 
 	jp brick_hit_check_done		;9e55	c3 99 a2 	. . . 
 
-l9e58h:
+up_left_main_compare:
 	ld a,(PREV_BRICK_Y)		;9e58	3a 8c e5 	: . . 
 	cp 12		;9e5b	fe 0c 	. . 
 	jp nc,brick_hit_check_done		;9e5d	d2 99 a2 	. . . 
@@ -461,35 +461,35 @@ l9e58h:
 	ld c,a			;9e63	4f 	O 
 	ld a,(CURR_BRICK_Y)		;9e64	3a 8a e5 	: . . 
 	cp c			;9e67	b9 	. 
-	jp z,l9e73h		;9e68	ca 73 9e 	. s . 
+	jp z,up_left_same_row		;9e68	ca 73 9e 	. s . 
 	dec c			;9e6b	0d 	. 
 	cp c			;9e6c	b9 	. 
-	jp z,l9e86h		;9e6d	ca 86 9e 	. . . 
+	jp z,up_left_prev_row_minus_1		;9e6d	ca 86 9e 	. . . 
 	jp brick_hit_check_done		;9e70	c3 99 a2 	. . . 
 
-l9e73h:
+up_left_same_row:
 	ld a,(PREV_BRICK_X)		;9e73	3a 8d e5 	: . . 
 	ld c,a			;9e76	4f 	O 
 	ld a,(CURR_BRICK_X)		;9e77	3a 8b e5 	: . . 
 	cp c			;9e7a	b9 	. 
-	jp z,l9e99h		;9e7b	ca 99 9e 	. . . 
+	jp z,up_left_check_vertical_face		;9e7b	ca 99 9e 	. . . 
 	dec c			;9e7e	0d 	. 
 	cp c			;9e7f	b9 	. 
-	jp z,l9eb4h		;9e80	ca b4 9e 	. . . 
+	jp z,up_left_check_horizontal_face		;9e80	ca b4 9e 	. . . 
 	jp brick_hit_check_done		;9e83	c3 99 a2 	. . . 
 
-l9e86h:
+up_left_prev_row_minus_1:
 	ld a,(PREV_BRICK_X)		;9e86	3a 8d e5 	: . . 
 	ld c,a			;9e89	4f 	O 
 	ld a,(CURR_BRICK_X)		;9e8a	3a 8b e5 	: . . 
 	cp c			;9e8d	b9 	. 
-	jp z,l9ed2h		;9e8e	ca d2 9e 	. . . 
+	jp z,up_left_check_corner_vertical		;9e8e	ca d2 9e 	. . . 
 	dec c			;9e91	0d 	. 
 	cp c			;9e92	b9 	. 
-	jp z,l9ef0h		;9e93	ca f0 9e 	. . . 
+	jp z,up_left_resolve_corner		;9e93	ca f0 9e 	. . . 
 	jp brick_hit_check_done		;9e96	c3 99 a2 	. . . 
 
-l9e99h:
+up_left_check_vertical_face:
 	; Check for brick at (X2, Y1)
     ld a,(PREV_BRICK_Y)		        ;9e99	3a 8c e5
 	ld (BRICK_ROW),a		        ;9e9c	32 aa e2
@@ -504,7 +504,7 @@ l9e99h:
 	call APPLY_BRICK_HIT_EFFECT		    ;9eae	cd 05 aa
 	jp brick_hit_check_done		    ;9eb1	c3 99 a2
 
-l9eb4h:
+up_left_check_horizontal_face:
     ; Check for brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		        ;9eb4	3a 8c e5
 	ld (BRICK_ROW),a		        ;9eb7	32 aa e2
@@ -522,7 +522,7 @@ l9eb4h:
 	call APPLY_BRICK_HIT_EFFECT		    ;9ecc	cd 05 aa
 	jp brick_hit_check_done		    ;9ecf	c3 99 a2
 
-l9ed2h:
+up_left_check_corner_vertical:
     ; Check for brick at (X1, Y2)
 	ld a,(CURR_BRICK_Y)		    ;9ed2	3a 8a e5
 	ld (BRICK_ROW),a		    ;9ed5	32 aa e2
@@ -540,7 +540,7 @@ l9ed2h:
 	call APPLY_BRICK_HIT_EFFECT		;9eea	cd 05 aa
 	jp brick_hit_check_done		;9eed	c3 99 a2
 
-l9ef0h:
+up_left_resolve_corner:
     ; Check for brick at (X1, Y2)
 	ld a,(CURR_BRICK_Y)		;9ef0	3a 8a e5
 	ld (BRICK_ROW),a		;9ef3	32 aa e2
@@ -549,11 +549,11 @@ l9ef0h:
     
     ; Check double impact
 	call RESOLVE_CORNER_COLLISION    ;9efc	cd 70 a6
-	jp nc,l9f35h		        ;9eff	d2 35 9f
+	jp nc,up_left_corner_fallback		        ;9eff	d2 35 9f
 
     ; Check for brick
 	call BRICK_EXISTS_AT_ROWCOL	;9f02	cd a8 ad
-	jp nc,l9f1dh		    ;9f05	d2 1d 9f
+	jp nc,up_left_corner_try_other_face		    ;9f05	d2 1d 9f
 
 	; Adjust the position of the ball
     ld a,(BRICK_HIT_Y_PIXEL)		;9f08	3a 3c e5
@@ -567,7 +567,7 @@ l9ef0h:
 	call APPLY_BRICK_HIT_EFFECT		;9f17	cd 05 aa
 	jp brick_hit_check_done		;9f1a	c3 99 a2
 
-l9f1dh:
+up_left_corner_try_other_face:
     ; Check for brick
 	ld a,(CURR_BRICK_X)		    ;9f1d	3a 8b e5
 	ld (BRICK_COL),a		    ;9f20	32 ab e2
@@ -582,7 +582,7 @@ l9f1dh:
 	call APPLY_BRICK_HIT_EFFECT		;9f2f	cd 05 aa
 	jp brick_hit_check_done		;9f32	c3 99 a2
 
-l9f35h:
+up_left_corner_fallback:
     ; Check for brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9f35	3a 8c e5
 	ld (BRICK_ROW),a		;9f38	32 aa e2
@@ -590,7 +590,7 @@ l9f35h:
 	ld (BRICK_COL),a		;9f3e	32 ab e2
 
 	call BRICK_EXISTS_AT_ROWCOL	;9f41	cd a8 ad
-	jp nc,l9f53h		    ;9f44	d2 53 9f
+	jp nc,up_left_corner_last_try		    ;9f44	d2 53 9f
 
 	; Double impact
     call HANDLE_CORNER_CASE_HORIZONTAL  ;9f47	cd 01 a9
@@ -600,7 +600,7 @@ l9f35h:
 	call APPLY_BRICK_HIT_EFFECT		;9f4d	cd 05 aa
 	jp brick_hit_check_done		;9f50	c3 99 a2
 
-l9f53h:
+up_left_corner_last_try:
     ; Check for brick
 	ld a,(CURR_BRICK_Y)		    ;9f53	3a 8a e5
 	ld (BRICK_ROW),a		    ;9f56	32 aa e2
@@ -616,7 +616,7 @@ l9f53h:
 	jp brick_hit_check_done		;9f68	c3 99 a2
 
 ; The X, Y speeds are not both negative here
-check_case_down_right:
+down_right_main_compare:
     ; Jump if the Y speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9f6b	fd cb 02 7e 	. . . ~ 
 	jp nz,check_case_down_left		;9f6f	c2 02 a1 	. . . 
@@ -672,14 +672,14 @@ check_case_down_right:
 	jp nc,brick_hit_check_done		;9fd6	d2 99 a2 	. . . 
 	ld a,(CURR_BRICK_Y)		;9fd9	3a 8a e5 	: . . 
 	cp 0		;9fdc	fe 00 	. . 
-	jp nz,l9fefh		;9fde	c2 ef 9f 	. . . 
+	jp nz,check_case_down_right		;9fde	c2 ef 9f 	. . . 
 	ld a,(PREV_BRICK_Y)		;9fe1	3a 8c e5 	: . . 
 	cp 31		;9fe4	fe 1f 	. . 
-	jp nz,l9fefh		;9fe6	c2 ef 9f 	. . . 
+	jp nz,check_case_down_right		;9fe6	c2 ef 9f 	. . . 
 	call CHECK_VERTICAL_DOUBLE_IMPACT		;9fe9	cd 28 a3 	. ( . 
 	jp brick_hit_check_done		;9fec	c3 99 a2 	. . . 
 
-l9fefh:
+check_case_down_right:
 	ld a,(PREV_BRICK_Y)		;9fef	3a 8c e5 	: . . 
 	cp 12		;9ff2	fe 0c 	. . 
 	jp nc,brick_hit_check_done		;9ff4	d2 99 a2 	. . . 
