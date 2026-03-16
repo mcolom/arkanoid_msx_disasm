@@ -39,7 +39,7 @@ BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the 
 
 
 ;ToDo: this in incremented and compared to the BALL_X_SLOPE OR BALL_Y_SLOPE
-COMPUTED_HIT_COUNTER: equ 0xe541
+TICKS_TO_HIT: equ 0xe541
 ; After each brick hit, this contains the new ball's X speed
 BALL_X_SLOPE: equ 0xe542
 ; After each brick hit, this contains the new ball's Y speed

@@ -49,7 +49,8 @@
 ; If it's going right, you check X - 12
 ; If it's going left, you check X - 17
 
-
+; TICKS_TO_HIT represents the number of step needed to the
+; auxiliar trajectory to cross the Y-border of the brick.
 
 CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; iy = BALL_TABLE1
@@ -1161,7 +1162,7 @@ all_done:
 ;   BALL_Y_SLOPE
 ;   BALL_X_SLOPE
 COMPUTE_PRECISE_HIT_POINT:
-	ld hl,COMPUTED_HIT_COUNTER		;a3d1	21 41 e5 	! A . 
+	ld hl,TICKS_TO_HIT		;a3d1	21 41 e5 	! A . 
 	ld (hl), 0		;a3d4	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a3d6	11 42 e5 	. B . 
 	ld bc, 2		;a3d9	01 02 00 	. . . 
@@ -1216,9 +1217,9 @@ la429h:
 	inc (hl)			;a440	34 	4 
 la441h:
 	push af			;a441	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a442	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a442	3a 41 e5 	: A . 
 	inc a			;a445	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a446	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a446	32 41 e5 	2 A . 
 	pop af			;a449	f1 	. 
 	add a,b			;a44a	80 	. 
 	cp (hl)			;a44b	be  Compare with COMPUTED_HIT_X
@@ -1226,9 +1227,9 @@ la441h:
 	jp la441h		;a44f	c3 41 a4 	. A . 
 la452h:
 	push af			;a452	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a453	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a453	3a 41 e5 	: A . 
 	inc a			;a456	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a457	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a457	32 41 e5 	2 A . 
 	pop af			;a45a	f1 	. 
 	add a,b			;a45b	80 	. 
 	cp (hl)			;a45c	be 	. 
@@ -1238,7 +1239,7 @@ la463h:
 	dec (hl)			;a463	35 	5 
 
 la464h:
-	ld a,(COMPUTED_HIT_COUNTER)	            ;a464	3a 41 e5
+	ld a,(TICKS_TO_HIT)	            ;a464	3a 41 e5
 	ld b,a			            ;a467	47 	G       B = counter
 	ld a,(BALL_Y_SLOPE)		;a468	3a 43 e5
 	ld c,a			            ;a46b	4f          C = BALL_Y_SLOPE
@@ -1249,13 +1250,13 @@ la46eh:
 	add a,c         ;a46e	81
 	djnz la46eh		;a46f	10 fd
 
-	ld b,a			                ;a471	47          B = (counter - 1) * BALL_Y_SLOPE
+	ld b,a			        ;a471	47          B = (counter - 1) * BALL_Y_SLOPE
 	ld a,(PREV_Y_PX)		;a472	3a 86 e5    A = PREV_Y_PX
-	add a,b			                ;a475	80          A = PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
+	add a,b			        ;a475	80          A = PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
     
-	ld b,a			                ;a476	47          B = PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
-	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a477	fd cb 02 7e 	. . . ~ 
-	jp nz,la49ch		;a47b	c2 9c a4 	. . . 
+	ld b,a			        ;a476	47          B = PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a477	fd cb 02 7e
+	jp nz,la49ch		    ;a47b	c2 9c a4
 
 	ld a,(BRICK_ROW)    ;a47e	3a aa e2
 	sla a		        ;a481	cb 27
@@ -1266,37 +1267,40 @@ la46eh:
 	cp b			    ;a489	b8      Compare with PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
 	jp c,la492h		    ;a48a	da 92 a4
 
-	inc a			;a48d	3c 	< 
-	ld b,a			;a48e	47 	G 
-	jp la4bbh		;a48f	c3 bb a4 	. . . 
+	inc a			;a48d	3c
+	ld b,a			;a48e	47
+	jp la4bbh		;a48f	c3 bb a4
 la492h:
-	add a, 8		;a492	c6 08 	. . 
-	cp b			;a494	b8 	. 
-	jp nc,la4bbh		;a495	d2 bb a4 	. . . 
-	ld b,a			;a498	47 	G 
-	jp la4bbh		;a499	c3 bb a4 	. . . 
+	add a, 8		;a492	c6 08
+	cp b			;a494	b8
+	jp nc,la4bbh	;a495	d2 bb a4
+	ld b,a			;a498	47
+	jp la4bbh		;a499	c3 bb a4
+
 la49ch:
-	ld a,(BRICK_ROW)		;a49c	3a aa e2 	: . . 
-	sla a		;a49f	cb 27 	. ' 
-	sla a		;a4a1	cb 27 	. ' 
-	sla a		;a4a3	cb 27 	. ' 
-	add a, 31		;a4a5	c6 1f 	. . 
-	cp b			;a4a7	b8 	. 
-	jp nc,la4afh		;a4a8	d2 af a4 	. . . 
-	ld b,a			;a4ab	47 	G 
-	jp la4bbh		;a4ac	c3 bb a4 	. . . 
+    ; A = 8*BRICK_ROW + 31
+	ld a,(BRICK_ROW)	;a49c	3a aa e2
+	sla a		        ;a49f	cb 27
+	sla a		        ;a4a1	cb 27
+	sla a		        ;a4a3	cb 27
+	add a, 31		    ;a4a5	c6 1f
+
+	cp b			    ;a4a7	b8
+	jp nc,la4afh		;a4a8	d2 af a4
+	ld b,a			    ;a4ab	47
+	jp la4bbh		    ;a4ac	c3 bb a4
 la4afh:
-	sub 8		;a4af	d6 08 	. . 
-	cp b			;a4b1	b8 	. 
-	jp c,la4bah		;a4b2	da ba a4 	. . . 
-	inc a			;a4b5	3c 	< 
-	ld b,a			;a4b6	47 	G 
-	jp la4bbh		;a4b7	c3 bb a4 	. . . 
+	sub 8		    ;a4af	d6 08
+	cp b			;a4b1	b8
+	jp c,la4bah		;a4b2	da ba a4
+	inc a			;a4b5	3c
+	ld b,a			;a4b6	47
+	jp la4bbh		;a4b7	c3 bb a4
 la4bah:
-	inc a			;a4ba	3c 	< 
+	inc a			;a4ba	3c
 la4bbh:
-	ld b,a			;a4bb	47 	G 
-	ld (VAUS_X2),a		;a4bc	32 3e e5 	2 > . 
+	ld b,a			;a4bb	47
+	ld (VAUS_X2),a	;a4bc	32 3e e5
     
 	ld a,(COMPUTED_HIT_X)		            ;a4bf	3a c7 e2
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a4c2	fd cb 03 7e
@@ -1304,7 +1308,7 @@ la4bbh:
 	ld a,(COMPUTED_HIT_X_NEG)		            ;a4c9	3a c6 e2
 la4cch:
 	ld (BRICK_HIT_COL),a		;a4cc	32 3d e5 	2 = . 
-	ld hl,COMPUTED_HIT_COUNTER		;a4cf	21 41 e5 	! A . 
+	ld hl,TICKS_TO_HIT		;a4cf	21 41 e5 	! A . 
 	ld (hl), 0		;a4d2	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a4d4	11 42 e5 	. B . 
 	ld bc, 2		;a4d7	01 02 00 	. . . 
@@ -1357,9 +1361,9 @@ la52fh:
 	inc (hl)			;a53c	34 	4 
 la53dh:
 	push af			;a53d	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a53e	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a53e	3a 41 e5 	: A . 
 	inc a			;a541	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a542	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a542	32 41 e5 	2 A . 
 	pop af			;a545	f1 	. 
 	add a,b			;a546	80 	. 
 	cp (hl)			;a547	be  Compare with COMPUTED_HIT_Y_NEG
@@ -1367,9 +1371,9 @@ la53dh:
 	jp la53dh		;a54b	c3 3d a5 	. = . 
 la54eh:
 	push af			;a54e	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a54f	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a54f	3a 41 e5 	: A . 
 	inc a			;a552	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a553	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a553	32 41 e5 	2 A . 
 	pop af			;a556	f1 	. 
 	add a,b			;a557	80 	. 
 	cp (hl)			;a558	be 	. 
@@ -1378,7 +1382,7 @@ la54eh:
 la55fh:
 	dec (hl)			;a55f	35 	5 
 la560h:
-	ld a,(COMPUTED_HIT_COUNTER)		;a560	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a560	3a 41 e5 	: A . 
 	ld b,a			;a563	47 	G 
 	ld a,(BALL_X_SLOPE)		;a564	3a 42 e5 	: B . 
 	ld c,a			;a567	4f 	O 
@@ -1416,7 +1420,7 @@ la58fh:
 ; parameters of the ball.
 ; Called after hitting the left or right walls.
 COMPUTE_WALL_ADJACENT_HIT_POINT:
-	ld hl,COMPUTED_HIT_COUNTER		;a591	21 41 e5 	! A . 
+	ld hl,TICKS_TO_HIT		;a591	21 41 e5 	! A . 
 	ld (hl), 0		;a594	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a596	11 42 e5 	. B . 
 	ld bc, 2		;a599	01 02 00 	. . . 
@@ -1473,9 +1477,9 @@ la5e7h:
 	inc (hl)			;a5fe	34 	4 
 la5ffh:
 	push af			;a5ff	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a600	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a600	3a 41 e5 	: A . 
 	inc a			;a603	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a604	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a604	32 41 e5 	2 A . 
 	pop af			;a607	f1 	. 
 	add a,b			;a608	80 	. 
 	cp (hl)			;a609	be 	. 
@@ -1483,9 +1487,9 @@ la5ffh:
 	jp la5ffh		;a60d	c3 ff a5 	. . . 
 la610h:
 	push af			;a610	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a611	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a611	3a 41 e5 	: A . 
 	inc a			;a614	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a615	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a615	32 41 e5 	2 A . 
 	pop af			;a618	f1 	. 
 	add a,b			;a619	80 	. 
 	cp (hl)			;a61a	be 	. 
@@ -1494,7 +1498,7 @@ la610h:
 la621h:
 	dec (hl)			;a621	35 	5 
 la622h:
-	ld a,(COMPUTED_HIT_COUNTER)		;a622	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a622	3a 41 e5 	: A . 
 	ld b,a			;a625	47 	G 
 	ld a,(BALL_X_SLOPE)		;a626	3a 42 e5 	: B . 
 	ld c,a			;a629	4f 	O 
@@ -1544,7 +1548,7 @@ RESOLVE_CORNER_COLLISION:
     ; IY: BALL_TABLE
     
     ; Clear 2 variables
-	ld hl,COMPUTED_HIT_COUNTER		;a670	21 41 e5 	! A . 
+	ld hl,TICKS_TO_HIT		;a670	21 41 e5 	! A . 
 	ld (hl), 0		;a673	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a675	11 42 e5 	. B . 
 	ld bc, 2		    ;a678	01 02 00 	. . . 
@@ -1605,9 +1609,9 @@ la6cch:
 	inc (hl)			;a6e0	34 	4 
 la6e1h:
 	push af			;a6e1	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a6e2	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a6e2	3a 41 e5 	: A . 
 	inc a			;a6e5	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a6e6	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a6e6	32 41 e5 	2 A . 
 	pop af			;a6e9	f1 	. 
 	add a,b			;a6ea	80 	. 
 	cp (hl)			;a6eb	be 	. 
@@ -1615,9 +1619,9 @@ la6e1h:
 	jp la6e1h		;a6ef	c3 e1 a6 	. . . 
 la6f2h:
 	push af			;a6f2	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a6f3	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a6f3	3a 41 e5 	: A . 
 	inc a			;a6f6	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a6f7	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a6f7	32 41 e5 	2 A . 
 	pop af			;a6fa	f1 	. 
 	add a,b			;a6fb	80 	. 
 	cp (hl)			;a6fc	be 	. 
@@ -1626,98 +1630,110 @@ la6f2h:
 la703h:
 	dec (hl)			;a703	35 	5 
 la704h:
-	ld a,(COMPUTED_HIT_COUNTER)		;a704	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a704	3a 41 e5 	: A . 
 	ld b,a			;a707	47 	G 
 	ld a,(BALL_X_SLOPE)		;a708	3a 42 e5 	: B . 
 	ld c,a			;a70b	4f 	O 
 	neg		;a70c	ed 44 	. D 
+
+    ; Compute A = (TICKS_TO_HIT - 1) * COMPUTED_X_SPEED
 la70eh:
-	add a,c			;a70e	81 	. 
-	djnz la70eh		;a70f	10 fd 	. . 
-	ld b,a			;a711	47 	G 
-	ld a,(PREV_X_PX)		;a712	3a 87 e5 	: . . 
-	add a,b			;a715	80 	. 
-	ld b,a			;a716	47 	G 
-	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a717	fd cb 02 7e 	. . . ~ 
-	jp nz,la797h		;a71b	c2 97 a7 	. . . 
-	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a71e	fd cb 03 7e 	. . . ~ 
-	jp nz,la75eh		;a722	c2 5e a7 	. ^ . 
-	ld a,(BRICK_COL)		;a725	3a ab e2 	: . . 
-	sla a		;a728	cb 27 	. ' 
-	sla a		;a72a	cb 27 	. ' 
-	sla a		;a72c	cb 27 	. ' 
-	sla a		;a72e	cb 27 	. ' 
-	add a, 12		;a730	c6 0c 	. . 
+	add a,c			;a70e	81
+	djnz la70eh		;a70f	10 fd
+
+	ld b,a			;a711	47 	G   B = (TICKS_TO_HIT - 1) * COMPUTED_X_SPEED
+	ld a,(PREV_X_PX)		;a712	3a 87 e5
+	add a,b			        ;a715	80
+	ld b,a			        ;a716	47  B = PREV_X_PX + (TICKS_TO_HIT - 1) * COMPUTED_X_SPEED
+    
+    ; Here B is the estimated X when the ball crosses the frontier Y that was computed before
+
+    ; Compate B with the horizontal limits of the brick
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a717	fd cb 02 7e
+	jp nz,la797h		                    ;a71b	c2 97 a7
+	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a71e	fd cb 03 7e
+	jp nz,la75eh		                    ;a722	c2 5e a7
+
+    ; A = 16*BRICK_COL + 12
+	ld a,(BRICK_COL)		                ;a725	3a ab e2
+	sla a		                            ;a728	cb 27
+	sla a		                            ;a72a	cb 27
+	sla a		                            ;a72c	cb 27
+	sla a		                            ;a72e	cb 27
+	add a, 12		                        ;a730	c6 0c
+    
 	cp b			;a732	b8 	. 
-	jp c,la73bh		;a733	da 3b a7 	. ; . 
-	ld b,a			;a736	47 	G 
-	scf			;a737	37 	7 
-	jp la751h		;a738	c3 51 a7 	. Q . 
+	jp c,la73bh		;a733	da 3b a7
+	ld b,a			;a736	47
+	scf			    ;a737	37
+	jp la751h		;a738	c3 51 a7
 la73bh:
-	add a, 31		;a73b	c6 1f 	. . 
-	cp b			;a73d	b8 	. 
-	jp nc,la746h		;a73e	d2 46 a7 	. F . 
-	ld b,a			;a741	47 	G 
-	or a			;a742	b7 	. 
-	jp la751h		;a743	c3 51 a7 	. Q . 
+	add a, 31		;a73b	c6 1f
+	cp b			;a73d	b8
+	jp nc,la746h	;a73e	d2 46 a7
+	ld b,a			;a741	47
+	or a			;a742	b7
+	jp la751h		;a743	c3 51 a7
 la746h:
-	sub 16		;a746	d6 10 	. . 
-	cp b			;a748	b8 	. 
-	jp c,la750h		;a749	da 50 a7 	. P . 
-	scf			;a74c	37 	7 
-	jp la751h		;a74d	c3 51 a7 	. Q . 
+	sub 16		    ;a746	d6 10
+	cp b			;a748	b8
+	jp c,la750h		;a749	da 50 a7
+	scf			    ;a74c	37
+	jp la751h		;a74d	c3 51 a7
 la750h:
-	or a			;a750	b7 	. 
+	or a			;a750	b7
 la751h:
     ; Set the row and col of the brick hit
     ; Row: (COMPUTED_HIT_Y_NEG)
     ; col: reg. B
-	push af			;a751	f5 	. 
-	ld a,(COMPUTED_HIT_Y_NEG)		;a752	3a c4 e2 	: . . 
-	ld (BRICK_HIT_ROW),a		;a755	32 3c e5 	2 < . 
-	ld a,b			;a758	78 	x 
-	ld (BRICK_HIT_COL),a		;a759	32 3d e5 	2 = . 
-	pop af			;a75c	f1 	. 
-	ret			;a75d	c9 	. 
+	push af			            ;a751	f5
+	ld a,(COMPUTED_HIT_Y_NEG)	;a752	3a c4 e2
+	ld (BRICK_HIT_ROW),a		;a755	32 3c e5
+	ld a,b			            ;a758	78
+	ld (BRICK_HIT_COL),a		;a759	32 3d e5
+	pop af			            ;a75c	f1
+	ret			                ;a75d	c9
 
 la75eh:
-	ld a,(BRICK_COL)		;a75e	3a ab e2 	: . . 
-	sla a		;a761	cb 27 	. ' 
-	sla a		;a763	cb 27 	. ' 
-	sla a		;a765	cb 27 	. ' 
-	sla a		;a767	cb 27 	. ' 
-	add a,16		;a769	c6 10 	. . 
-	cp b			;a76b	b8 	. 
-	jp c,la774h		;a76c	da 74 a7 	. t . 
-	ld b,a			;a76f	47 	G 
-	or a			;a770	b7 	. 
-	jp la78ah		;a771	c3 8a a7 	. . . 
+    ; A = 16*BRICK_COL + 16
+	ld a,(BRICK_COL)	;a75e	3a ab e2
+	sla a		        ;a761	cb 27
+	sla a		        ;a763	cb 27
+	sla a		        ;a765	cb 27
+	sla a		        ;a767	cb 27
+	add a,16		    ;a769	c6 10
+
+	cp b			;a76b	b8
+	jp c,la774h		;a76c	da 74 a7
+	ld b,a			;a76f	47
+	or a			;a770	b7
+	jp la78ah		;a771	c3 8a a7
 la774h:
-	add a, 31		;a774	c6 1f 	. . 
-	cp b			;a776	b8 	. 
-	jp nc,la77fh		;a777	d2 7f a7 	. ␡ . 
-	ld b,a			;a77a	47 	G 
-	scf			;a77b	37 	7 
-	jp la78ah		;a77c	c3 8a a7 	. . . 
+	add a, 31		;a774	c6 1f
+	cp b			;a776	b8
+	jp nc,la77fh	;a777	d2 7f a7
+	ld b,a			;a77a	47
+	scf			    ;a77b	37
+	jp la78ah		;a77c	c3 8a a7
 la77fh:
-	sub 16		;a77f	d6 10 	. . 
-	cp b			;a781	b8 	. 
-	jp c,la789h		;a782	da 89 a7 	. . . 
-	scf			;a785	37 	7 
-	jp la78ah		;a786	c3 8a a7 	. . . 
+	sub 16		    ;a77f	d6 10
+	cp b			;a781	b8
+	jp c,la789h		;a782	da 89 a7
+	scf			    ;a785	37
+	jp la78ah		;a786	c3 8a a7
 la789h:
-	or a			;a789	b7 	. 
+	or a			;a789	b7
 la78ah:
     ; Set the row and col of the brick hit
     ; Row: (COMPUTED_HIT_Y_NEG)
     ; col: reg. B
-	push af			;a78a	f5 	. 
-	ld a,(COMPUTED_HIT_Y_NEG)		;a78b	3a c4 e2 	: . . 
-	ld (BRICK_HIT_ROW),a		;a78e	32 3c e5 	2 < . 
-	ld a,b			;a791	78 	x 
-	ld (BRICK_HIT_COL),a		;a792	32 3d e5 	2 = . 
-	pop af			;a795	f1 	. 
-	ret			;a796	c9 	. 
+	push af			            ;a78a	f5
+	ld a,(COMPUTED_HIT_Y_NEG)	;a78b	3a c4 e2
+	ld (BRICK_HIT_ROW),a		;a78e	32 3c e5
+	ld a,b			            ;a791	78
+	ld (BRICK_HIT_COL),a		;a792	32 3d e5
+	pop af			            ;a795	f1
+	ret			                ;a796	c9
 
 la797h:
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a797	fd cb 03 7e 	. . . ~ 
@@ -1794,7 +1810,7 @@ la803h:
 
 ; Perform a double impact of the ball at two bricks
 APPLY_CORNER_HIT_VERTICAL:
-	ld hl,COMPUTED_HIT_COUNTER		;a810	21 41 e5 	! A . 
+	ld hl,TICKS_TO_HIT		;a810	21 41 e5 	! A . 
 	ld (hl), 0		;a813	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a815	11 42 e5 	. B . 
 	ld bc, 2		;a818	01 02 00 	. . . 
@@ -1861,9 +1877,9 @@ la87ch:
 	inc (hl)			;a890	34 	4 
 la891h:
 	push af			;a891	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a892	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a892	3a 41 e5 	: A . 
 	inc a			;a895	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a896	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a896	32 41 e5 	2 A . 
 	pop af			;a899	f1 	. 
 	add a,b			;a89a	80 	. 
 	cp (hl)			;a89b	be 	. 
@@ -1871,9 +1887,9 @@ la891h:
 	jp la891h		;a89f	c3 91 a8 	. . . 
 la8a2h:
 	push af			;a8a2	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a8a3	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a8a3	3a 41 e5 	: A . 
 	inc a			;a8a6	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a8a7	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a8a7	32 41 e5 	2 A . 
 	pop af			;a8aa	f1 	. 
 	add a,b			;a8ab	80 	. 
 	cp (hl)			;a8ac	be 	. 
@@ -1882,7 +1898,7 @@ la8a2h:
 la8b3h:
 	dec (hl)			;a8b3	35 	5 
 la8b4h:
-	ld a,(COMPUTED_HIT_COUNTER)		;a8b4	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a8b4	3a 41 e5 	: A . 
 	ld b,a			;a8b7	47 	G 
 	ld a,(BALL_X_SLOPE)		;a8b8	3a 42 e5 	: B . 
 	ld c,a			;a8bb	4f 	O 
@@ -1931,7 +1947,7 @@ la8fdh:
 ; When the balls goes down left.
 APPLY_CORNER_HIT_HORIZONTAL:
     ; Clear two variables
-	ld hl,COMPUTED_HIT_COUNTER		;a901	21 41 e5
+	ld hl,TICKS_TO_HIT		;a901	21 41 e5
 	ld (hl), 0		;a904	36 00
 	ld de,BALL_X_SLOPE		;a906	11 42 e5
 	ld bc, 2		    ;a909	01 02 00
@@ -2003,9 +2019,9 @@ la959h:
 	inc (hl)			;a970	34 	4 
 la971h:
 	push af			;a971	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a972	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a972	3a 41 e5 	: A . 
 	inc a			;a975	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a976	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a976	32 41 e5 	2 A . 
 	pop af			;a979	f1 	. 
 	add a,b			;a97a	80 	. 
 	cp (hl)			;a97b	be 	. 
@@ -2013,9 +2029,9 @@ la971h:
 	jp la971h		;a97f	c3 71 a9 	. q . 
 la982h:
 	push af			;a982	f5 	. 
-	ld a,(COMPUTED_HIT_COUNTER)		;a983	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a983	3a 41 e5 	: A . 
 	inc a			;a986	3c 	< 
-	ld (COMPUTED_HIT_COUNTER),a		;a987	32 41 e5 	2 A . 
+	ld (TICKS_TO_HIT),a		;a987	32 41 e5 	2 A . 
 	pop af			;a98a	f1 	. 
 	add a,b			;a98b	80 	. 
 	cp (hl)			;a98c	be 	. 
@@ -2024,7 +2040,7 @@ la982h:
 la993h:
 	dec (hl)			;a993	35 	5 
 la994h:
-	ld a,(COMPUTED_HIT_COUNTER)		;a994	3a 41 e5 	: A . 
+	ld a,(TICKS_TO_HIT)		;a994	3a 41 e5 	: A . 
 	ld b,a			;a997	47 	G 
 	ld a,(BALL_Y_SLOPE)		;a998	3a 43 e5 	: C . 
 	ld c,a			;a99b	4f 	O 
