@@ -1,100 +1,115 @@
 ; Function CHECK_BRICK_HIT_AND_BOUNCE_BALL is large and complex.
 ; It handles the case where the ball can hit a brick from different sides, or even double impacts.
 
-; 1. determine which brick cell the ball is currently in,
-; 2. determine which cell it was in the previous step,
-; 3. based on the signs of X_SPEED and Y_SPEED, it falls into one of 4 variants:
-;   top-right
-;   top-left
-;   bottom-right
-;   bottom-left
-; 4. compares the previous cell (X1,Y1) with the current one (X2,Y2),
-; 5. decides if the collision was:
-;   vertical,
-;   horizontal,
-;   diagonal / corner,
-;   double impact,
-;   or no impact,
-; 6. calls a bounce routine:
-;   BALL_VERTICAL_BOUNCE
-;   BALL_HORIZONTAL_BOUNCE
-; 7. and finally destroys/activates the brick with APPLY_BRICK_HIT_EFFECT.
-
-
-; Important variables:
-; BALL_BRS_X2, BALL_BRS_Y2 = ball's current position in brick coordinates
-; BALL_BRS_X1, BALL_BRS_Y1 = estimated previous position, obtained after subtracting the speed
+; ============================================================================
+; CHECK_BRICK_HIT_AND_BOUNCE_BALL
+; ============================================================================
 ;
-; Thus:
-; X2 = f(BALL_X)
-; Y2 = f(BALL_Y)
-; X1 = f(BALL_X - X_SPEED)
-; Y1 = f(BALL_Y - Y_SPEED)
-; where f converts pixels/sprite to brick coordinates.
-
-; These store the previous position in pixels (not brick coordinates):
-; PREV_X_PX
-; PREV_Y_PX
-
-; BRICK_ROW, BRICK_COL are checked by BRICK_EXISTS_AT_ROWCOL.
-
-
-; The offsets.
-; The code considers four offsets: 24, 19 for vertical directions, and 12, 17 for the horizontal.
-; This is because it considers the contact point of the ball with a brick.
+; Large brick-collision routine for the Arkanoid MSX ball.
 ;
-; If it's going up, you check Y - 24
-; If it's going down, you check Y - 19
-; If it's going right, you check X - 12
-; If it's going left, you check X - 17
-
-; TICKS_TO_HIT represents the number of step needed to the
-; auxiliar trajectory to cross the Y-border of the brick.
-
-
-
-
-; The pseudocode of this part:
-
-; if level >= FINAL_LEVEL:
+; At a high level it:
+;   1. computes the current brick-grid position touched by the ball,
+;   2. computes the previous brick-grid position by subtracting the speed,
+;   3. selects one of four direction cases based on X_SPEED and Y_SPEED,
+;   4. compares previous/current brick cells,
+;   5. classifies the movement as:
+;        - same cell / no relevant crossing
+;        - vertical-face crossing
+;        - horizontal-face crossing
+;        - corner / ambiguous crossing
+;        - special wall-adjacent case
+;   6. performs the corresponding bounce:
+;        - BALL_VERTICAL_BOUNCE
+;        - BALL_HORIZONTAL_BOUNCE
+;   7. applies the brick-hit effect if a brick is present.
+;
+; The routine is highly duplicated: the same geometric idea is implemented
+; separately for the four movement directions.
+;
+; ----------------------------------------------------------------------------
+; Important coordinate conventions
+; ----------------------------------------------------------------------------
+;
+; CURR_BRICK_X / CURR_BRICK_Y
+;   Current ball contact position in brick-grid coordinates.
+;
+; PREV_BRICK_X / PREV_BRICK_Y
+;   Previous ball contact position in brick-grid coordinates, obtained from:
+;       BALL_X - X_SPEED
+;       BALL_Y - Y_SPEED
+;
+; PREV_X_PX / PREV_Y_PX
+;   Previous ball position in sprite/pixel coordinates, not brick-grid indices.
+;
+; BRICK_ROW / BRICK_COL
+;   Brick-grid indices used by BRICK_EXISTS_AT_ROWCOL.
+;
+; BRICK_HIT_X_PIXEL / BRICK_HIT_Y_PIXEL
+;   Refined impact position in sprite/pixel coordinates.
+;   These are NOT brick-grid indices despite the historical naming.
+;
+; ----------------------------------------------------------------------------
+; Contact offsets
+; ----------------------------------------------------------------------------
+;
+; The code does not use the ball center. It uses the leading contact point of
+; the sprite, which depends on movement direction:
+;
+;   moving up    -> Y - 24
+;   moving down  -> Y - 19
+;   moving right -> X - 12
+;   moving left  -> X - 17
+;
+; These offsets select the edge of the ball that is relevant for brick contact.
+;
+; ----------------------------------------------------------------------------
+; About TICKS_TO_HIT
+; ----------------------------------------------------------------------------
+;
+; TICKS_TO_HIT is a discrete sub-step counter used by the refined collision
+; helpers. It represents how many steps along an auxiliary slope are needed
+; before crossing a candidate brick boundary.
+;
+; ----------------------------------------------------------------------------
+; High-level pseudocode
+; ----------------------------------------------------------------------------
+;
+; if LEVEL >= FINAL_LEVEL:
 ;     return
-; 
-; determine case from signs of X_SPEED and Y_SPEED
-; 
+;
+; choose direction case from the signs of X_SPEED and Y_SPEED
+;
 ; compute:
-;     curr_brick = brick cell touched by current leading edge of ball
-;     prev_brick = brick cell touched by previous leading edge of ball
-; 
-; if outside brick area:
+;     curr_brick = current brick cell touched by the leading edge
+;     prev_brick = previous brick cell touched by the leading edge
+;
+; if outside brick field:
 ;     return
-; 
-; handle wall-border special case if needed
-; 
+;
+; handle special wall-border cases if needed
+;
 ; if special vertical double-impact case:
-;     resolve_vertical_double_impact()
+;     CHECK_VERTICAL_DOUBLE_IMPACT()
 ;     return
-; 
+;
 ; compare prev_brick_y with curr_brick_y
-;     if incompatible:
-;         return
-; 
+; if incompatible:
+;     return
+;
 ; compare prev_brick_x with curr_brick_x
-;     if incompatible:
-;         return
-; 
-; depending on whether motion crossed:
-;     top/bottom face
-;     left/right face
-;     corner between two bricks
-; 
-;     test candidate brick cells
-;     if needed, compute more precise impact point
-;     perform either:
-;         vertical bounce
-;         horizontal bounce
-;         corner/double-impact resolution
-; 
- ;    apply brick action if brick exists
+; if incompatible:
+;     return
+;
+; depending on how the ball crossed between the two cells:
+;     - test a vertical face
+;     - test a horizontal face
+;     - resolve an ambiguous corner
+;
+; if a brick is present:
+;     bounce
+;     apply brick-hit effect
+;
+; ============================================================================
 
 CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; iy = BALL_TABLE1
@@ -122,7 +137,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 	srl a		                ;9c46	cb 3f
 	srl a		                ;9c48	cb 3f
 	srl a		                ;9c4a	cb 3f       A = (BALL_Y - 24) \ 8
-    ; A is the position of the ball in brick coordinates
+    ; A = current contact row in brick coordinates
     
     ; Jump if (BALL_Y - 24) \ 8 >= 12
 	cp 12		                ;9c4c	fe 0c
@@ -255,7 +270,7 @@ up_right_prev_row_minus_1:
 
 ; Brick check (X2, Y1) and vertical bounce
 up_right_check_top_face:
-    ; Check if there's a brick at (X2, Y1)
+    ; Check brick at (CURR_BRICK_X, PREV_BRICK_Y)
 	ld a,(PREV_BRICK_Y)		    ;9cfd	3a 8c e5
 	ld (BRICK_ROW),a		    ;9d00	32 aa e2
 	ld a,(CURR_BRICK_X)		    ;9d03	3a 8b e5
@@ -269,7 +284,7 @@ up_right_check_top_face:
 	jp brick_hit_check_done		;9d15	c3 99 a2
 
 ; Brick check (X2, Y1) and vertical bounce
-; With HANDLE_CORNER_CASE_1
+; With HANDLE_CORNER_CASE_HORIZONTAL
 up_right_check_corner_horizontal:
     ; Check if there's a brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9d18	3a 8c e5
@@ -280,7 +295,7 @@ up_right_check_corner_horizontal:
 	jp nc,brick_hit_check_done	;9d27	d2 99 a2
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1  ;9d2a	cd 01 a9
+	call HANDLE_CORNER_CASE_HORIZONTAL  ;9d2a	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9d2d	cd 80 9b
@@ -298,7 +313,7 @@ up_right_check_corner_vertical:
 	jp nc,brick_hit_check_done		;9d45	d2 99 a2
     
     ; Double impact
-	call HANDLE_CORNER_CASE_2		    ;9d48	cd 10 a8
+	call HANDLE_CORNER_CASE_VERTICAL		    ;9d48	cd 10 a8
     
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9d4b	cd 5b 9b
@@ -338,7 +353,7 @@ l9d81h:
 	jp nc,brick_hit_check_done	;9d8a	d2 99 a2
     
     ; Double impact
-	call HANDLE_CORNER_CASE_1  ;9d8d	cd 01 a9
+	call HANDLE_CORNER_CASE_HORIZONTAL  ;9d8d	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9d90	cd 80 9b
@@ -356,7 +371,7 @@ l9d99h:
 	jp nc,l9db7h		    ;9da8	d2 b7 9d
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		    ;9dab	cd 01 a9
+	call HANDLE_CORNER_CASE_HORIZONTAL		    ;9dab	cd 01 a9
 
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9dae	cd 80 9b
@@ -372,7 +387,7 @@ l9db7h:
 	jp nc,brick_hit_check_done	;9dc0	d2 99 a2
     
     ; Double impact
-	call HANDLE_CORNER_CASE_2		        ;9dc3	cd 10 a8
+	call HANDLE_CORNER_CASE_VERTICAL		        ;9dc3	cd 10 a8
 
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9dc6	cd 5b 9b
@@ -500,7 +515,7 @@ l9eb4h:
 	jp nc,brick_hit_check_done		;9ec3	d2 99 a2
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		            ;9ec6	cd 01 a9
+	call HANDLE_CORNER_CASE_HORIZONTAL		            ;9ec6	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE		;9ec9	cd 80 9b
@@ -518,7 +533,7 @@ l9ed2h:
 	jp nc,brick_hit_check_done	;9ee1	d2 99 a2
     
     ; Double impact
-	call HANDLE_CORNER_CASE_2  ;9ee4	cd 10 a8
+	call HANDLE_CORNER_CASE_VERTICAL  ;9ee4	cd 10 a8
     
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9ee7	cd 5b 9b
@@ -560,7 +575,7 @@ l9f1dh:
 	jp nc,brick_hit_check_done	;9f26	d2 99 a2
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1	;9f29	cd 01 a9
+	call HANDLE_CORNER_CASE_HORIZONTAL	;9f29	cd 01 a9
 
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9f2c	cd 80 9b
@@ -578,7 +593,7 @@ l9f35h:
 	jp nc,l9f53h		    ;9f44	d2 53 9f
 
 	; Double impact
-    call HANDLE_CORNER_CASE_1  ;9f47	cd 01 a9
+    call HANDLE_CORNER_CASE_HORIZONTAL  ;9f47	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9f4a	cd 80 9b
@@ -593,7 +608,7 @@ l9f53h:
 	jp nc,brick_hit_check_done	;9f5c	d2 99 a2
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2  ;9f5f	cd 10 a8
+	call HANDLE_CORNER_CASE_VERTICAL  ;9f5f	cd 10 a8
 
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9f62	cd 5b 9b
@@ -720,7 +735,7 @@ la04bh:
 	jp nc,brick_hit_check_done		;a05a	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		;a05d	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a05d	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a060	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a063	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a066	c3 99 a2 	. . . 
@@ -734,7 +749,7 @@ la069h:
 	jp nc,brick_hit_check_done		;a078	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2		;a07b	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_VERTICAL		;a07b	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a07e	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a081	cd 05 aa 	. . . 
@@ -763,7 +778,7 @@ la0b4h:
 	call BRICK_EXISTS_AT_ROWCOL		;a0ba	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a0bd	d2 99 a2 	. . . 
 la0c0h:
-	call HANDLE_CORNER_CASE_1		;a0c0	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a0c0	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a0c3	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a0c6	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0c9	c3 99 a2 	. . . 
@@ -777,7 +792,7 @@ la0cch:
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		;a0de	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a0de	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a0e1	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a0e4	cd 05 aa 	. . . 
@@ -790,7 +805,7 @@ la0eah:
 	jp nc,brick_hit_check_done		;a0f3	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2		;a0f6	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_VERTICAL		;a0f6	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a0f9	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a0fc	cd 05 aa 	. . . 
@@ -913,7 +928,7 @@ la1e2h:
 	jp nc,brick_hit_check_done		;a1f1	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		;a1f4	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a1f4	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a1f7	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a1fa	cd 05 aa 	. . . 
@@ -928,7 +943,7 @@ la200h:
 	jp nc,brick_hit_check_done		;a20f	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2		;a212	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_VERTICAL		;a212	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a215	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a218	cd 05 aa 	. . . 
@@ -962,7 +977,7 @@ la24bh:
 	jp nc,brick_hit_check_done		;a254	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		;a257	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a257	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a25a	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a25d	cd 05 aa 	. . . 
@@ -977,7 +992,7 @@ la263h:
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_1		;a275	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a275	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a278	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a27b	cd 05 aa 	. . . 
@@ -990,7 +1005,7 @@ la281h:
 	jp nc,brick_hit_check_done		;a28a	d2 99 a2 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2		;a28d	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_VERTICAL		;a28d	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a290	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a293	cd 05 aa 	. . . 
@@ -1127,7 +1142,7 @@ CHECK_VERTICAL_DOUBLE_IMPACT:
 	jp nc,la351h		    ;a342	d2 51 a3
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2	;a345	cd 10 a8
+	call HANDLE_CORNER_CASE_VERTICAL	;a345	cd 10 a8
 
 	call BALL_VERTICAL_BOUNCE	;a348	cd 5b 9b
 	call APPLY_BRICK_HIT_EFFECT		;a34b	cd 05 aa
@@ -1156,7 +1171,7 @@ la367h:
 	call BRICK_EXISTS_AT_ROWCOL		;a37c	cd a8 ad 	. . . 
 	jp nc,la38eh		;a37f	d2 8e a3 	. . . 
 
-	call HANDLE_CORNER_CASE_2		;a382	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_VERTICAL		;a382	cd 10 a8 	. . . 
 	call BALL_VERTICAL_BOUNCE		;a385	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a388	cd 05 aa 	. . . 
 	jp all_done		;a38b	c3 d0 a3 	. . . 
@@ -1171,7 +1186,7 @@ la38eh:
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
     
     ; Double impact
-	call HANDLE_CORNER_CASE_1		;a3a0	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_HORIZONTAL		;a3a0	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a3a3	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a3a6	cd 05 aa 	. . . 
@@ -1189,7 +1204,7 @@ la3afh:
 	jp nc,la3cdh		;a3be	d2 cd a3 	. . . 
 
     ; Double impact
-	call HANDLE_CORNER_CASE_2		;a3c1	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_VERTICAL		;a3c1	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a3c4	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a3c7	cd 05 aa 	. . . 
@@ -1949,7 +1964,7 @@ la803h:
 	ret			;a80f	c9 	. 
 
 ; Perform a double impact of the ball at two bricks
-HANDLE_CORNER_CASE_2:
+HANDLE_CORNER_CASE_VERTICAL:
 	ld hl,TICKS_TO_HIT		;a810	21 41 e5 	! A . 
 	ld (hl), 0		;a813	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a815	11 42 e5 	. B . 
@@ -2084,7 +2099,7 @@ la8fdh:
 ; Perform a double impact of the ball at two bricks
 ;
 ; This function resolves a corner-impact case at the joint of two bricks.
-HANDLE_CORNER_CASE_1:
+HANDLE_CORNER_CASE_HORIZONTAL:
     ; Clear two variables
 	ld hl,TICKS_TO_HIT		;a901	21 41 e5
 	ld (hl), 0		;a904	36 00
