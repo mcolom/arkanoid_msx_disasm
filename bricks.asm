@@ -54,10 +54,10 @@ BRICK_ACTION_TABLE_OFFSET: equ 0xe2bc
 
 ; Position of the ball in the brick coordinate space
 ; BRS = "brick space"
-BALL_BRS_Y2: equ 0xe58a
-BALL_BRS_X2: equ 0xe58b
-BALL_BRS_Y1: equ 0xe58c
-BALL_BRS_X1: equ 0xe58d
+PREV_CURR_Y: equ 0xe58a
+PREV_CURR_X: equ 0xe58b
+PREV_BRICK_Y: equ 0xe58c
+PREV_BRICK_X: equ 0xe58d
 
 ;ToDo:
 ; These are assigned when the ball collides at something and

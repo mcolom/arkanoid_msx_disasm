@@ -4455,7 +4455,7 @@ l70bfh:
 	ld (BRICK_COL),a		;7107	32 ab e2
     
     ; Skip if there's no brick
-	call THERE_IS_A_BRICK		;710a	cd a8 ad
+	call BRICK_EXISTS_AT_ROWCOL		;710a	cd a8 ad
 	jp nc,l7118h		;710d	d2 18 71
 
     ; BRICK_HIT_ROW <-- 1
@@ -4463,7 +4463,7 @@ l70bfh:
 	ld (BRICK_HIT_ROW),a	;7112	32 3c e5
 
     ; Perform the corresponding brick action
-	call DO_BRICK_ACTION		;7115	cd 05 aa
+	call APPLY_BRICK_HIT_EFFECT		;7115	cd 05 aa
 l7118h:
     ; Check if X+14 is in [16, 191]
 	ld a,(ix+SPR_PARAMS_IDX_X)	;7118	dd 7e 01
@@ -4484,7 +4484,7 @@ l7118h:
     ld (BRICK_COL),a		;7131	32 ab e2
     
     ; Skip if there's no brick
-	call THERE_IS_A_BRICK	;7134	cd a8 ad
+	call BRICK_EXISTS_AT_ROWCOL	;7134	cd a8 ad
 	jp nc,l7142h		    ;7137	d2 42 71
 
     ; BRICK_HIT_ROW <-- 1
@@ -4492,7 +4492,7 @@ l7118h:
 	ld (BRICK_HIT_ROW),a	;713c	32 3c e5
 
     ; Perform the corresponding brick action
-	call DO_BRICK_ACTION		;713f	cd 05 aa
+	call APPLY_BRICK_HIT_EFFECT		;713f	cd 05 aa
 l7142h:
 	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5
 	or a			            ;7145	b7
@@ -6942,7 +6942,7 @@ l9786h:
     ; Skip if there's no brick for the alien to touch
 	push iy		            ;9786	fd e5
 	push ix		            ;9788	dd e5
-	call THERE_IS_A_BRICK	;978a	cd a8 ad
+	call BRICK_EXISTS_AT_ROWCOL	;978a	cd a8 ad
 	pop ix		            ;978d	dd e1
 	pop iy		            ;978f	fd e1
 	jr nc,l979bh		    ;9791	30 08
@@ -7058,7 +7058,7 @@ l981ah:
 	ld (BRICK_COL),a		                ;9840	32 ab e2
     
     ; Erase the brick if destroyed
-	call THERE_IS_A_BRICK	;9843	cd a8 ad
+	call BRICK_EXISTS_AT_ROWCOL	;9843	cd a8 ad
 	jr c,l984bh		        ;9846	38 03
     
     ; Erase that brick
@@ -7822,7 +7822,7 @@ BALL_SKEWNESS_TABLE:                    ;9c27
 include 'check_brick_hit_and_bounce_ball.asm'
 
 ; Take the appropriate action when a brick is hit
-DO_BRICK_ACTION:
+APPLY_BRICK_HIT_EFFECT:
 	call UPDATE_BALL_SPEED		;aa05	cd f0 9a
     
     ; HL = TBL_BRICK_ACTION_TABLE_OFFSETs[2*LEVEL]
@@ -8317,7 +8317,7 @@ TABLE_BACKGROUND_ENTRY4:
 
 ; Check if there's a brick in [BRICK_COL, BRICK_ROW]
 ; Result in carry
-THERE_IS_A_BRICK:
+BRICK_EXISTS_AT_ROWCOL:
 	push iy		;ada8	fd e5
 
 	ld a,0		        ;adaa	3e 00
