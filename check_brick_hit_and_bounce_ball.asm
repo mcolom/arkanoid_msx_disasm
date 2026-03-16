@@ -85,8 +85,8 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; (BALL_Y - 24) \ 8 < 12
     
     ; We'll consider 2 X-Y coordinates of the ball in brick space ("BRS")
-    ; PREV_CURR_Y = (BALL_Y - 24) \ 8
-    ; PREV_CURR_X = (BALL_X - 12) \ 16
+    ; CURR_BRICK_Y = (BALL_Y - 24) \ 8
+    ; CURR_BRICK_X = (BALL_X - 12) \ 16
     ;
     ; PREV_BRICK_Y = (BALL_Y - BALL_Y_SPEED - 24) \ 8
     ; PREV_BRICK_X = (BALL_X - SPEED_X - 12) \ 16
@@ -97,7 +97,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     
 
     ; Store (BALL_Y - 24) \ 8
-	ld (PREV_CURR_Y),a		        ;9c51	32 8a e5
+	ld (CURR_BRICK_Y),a		        ;9c51	32 8a e5
 
 	ld a,(ix+SPR_PARAMS_IDX_X)	;9c54	dd 7e 01
 	sub 12		                ;9c57	d6 0c
@@ -107,7 +107,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 	srl a		                ;9c5f	cb 3f   A = (BALL_X - 12) \ 16
     
     ; Store (BALL_X - 12) \ 16
-	ld (PREV_CURR_X),a		        ;9c61	32 8b e5
+	ld (CURR_BRICK_X),a		        ;9c61	32 8b e5
 
     ; Subtract Y speed to the ball
     ; A = BALL_Y - BALL_Y_SPEED
@@ -155,11 +155,11 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 	call CHECK_BALL_REACHES_RIGHT_BORDER		            ;9c98	cd 9a a2
 	jp c,brick_hit_check_done		;9c9b	da 99 a2 	. . . 
 
-	ld a,(PREV_CURR_X)		;9c9e	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;9c9e	3a 8b e5 	: . . 
 	cp 11		;9ca1	fe 0b 	. . 
 	jp nc,brick_hit_check_done		;9ca3	d2 99 a2 	. . . 
 
-	ld a,(PREV_CURR_Y)		;9ca6	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;9ca6	3a 8a e5 	: . . 
 	cp 11		;9ca9	fe 0b 	. . 
 	jp nz,l9cbch		;9cab	c2 bc 9c 	. . . 
 
@@ -178,42 +178,42 @@ l9cbch:
     ; Y2 < 12
     
 	ld a,(PREV_BRICK_Y)		    ;9cc4	3a 8c e5
-	ld c,a			            ;9cc7	4f          C = Y2
-	ld a,(PREV_CURR_Y)		    ;9cc8	3a 8a e5    A = Y1
+	ld c,a			            ;9cc7	4f          C = Y1
+	ld a,(CURR_BRICK_Y)		    ;9cc8	3a 8a e5    A = Y2
 	cp c			            ;9ccb	b9
 	jp z,l9cd7h		            ;9ccc	ca d7 9c    Jump if Y1 == Y2
-	dec c			            ;9ccf	0d          C = Y2 - 1
+	dec c			            ;9ccf	0d          C = Y1 - 1
 	cp c			            ;9cd0	b9
-	jp z,l9ceah		            ;9cd1	ca ea 9c    Jump If Y1 == Y2 - 1
+	jp z,l9ceah		            ;9cd1	ca ea 9c    Jump if Y2 == Y1 - 1
 	jp brick_hit_check_done		;9cd4	c3 99 a2
 l9cd7h:
-	ld a,(PREV_BRICK_X)		;9cd7	3a 8d e5
-	ld c,a			            ;9cda	4f          C = X2
-	ld a,(PREV_CURR_X)		;9cdb	3a 8b e5    A = X1
+	ld a,(PREV_BRICK_X)		    ;9cd7	3a 8d e5
+	ld c,a			            ;9cda	4f          C = X1
+	ld a,(CURR_BRICK_X)		    ;9cdb	3a 8b e5    A = X2
 	cp c			            ;9cde	b9
 	jp z,l9cfdh		            ;9cdf	ca fd 9c    Jump if X1 == X2
 	inc c			            ;9ce2	0c
-	cp c			            ;9ce3	b9          Jump if X1 == X2 + 1
-	jp z,l9d18h		;9ce4	ca 18 9d 	. . . 
-	jp brick_hit_check_done		;9ce7	c3 99 a2 	. . . 
+	cp c			            ;9ce3	b9          Jump if X2 == X1 + 1
+	jp z,l9d18h		            ;9ce4	ca 18 9d
+	jp brick_hit_check_done		;9ce7	c3 99 a2
 
 l9ceah:
-	ld a,(PREV_BRICK_X)		;9cea	3a 8d e5 	: . . 
-	ld c,a			;9ced	4f 	O 
-	ld a,(PREV_CURR_X)		;9cee	3a 8b e5 	: . . 
-	cp c			;9cf1	b9 	. 
-	jp z,l9d36h		;9cf2	ca 36 9d 	. 6 . 
-	inc c			;9cf5	0c 	. 
-	cp c			;9cf6	b9 	. 
-	jp z,l9d54h		;9cf7	ca 54 9d 	. T . 
-	jp brick_hit_check_done		;9cfa	c3 99 a2 	. . . 
+	ld a,(PREV_BRICK_X)		    ;9cea	3a 8d e5
+	ld c,a			            ;9ced	4f          C = X1
+	ld a,(CURR_BRICK_X)		    ;9cee	3a 8b e5    A = X2
+	cp c			            ;9cf1	b9
+	jp z,l9d36h		            ;9cf2	ca 36 9d    Jump if X1 == X2
+	inc c			            ;9cf5	0c
+	cp c			            ;9cf6	b9
+	jp z,l9d54h		            ;9cf7	ca 54 9d    Jump if X2 == X1 + 1
+	jp brick_hit_check_done		;9cfa	c3 99 a2
 
 ; Brick check (X2, Y1) and vertical bounce
 l9cfdh:
     ; Check if there's a brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		    ;9cfd	3a 8c e5
 	ld (BRICK_ROW),a		    ;9d00	32 aa e2
-	ld a,(PREV_CURR_X)		    ;9d03	3a 8b e5
+	ld a,(CURR_BRICK_X)		    ;9d03	3a 8b e5
 	ld (BRICK_COL),a		    ;9d06	32 ab e2
 	call BRICK_EXISTS_AT_ROWCOL		;9d09	cd a8 ad
 	jp nc,brick_hit_check_done	;9d0c	d2 99 a2
@@ -229,7 +229,7 @@ l9d18h:
     ; Check if there's a brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9d18	3a 8c e5
 	ld (BRICK_ROW),a		;9d1b	32 aa e2
-	ld a,(PREV_CURR_X)		;9d1e	3a 8b e5
+	ld a,(CURR_BRICK_X)		;9d1e	3a 8b e5
 	ld (BRICK_COL),a		;9d21	32 ab e2
 	call BRICK_EXISTS_AT_ROWCOL		;9d24	cd a8 ad
 	jp nc,brick_hit_check_done	;9d27	d2 99 a2
@@ -245,7 +245,7 @@ l9d18h:
 ; Brick check (X1, Y2) and vertical bounce
 l9d36h:
     ; Check if there's a brick at (X2, Y1)
-	ld a,(PREV_CURR_Y)		;9d36	3a 8a e5
+	ld a,(CURR_BRICK_Y)		;9d36	3a 8a e5
 	ld (BRICK_ROW),a		;9d39	32 aa e2
 	ld a,(PREV_BRICK_X)		;9d3c	3a 8d e5
 	ld (BRICK_COL),a		;9d3f	32 ab e2
@@ -262,7 +262,7 @@ l9d36h:
 
 l9d54h:
     ; Call RESOLVE_CORNER_COLLISION with (X1, Y2)
-	ld a,(PREV_CURR_Y)		;9d54	3a 8a e5
+	ld a,(CURR_BRICK_Y)		;9d54	3a 8a e5
 	ld (BRICK_ROW),a		;9d57	32 aa e2
 	ld a,(PREV_BRICK_X)		;9d5a	3a 8d e5
 	ld (BRICK_COL),a		;9d5d	32 ab e2
@@ -287,7 +287,7 @@ l9d54h:
 	jp brick_hit_check_done		;9d7e	c3 99 a2
 l9d81h:
     ; Check for brick
-	ld a,(PREV_CURR_X)		    ;9d81	3a 8b e5
+	ld a,(CURR_BRICK_X)		    ;9d81	3a 8b e5
 	ld (BRICK_COL),a		    ;9d84	32 ab e2
 	call BRICK_EXISTS_AT_ROWCOL		;9d87	cd a8 ad
 	jp nc,brick_hit_check_done	;9d8a	d2 99 a2
@@ -304,7 +304,7 @@ l9d99h:
     ; Check for brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9d99	3a 8c e5
 	ld (BRICK_ROW),a		;9d9c	32 aa e2
-	ld a,(PREV_CURR_X)		;9d9f	3a 8b e5
+	ld a,(CURR_BRICK_X)		;9d9f	3a 8b e5
 	ld (BRICK_COL),a		;9da2	32 ab e2
 
 	call BRICK_EXISTS_AT_ROWCOL	;9da5	cd a8 ad
@@ -320,7 +320,7 @@ l9d99h:
 
 l9db7h:
     ; Check for brick
-	ld a,(PREV_CURR_Y)		    ;9db7	3a 8a e5
+	ld a,(CURR_BRICK_Y)		    ;9db7	3a 8a e5
 	ld (BRICK_ROW),a		    ;9dba	32 aa e2
 
 	call BRICK_EXISTS_AT_ROWCOL		;9dbd	cd a8 ad
@@ -350,14 +350,14 @@ check_second_quadrant:
 	srl a		;9de6	cb 3f 	. ? 
 	cp 12		;9de8	fe 0c 	. . 
 	jp nc,check_third_quadrant		;9dea	d2 6b 9f 	. k . 
-	ld (PREV_CURR_Y),a		;9ded	32 8a e5 	2 . . 
+	ld (CURR_BRICK_Y),a		;9ded	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9df0	dd 7e 01 	. ~ . 
 	sub 17		;9df3	d6 11 	. . 
 	srl a		;9df5	cb 3f 	. ? 
 	srl a		;9df7	cb 3f 	. ? 
 	srl a		;9df9	cb 3f 	. ? 
 	srl a		;9dfb	cb 3f 	. ? 
-	ld (PREV_CURR_X),a		;9dfd	32 8b e5 	2 . . 
+	ld (CURR_BRICK_X),a		;9dfd	32 8b e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;9e00	dd 7e 00 	. ~ . 
 	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;9e03	fd 96 02 	. . . 
 	ld (PREV_Y_PX),a		;9e06	32 86 e5 	2 . . 
@@ -381,10 +381,10 @@ check_second_quadrant:
 	ld (PREV_BRICK_X),a		;9e31	32 8d e5 	2 . . 
 	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;9e34	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;9e37	da 99 a2 	. . . 
-	ld a,(PREV_CURR_X)		;9e3a	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;9e3a	3a 8b e5 	: . . 
 	cp 11		;9e3d	fe 0b 	. . 
 	jp nc,brick_hit_check_done		;9e3f	d2 99 a2 	. . . 
-	ld a,(PREV_CURR_Y)		;9e42	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;9e42	3a 8a e5 	: . . 
 	cp 11		;9e45	fe 0b 	. . 
 	jp nz,l9e58h		;9e47	c2 58 9e 	. X . 
 	ld a,(PREV_BRICK_Y)		;9e4a	3a 8c e5 	: . . 
@@ -399,7 +399,7 @@ l9e58h:
 	jp nc,brick_hit_check_done		;9e5d	d2 99 a2 	. . . 
 	ld a,(PREV_BRICK_Y)		;9e60	3a 8c e5 	: . . 
 	ld c,a			;9e63	4f 	O 
-	ld a,(PREV_CURR_Y)		;9e64	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;9e64	3a 8a e5 	: . . 
 	cp c			;9e67	b9 	. 
 	jp z,l9e73h		;9e68	ca 73 9e 	. s . 
 	dec c			;9e6b	0d 	. 
@@ -410,7 +410,7 @@ l9e58h:
 l9e73h:
 	ld a,(PREV_BRICK_X)		;9e73	3a 8d e5 	: . . 
 	ld c,a			;9e76	4f 	O 
-	ld a,(PREV_CURR_X)		;9e77	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;9e77	3a 8b e5 	: . . 
 	cp c			;9e7a	b9 	. 
 	jp z,l9e99h		;9e7b	ca 99 9e 	. . . 
 	dec c			;9e7e	0d 	. 
@@ -421,7 +421,7 @@ l9e73h:
 l9e86h:
 	ld a,(PREV_BRICK_X)		;9e86	3a 8d e5 	: . . 
 	ld c,a			;9e89	4f 	O 
-	ld a,(PREV_CURR_X)		;9e8a	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;9e8a	3a 8b e5 	: . . 
 	cp c			;9e8d	b9 	. 
 	jp z,l9ed2h		;9e8e	ca d2 9e 	. . . 
 	dec c			;9e91	0d 	. 
@@ -433,7 +433,7 @@ l9e99h:
 	; Check for brick at (X2, Y1)
     ld a,(PREV_BRICK_Y)		        ;9e99	3a 8c e5
 	ld (BRICK_ROW),a		        ;9e9c	32 aa e2
-	ld a,(PREV_CURR_X)		        ;9e9f	3a 8b e5
+	ld a,(CURR_BRICK_X)		        ;9e9f	3a 8b e5
 	ld (BRICK_COL),a		        ;9ea2	32 ab e2
 
 	call BRICK_EXISTS_AT_ROWCOL		    ;9ea5	cd a8 ad
@@ -448,7 +448,7 @@ l9eb4h:
     ; Check for brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		        ;9eb4	3a 8c e5
 	ld (BRICK_ROW),a		        ;9eb7	32 aa e2
-	ld a,(PREV_CURR_X)		        ;9eba	3a 8b e5
+	ld a,(CURR_BRICK_X)		        ;9eba	3a 8b e5
 	ld (BRICK_COL),a		        ;9ebd	32 ab e2
 
 	call BRICK_EXISTS_AT_ROWCOL		    ;9ec0	cd a8 ad
@@ -464,7 +464,7 @@ l9eb4h:
 
 l9ed2h:
     ; Check for brick at (X1, Y2)
-	ld a,(PREV_CURR_Y)		    ;9ed2	3a 8a e5
+	ld a,(CURR_BRICK_Y)		    ;9ed2	3a 8a e5
 	ld (BRICK_ROW),a		    ;9ed5	32 aa e2
 	ld a,(PREV_BRICK_X)		    ;9ed8	3a 8d e5
 	ld (BRICK_COL),a		    ;9edb	32 ab e2
@@ -482,7 +482,7 @@ l9ed2h:
 
 l9ef0h:
     ; Check for brick at (X1, Y2)
-	ld a,(PREV_CURR_Y)		;9ef0	3a 8a e5
+	ld a,(CURR_BRICK_Y)		;9ef0	3a 8a e5
 	ld (BRICK_ROW),a		;9ef3	32 aa e2
 	ld a,(PREV_BRICK_X)		;9ef6	3a 8d e5
 	ld (BRICK_COL),a		;9ef9	32 ab e2
@@ -509,7 +509,7 @@ l9ef0h:
 
 l9f1dh:
     ; Check for brick
-	ld a,(PREV_CURR_X)		    ;9f1d	3a 8b e5
+	ld a,(CURR_BRICK_X)		    ;9f1d	3a 8b e5
 	ld (BRICK_COL),a		    ;9f20	32 ab e2
 	call BRICK_EXISTS_AT_ROWCOL		;9f23	cd a8 ad
 	jp nc,brick_hit_check_done	;9f26	d2 99 a2
@@ -526,7 +526,7 @@ l9f35h:
     ; Check for brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9f35	3a 8c e5
 	ld (BRICK_ROW),a		;9f38	32 aa e2
-	ld a,(PREV_CURR_X)		;9f3b	3a 8b e5
+	ld a,(CURR_BRICK_X)		;9f3b	3a 8b e5
 	ld (BRICK_COL),a		;9f3e	32 ab e2
 
 	call BRICK_EXISTS_AT_ROWCOL	;9f41	cd a8 ad
@@ -542,7 +542,7 @@ l9f35h:
 
 l9f53h:
     ; Check for brick
-	ld a,(PREV_CURR_Y)		    ;9f53	3a 8a e5
+	ld a,(CURR_BRICK_Y)		    ;9f53	3a 8a e5
 	ld (BRICK_ROW),a		    ;9f56	32 aa e2
 	call BRICK_EXISTS_AT_ROWCOL		;9f59	cd a8 ad
 	jp nc,brick_hit_check_done	;9f5c	d2 99 a2
@@ -576,14 +576,14 @@ check_third_quadrant:
 	srl a		;9f82	cb 3f 	. ? 
 	cp 12		;9f84	fe 0c 	. . 
 	jp nc,check_fourth_quadrant		;9f86	d2 02 a1 	. . . 
-	ld (PREV_CURR_Y),a		;9f89	32 8a e5 	2 . . 
+	ld (CURR_BRICK_Y),a		;9f89	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9f8c	dd 7e 01 	. ~ . 
 	sub 12		;9f8f	d6 0c 	. . 
 	srl a		;9f91	cb 3f 	. ? 
 	srl a		;9f93	cb 3f 	. ? 
 	srl a		;9f95	cb 3f 	. ? 
 	srl a		;9f97	cb 3f 	. ? 
-	ld (PREV_CURR_X),a		;9f99	32 8b e5 	2 . . 
+	ld (CURR_BRICK_X),a		;9f99	32 8b e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;9f9c	dd 7e 00 	. ~ . 
 	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;9f9f	fd 96 02 	. . . 
 	ld (PREV_Y_PX),a		;9fa2	32 86 e5 	2 . . 
@@ -607,10 +607,10 @@ check_third_quadrant:
 	call CHECK_BALL_REACHES_RIGHT_BORDER		;9fcb	cd 9a a2 	. . . 
 	jp c,brick_hit_check_done		;9fce	da 99 a2 	. . . 
 
-	ld a,(PREV_CURR_X)		;9fd1	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;9fd1	3a 8b e5 	: . . 
 	cp 11		;9fd4	fe 0b 	. . 
 	jp nc,brick_hit_check_done		;9fd6	d2 99 a2 	. . . 
-	ld a,(PREV_CURR_Y)		;9fd9	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;9fd9	3a 8a e5 	: . . 
 	cp 0		;9fdc	fe 00 	. . 
 	jp nz,l9fefh		;9fde	c2 ef 9f 	. . . 
 	ld a,(PREV_BRICK_Y)		;9fe1	3a 8c e5 	: . . 
@@ -625,7 +625,7 @@ l9fefh:
 	jp nc,brick_hit_check_done		;9ff4	d2 99 a2 	. . . 
 	ld a,(PREV_BRICK_Y)		;9ff7	3a 8c e5 	: . . 
 	ld c,a			;9ffa	4f 	O 
-	ld a,(PREV_CURR_Y)		;9ffb	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;9ffb	3a 8a e5 	: . . 
 	cp c			;9ffe	b9 	. 
 	jp z,la00ah		;9fff	ca 0a a0 	. . . 
 	inc c			;a002	0c 	. 
@@ -636,7 +636,7 @@ l9fefh:
 la00ah:
 	ld a,(PREV_BRICK_X)		;a00a	3a 8d e5 	: . . 
 	ld c,a			;a00d	4f 	O 
-	ld a,(PREV_CURR_X)		;a00e	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a00e	3a 8b e5 	: . . 
 	cp c			;a011	b9 	. 
 	jp z,la030h		;a012	ca 30 a0 	. 0 . 
 	inc c			;a015	0c 	. 
@@ -647,7 +647,7 @@ la00ah:
 la01dh:
 	ld a,(PREV_BRICK_X)		;a01d	3a 8d e5 	: . . 
 	ld c,a			;a020	4f 	O 
-	ld a,(PREV_CURR_X)		;a021	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a021	3a 8b e5 	: . . 
 	cp c			;a024	b9 	. 
 	jp z,la069h		;a025	ca 69 a0 	. i . 
 	inc c			;a028	0c 	. 
@@ -658,7 +658,7 @@ la01dh:
 la030h:
 	ld a,(PREV_BRICK_Y)		;a030	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a033	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a036	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a036	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a039	32 ab e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a03c	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a03f	d2 99 a2 	. . . 
@@ -669,7 +669,7 @@ la030h:
 la04bh:
 	ld a,(PREV_BRICK_Y)		;a04b	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a04e	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a051	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a051	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a054	32 ab e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a057	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a05a	d2 99 a2 	. . . 
@@ -681,7 +681,7 @@ la04bh:
 	jp brick_hit_check_done		;a066	c3 99 a2 	. . . 
 
 la069h:
-	ld a,(PREV_CURR_Y)		;a069	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a069	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a06c	32 aa e2 	2 . . 
 	ld a,(PREV_BRICK_X)		;a06f	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a072	32 ab e2 	2 . . 
@@ -696,7 +696,7 @@ la069h:
 	jp brick_hit_check_done		;a084	c3 99 a2 	. . . 
 
 la087h:
-	ld a,(PREV_CURR_Y)		;a087	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a087	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a08a	32 aa e2 	2 . . 
 	ld a,(PREV_BRICK_X)		;a08d	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a090	32 ab e2 	2 . . 
@@ -713,7 +713,7 @@ la087h:
 	jp brick_hit_check_done		;a0b1	c3 99 a2 	. . . 
 
 la0b4h:
-	ld a,(PREV_CURR_X)		;a0b4	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a0b4	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a0b7	32 ab e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a0ba	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a0bd	d2 99 a2 	. . . 
@@ -726,7 +726,7 @@ la0c0h:
 la0cch:
 	ld a,(PREV_BRICK_Y)		;a0cc	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a0cf	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a0d2	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a0d2	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a0d5	32 ab e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a0d8	cd a8 ad 	. . . 
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
@@ -739,7 +739,7 @@ la0cch:
 	jp brick_hit_check_done		;a0e7	c3 99 a2 	. . . 
 
 la0eah:
-	ld a,(PREV_CURR_Y)		;a0ea	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a0ea	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a0ed	32 aa e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a0f0	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a0f3	d2 99 a2 	. . . 
@@ -768,14 +768,14 @@ check_fourth_quadrant:
 	srl a		;a119	cb 3f 	. ? 
 	cp 12		;a11b	fe 0c 	. . 
 	jp nc,brick_hit_check_done		;a11d	d2 99 a2 	. . . 
-	ld (PREV_CURR_Y),a		;a120	32 8a e5 	2 . . 
+	ld (CURR_BRICK_Y),a		;a120	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;a123	dd 7e 01 	. ~ . 
 	sub 17		;a126	d6 11 	. . 
 	srl a		;a128	cb 3f 	. ? 
 	srl a		;a12a	cb 3f 	. ? 
 	srl a		;a12c	cb 3f 	. ? 
 	srl a		;a12e	cb 3f 	. ? 
-	ld (PREV_CURR_X),a		;a130	32 8b e5 	2 . . 
+	ld (CURR_BRICK_X),a		;a130	32 8b e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;a133	dd 7e 00 	. ~ . 
 	sub (iy+BALL_TABLE_IDX_Y_SPEED)		;a136	fd 96 02 	. . . 
 	ld (PREV_Y_PX),a		;a139	32 86 e5 	2 . . 
@@ -797,10 +797,10 @@ check_fourth_quadrant:
 	ld (PREV_BRICK_X),a		;a15f	32 8d e5 	2 . . 
 	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;a162	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;a165	da 99 a2 	. . . 
-	ld a,(PREV_CURR_X)		;a168	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a168	3a 8b e5 	: . . 
 	cp 11		;a16b	fe 0b 	. . 
 	jp nc,brick_hit_check_done		;a16d	d2 99 a2 	. . . 
-	ld a,(PREV_CURR_Y)		;a170	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a170	3a 8a e5 	: . . 
 	cp 0		;a173	fe 00 	. . 
 	jp nz,la186h		;a175	c2 86 a1 	. . . 
 	ld a,(PREV_BRICK_Y)		;a178	3a 8c e5 	: . . 
@@ -815,7 +815,7 @@ la186h:
 	jp nc,brick_hit_check_done		;a18b	d2 99 a2 	. . . 
 	ld a,(PREV_BRICK_Y)		;a18e	3a 8c e5 	: . . 
 	ld c,a			;a191	4f 	O 
-	ld a,(PREV_CURR_Y)		;a192	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a192	3a 8a e5 	: . . 
 	cp c			;a195	b9 	. 
 	jp z,la1a1h		;a196	ca a1 a1 	. . . 
 	inc c			;a199	0c 	. 
@@ -826,7 +826,7 @@ la186h:
 la1a1h:
 	ld a,(PREV_BRICK_X)		;a1a1	3a 8d e5 	: . . 
 	ld c,a			;a1a4	4f 	O 
-	ld a,(PREV_CURR_X)		;a1a5	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a1a5	3a 8b e5 	: . . 
 	cp c			;a1a8	b9 	. 
 	jp z,la1c7h		;a1a9	ca c7 a1 	. . . 
 	dec c			;a1ac	0d 	. 
@@ -837,7 +837,7 @@ la1a1h:
 la1b4h:
 	ld a,(PREV_BRICK_X)		;a1b4	3a 8d e5 	: . . 
 	ld c,a			;a1b7	4f 	O 
-	ld a,(PREV_CURR_X)		;a1b8	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a1b8	3a 8b e5 	: . . 
 	cp c			;a1bb	b9 	. 
 	jp z,la200h		;a1bc	ca 00 a2 	. . . 
 	dec c			;a1bf	0d 	. 
@@ -848,7 +848,7 @@ la1b4h:
 la1c7h:
 	ld a,(PREV_BRICK_Y)		;a1c7	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a1ca	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a1cd	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a1cd	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a1d0	32 ab e2 	2 . . 
 
 	call BRICK_EXISTS_AT_ROWCOL		;a1d3	cd a8 ad
@@ -861,7 +861,7 @@ la1c7h:
 la1e2h:
 	ld a,(PREV_BRICK_Y)		;a1e2	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a1e5	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a1e8	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a1e8	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a1eb	32 ab e2 	2 . . 
 
 	call BRICK_EXISTS_AT_ROWCOL		;a1ee	cd a8 ad 	. . . 
@@ -875,7 +875,7 @@ la1e2h:
 	jp brick_hit_check_done		;a1fd	c3 99 a2 	. . . 
 
 la200h:
-	ld a,(PREV_CURR_Y)		;a200	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a200	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a203	32 aa e2 	2 . . 
 	ld a,(PREV_BRICK_X)		;a206	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a209	32 ab e2 	2 . . 
@@ -890,7 +890,7 @@ la200h:
 	jp brick_hit_check_done		;a21b	c3 99 a2 	. . . 
 
 la21eh:
-	ld a,(PREV_CURR_Y)		;a21e	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a21e	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a221	32 aa e2 	2 . . 
 	ld a,(PREV_BRICK_X)		;a224	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a227	32 ab e2 	2 . . 
@@ -911,7 +911,7 @@ la21eh:
 	jp brick_hit_check_done		;a248	c3 99 a2 	. . . 
 
 la24bh:
-	ld a,(PREV_CURR_X)		;a24b	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a24b	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a24e	32 ab e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a251	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a254	d2 99 a2 	. . . 
@@ -926,7 +926,7 @@ la24bh:
 la263h:
 	ld a,(PREV_BRICK_Y)		;a263	3a 8c e5 	: . . 
 	ld (BRICK_ROW),a		;a266	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a269	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a269	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a26c	32 ab e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a26f	cd a8 ad 	. . . 
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
@@ -939,7 +939,7 @@ la263h:
 	jp brick_hit_check_done		;a27e	c3 99 a2 	. . . 
 
 la281h:
-	ld a,(PREV_CURR_Y)		;a281	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a281	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a284	32 aa e2 	2 . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a287	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a28a	d2 99 a2 	. . . 
@@ -956,7 +956,7 @@ brick_hit_check_done:
 ; Check when the ball reaches the right wall
 CHECK_BALL_REACHES_RIGHT_BORDER:
     ; If X1 != 11, clear_carry_and_exit
-	ld a,(PREV_CURR_X)		    ;a29a	3a 8b e5
+	ld a,(CURR_BRICK_X)		    ;a29a	3a 8b e5
 	cp 11		                ;a29d	fe 0b
 	jp nz,clear_carry_and_exit	;a29f	c2 24 a3
 
@@ -974,7 +974,7 @@ CHECK_BALL_REACHES_RIGHT_BORDER:
 ; In practice it simply resets the carry.
 CHECK_RARE_OR_IMPOSSIBLE_CASE:
 	; If X1 != 15, clear_carry_and_exit
-    ld a,(PREV_CURR_X)		;a2ad	3a 8b e5
+    ld a,(CURR_BRICK_X)		;a2ad	3a 8b e5
 	cp 15		                ;a2b0	fe 0f
 	jp nz,clear_carry_and_exit	;a2b2	c2 24 a3
     
@@ -986,7 +986,7 @@ CHECK_RARE_OR_IMPOSSIBLE_CASE:
 la2bdh:
 	ld a,(PREV_BRICK_Y)		;a2bd	3a 8c e5
 	ld c,a			        ;a2c0	4f          C = Y1
-	ld a,(PREV_CURR_Y)		;a2c1	3a 8a e5    A = Y2
+	ld a,(CURR_BRICK_Y)		;a2c1	3a 8a e5    A = Y2
 	cp c			        ;a2c4	b9
 	jp z,la2dfh		        ;a2c5	ca df a2    Jump if Y1 == Y2
     
@@ -1025,7 +1025,7 @@ la2dfh:
 ; Ball hitting the left wall, moving left-down
 ; Ball hitting the right wall, moving right-up
 la2eeh:
-	ld a,(PREV_CURR_Y)		;a2ee	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a2ee	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a2f1	32 aa e2 	2 . . 
 
 	call COMPUTE_WALL_ADJACENT_HIT_POINT		;a2f4	cd 91 a5 	. . . 
@@ -1063,16 +1063,16 @@ set_carry_and_exit:
 ; corresponding brick action.
 CHECK_VERTICAL_DOUBLE_IMPACT:
     ; Check if the ball might be hitting a brick in X
-	ld a,(PREV_CURR_X)		;a328	3a 8b e5
+	ld a,(CURR_BRICK_X)		;a328	3a 8b e5
 	ld b,a			        ;a32b	47
 	ld a,(BRICK_COL)		;a32c	3a ab e2
 	cp b			        ;a32f	b8
 	jp nz,la354h		    ;a330	c2 54 a3
 
     ; Set BRICK_ROW and BRICK_COL
-	ld a,(PREV_CURR_Y)		;a333	3a 8a e5
+	ld a,(CURR_BRICK_Y)		;a333	3a 8a e5
 	ld (BRICK_ROW),a		;a336	32 aa e2
-	ld a,(PREV_CURR_X)		;a339	3a 8b e5
+	ld a,(CURR_BRICK_X)		;a339	3a 8b e5
 	ld (BRICK_COL),a		;a33c	32 ab e2
 
     ; Check if there's actually a brick there.
@@ -1090,19 +1090,19 @@ la351h:
 	jp all_done		;a351	c3 d0 a3
 
 la354h:
-	ld a,(PREV_CURR_Y)		;a354	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a354	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a357	32 aa e2 	2 . . 
 	ld a,(PREV_BRICK_X)		;a35a	3a 8d e5 	: . . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a35d	fd cb 03 7e 	. . . ~ 
 	jp z,la367h		;a361	ca 67 a3 	. g . 
-	ld a,(PREV_CURR_X)		;a364	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a364	3a 8b e5 	: . . 
 la367h:
 	ld (BRICK_COL),a		;a367	32 ab e2 	2 . . 
 
 	call RESOLVE_CORNER_COLLISION		;a36a	cd 70 a6 	. p . 
 	jp nc,la3afh		;a36d	d2 af a3 	. . . 
 
-	ld a,(PREV_CURR_Y)		;a370	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a370	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a373	32 aa e2 	2 . . 
 	ld a,(PREV_BRICK_X)		;a376	3a 8d e5 	: . . 
 	ld (BRICK_COL),a		;a379	32 ab e2 	2 . . 
@@ -1116,9 +1116,9 @@ la367h:
 	jp all_done		;a38b	c3 d0 a3 	. . . 
 
 la38eh:
-	ld a,(PREV_CURR_Y)		;a38e	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a38e	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a391	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a394	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a394	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a397	32 ab e2 	2 . . 
 
 	call BRICK_EXISTS_AT_ROWCOL		;a39a	cd a8 ad 	. . . 
@@ -1134,9 +1134,9 @@ la3ach:
 	jp all_done		;a3ac	c3 d0 a3 	. . . 
 
 la3afh:
-	ld a,(PREV_CURR_Y)		;a3af	3a 8a e5 	: . . 
+	ld a,(CURR_BRICK_Y)		;a3af	3a 8a e5 	: . . 
 	ld (BRICK_ROW),a		;a3b2	32 aa e2 	2 . . 
-	ld a,(PREV_CURR_X)		;a3b5	3a 8b e5 	: . . 
+	ld a,(CURR_BRICK_X)		;a3b5	3a 8b e5 	: . . 
 	ld (BRICK_COL),a		;a3b8	32 ab e2 	2 . . 
 
 	call BRICK_EXISTS_AT_ROWCOL		;a3bb	cd a8 ad 	. . . 

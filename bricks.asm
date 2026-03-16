@@ -54,8 +54,8 @@ BRICK_ACTION_TABLE_OFFSET: equ 0xe2bc
 
 ; Position of the ball in the brick coordinate space
 ; BRS = "brick space"
-PREV_CURR_Y: equ 0xe58a
-PREV_CURR_X: equ 0xe58b
+CURR_BRICK_Y: equ 0xe58a
+CURR_BRICK_X: equ 0xe58b
 PREV_BRICK_Y: equ 0xe58c
 PREV_BRICK_X: equ 0xe58d
 
