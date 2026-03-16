@@ -1158,12 +1158,12 @@ all_done:
 ;   COMPUTED_HIT_Y
 ;   COMPUTED_HIT_X_NEG
 ;   COMPUTED_HIT_X
-;   COMPUTED_Y_SPEED
-;   COMPUTED_X_SPEED
+;   BALL_Y_SLOPE
+;   BALL_X_SLOPE
 COMPUTE_PRECISE_HIT_POINT:
 	ld hl,COMPUTED_HIT_COUNTER		;a3d1	21 41 e5 	! A . 
 	ld (hl), 0		;a3d4	36 00 	6 . 
-	ld de,COMPUTED_X_SPEED		;a3d6	11 42 e5 	. B . 
+	ld de,BALL_X_SLOPE		;a3d6	11 42 e5 	. B . 
 	ld bc, 2		;a3d9	01 02 00 	. . . 
 	ldir		;a3dc	ed b0 	. . 
 
@@ -1190,22 +1190,22 @@ la407h:
 	sla a		;a408	cb 27 	. ' 
 	ld l,a			;a40a	6f 	o 
 	ld h,0		;a40b	26 00 	& . 
-	ld de,TBL_a86c		;a40d	11 6c a8 	. l . 
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a40d	11 6c a8 	. l . 
 	add hl,de			;a410	19 	. 
 	ld a,(hl)			;a411	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a412	fd cb 02 7e 	. . . ~ 
 	jp nz,la41bh		;a416	c2 1b a4 	. . . 
 	neg		;a419	ed 44 	. D 
 la41bh:
-	ld (COMPUTED_X_SPEED),a		;a41b	32 42 e5 	2 B . 
+	ld (BALL_X_SLOPE),a		;a41b	32 42 e5 	2 B . 
 	inc hl			;a41e	23 	# 
 	ld a,(hl)			;a41f	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a420	fd cb 02 7e 	. . . ~ 
 	jp nz,la429h		;a424	c2 29 a4 	. ) . 
 	neg		;a427	ed 44 	. D 
 la429h:
-	ld (COMPUTED_Y_SPEED),a		;a429	32 43 e5 	2 C . 
-	ld a,(COMPUTED_X_SPEED)		;a42c	3a 42 e5 	: B . 
+	ld (BALL_Y_SLOPE),a		;a429	32 43 e5 	2 C . 
+	ld a,(BALL_X_SLOPE)		;a42c	3a 42 e5 	: B . 
 	ld b,a			;a42f	47 	G 
 	ld a,(PREV_X_PX)		;a430	3a 87 e5 	: . . 
     
@@ -1240,20 +1240,20 @@ la463h:
 la464h:
 	ld a,(COMPUTED_HIT_COUNTER)	            ;a464	3a 41 e5
 	ld b,a			            ;a467	47 	G       B = counter
-	ld a,(COMPUTED_Y_SPEED)		;a468	3a 43 e5
-	ld c,a			            ;a46b	4f          C = COMPUTED_Y_SPEED
-	neg		                    ;a46c	ed 44       A = -COMPUTED_Y_SPEED
+	ld a,(BALL_Y_SLOPE)		;a468	3a 43 e5
+	ld c,a			            ;a46b	4f          C = BALL_Y_SLOPE
+	neg		                    ;a46c	ed 44       A = -BALL_Y_SLOPE
 
-; A = -COMPUTED_Y_SPEED + counter * COMPUTED_Y_SPEED = (counter - 1) * COMPUTED_Y_SPEED
+; A = -BALL_Y_SLOPE + counter * BALL_Y_SLOPE = (counter - 1) * BALL_Y_SLOPE
 la46eh:
 	add a,c         ;a46e	81
 	djnz la46eh		;a46f	10 fd
 
-	ld b,a			                ;a471	47          B = (counter - 1) * COMPUTED_Y_SPEED
+	ld b,a			                ;a471	47          B = (counter - 1) * BALL_Y_SLOPE
 	ld a,(PREV_Y_PX)		;a472	3a 86 e5    A = PREV_Y_PX
-	add a,b			                ;a475	80          A = PREV_Y_PX + (counter - 1) * COMPUTED_Y_SPEED
+	add a,b			                ;a475	80          A = PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
     
-	ld b,a			                ;a476	47          B = PREV_Y_PX + (counter - 1) * COMPUTED_Y_SPEED
+	ld b,a			                ;a476	47          B = PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a477	fd cb 02 7e 	. . . ~ 
 	jp nz,la49ch		;a47b	c2 9c a4 	. . . 
 
@@ -1263,7 +1263,7 @@ la46eh:
 	sla a		        ;a485	cb 27
 	add a, 18		    ;a487	c6 12   A = 8*BRICK_ROW + 18
     
-	cp b			    ;a489	b8      Compare with PREV_Y_PX + (counter - 1) * COMPUTED_Y_SPEED
+	cp b			    ;a489	b8      Compare with PREV_Y_PX + (counter - 1) * BALL_Y_SLOPE
 	jp c,la492h		    ;a48a	da 92 a4
 
 	inc a			;a48d	3c 	< 
@@ -1306,7 +1306,7 @@ la4cch:
 	ld (BRICK_HIT_COL),a		;a4cc	32 3d e5 	2 = . 
 	ld hl,COMPUTED_HIT_COUNTER		;a4cf	21 41 e5 	! A . 
 	ld (hl), 0		;a4d2	36 00 	6 . 
-	ld de,COMPUTED_X_SPEED		;a4d4	11 42 e5 	. B . 
+	ld de,BALL_X_SLOPE		;a4d4	11 42 e5 	. B . 
 	ld bc, 2		;a4d7	01 02 00 	. . . 
 	ldir		;a4da	ed b0 	. . 
 	ld a,(BRICK_ROW)		;a4dc	3a aa e2 	: . . 
@@ -1331,22 +1331,22 @@ la503h:
 	sla a		;a504	cb 27 	. ' 
 	ld l,a			;a506	6f 	o 
 	ld h,0		;a507	26 00 	& . 
-	ld de,TBL_a86c		;a509	11 6c a8 	. l . 
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a509	11 6c a8 	. l . 
 	add hl,de			;a50c	19 	. 
 	ld a,(hl)			;a50d	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a50e	fd cb 02 7e 	. . . ~ 
 	jp nz,la517h		;a512	c2 17 a5 	. . . 
 	neg		;a515	ed 44 	. D 
 la517h:
-	ld (COMPUTED_X_SPEED),a		;a517	32 42 e5 	2 B . 
+	ld (BALL_X_SLOPE),a		;a517	32 42 e5 	2 B . 
 	inc hl			;a51a	23 	# 
 	ld a,(hl)			;a51b	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a51c	fd cb 02 7e 	. . . ~ 
 	jp nz,la525h		;a520	c2 25 a5 	. % . 
 	neg		;a523	ed 44 	. D 
 la525h:
-	ld (COMPUTED_Y_SPEED),a		;a525	32 43 e5 	2 C . 
-	ld a,(COMPUTED_Y_SPEED)		;a528	3a 43 e5 	: C . 
+	ld (BALL_Y_SLOPE),a		;a525	32 43 e5 	2 C . 
+	ld a,(BALL_Y_SLOPE)		;a528	3a 43 e5 	: C . 
 	ld b,a			;a52b	47 	G 
 	ld a,(PREV_Y_PX)		;a52c	3a 86 e5 	: . . 
 la52fh:
@@ -1380,7 +1380,7 @@ la55fh:
 la560h:
 	ld a,(COMPUTED_HIT_COUNTER)		;a560	3a 41 e5 	: A . 
 	ld b,a			;a563	47 	G 
-	ld a,(COMPUTED_X_SPEED)		;a564	3a 42 e5 	: B . 
+	ld a,(BALL_X_SLOPE)		;a564	3a 42 e5 	: B . 
 	ld c,a			;a567	4f 	O 
 	neg		;a568	ed 44 	. D 
 la56ah:
@@ -1418,7 +1418,7 @@ la58fh:
 COMPUTE_WALL_ADJACENT_HIT_POINT:
 	ld hl,COMPUTED_HIT_COUNTER		;a591	21 41 e5 	! A . 
 	ld (hl), 0		;a594	36 00 	6 . 
-	ld de,COMPUTED_X_SPEED		;a596	11 42 e5 	. B . 
+	ld de,BALL_X_SLOPE		;a596	11 42 e5 	. B . 
 	ld bc, 2		;a599	01 02 00 	. . . 
 	ldir		;a59c	ed b0 	. . 
 
@@ -1448,22 +1448,22 @@ la5c5h:
 	sla a		;a5c6	cb 27 	. ' 
 	ld l,a			;a5c8	6f 	o 
 	ld h, 0		;a5c9	26 00 	& . 
-	ld de,TBL_a86c		;a5cb	11 6c a8 	. l . 
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a5cb	11 6c a8 	. l . 
 	add hl,de			;a5ce	19 	. 
 	ld a,(hl)			;a5cf	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5d0	fd cb 02 7e 	. . . ~ 
 	jp nz,la5d9h		;a5d4	c2 d9 a5 	. . . 
 	neg		;a5d7	ed 44 	. D 
 la5d9h:
-	ld (COMPUTED_X_SPEED),a		;a5d9	32 42 e5 	2 B . 
+	ld (BALL_X_SLOPE),a		;a5d9	32 42 e5 	2 B . 
 	inc hl			;a5dc	23 	# 
 	ld a,(hl)			;a5dd	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5de	fd cb 02 7e 	. . . ~ 
 	jp nz,la5e7h		;a5e2	c2 e7 a5 	. . . 
 	neg		;a5e5	ed 44 	. D 
 la5e7h:
-	ld (COMPUTED_Y_SPEED),a		;a5e7	32 43 e5 	2 C . 
-	ld a,(COMPUTED_Y_SPEED)		;a5ea	3a 43 e5 	: C . 
+	ld (BALL_Y_SLOPE),a		;a5e7	32 43 e5 	2 C . 
+	ld a,(BALL_Y_SLOPE)		;a5ea	3a 43 e5 	: C . 
 	ld b,a			;a5ed	47 	G 
 	ld a,(PREV_Y_PX)		;a5ee	3a 86 e5 	: . . 
 	ld hl,COMPUTED_HIT_Y		;a5f1	21 c5 e2 	! . . 
@@ -1496,7 +1496,7 @@ la621h:
 la622h:
 	ld a,(COMPUTED_HIT_COUNTER)		;a622	3a 41 e5 	: A . 
 	ld b,a			;a625	47 	G 
-	ld a,(COMPUTED_X_SPEED)		;a626	3a 42 e5 	: B . 
+	ld a,(BALL_X_SLOPE)		;a626	3a 42 e5 	: B . 
 	ld c,a			;a629	4f 	O 
 	neg		;a62a	ed 44 	. D 
 la62ch:
@@ -1546,7 +1546,7 @@ RESOLVE_CORNER_COLLISION:
     ; Clear 2 variables
 	ld hl,COMPUTED_HIT_COUNTER		;a670	21 41 e5 	! A . 
 	ld (hl), 0		;a673	36 00 	6 . 
-	ld de,COMPUTED_X_SPEED		;a675	11 42 e5 	. B . 
+	ld de,BALL_X_SLOPE		;a675	11 42 e5 	. B . 
 	ld bc, 2		    ;a678	01 02 00 	. . . 
 	ldir		        ;a67b	ed b0 	. . 
 
@@ -1564,6 +1564,10 @@ la691h:
 	add a, 7		;a695	c6 07 	. . 
 	ld (COMPUTED_HIT_Y),a		;a697	32 c5 e2 	2 . . 
 
+    ; Obtain BALL_X_SLOPE and BALL_Y_SLOPE with
+    ; TBL_SPEED_FROM_SKEWNESS according to BALL_TABLE_IDX_SKEWNESS:
+    ;   idx = 2 * (abs(skewness) - 1)
+    ;   HL = &TBL_SPEED_FROM_SKEWNESS[idx]
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a69a	fd 7e 06 	. ~ . 
 	bit 7,a		;a69d	cb 7f 	. ␡ 
 	jp z,la6a4h		;a69f	ca a4 a6 	. . . 
@@ -1573,24 +1577,25 @@ la6a4h:
 	sla a		;a6a5	cb 27 	. ' 
 	ld l,a			;a6a7	6f 	o 
 	ld h, 0		;a6a8	26 00 	& . 
-	ld de,TBL_a86c		;a6aa	11 6c a8 	. l . 
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a6aa	11 6c a8 	. l . 
 	add hl,de			;a6ad	19 	. 
+
 	ld a,(hl)			;a6ae	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a6af	fd cb 02 7e 	. . . ~ 
 	jp nz,la6b8h		;a6b3	c2 b8 a6 	. . . 
 	neg		;a6b6	ed 44 	. D 
 la6b8h:
-	ld (COMPUTED_X_SPEED),a		;a6b8	32 42 e5 	2 B . 
+	ld (BALL_X_SLOPE),a		;a6b8	32 42 e5 	2 B . 
 	inc hl			;a6bb	23 	# 
 	ld a,(hl)			;a6bc	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a6bd	fd cb 02 7e 	. . . ~ 
 	jp nz,la6c6h		;a6c1	c2 c6 a6 	. . . 
 	neg		;a6c4	ed 44 	. D 
 la6c6h:
-	ld (COMPUTED_Y_SPEED),a		;a6c6	32 43 e5 	2 C . 
+	ld (BALL_Y_SLOPE),a		;a6c6	32 43 e5 	2 C . 
 	jp la6cch		;a6c9	c3 cc a6 	. . . 
 la6cch:
-	ld a,(COMPUTED_Y_SPEED)		;a6cc	3a 43 e5 	: C . 
+	ld a,(BALL_Y_SLOPE)		;a6cc	3a 43 e5 	: C . 
 	ld b,a			;a6cf	47 	G 
 	ld a,(PREV_Y_PX)		;a6d0	3a 86 e5 	: . . 
 	ld hl,COMPUTED_HIT_Y		;a6d3	21 c5 e2 	! . . 
@@ -1623,7 +1628,7 @@ la703h:
 la704h:
 	ld a,(COMPUTED_HIT_COUNTER)		;a704	3a 41 e5 	: A . 
 	ld b,a			;a707	47 	G 
-	ld a,(COMPUTED_X_SPEED)		;a708	3a 42 e5 	: B . 
+	ld a,(BALL_X_SLOPE)		;a708	3a 42 e5 	: B . 
 	ld c,a			;a70b	4f 	O 
 	neg		;a70c	ed 44 	. D 
 la70eh:
@@ -1791,7 +1796,7 @@ la803h:
 APPLY_CORNER_HIT_VERTICAL:
 	ld hl,COMPUTED_HIT_COUNTER		;a810	21 41 e5 	! A . 
 	ld (hl), 0		;a813	36 00 	6 . 
-	ld de,COMPUTED_X_SPEED		;a815	11 42 e5 	. B . 
+	ld de,BALL_X_SLOPE		;a815	11 42 e5 	. B . 
 	ld bc, 2		;a818	01 02 00 	. . . 
 	ldir		;a81b	ed b0 	. . 
 	ld a,(BRICK_ROW)		;a81d	3a aa e2 	: . . 
@@ -1816,27 +1821,34 @@ la844h:
 	sla a		;a845	cb 27 	. ' 
 	ld l,a			;a847	6f 	o 
 	ld h, 0		;a848	26 00 	& . 
-	ld de,TBL_a86c		;a84a	11 6c a8 	. l . 
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a84a	11 6c a8 	. l . 
 	add hl,de			;a84d	19 	. 
 	ld a,(hl)			;a84e	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a84f	fd cb 02 7e 	. . . ~ 
 	jp nz,la858h		;a853	c2 58 a8 	. X . 
 	neg		;a856	ed 44 	. D 
 la858h:
-	ld (COMPUTED_X_SPEED),a		;a858	32 42 e5 	2 B . 
+	ld (BALL_X_SLOPE),a		;a858	32 42 e5 	2 B . 
 	inc hl			;a85b	23 	# 
 	ld a,(hl)			;a85c	7e 	~ 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a85d	fd cb 02 7e 	. . . ~ 
 	jp nz,la866h		;a861	c2 66 a8 	. f . 
 	neg		;a864	ed 44 	. D 
 la866h:
-	ld (COMPUTED_Y_SPEED),a		;a866	32 43 e5 	2 C . 
+	ld (BALL_Y_SLOPE),a		;a866	32 43 e5 	2 C . 
 	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
 
-; ToDo
-; Values are read and put at COMPUTED_X_SPEED
-TBL_a86c:   ;a86c
-    db 4, -1, 2, -1, 1, -1, 1, -2, -1, -2, -1, -1, -2, -1,  -4, -1
+; Table to obtain pairs of (BALL_X_SLOPE, BALL_X_SLOPE) from the ball's skewness
+; All Y values are negatives, as the actual sign is adjusted using Y_SPEED.
+TBL_SPEED_FROM_SKEWNESS:   ;a86c
+    db  4, -1
+    db  2, -1
+    db  1, -1
+    db  1, -2
+    db -1, -2
+    db -1, -1
+    db -2, -1
+    db -4, -1
 
 la87ch:
 	ld a, (0xe543)      ;a87c    
@@ -1872,7 +1884,7 @@ la8b3h:
 la8b4h:
 	ld a,(COMPUTED_HIT_COUNTER)		;a8b4	3a 41 e5 	: A . 
 	ld b,a			;a8b7	47 	G 
-	ld a,(COMPUTED_X_SPEED)		;a8b8	3a 42 e5 	: B . 
+	ld a,(BALL_X_SLOPE)		;a8b8	3a 42 e5 	: B . 
 	ld c,a			;a8bb	4f 	O 
 	neg		;a8bc	ed 44 	. D 
 la8beh:
@@ -1921,7 +1933,7 @@ APPLY_CORNER_HIT_HORIZONTAL:
     ; Clear two variables
 	ld hl,COMPUTED_HIT_COUNTER		;a901	21 41 e5
 	ld (hl), 0		;a904	36 00
-	ld de,COMPUTED_X_SPEED		;a906	11 42 e5
+	ld de,BALL_X_SLOPE		;a906	11 42 e5
 	ld bc, 2		    ;a909	01 02 00
 	ldir		        ;a90c	ed b0
     
@@ -1960,16 +1972,16 @@ la93ah:
 	ld l,a		;a93a	6f
 	ld h, 0		;a93b	26 00   HL = 2*(skewness - 1)
 
-	ld de,TBL_a86c		;a93d	11 6c a8
-	add hl,de			;a940	19          HL = TBL_a86c + 2*(skewness - 1)
-	ld a,(hl)			;a941	7e          A = TBL_a86c[2*(skewness - 1)]
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a93d	11 6c a8
+	add hl,de			;a940	19          HL = TBL_SPEED_FROM_SKEWNESS + 2*(skewness - 1)
+	ld a,(hl)			;a941	7e          A = TBL_SPEED_FROM_SKEWNESS[2*(skewness - 1)]
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a942	fd cb 02 7e
 	jp nz,la94bh		;a946	c2 4b a9
 	neg		            ;a949	ed 44
-    ; A = TBL_a86c[2*(skewness - 1)]
+    ; A = TBL_SPEED_FROM_SKEWNESS[2*(skewness - 1)]
 la94bh:
-	; Set COMPUTED_X_SPEED
-    ld (COMPUTED_X_SPEED),a		;a94b	32 42 e5 	2 B . 
+	; Set BALL_X_SLOPE
+    ld (BALL_X_SLOPE),a		;a94b	32 42 e5 	2 B . 
 
     ; Read next value
 	inc hl			                        ;a94e	23
@@ -1978,10 +1990,10 @@ la94bh:
 	jp nz,la959h		                    ;a954	c2 59 a9
 	neg		                                ;a957	ed 44
 la959h:
-    ; Set COMPUTED_Y_SPEED
-	ld (COMPUTED_Y_SPEED),a		;a959	32 43 e5
+    ; Set BALL_Y_SLOPE
+	ld (BALL_Y_SLOPE),a		;a959	32 43 e5
     
-	ld a,(COMPUTED_X_SPEED)		            ;a95c	3a 42 e5
+	ld a,(BALL_X_SLOPE)		            ;a95c	3a 42 e5
 	ld b,a			                ;a95f	47
 	ld a,(PREV_X_PX)		;a960	3a 87 e5 	: . . 
 	ld hl,COMPUTED_HIT_X_NEG		;a963	21 c6 e2 	! . . 
@@ -2014,7 +2026,7 @@ la993h:
 la994h:
 	ld a,(COMPUTED_HIT_COUNTER)		;a994	3a 41 e5 	: A . 
 	ld b,a			;a997	47 	G 
-	ld a,(COMPUTED_Y_SPEED)		;a998	3a 43 e5 	: C . 
+	ld a,(BALL_Y_SLOPE)		;a998	3a 43 e5 	: C . 
 	ld c,a			;a99b	4f 	O 
 	neg		;a99c	ed 44 	. D 
 la99eh:

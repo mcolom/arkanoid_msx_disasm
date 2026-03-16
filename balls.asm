@@ -38,12 +38,12 @@ BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
 
 
-;ToDo: this in incremented and compared to the COMPUTED_X_SPEED OR COMPUTED_Y_SPEED
+;ToDo: this in incremented and compared to the BALL_X_SLOPE OR BALL_Y_SLOPE
 COMPUTED_HIT_COUNTER: equ 0xe541
 ; After each brick hit, this contains the new ball's X speed
-COMPUTED_X_SPEED: equ 0xe542
+BALL_X_SLOPE: equ 0xe542
 ; After each brick hit, this contains the new ball's Y speed
-COMPUTED_Y_SPEED: equ 0xe543
+BALL_Y_SLOPE: equ 0xe543
 
 
 ; When this counter reaches 40, the skewness of the balls change

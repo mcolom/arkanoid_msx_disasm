@@ -1768,7 +1768,7 @@ l4f6bh:
 	ld (VAUS_X2),hl		        ;4f71	22 3e e5
 
 	ld (TITLE_TICKS+1),hl		;4f74	22 40 e5
-    ld (COMPUTED_X_SPEED),hl	;4f77	22 42 e5
+    ld (BALL_X_SLOPE),hl	;4f77	22 42 e5
 l4f7ah:
     ; Not in the demo anymore
 	ld hl, 0		                ;4f7a	21 00 00
@@ -8316,7 +8316,8 @@ TABLE_BACKGROUND_ENTRY4:
     db 0x76, 0x77, 0x74, 0x75
 
 ; Check if there's a brick in [BRICK_COL, BRICK_ROW]
-; Result in carry
+; Carry = 1 ==> there's a brick
+; Carry = 0 ==> there is not.
 BRICK_EXISTS_AT_ROWCOL:
 	push iy		;ada8	fd e5
 
