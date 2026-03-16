@@ -1,8 +1,8 @@
 BRICK_ROW: equ 0xe2aa
 BRICK_COL: equ 0xe2ab ; First brick: 0, second brick: 1, ..., last brick: 10.
 
-BRICK_HIT_ROW: equ 0xe53c
-BRICK_HIT_COL: equ 0xe53d
+BRICK_HIT_Y_PIXEL: equ 0xe53c
+BRICK_HIT_X_PIXEL: equ 0xe53d
 
 
 BRICK_TILEMAP_OFFSET: equ 0xe486 ; Where to write in the tilemap 
@@ -63,8 +63,8 @@ PREV_BRICK_X: equ 0xe58d
 ; These are assigned when the ball collides at something and
 ; it'll bounce. Depending on the speed of the ball it stores the
 ; value in a negative o positive variable.
-COMPUTED_HIT_Y_NEG: equ 0xe2c4
-COMPUTED_HIT_Y:     equ 0xe2c5
+HIY_Y_EDGE_A: equ 0xe2c4
+HIY_Y_EDGE_B:     equ 0xe2c5
 ;
 COMPUTED_HIT_X_NEG:  equ 0xe2c6
 COMPUTED_HIT_X:      equ 0xe2c7

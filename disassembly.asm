@@ -710,8 +710,8 @@ l42d9h:
 	ld (GAME_TRANSITION_ACTION),a		;42e6	32 0a e0
 
     ; Clear memory
-	ld hl,BRICK_HIT_ROW		    ;42e9	21 3c e5
-	ld de,BRICK_HIT_ROW+1		;42ec	11 3d e5
+	ld hl,BRICK_HIT_Y_PIXEL		    ;42e9	21 3c e5
+	ld de,BRICK_HIT_Y_PIXEL+1		;42ec	11 3d e5
 	ld (hl), 0		            ;42ef	36 00
 	ld bc,7		                ;42f1	01 07 00
 	ldir		                ;42f4	ed b0
@@ -814,8 +814,8 @@ l4322h:
 	ld (GAME_TRANSITION_ACTION),a	;4360	32 0a e0
 
     ; Reset variables
-	ld hl,BRICK_HIT_ROW		;4363	21 3c e5
-	ld de,BRICK_HIT_ROW+1	;4366	11 3d e5
+	ld hl,BRICK_HIT_Y_PIXEL		;4363	21 3c e5
+	ld de,BRICK_HIT_Y_PIXEL+1	;4366	11 3d e5
 	ld (hl), 0		        ;4369	36 00
 	ld bc, 7		        ;436b	01 07 00
 	ldir		            ;436e	ed b0
@@ -989,13 +989,13 @@ l43f0h:
 
 ; Complete the unrolled tables of brick actions for all 32 levels
 FILL_BRICK_ACTION_TABLE:
-    ; Here BRICK_HIT_ROW is a LEVEL counter
+    ; Here BRICK_HIT_Y_PIXEL is a LEVEL counter
     
     ; LEVEL <-- 0
 	xor a			        ;43ff	af
-	ld (BRICK_HIT_ROW),a	;4400	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;4400	32 3c e5
 l4403h:
-	ld a,(BRICK_HIT_ROW)	;4403	3a 3c e5
+	ld a,(BRICK_HIT_Y_PIXEL)	;4403	3a 3c e5
 l4406h:
     ; DE = TBL_BRICK_ACTION_TABLE_OFFSETs_COPY[2*LEVEL]
 	ld l,a		    ;4406	6f
@@ -1048,7 +1048,7 @@ l442bh:
 
     ; Increment LEVEL
     ; If it's 32, done. If not, next level
-	ld hl,BRICK_HIT_ROW	;4436	21 3c e5
+	ld hl,BRICK_HIT_Y_PIXEL	;4436	21 3c e5
 	inc (hl)			;4439	34
 	ld a,(hl)			;443a	7e
 	cp 32		        ;443b	fe 20
@@ -1056,7 +1056,7 @@ l442bh:
 
     ; LEVEL <-- 0
 	xor a			        ;4440	af
-	ld (BRICK_HIT_ROW),a	;4441	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;4441	32 3c e5
 	ret			            ;4444	c9
 
 
@@ -1084,8 +1084,8 @@ DRAW_TITLE_SCREEN:
 	or a			    ;4b94	b7
 	jp nz,l4eddh		;4b95	c2 dd 4e
 
-    ; Switch according to BRICK_HIT_ROW
-	ld a,(BRICK_HIT_ROW)		            ;4b98	3a 3c e5
+    ; Switch according to BRICK_HIT_Y_PIXEL
+	ld a,(BRICK_HIT_Y_PIXEL)		            ;4b98	3a 3c e5
 	cp TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN	;4b9b	fe 01
 	jp z,l4c48h		                            ;4b9d	ca 48 4c
     
@@ -1144,7 +1144,7 @@ DRAW_TITLE_SCREEN:
 	ld (ix+SPR_PARAMS_IDX_COLOR),10	        ;4bfd	dd 36 03 0a
 
 	ld a,TITLE_SCREEN_ACTION_WAIT_IN_TITLE_SCREEN		;4c01	3e 01
-	ld (BRICK_HIT_ROW),a		                    ;4c03	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a		                    ;4c03	32 3c e5
 
     ; Write "PRESS START BUTTON"
 	ld hl,PUSH_START_BUTTON_STR		;4c06	21 b3 54
@@ -1213,7 +1213,7 @@ start_game:
 
 l4c73h:
 	ld a,TITLE_SCREEN_ACTION_START_GAME		;4c73	3e 02
-	ld (BRICK_HIT_ROW),a		            ;4c75	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a		            ;4c75	32 3c e5
 
     ; Print "GAME START"
 	ld hl,GAME_START_STR	    ;4c78	21 cc 54
@@ -1234,7 +1234,7 @@ l4c73h:
 
 l4c94h:
 	ld a,TITLE_SCREEN_ACTION_DEMO	;4c94	3e 05
-	ld (BRICK_HIT_ROW),a		    ;4c96	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a		    ;4c96	32 3c e5
 
 	; Set we're in the demo
     ld a, 1		        ;4c99	3e 01
@@ -1764,7 +1764,7 @@ l4f60h:
 	jp l4f7ah		            ;4f68	c3 7a 4f
 l4f6bh:
 	ld hl,0		                ;4f6b	21 00 00
-	ld (BRICK_HIT_ROW),hl		;4f6e	22 3c e5
+	ld (BRICK_HIT_Y_PIXEL),hl		;4f6e	22 3c e5
 	ld (VAUS_X2),hl		        ;4f71	22 3e e5
 
 	ld (TITLE_TICKS+1),hl		;4f74	22 40 e5
@@ -1790,28 +1790,28 @@ ENDING_TEXT_ANIMATION:
 
 	call CLEAR_SCREEN		    ;4f8a	cd 27 42
     
-    ; They're reusing BRICK_HIT_ROW and BRICK_HIT_ROW.
-    ; Here BRICK_HIT_ROW is the row and
-    ; BRICK_HIT_ROW is the column.
+    ; They're reusing BRICK_HIT_Y_PIXEL and BRICK_HIT_Y_PIXEL.
+    ; Here BRICK_HIT_Y_PIXEL is the row and
+    ; BRICK_HIT_Y_PIXEL is the column.
     
-    ; BRICK_HIT_ROW <-- 0
+    ; BRICK_HIT_Y_PIXEL <-- 0
 	xor a			        ;4f8d	af
-	ld (BRICK_HIT_ROW),a	;4f8e	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;4f8e	32 3c e5
 l4f91h:
 	push ix		            ;4f91	dd e5
 	
-    ; BRICK_HIT_ROW <-- 0
+    ; BRICK_HIT_Y_PIXEL <-- 0
     xor a			        ;4f93	af
-	ld (BRICK_HIT_COL),a	;4f94	32 3d e5
+	ld (BRICK_HIT_X_PIXEL),a	;4f94	32 3d e5
     
-	; IX = TBL_VDP_POINTERS_LINE_ENDING_TEXT  + 2*BRICK_HIT_ROW
-    ld a,(BRICK_HIT_ROW)	;4f97	3a 3c e5
+	; IX = TBL_VDP_POINTERS_LINE_ENDING_TEXT  + 2*BRICK_HIT_Y_PIXEL
+    ld a,(BRICK_HIT_Y_PIXEL)	;4f97	3a 3c e5
 	ld e,a			        ;4f9a	5f
 	sla e		            ;4f9b	cb 23
 	ld d, 0		            ;4f9d	16 00
 	add ix,de		        ;4f9f	dd 19
 
-    ; HL = TBL_VDP_POINTERS_LINE_ENDING_TEXT[2*BRICK_HIT_ROW]
+    ; HL = TBL_VDP_POINTERS_LINE_ENDING_TEXT[2*BRICK_HIT_Y_PIXEL]
 	ld e,(ix+0)		;4fa1	dd 5e 00
 	ld d,(ix+1)		;4fa4	dd 56 01    
 	ex de,hl			;4fa7	eb 	. 
@@ -1836,19 +1836,19 @@ l4fbbh:
 	inc hl		;4fbb	23
 	inc iy		;4fbc	fd 23
 	
-    ld a,(BRICK_HIT_COL)	;4fbe	3a 3d e5
+    ld a,(BRICK_HIT_X_PIXEL)	;4fbe	3a 3d e5
 	inc a			        ;4fc1	3c
 	cp 26		            ;4fc2	fe 1a
     
     ; Keep iterating columns if we haven't done 26
-	ld (BRICK_HIT_COL),a		;4fc4	32 3d e5
+	ld (BRICK_HIT_X_PIXEL),a		;4fc4	32 3d e5
 	jp nz,l4fa8h		        ;4fc7	c2 a8 4f
     
     ; Row done
 	pop ix		                ;4fca	dd e1
     
     ; Increment row number
-	ld hl,BRICK_HIT_ROW		;4fcc	21 3c e5
+	ld hl,BRICK_HIT_Y_PIXEL		;4fcc	21 3c e5
 	inc (hl)			    ;4fcf	34 	4 
     
     ; Keep executing if row != 9
@@ -2919,18 +2919,18 @@ l5d82h:
 
 ; Fill the playfield with background tiles
 ADD_BACKGROUND_TO_TILEMAP:
-    ; BRICK_HIT_ROW = 0
+    ; BRICK_HIT_Y_PIXEL = 0
 	xor a			        ;5d9d	af
-	ld (BRICK_HIT_ROW),a	;5d9e	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;5d9e	32 3c e5
 
 	ld ix,BACKGROUND_TILEMAP		    ;5da1	dd 21 6e e3
 l5da5h:
-    ; BRICK_HIT_COL = 0
+    ; BRICK_HIT_X_PIXEL = 0
 	xor a			        ;5da5	af
-	ld (BRICK_HIT_COL),a	;5da6	32 3d e5
+	ld (BRICK_HIT_X_PIXEL),a	;5da6	32 3d e5
 l5da9h:
-    ; HL = TABLE_BACKGROUND_ENTRY1 + 4*(BRICK_HIT_ROW & 3)
-	ld a,(BRICK_HIT_ROW)	;5da9	3a 3c e5
+    ; HL = TABLE_BACKGROUND_ENTRY1 + 4*(BRICK_HIT_Y_PIXEL & 3)
+	ld a,(BRICK_HIT_Y_PIXEL)	;5da9	3a 3c e5
 	and 3		            ;5dac	e6 03
 	ld l,a			        ;5dae	6f
 	ld h, 0		            ;5daf	26 00
@@ -2940,8 +2940,8 @@ l5da9h:
 	add hl,de			            ;5db6	19
 
     ; Point to the background tile corresponding to the hit brick
-    ; HL = TABLE_BACKGROUND_ENTRY1 + 4*(BRICK_HIT_ROW & 3) + BRICK_HIT_COL & 3
-	ld a,(BRICK_HIT_COL)	;5db7	3a 3d e5
+    ; HL = TABLE_BACKGROUND_ENTRY1 + 4*(BRICK_HIT_Y_PIXEL & 3) + BRICK_HIT_X_PIXEL & 3
+	ld a,(BRICK_HIT_X_PIXEL)	;5db7	3a 3d e5
 	and 3		            ;5dba	e6 03
 	ld e,a			        ;5dbc	5f
 	ld d, 0		            ;5dbd	16 00
@@ -2953,7 +2953,7 @@ l5da9h:
 	inc ix		        ;5dc4	dd 23
 
     ; Column on the right
-	ld hl,BRICK_HIT_COL	;5dc6	21 3d e5
+	ld hl,BRICK_HIT_X_PIXEL	;5dc6	21 3d e5
 	inc (hl)			;5dc9	34 	4 
 	ld a,(hl)			;5dca	7e
 	
@@ -2962,7 +2962,7 @@ l5da9h:
 	jp nz,l5da9h		;5dcd	c2 a9 5d
     
     ; Row below
-	ld hl,BRICK_HIT_ROW	;5dd0	21 3c e5
+	ld hl,BRICK_HIT_Y_PIXEL	;5dd0	21 3c e5
 	inc (hl)			;5dd3	34 	4 
     
     ; Skip if ROW is out of the limits
@@ -4400,9 +4400,9 @@ LASERS_FIRE_STEP:
 l70bfh:
 	push bc			        ;70bf	c5
     
-    ; Reset BRICK_HIT_ROW
+    ; Reset BRICK_HIT_Y_PIXEL
 	xor a			        ;70c0	af
-	ld (BRICK_HIT_ROW),a	;70c1	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;70c1	32 3c e5
 
     ; Check if this laser is active
     ; Next laser if not
@@ -4458,9 +4458,9 @@ l70bfh:
 	call BRICK_EXISTS_AT_ROWCOL		;710a	cd a8 ad
 	jp nc,l7118h		;710d	d2 18 71
 
-    ; BRICK_HIT_ROW <-- 1
+    ; BRICK_HIT_Y_PIXEL <-- 1
 	ld a, 1		            ;7110	3e 01
-	ld (BRICK_HIT_ROW),a	;7112	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;7112	32 3c e5
 
     ; Perform the corresponding brick action
 	call APPLY_BRICK_HIT_EFFECT		;7115	cd 05 aa
@@ -4487,14 +4487,14 @@ l7118h:
 	call BRICK_EXISTS_AT_ROWCOL	;7134	cd a8 ad
 	jp nc,l7142h		    ;7137	d2 42 71
 
-    ; BRICK_HIT_ROW <-- 1
+    ; BRICK_HIT_Y_PIXEL <-- 1
 	ld a, 1	                ;713a	3e 01
-	ld (BRICK_HIT_ROW),a	;713c	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;713c	32 3c e5
 
     ; Perform the corresponding brick action
 	call APPLY_BRICK_HIT_EFFECT		;713f	cd 05 aa
 l7142h:
-	ld a,(BRICK_HIT_ROW)		;7142	3a 3c e5
+	ld a,(BRICK_HIT_Y_PIXEL)		;7142	3a 3c e5
 	or a			            ;7145	b7
 	jp z,l715dh		            ;7146	ca 5d 71
     
@@ -4586,9 +4586,9 @@ l71c1h:
 	jp c,l71c8h		;71c3	da c8 71
 	ld a, 6		    ;71c6	3e 06
 l71c8h:
-	ld (BRICK_HIT_ROW),a		;71c8	32 3c e5    Remaining lives to draw
+	ld (BRICK_HIT_Y_PIXEL),a		;71c8	32 3c e5    Remaining lives to draw
 	xor a			            ;71cb	af
-	ld (BRICK_HIT_COL),a		;71cc	32 3d e5    Index of the live being drawn
+	ld (BRICK_HIT_X_PIXEL),a		;71cc	32 3d e5    Index of the live being drawn
     
     ; Interesting: it seems they wanted to use IY as a VRAM pointer, but
     ; later they decided to use table LIVES_VDP_ADDRESSES. And they forgot to
@@ -4596,8 +4596,8 @@ l71c8h:
 	ld iy,0x1800 + 26 + 11*32   ;71cf	fd 21 7a 19     Locate at [26, 11]
 l71d3h:
     ; Get the address to write in VRAM
-    ; DE = LIVES_VDP_ADDRESSES[2*BRICK_HIT_COL]
-	ld a,(BRICK_HIT_COL)		;71d3	3a 3d e5
+    ; DE = LIVES_VDP_ADDRESSES[2*BRICK_HIT_X_PIXEL]
+	ld a,(BRICK_HIT_X_PIXEL)		;71d3	3a 3d e5
 	ld l,a			            ;71d6	6f
 	ld h,000h		            ;71d7	26 00
 	add hl,hl			        ;71d9	29
@@ -4614,11 +4614,11 @@ l71e7h:
 	call LDIRVM		            ;71e7	cd 5c 00
 
     ; Incremente count of drawn lives
-	ld hl,BRICK_HIT_COL		    ;71ea	21 3d e5
+	ld hl,BRICK_HIT_X_PIXEL		    ;71ea	21 3d e5
 	inc (hl)			        ;71ed	34
     
     ; Decrement remaining lives
-	ld hl,BRICK_HIT_ROW		    ;71ee	21 3c e5
+	ld hl,BRICK_HIT_Y_PIXEL		    ;71ee	21 3c e5
 	dec (hl)			        ;71f1	35
 
 	jp nz,l71d3h		        ;71f2	c2 d3 71
@@ -4709,8 +4709,8 @@ CHECK_DEMO_TIMEOUT:
 	ld (GAME_TRANSITION_ACTION),a		        ;725d	32 0a e0
 
     ; Clear variables
-	ld hl,BRICK_HIT_ROW		;7260	21 3c e5
-	ld de,BRICK_HIT_COL		;7263	11 3d e5
+	ld hl,BRICK_HIT_Y_PIXEL		;7260	21 3c e5
+	ld de,BRICK_HIT_X_PIXEL		;7263	11 3d e5
 	ld bc, 7		        ;7266	01 07 00
 	ld (hl), 0  	        ;7269	36 00
 	ldir		            ;726b	ed b0
@@ -6870,7 +6870,7 @@ UPDATE_ALIEN_VERT_DIR_WHEN_BRICK:
     
     ; This is used to count up to 3 aliens
 	xor a			        ;972c	af
-	ld (BRICK_HIT_ROW),a	;972d	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;972d	32 3c e5
     
 	ld iy,ALIEN_TABLE		;9730	fd 21 c7 e4
 	ld ix,ALIEN_SPR_PARAMS	;9734	dd 21 01 e1
@@ -6959,7 +6959,7 @@ l979bh:
 	add ix,de		        ;97a3	dd 19
 
     ; Done if we've already checked 3 aliens
-	ld hl,BRICK_HIT_ROW	;97a5	21 3c e5
+	ld hl,BRICK_HIT_Y_PIXEL	;97a5	21 3c e5
 	inc (hl)			;97a8	34
 	ld a,(hl)			;97a9	7e
 	cp 3		        ;97aa	fe 03
@@ -6988,11 +6988,11 @@ l97c6h:
 	ld (ix+HARD_BRICK_TABLE_IDX_ANIM_STEP), 0		;97d7	dd 36 05 00
     
     ; Store row
-	ld a,(BRICK_HIT_ROW)		            ;97db	3a 3c e5
+	ld a,(BRICK_HIT_Y_PIXEL)		            ;97db	3a 3c e5
 	ld (ix+HARD_BRICK_TABLE_IDX_ROW),a		;97de	dd 77 06
 
     ; Store col
-	ld a,(BRICK_HIT_COL)		            ;97e1	3a 3d e5
+	ld a,(BRICK_HIT_X_PIXEL)		            ;97e1	3a 3d e5
 	ld (ix+HARD_BRICK_TABLE_IDX_COL),a		;97e4	dd 77 07
 l97e7h:
 	pop ix		;97e7	dd e1
@@ -8035,13 +8035,13 @@ lab10h:
 	ld d, 0		        ;ab1f	16 00
 	add hl,de			;ab21	19
 
-    ; BRICK_HIT_ROW <-- BRICK_ROW
+    ; BRICK_HIT_Y_PIXEL <-- BRICK_ROW
 	ld a,(BRICK_ROW)		;ab22	3a aa e2
-	ld (BRICK_HIT_ROW),a	;ab25	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a	;ab25	32 3c e5
 
-    ; BRICK_HIT_COL <-- BRICK_COL
+    ; BRICK_HIT_X_PIXEL <-- BRICK_COL
 	ld a,(BRICK_COL)		;ab28	3a ab e2
-	ld (BRICK_HIT_COL),a	;ab2b	32 3d e5
+	ld (BRICK_HIT_X_PIXEL),a	;ab2b	32 3d e5
     
     ; Update the hard-brick table
 	call UPDATE_HARD_BRICK_TABLE		;ab2e	cd af 97
@@ -9163,7 +9163,7 @@ lb2f5h:
 
 	ld c,(iy+BALL_TABLE_IDX_SPEED_POS)		;b2fd	fd 4e 07
 	ld a,(iy+BALL_TABLE_IDX_SPEED_COUNTER)	;b300	fd 7e 0d
-	ld (BRICK_HIT_ROW),a		        ;b303	32 3c e5
+	ld (BRICK_HIT_Y_PIXEL),a		        ;b303	32 3c e5
 
     ; Loop over B=3 balls
 	ld b, 3		            ;b306	06 03
@@ -9181,7 +9181,7 @@ lb30fh:
 	ld (iy+BALL_TABLE_IDX_SKEWNESS),a		;b318	fd 77 06
 
     ; Update speed and its counter
-	ld a,(BRICK_HIT_ROW)		            ;b31b	3a 3c e5
+	ld a,(BRICK_HIT_Y_PIXEL)		            ;b31b	3a 3c e5
 	ld (iy+BALL_TABLE_IDX_SPEED_COUNTER),a	;b31e	fd 77 0d
 	ld (iy+BALL_TABLE_IDX_SPEED_POS),c		;b321	fd 71 07
     

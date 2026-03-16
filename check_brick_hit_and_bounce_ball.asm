@@ -1,5 +1,5 @@
-; Function CHECK_BRICK_HIT_AND_BOUNCE_BALL is so large and complex, that I
-; though it merits to be in its own file.
+; Function CHECK_BRICK_HIT_AND_BOUNCE_BALL is large and complex.
+; It handles the case where the ball can hit a brick from different sides, or even double impacts.
 
 ; 1. determine which brick cell the ball is currently in,
 ; 2. determine which cell it was in the previous step,
@@ -33,11 +33,10 @@
 ; where f converts pixels/sprite to brick coordinates.
 
 ; These store the previous position in pixels (not brick coordinates):
-; BALL_X_MINUS_SPEED
-; BALL_Y_MINUS_SPEED
+; PREV_X_PX
+; PREV_Y_PX
 
 ; BRICK_ROW, BRICK_COL are checked by BRICK_EXISTS_AT_ROWCOL.
-
 
 
 ; The offsets.
@@ -52,6 +51,51 @@
 ; TICKS_TO_HIT represents the number of step needed to the
 ; auxiliar trajectory to cross the Y-border of the brick.
 
+
+
+
+; The pseudocode of this part:
+
+; if level >= FINAL_LEVEL:
+;     return
+; 
+; determine case from signs of X_SPEED and Y_SPEED
+; 
+; compute:
+;     curr_brick = brick cell touched by current leading edge of ball
+;     prev_brick = brick cell touched by previous leading edge of ball
+; 
+; if outside brick area:
+;     return
+; 
+; handle wall-border special case if needed
+; 
+; if special vertical double-impact case:
+;     resolve_vertical_double_impact()
+;     return
+; 
+; compare prev_brick_y with curr_brick_y
+;     if incompatible:
+;         return
+; 
+; compare prev_brick_x with curr_brick_x
+;     if incompatible:
+;         return
+; 
+; depending on whether motion crossed:
+;     top/bottom face
+;     left/right face
+;     corner between two bricks
+; 
+;     test candidate brick cells
+;     if needed, compute more precise impact point
+;     perform either:
+;         vertical bounce
+;         horizontal bounce
+;         corner/double-impact resolution
+; 
+ ;    apply brick action if brick exists
+
 CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; iy = BALL_TABLE1
     ; ix = SPR_PARAMS_IDX_Y
@@ -63,13 +107,13 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 
     ; Jump if the ball's vertical speed is positive
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)	;9c33	fd cb 02 7e
-	jp z,check_second_quadrant		                    ;9c37	ca cf 9d
+	jp z,check_case_up_left		                    ;9c37	ca cf 9d
     
     ; Jump if the ball's horizontal speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)	;9c3a	fd cb 03 7e
-	jp nz,check_second_quadrant		                ;9c3e	c2 cf 9d
+	jp nz,check_case_up_left		                ;9c3e	c2 cf 9d
     
-    ; *** First quadrant: the ball goes up right
+    ; *** First case: the ball goes up right
     ;   Vertical speed negative
     ;   Horizontal speed positive
 
@@ -78,11 +122,11 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 	srl a		                ;9c46	cb 3f
 	srl a		                ;9c48	cb 3f
 	srl a		                ;9c4a	cb 3f       A = (BALL_Y - 24) \ 8
-    ; A is the character-position of the ball
+    ; A is the position of the ball in brick coordinates
     
     ; Jump if (BALL_Y - 24) \ 8 >= 12
 	cp 12		                ;9c4c	fe 0c
-	jp nc,check_second_quadrant		        ;9c4e	d2 cf 9d
+	jp nc,check_case_up_left		        ;9c4e	d2 cf 9d
     ; (BALL_Y - 24) \ 8 < 12
     
     ; We'll consider 2 X-Y coordinates of the ball in brick space ("BRS")
@@ -126,10 +170,10 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; Jump if (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
     ; No bricks that low?
 	cp 13		        ;9c75	fe 0d
-	jp nc,check_second_quadrant		;9c77	d2 cf 9d
+	jp nc,check_case_up_left		;9c77	d2 cf 9d
     ; (BALL_Y - BALL_Y_SPEED - 24) \ 8 < 13
     
-    ; Store (BALL_Y - BALL_Y_SPEED - 24) \ 8 >= 13
+    ; Store (BALL_Y - BALL_Y_SPEED - 24) \ 8
 	ld (PREV_BRICK_Y),a		;9c7a	32 8c e5
 
     ; A = BALL_X - SPEED_X
@@ -148,7 +192,7 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
     ; Jump if (BALL_X - SPEED_X - 12) \ 16 >= 11
     ; It's divided by 16 because a brick is made of 2 chars horizontally
 	cp 11		                    ;9c90	fe 0b
-	jp nc,check_second_quadrant		            ;9c92	d2 cf 9d
+	jp nc,check_case_up_left		            ;9c92	d2 cf 9d
     
     ; Store (BALL_X - SPEED_X - 12) \ 16, an X coordinate
 	ld (PREV_BRICK_X),a           ;9c95	32 8d e5
@@ -162,16 +206,16 @@ CHECK_BRICK_HIT_AND_BOUNCE_BALL:
 
 	ld a,(CURR_BRICK_Y)		;9ca6	3a 8a e5 	: . . 
 	cp 11		;9ca9	fe 0b 	. . 
-	jp nz,l9cbch		;9cab	c2 bc 9c 	. . . 
+	jp nz,up_right_main_compare		;9cab	c2 bc 9c 	. . . 
 
 	ld a,(PREV_BRICK_Y)		;9cae	3a 8c e5 	: . . 
 	cp 12		;9cb1	fe 0c 	. . 
-	jp nz,l9cbch		;9cb3	c2 bc 9c 	. . . 
+	jp nz,up_right_main_compare		;9cb3	c2 bc 9c 	. . . 
 
 	call CHECK_VERTICAL_DOUBLE_IMPACT		;9cb6	cd 28 a3 	. ( . 
 	jp brick_hit_check_done		;9cb9	c3 99 a2 	. . . 
 
-l9cbch:
+up_right_main_compare:
     ; Ball goes up and right
 	ld a,(PREV_BRICK_Y)		    ;9cbc	3a 8c e5
 	cp 12		                ;9cbf	fe 0c
@@ -182,35 +226,35 @@ l9cbch:
 	ld c,a			            ;9cc7	4f          C = Y1
 	ld a,(CURR_BRICK_Y)		    ;9cc8	3a 8a e5    A = Y2
 	cp c			            ;9ccb	b9
-	jp z,l9cd7h		            ;9ccc	ca d7 9c    Jump if Y1 == Y2
+	jp z,up_right_same_row		            ;9ccc	ca d7 9c    Jump if Y1 == Y2
 	dec c			            ;9ccf	0d          C = Y1 - 1
 	cp c			            ;9cd0	b9
-	jp z,l9ceah		            ;9cd1	ca ea 9c    Jump if Y2 == Y1 - 1
+	jp z,up_right_prev_row_minus_1		            ;9cd1	ca ea 9c    Jump if Y2 == Y1 - 1
 	jp brick_hit_check_done		;9cd4	c3 99 a2
-l9cd7h:
+up_right_same_row:
 	ld a,(PREV_BRICK_X)		    ;9cd7	3a 8d e5
 	ld c,a			            ;9cda	4f          C = X1
 	ld a,(CURR_BRICK_X)		    ;9cdb	3a 8b e5    A = X2
 	cp c			            ;9cde	b9
-	jp z,l9cfdh		            ;9cdf	ca fd 9c    Jump if X1 == X2
+	jp z,up_right_check_top_face		            ;9cdf	ca fd 9c    Jump if X1 == X2
 	inc c			            ;9ce2	0c
 	cp c			            ;9ce3	b9          Jump if X2 == X1 + 1
-	jp z,l9d18h		            ;9ce4	ca 18 9d
+	jp z,up_right_check_corner_horizontal		            ;9ce4	ca 18 9d
 	jp brick_hit_check_done		;9ce7	c3 99 a2
 
-l9ceah:
+up_right_prev_row_minus_1:
 	ld a,(PREV_BRICK_X)		    ;9cea	3a 8d e5
 	ld c,a			            ;9ced	4f          C = X1
 	ld a,(CURR_BRICK_X)		    ;9cee	3a 8b e5    A = X2
 	cp c			            ;9cf1	b9
-	jp z,l9d36h		            ;9cf2	ca 36 9d    Jump if X1 == X2
+	jp z,up_right_check_corner_vertical		            ;9cf2	ca 36 9d    Jump if X1 == X2
 	inc c			            ;9cf5	0c
 	cp c			            ;9cf6	b9
-	jp z,l9d54h		            ;9cf7	ca 54 9d    Jump if X2 == X1 + 1
+	jp z,up_right_resolve_ambiguous_corner		            ;9cf7	ca 54 9d    Jump if X2 == X1 + 1
 	jp brick_hit_check_done		;9cfa	c3 99 a2
 
 ; Brick check (X2, Y1) and vertical bounce
-l9cfdh:
+up_right_check_top_face:
     ; Check if there's a brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		    ;9cfd	3a 8c e5
 	ld (BRICK_ROW),a		    ;9d00	32 aa e2
@@ -225,8 +269,8 @@ l9cfdh:
 	jp brick_hit_check_done		;9d15	c3 99 a2
 
 ; Brick check (X2, Y1) and vertical bounce
-; With APPLY_CORNER_HIT_HORIZONTAL
-l9d18h:
+; With HANDLE_CORNER_CASE_1
+up_right_check_corner_horizontal:
     ; Check if there's a brick at (X2, Y1)
 	ld a,(PREV_BRICK_Y)		;9d18	3a 8c e5
 	ld (BRICK_ROW),a		;9d1b	32 aa e2
@@ -236,7 +280,7 @@ l9d18h:
 	jp nc,brick_hit_check_done	;9d27	d2 99 a2
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL  ;9d2a	cd 01 a9
+	call HANDLE_CORNER_CASE_1  ;9d2a	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9d2d	cd 80 9b
@@ -244,7 +288,7 @@ l9d18h:
 	jp brick_hit_check_done		;9d33	c3 99 a2
 
 ; Brick check (X1, Y2) and vertical bounce
-l9d36h:
+up_right_check_corner_vertical:
     ; Check if there's a brick at (X2, Y1)
 	ld a,(CURR_BRICK_Y)		;9d36	3a 8a e5
 	ld (BRICK_ROW),a		;9d39	32 aa e2
@@ -254,14 +298,14 @@ l9d36h:
 	jp nc,brick_hit_check_done		;9d45	d2 99 a2
     
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		    ;9d48	cd 10 a8
+	call HANDLE_CORNER_CASE_2		    ;9d48	cd 10 a8
     
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9d4b	cd 5b 9b
 	call APPLY_BRICK_HIT_EFFECT		;9d4e	cd 05 aa
 	jp brick_hit_check_done		;9d51	c3 99 a2
 
-l9d54h:
+up_right_resolve_ambiguous_corner:
     ; Call RESOLVE_CORNER_COLLISION with (X1, Y2)
 	ld a,(CURR_BRICK_Y)		;9d54	3a 8a e5
 	ld (BRICK_ROW),a		;9d57	32 aa e2
@@ -276,10 +320,10 @@ l9d54h:
 	jp nc,l9d81h		    ;9d69	d2 81 9d
 
     ; Adjust the location of the ball sprite
-	ld a,(BRICK_HIT_ROW)		;9d6c	3a 3c e5
+	ld a,(BRICK_HIT_Y_PIXEL)		;9d6c	3a 3c e5
 	ld (ix+SPR_PARAMS_IDX_Y),a	;9d6f	dd 77 00
 
-	ld a,(BRICK_HIT_COL)		;9d72	3a 3d e5
+	ld a,(BRICK_HIT_X_PIXEL)		;9d72	3a 3d e5
 	ld (ix+SPR_PARAMS_IDX_X),a	;9d75	dd 77 01
 
     ; Vertical bounce
@@ -294,7 +338,7 @@ l9d81h:
 	jp nc,brick_hit_check_done	;9d8a	d2 99 a2
     
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL  ;9d8d	cd 01 a9
+	call HANDLE_CORNER_CASE_1  ;9d8d	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9d90	cd 80 9b
@@ -312,7 +356,7 @@ l9d99h:
 	jp nc,l9db7h		    ;9da8	d2 b7 9d
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		    ;9dab	cd 01 a9
+	call HANDLE_CORNER_CASE_1		    ;9dab	cd 01 a9
 
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9dae	cd 80 9b
@@ -328,20 +372,20 @@ l9db7h:
 	jp nc,brick_hit_check_done	;9dc0	d2 99 a2
     
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		        ;9dc3	cd 10 a8
+	call HANDLE_CORNER_CASE_2		        ;9dc3	cd 10 a8
 
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9dc6	cd 5b 9b
 	call APPLY_BRICK_HIT_EFFECT		;9dc9	cd 05 aa
 	jp brick_hit_check_done		;9dcc	c3 99 a2
 
-check_second_quadrant:
+check_case_up_left:
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9dcf	fd cb 02 7e 	. . . ~ 
-	jp z,check_third_quadrant		;9dd3	ca 6b 9f 	. k . 
+	jp z,check_case_down_right		;9dd3	ca 6b 9f 	. k . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9dd6	fd cb 03 7e 	. . . ~ 
-	jp z,check_third_quadrant		;9dda	ca 6b 9f 	. k . 
+	jp z,check_case_down_right		;9dda	ca 6b 9f 	. k . 
 
-    ; *** Second quadrant: the ball goes up left
+    ; *** Second case: the ball goes up left
     ;   Vertical speed negative
     ;   Horizontal speed negative
 	ld a,(ix+SPR_PARAMS_IDX_Y)		;9ddd	dd 7e 00 	. ~ . 
@@ -350,7 +394,7 @@ check_second_quadrant:
 	srl a		;9de4	cb 3f 	. ? 
 	srl a		;9de6	cb 3f 	. ? 
 	cp 12		;9de8	fe 0c 	. . 
-	jp nc,check_third_quadrant		;9dea	d2 6b 9f 	. k . 
+	jp nc,check_case_down_right		;9dea	d2 6b 9f 	. k . 
 	ld (CURR_BRICK_Y),a		;9ded	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9df0	dd 7e 01 	. ~ . 
 	sub 17		;9df3	d6 11 	. . 
@@ -367,7 +411,7 @@ check_second_quadrant:
 	srl a		;9e0d	cb 3f 	. ? 
 	srl a		;9e0f	cb 3f 	. ? 
 	cp 00dh		;9e11	fe 0d 	. . 
-	jp nc,check_third_quadrant		;9e13	d2 6b 9f 	. k . 
+	jp nc,check_case_down_right		;9e13	d2 6b 9f 	. k . 
 	ld (PREV_BRICK_Y),a		;9e16	32 8c e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9e19	dd 7e 01 	. ~ . 
 	sub (iy+BALL_TABLE_IDX_X_SPEED)		;9e1c	fd 96 03 	. . . 
@@ -378,7 +422,7 @@ check_second_quadrant:
 	srl a		;9e28	cb 3f 	. ? 
 	srl a		;9e2a	cb 3f 	. ? 
 	cp 11		;9e2c	fe 0b 	. . 
-	jp nc,check_third_quadrant		;9e2e	d2 6b 9f 	. k . 
+	jp nc,check_case_down_right		;9e2e	d2 6b 9f 	. k . 
 	ld (PREV_BRICK_X),a		;9e31	32 8d e5 	2 . . 
 	call CHECK_RARE_OR_IMPOSSIBLE_CASE		;9e34	cd ad a2 	. . . 
 	jp c,brick_hit_check_done		;9e37	da 99 a2 	. . . 
@@ -456,7 +500,7 @@ l9eb4h:
 	jp nc,brick_hit_check_done		;9ec3	d2 99 a2
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		            ;9ec6	cd 01 a9
+	call HANDLE_CORNER_CASE_1		            ;9ec6	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE		;9ec9	cd 80 9b
@@ -474,7 +518,7 @@ l9ed2h:
 	jp nc,brick_hit_check_done	;9ee1	d2 99 a2
     
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL  ;9ee4	cd 10 a8
+	call HANDLE_CORNER_CASE_2  ;9ee4	cd 10 a8
     
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9ee7	cd 5b 9b
@@ -497,10 +541,10 @@ l9ef0h:
 	jp nc,l9f1dh		    ;9f05	d2 1d 9f
 
 	; Adjust the position of the ball
-    ld a,(BRICK_HIT_ROW)		;9f08	3a 3c e5
+    ld a,(BRICK_HIT_Y_PIXEL)		;9f08	3a 3c e5
 	ld (ix+SPR_PARAMS_IDX_Y),a	;9f0b	dd 77 00
 
-	ld a,(BRICK_HIT_COL)		;9f0e	3a 3d e5
+	ld a,(BRICK_HIT_X_PIXEL)		;9f0e	3a 3d e5
 	ld (ix+SPR_PARAMS_IDX_X),a	;9f11	dd 77 01
 
     ; Vertical bounce
@@ -516,7 +560,7 @@ l9f1dh:
 	jp nc,brick_hit_check_done	;9f26	d2 99 a2
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL	;9f29	cd 01 a9
+	call HANDLE_CORNER_CASE_1	;9f29	cd 01 a9
 
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9f2c	cd 80 9b
@@ -534,7 +578,7 @@ l9f35h:
 	jp nc,l9f53h		    ;9f44	d2 53 9f
 
 	; Double impact
-    call APPLY_CORNER_HIT_HORIZONTAL  ;9f47	cd 01 a9
+    call HANDLE_CORNER_CASE_1  ;9f47	cd 01 a9
     
     ; Horizontal bounce
 	call BALL_HORIZONTAL_BOUNCE	;9f4a	cd 80 9b
@@ -549,7 +593,7 @@ l9f53h:
 	jp nc,brick_hit_check_done	;9f5c	d2 99 a2
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL  ;9f5f	cd 10 a8
+	call HANDLE_CORNER_CASE_2  ;9f5f	cd 10 a8
 
     ; Vertical bounce
 	call BALL_VERTICAL_BOUNCE	;9f62	cd 5b 9b
@@ -557,26 +601,26 @@ l9f53h:
 	jp brick_hit_check_done		;9f68	c3 99 a2
 
 ; The X, Y speeds are not both negative here
-check_third_quadrant:
+check_case_down_right:
     ; Jump if the Y speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;9f6b	fd cb 02 7e 	. . . ~ 
-	jp nz,check_fourth_quadrant		;9f6f	c2 02 a1 	. . . 
+	jp nz,check_case_down_left		;9f6f	c2 02 a1 	. . . 
 
     ; Jump if the X speed is negative
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;9f72	fd cb 03 7e 	. . . ~ 
-	jp nz,check_fourth_quadrant		;9f76	c2 02 a1 	. . . 
+	jp nz,check_case_down_left		;9f76	c2 02 a1 	. . . 
     
-    ; *** Third quadrant: the ball goes down right
+    ; *** Third case: the ball goes down right
     ;   Vertical speed positive
     ;   Horizontal speed positive
 
-	ld a,(ix+SPR_PARAMS_IDX_Y)		;9f79	dd 7e 00 	. ~ . 
-	sub 19		;9f7c	d6 13 	. . 
-	srl a		;9f7e	cb 3f 	. ? 
-	srl a		;9f80	c0b 3f 	. ? 
-	srl a		;9f82	cb 3f 	. ? 
-	cp 12		;9f84	fe 0c 	. . 
-	jp nc,check_fourth_quadrant		;9f86	d2 02 a1 	. . . 
+	ld a,(ix+SPR_PARAMS_IDX_Y)		;9f79	dd 7e 00
+	sub 19		;9f7c	d6 13
+	srl a		;9f7e	cb 3f
+	srl a		;9f80	cb 3f
+	srl a		;9f82	cb 3f
+	cp 12		;9f84	fe 0c
+	jp nc,check_case_down_left		;9f86	d2 02 a1 	. . . 
 	ld (CURR_BRICK_Y),a		;9f89	32 8a e5 	2 . . 
 	ld a,(ix+SPR_PARAMS_IDX_X)		;9f8c	dd 7e 01 	. ~ . 
 	sub 12		;9f8f	d6 0c 	. . 
@@ -602,7 +646,7 @@ check_third_quadrant:
 	srl a		;9fbf	cb 3f 	. ? 
 	srl a		;9fc1	cb 3f 	. ? 
 	cp 11		;9fc3	fe 0b 	. . 
-	jp nc,check_fourth_quadrant		;9fc5	d2 02 a1 	. . . 
+	jp nc,check_case_down_left		;9fc5	d2 02 a1 	. . . 
 	ld (PREV_BRICK_X),a		;9fc8	32 8d e5 	2 . . 
 
 	call CHECK_BALL_REACHES_RIGHT_BORDER		;9fcb	cd 9a a2 	. . . 
@@ -676,7 +720,7 @@ la04bh:
 	jp nc,brick_hit_check_done		;a05a	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		;a05d	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a05d	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a060	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a063	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a066	c3 99 a2 	. . . 
@@ -690,7 +734,7 @@ la069h:
 	jp nc,brick_hit_check_done		;a078	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		;a07b	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_2		;a07b	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a07e	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a081	cd 05 aa 	. . . 
@@ -705,9 +749,9 @@ la087h:
 	jp nc,la0cch		;a096	d2 cc a0 	. . . 
 	call BRICK_EXISTS_AT_ROWCOL		;a099	cd a8 ad 	. . . 
 	jp nc,la0b4h		;a09c	d2 b4 a0 	. . . 
-	ld a,(BRICK_HIT_ROW)		;a09f	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_Y_PIXEL)		;a09f	3a 3c e5 	: < . 
 	ld (ix+SPR_PARAMS_IDX_Y),a		;a0a2	dd 77 00 	. w . 
-	ld a,(BRICK_HIT_COL)		;a0a5	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_X_PIXEL)		;a0a5	3a 3d e5 	: = . 
 	ld (ix+SPR_PARAMS_IDX_X),a		;a0a8	dd 77 01 	. w . 
 	call BALL_VERTICAL_BOUNCE		;a0ab	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a0ae	cd 05 aa 	. . . 
@@ -719,7 +763,7 @@ la0b4h:
 	call BRICK_EXISTS_AT_ROWCOL		;a0ba	cd a8 ad 	. . . 
 	jp nc,brick_hit_check_done		;a0bd	d2 99 a2 	. . . 
 la0c0h:
-	call APPLY_CORNER_HIT_HORIZONTAL		;a0c0	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a0c0	cd 01 a9 	. . . 
 	call BALL_HORIZONTAL_BOUNCE		;a0c3	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a0c6	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0c9	c3 99 a2 	. . . 
@@ -733,7 +777,7 @@ la0cch:
 	jp nc,la0eah		;a0db	d2 ea a0 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		;a0de	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a0de	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a0e1	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a0e4	cd 05 aa 	. . . 
@@ -746,19 +790,19 @@ la0eah:
 	jp nc,brick_hit_check_done		;a0f3	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		;a0f6	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_2		;a0f6	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a0f9	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a0fc	cd 05 aa 	. . . 
 	jp brick_hit_check_done		;a0ff	c3 99 a2 	. . . 
 
-check_fourth_quadrant:
+check_case_down_left:
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a102	fd cb 02 7e 	. . . ~ 
 	jp nz,brick_hit_check_done		;a106	c2 99 a2 	. . . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a109	fd cb 03 7e 	. . . ~ 
 	jp z,brick_hit_check_done		;a10d	ca 99 a2 	. . . 
 
-    ; *** Fourth quadrant: the ball goes down left
+    ; *** Fourth case: the ball goes down left
     ;   Vertical speed positive
     ;   Horizontal speed negative
 
@@ -869,7 +913,7 @@ la1e2h:
 	jp nc,brick_hit_check_done		;a1f1	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		;a1f4	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a1f4	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a1f7	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a1fa	cd 05 aa 	. . . 
@@ -884,7 +928,7 @@ la200h:
 	jp nc,brick_hit_check_done		;a20f	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		;a212	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_2		;a212	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a215	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a218	cd 05 aa 	. . . 
@@ -902,9 +946,9 @@ la21eh:
 	call BRICK_EXISTS_AT_ROWCOL		;a230	cd a8 ad 	. . . 
 	jp nc,la24bh		;a233	d2 4b a2 	. K . 
 
-	ld a,(BRICK_HIT_ROW)		;a236	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_Y_PIXEL)		;a236	3a 3c e5 	: < . 
 	ld (ix+SPR_PARAMS_IDX_Y),a		;a239	dd 77 00 	. w . 
-	ld a,(BRICK_HIT_COL)		;a23c	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_X_PIXEL)		;a23c	3a 3d e5 	: = . 
 	ld (ix+SPR_PARAMS_IDX_X),a		;a23f	dd 77 01 	. w . 
 
 	call BALL_VERTICAL_BOUNCE		;a242	cd 5b 9b 	. [ . 
@@ -918,7 +962,7 @@ la24bh:
 	jp nc,brick_hit_check_done		;a254	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		;a257	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a257	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a25a	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a25d	cd 05 aa 	. . . 
@@ -933,7 +977,7 @@ la263h:
 	jp nc,la281h		;a272	d2 81 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		;a275	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a275	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a278	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a27b	cd 05 aa 	. . . 
@@ -946,7 +990,7 @@ la281h:
 	jp nc,brick_hit_check_done		;a28a	d2 99 a2 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		;a28d	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_2		;a28d	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a290	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a293	cd 05 aa 	. . . 
@@ -970,9 +1014,10 @@ CHECK_BALL_REACHES_RIGHT_BORDER:
     ; This means we're at the right border and starting to move left    
 	jp la2bdh		            ;a2aa	c3 bd a2
 
-; This funtions seems to check a very rare or probably
-; impossible situation to set the carry flag.
-; In practice it simply resets the carry.
+; This function handles a wraparound-like X transition:
+;   CURR_BRICK_X == 15 and PREV_BRICK_X == 0
+; This appears to be a safeguard for a very rare or possibly impossible case.
+; In normal gameplay this path may never be taken.
 CHECK_RARE_OR_IMPOSSIBLE_CASE:
 	; If X1 != 15, clear_carry_and_exit
     ld a,(CURR_BRICK_X)		;a2ad	3a 8b e5
@@ -1037,9 +1082,9 @@ la2eeh:
 	call BRICK_EXISTS_AT_ROWCOL		;a300	cd a8 ad 	. . . 
 	jp nc,no_brick_do_horizontal_bounce_set_carry		;a303	d2 1b a3 	. . . 
 
-	ld a,(BRICK_HIT_ROW)		;a306	3a 3c e5 	: < . 
+	ld a,(BRICK_HIT_Y_PIXEL)		;a306	3a 3c e5 	: < . 
 	ld (ix+SPR_PARAMS_IDX_Y),a		;a309	dd 77 00 	. w . 
-	ld a,(BRICK_HIT_COL)		;a30c	3a 3d e5 	: = . 
+	ld a,(BRICK_HIT_X_PIXEL)		;a30c	3a 3d e5 	: = . 
 	ld (ix+SPR_PARAMS_IDX_X),a		;a30f	dd 77 01 	. w . 
 
 	call BALL_VERTICAL_BOUNCE		;a312	cd 5b 9b 	. [ . 
@@ -1082,7 +1127,7 @@ CHECK_VERTICAL_DOUBLE_IMPACT:
 	jp nc,la351h		    ;a342	d2 51 a3
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL	;a345	cd 10 a8
+	call HANDLE_CORNER_CASE_2	;a345	cd 10 a8
 
 	call BALL_VERTICAL_BOUNCE	;a348	cd 5b 9b
 	call APPLY_BRICK_HIT_EFFECT		;a34b	cd 05 aa
@@ -1111,7 +1156,7 @@ la367h:
 	call BRICK_EXISTS_AT_ROWCOL		;a37c	cd a8 ad 	. . . 
 	jp nc,la38eh		;a37f	d2 8e a3 	. . . 
 
-	call APPLY_CORNER_HIT_VERTICAL		;a382	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_2		;a382	cd 10 a8 	. . . 
 	call BALL_VERTICAL_BOUNCE		;a385	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a388	cd 05 aa 	. . . 
 	jp all_done		;a38b	c3 d0 a3 	. . . 
@@ -1126,7 +1171,7 @@ la38eh:
 	jp nc,la3ach		;a39d	d2 ac a3 	. . . 
     
     ; Double impact
-	call APPLY_CORNER_HIT_HORIZONTAL		;a3a0	cd 01 a9 	. . . 
+	call HANDLE_CORNER_CASE_1		;a3a0	cd 01 a9 	. . . 
 
 	call BALL_HORIZONTAL_BOUNCE		;a3a3	cd 80 9b 	. . . 
 	call APPLY_BRICK_HIT_EFFECT		;a3a6	cd 05 aa 	. . . 
@@ -1144,7 +1189,7 @@ la3afh:
 	jp nc,la3cdh		;a3be	d2 cd a3 	. . . 
 
     ; Double impact
-	call APPLY_CORNER_HIT_VERTICAL		;a3c1	cd 10 a8 	. . . 
+	call HANDLE_CORNER_CASE_2		;a3c1	cd 10 a8 	. . . 
 
 	call BALL_VERTICAL_BOUNCE		;a3c4	cd 5b 9b 	. [ . 
 	call APPLY_BRICK_HIT_EFFECT		;a3c7	cd 05 aa 	. . . 
@@ -1154,9 +1199,13 @@ la3cdh:
 all_done:
 	ret			;a3d0	c9 	. 
 
+
+; Computes a refined discrete impact point by stepping along an auxiliary
+; trajectory derived from the ball skewness.
+;
 ; Among other things, this function writes:
-;   COMPUTED_HIT_Y_NEG
-;   COMPUTED_HIT_Y
+;   HIY_Y_EDGE_A
+;   HIY_Y_EDGE_B
 ;   COMPUTED_HIT_X_NEG
 ;   COMPUTED_HIT_X
 ;   BALL_Y_SLOPE
@@ -1307,7 +1356,7 @@ la4bbh:
 	jp z,la4cch		                        ;a4c6	ca cc a4    Jump if positive
 	ld a,(COMPUTED_HIT_X_NEG)		            ;a4c9	3a c6 e2
 la4cch:
-	ld (BRICK_HIT_COL),a		;a4cc	32 3d e5 	2 = . 
+	ld (BRICK_HIT_X_PIXEL),a		;a4cc	32 3d e5 	2 = . 
 	ld hl,TICKS_TO_HIT		;a4cf	21 41 e5 	! A . 
 	ld (hl), 0		;a4d2	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a4d4	11 42 e5 	. B . 
@@ -1323,9 +1372,9 @@ la4cch:
 	ld b, 19		;a4ee	06 13 	. . 
 la4f0h:
 	add a,b			;a4f0	80 	. 
-	ld (COMPUTED_HIT_Y_NEG),a		;a4f1	32 c4 e2 	2 . . 
+	ld (HIY_Y_EDGE_A),a		;a4f1	32 c4 e2 	2 . . 
 	add a, 7		;a4f4	c6 07 	. . 
-	ld (COMPUTED_HIT_Y),a		;a4f6	32 c5 e2 	2 . . 
+	ld (HIY_Y_EDGE_B),a		;a4f6	32 c5 e2 	2 . . 
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a4f9	fd 7e 06 	. ~ . 
 	bit 7,a		;a4fc	cb 7f 	. ␡ 
 	jp z,la503h		;a4fe	ca 03 a5 	. . . 
@@ -1354,10 +1403,10 @@ la525h:
 	ld b,a			;a52b	47 	G 
 	ld a,(PREV_Y_PX)		;a52c	3a 86 e5 	: . . 
 la52fh:
-	ld hl,COMPUTED_HIT_Y		;a52f	21 c5 e2 	! . . 
+	ld hl,HIY_Y_EDGE_B		;a52f	21 c5 e2 	! . . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a532	fd cb 02 7e 	. . . ~ 
 	jp nz,la54eh		;a536	c2 4e a5 	. N . 
-	ld hl,COMPUTED_HIT_Y_NEG		;a539	21 c4 e2 	! . . 
+	ld hl,HIY_Y_EDGE_A		;a539	21 c4 e2 	! . . 
 	inc (hl)			;a53c	34 	4 
 la53dh:
 	push af			;a53d	f5 	. 
@@ -1366,7 +1415,7 @@ la53dh:
 	ld (TICKS_TO_HIT),a		;a542	32 41 e5 	2 A . 
 	pop af			;a545	f1 	. 
 	add a,b			;a546	80 	. 
-	cp (hl)			;a547	be  Compare with COMPUTED_HIT_Y_NEG
+	cp (hl)			;a547	be  Compare with HIY_Y_EDGE_A
 	jp nc,la55fh		;a548	d2 5f a5 	. _ . 
 	jp la53dh		;a54b	c3 3d a5 	. = . 
 la54eh:
@@ -1393,7 +1442,7 @@ la56ah:
 	ld b,a			;a56d	47 	G 
 	ld a,(PREV_X_PX)		;a56e	3a 87 e5 	: . . 
 	add a,b			;a571	80 	. 
-	ld (BRICK_HIT_ROW),a		;a572	32 3c e5 	2 < . 
+	ld (BRICK_HIT_Y_PIXEL),a		;a572	32 3c e5 	2 < . 
 	ld b,a			;a575	47 	G 
 	ld a, 188		;a576	3e bc 	> . 
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a578	fd cb 03 7e 	. . . ~ 
@@ -1437,10 +1486,10 @@ COMPUTE_WALL_ADJACENT_HIT_POINT:
 	ld b, 19		;a5b0	06 13 	. . 
 la5b2h:
 	add a,b			;a5b2	80 	. 
-	ld (COMPUTED_HIT_Y_NEG),a		;a5b3	32 c4 e2 	2 . . 
+	ld (HIY_Y_EDGE_A),a		;a5b3	32 c4 e2 	2 . . 
 
 	add a, 7		;a5b6	c6 07 	. . 
-	ld (COMPUTED_HIT_Y),a		;a5b8	32 c5 e2 	2 . . 
+	ld (HIY_Y_EDGE_B),a		;a5b8	32 c5 e2 	2 . . 
 
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a5bb	fd 7e 06 	. ~ . 
 	bit 7,a		;a5be	cb 7f 	. ␡ 
@@ -1470,10 +1519,10 @@ la5e7h:
 	ld a,(BALL_Y_SLOPE)		;a5ea	3a 43 e5 	: C . 
 	ld b,a			;a5ed	47 	G 
 	ld a,(PREV_Y_PX)		;a5ee	3a 86 e5 	: . . 
-	ld hl,COMPUTED_HIT_Y		;a5f1	21 c5 e2 	! . . 
+	ld hl,HIY_Y_EDGE_B		;a5f1	21 c5 e2 	! . . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a5f4	fd cb 02 7e 	. . . ~ 
 	jp nz,la610h		;a5f8	c2 10 a6 	. . . 
-	ld hl,COMPUTED_HIT_Y_NEG		;a5fb	21 c4 e2 	! . . 
+	ld hl,HIY_Y_EDGE_A		;a5fb	21 c4 e2 	! . . 
 	inc (hl)			;a5fe	34 	4 
 la5ffh:
 	push af			;a5ff	f5 	. 
@@ -1534,16 +1583,65 @@ la656h:
 	jp la65bh		;a658	c3 5b a6 	. [ . 
 la65bh:
 	ld a,b			;a65b	78 	x 
-	ld (BRICK_HIT_COL),a		;a65c	32 3d e5 	2 = . 
-	ld a,(COMPUTED_HIT_Y_NEG)		;a65f	3a c4 e2 	: . . 
+	ld (BRICK_HIT_X_PIXEL),a		;a65c	32 3d e5 	2 = . 
+	ld a,(HIY_Y_EDGE_A)		;a65f	3a c4 e2 	: . . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a662	fd cb 02 7e 	. . . ~ 
 	jp z,la66ch		;a666	ca 6c a6 	. l . 
-	ld a,(COMPUTED_HIT_Y)		;a669	3a c5 e2 	: . . 
+	ld a,(HIY_Y_EDGE_B)		;a669	3a c5 e2 	: . . 
 la66ch:
-	ld (BRICK_HIT_ROW),a		;a66c	32 3c e5 	2 < . 
+	ld (BRICK_HIT_Y_PIXEL),a		;a66c	32 3c e5 	2 < . 
 	ret			;a66f	c9 	. 
 
 ; Check for an incoming double impact of the ball at two bricks
+
+; 1. Define the vertical band of the candidate brick.
+; 2. Obtain an auxiliary velocity based on skewness.
+; 3. Calculate how many substeps it takes for the trajectory to reach the relevant Y edge.
+; 4. Using that same substep, calculate the corresponding X.
+; 5. Depending on the case, compare that X with various brick boundaries.
+; 6. Store the precise impact position in BRICK_HIT_Y_PIXEL/COL.
+; 7. Return carry to indicate which interpretation of the collision is correct.
+
+; bool RESOLVE_CORNER_COLLISION() {
+;     reset_temporaries();
+;
+;     // vertical limits of the brick
+;     int hit_y0 = 8 * BRICK_ROW + (Y_SPEED < 0 ? 24 : 19);
+;     int hit_y1 = hit_y0 + 7;
+;     HIY_Y_EDGE_B_NEG = hit_y0;
+;     HIY_Y_EDGE_B     = hit_y1;
+;
+;    // get slope from the skewness
+;    (vx, vy) = table_from_abs_skewness(skewness);
+;    if (Y_SPEED >= 0) {
+;        vx = -vx;
+;        vy = -vy;
+;    }
+;    BALL_X_SLOPE = vx;
+;    BALL_Y_SLOPE = vy;
+;
+;    // find sub-step cross on Y
+;    counter = 0;
+;    y = BALL_Y_MINUS_SPEED;
+;    target = (Y_SPEED >= 0) ? hit_y0 : hit_y1;
+;
+;    do {
+;        counter++;
+;        y += vy;
+;    } while (!crossed_target(y, target, sign(Y_SPEED)));
+;
+;    // reconstruct X in that substep
+;    x = BALL_X_MINUS_SPEED + (counter - 1) * vx;
+;
+;    // according to case, decide which side wins
+;    carry = classify_x_against_brick_band(x, BRICK_COL, sign(X_SPEED), sign(Y_SPEED));
+;
+;    BRICK_HIT_Y_PIXEL = (Y_SPEED >= 0) ? hit_y0 : hit_y1_or_variant;
+;    BRICK_HIT_X_PIXEL = clamp_or_adjusted_x;
+;
+;    return carry;
+;}
+
 RESOLVE_CORNER_COLLISION:
     ; IY: BALL_TABLE
     
@@ -1564,9 +1662,9 @@ RESOLVE_CORNER_COLLISION:
 	ld b, 24		;a68f	06 18 	. . 
 la691h:
 	add a,b			;a691	80 	. 
-	ld (COMPUTED_HIT_Y_NEG),a		;a692	32 c4 e2 	2 . . 
+	ld (HIY_Y_EDGE_A),a		;a692	32 c4 e2 	2 . . 
 	add a, 7		;a695	c6 07 	. . 
-	ld (COMPUTED_HIT_Y),a		;a697	32 c5 e2 	2 . . 
+	ld (HIY_Y_EDGE_B),a		;a697	32 c5 e2 	2 . . 
 
     ; Obtain BALL_X_SLOPE and BALL_Y_SLOPE with
     ; TBL_SPEED_FROM_SKEWNESS according to BALL_TABLE_IDX_SKEWNESS:
@@ -1598,61 +1696,98 @@ la6b8h:
 la6c6h:
 	ld (BALL_Y_SLOPE),a		;a6c6	32 43 e5 	2 C . 
 	jp la6cch		;a6c9	c3 cc a6 	. . . 
+
+; Look for the moment it crosses, in Y
 la6cch:
-	ld a,(BALL_Y_SLOPE)		;a6cc	3a 43 e5 	: C . 
-	ld b,a			;a6cf	47 	G 
-	ld a,(PREV_Y_PX)		;a6d0	3a 86 e5 	: . . 
-	ld hl,COMPUTED_HIT_Y		;a6d3	21 c5 e2 	! . . 
-	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a6d6	fd cb 02 7e 	. . . ~ 
-	jp nz,la6f2h		;a6da	c2 f2 a6 	. . . 
-	ld hl,COMPUTED_HIT_Y_NEG		;a6dd	21 c4 e2 	! . . 
-	inc (hl)			;a6e0	34 	4 
+	ld a,(BALL_Y_SLOPE)		            ;a6cc	3a 43 e5
+	ld b,a			                    ;a6cf	47
+	ld a,(PREV_Y_PX)		            ;a6d0	3a 86 e5
+	ld hl,HIY_Y_EDGE_B		        ;a6d3	21 c5 e2
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)	;a6d6	fd cb 02 7e
+	jp nz,la6f2h		                ;a6da	c2 f2 a6
+	ld hl,HIY_Y_EDGE_A		    ;a6dd	21 c4 e2
+	inc (hl)			                ;a6e0	34
+
+; Here the ball goes down (Y_SPEED >= 0)
+
+; counter = 0
+; y = PREV_Y_PX
+; target = HIY_Y_EDGE_A + 1
+;
+; repeat:
+;    TICKS_TO_HIT++
+;    y += BALL_Y_SLOPE
+; until y >= target
+;
+; target--
+
 la6e1h:
-	push af			;a6e1	f5 	. 
-	ld a,(TICKS_TO_HIT)		;a6e2	3a 41 e5 	: A . 
-	inc a			;a6e5	3c 	< 
-	ld (TICKS_TO_HIT),a		;a6e6	32 41 e5 	2 A . 
-	pop af			;a6e9	f1 	. 
-	add a,b			;a6ea	80 	. 
-	cp (hl)			;a6eb	be 	. 
-	jp nc,la703h		;a6ec	d2 03 a7 	. . . 
-	jp la6e1h		;a6ef	c3 e1 a6 	. . . 
+	push af			        ;a6e1	f5
+	ld a,(TICKS_TO_HIT)		;a6e2	3a 41 e5
+	inc a			        ;a6e5	3c
+	ld (TICKS_TO_HIT),a		;a6e6	32 41 e5
+	pop af			        ;a6e9	f1
+	add a,b			        ;a6ea	80
+	cp (hl)			        ;a6eb	be
+	jp nc,la703h		    ;a6ec	d2 03 a7
+	jp la6e1h		        ;a6ef	c3 e1 a6
+
+
+; Here the ball goes up (Y_SPEED < 0)
+
+;repeat:
+;    TICKS_TO_HIT++
+;    y += BALL_Y_SLOPE
+; until y < target
+
 la6f2h:
-	push af			;a6f2	f5 	. 
-	ld a,(TICKS_TO_HIT)		;a6f3	3a 41 e5 	: A . 
-	inc a			;a6f6	3c 	< 
-	ld (TICKS_TO_HIT),a		;a6f7	32 41 e5 	2 A . 
-	pop af			;a6fa	f1 	. 
-	add a,b			;a6fb	80 	. 
-	cp (hl)			;a6fc	be 	. 
-	jp c,la704h		;a6fd	da 04 a7 	. . . 
-	jp la6f2h		;a700	c3 f2 a6 	. . . 
+	push af			        ;a6f2	f5
+	ld a,(TICKS_TO_HIT)		;a6f3	3a 41 e5
+	inc a			        ;a6f6	3c
+	ld (TICKS_TO_HIT),a		;a6f7	32 41 e5
+	pop af			        ;a6fa	f1
+	add a,b			        ;a6fb	80
+	cp (hl)			        ;a6fc	be
+	jp c,la704h		        ;a6fd	da 04 a7
+	jp la6f2h		        ;a700	c3 f2 a6
+
 la703h:
 	dec (hl)			;a703	35 	5 
-la704h:
-	ld a,(TICKS_TO_HIT)		;a704	3a 41 e5 	: A . 
-	ld b,a			;a707	47 	G 
-	ld a,(BALL_X_SLOPE)		;a708	3a 42 e5 	: B . 
-	ld c,a			;a70b	4f 	O 
-	neg		;a70c	ed 44 	. D 
 
-    ; Compute A = (TICKS_TO_HIT - 1) * COMPUTED_X_SPEED
+; Reconstruct X in the time of impact
+
+; A start at -BALL_X_SLOPE
+; then BALL_X_SLOPE is summed TICKS_TO_HIT times
+; A = (counter - 1) * BALL_X_SLOPE
+
+la704h:
+	ld a,(TICKS_TO_HIT)		;a704	3a 41 e5
+	ld b,a			        ;a707	47 	G 
+	ld a,(BALL_X_SLOPE)		;a708	3a 42 e5
+	ld c,a			        ;a70b	4f
+	neg		                ;a70c	ed 44
+
 la70eh:
 	add a,c			;a70e	81
 	djnz la70eh		;a70f	10 fd
 
-	ld b,a			;a711	47 	G   B = (TICKS_TO_HIT - 1) * COMPUTED_X_SPEED
+	ld b,a			;a711	47  B = PREV_X_PX + (counter - 1) * BALL_X_SLOPE
+    
+    
+    
 	ld a,(PREV_X_PX)		;a712	3a 87 e5
 	add a,b			        ;a715	80
-	ld b,a			        ;a716	47  B = PREV_X_PX + (TICKS_TO_HIT - 1) * COMPUTED_X_SPEED
+	ld b,a			        ;a716	47  B = PREV_X_PX + (TICKS_TO_HIT - 1) * BALL_X_SLOPE
     
     ; Here B is the estimated X when the ball crosses the frontier Y that was computed before
 
-    ; Compate B with the horizontal limits of the brick
+    ; Compare B with the horizontal limits of the brick
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a717	fd cb 02 7e
 	jp nz,la797h		                    ;a71b	c2 97 a7
 	bit 7,(iy+BALL_TABLE_IDX_X_SPEED)		;a71e	fd cb 03 7e
 	jp nz,la75eh		                    ;a722	c2 5e a7
+    
+    ; Here Y_SPEED >= 0 and X_SPEED >= 0
 
     ; A = 16*BRICK_COL + 12
 	ld a,(BRICK_COL)		                ;a725	3a ab e2
@@ -1666,35 +1801,39 @@ la70eh:
 	jp c,la73bh		;a733	da 3b a7
 	ld b,a			;a736	47
 	scf			    ;a737	37
-	jp la751h		;a738	c3 51 a7
+	jp set_hit_rowcol		;a738	c3 51 a7
 la73bh:
 	add a, 31		;a73b	c6 1f
 	cp b			;a73d	b8
 	jp nc,la746h	;a73e	d2 46 a7
 	ld b,a			;a741	47
 	or a			;a742	b7
-	jp la751h		;a743	c3 51 a7
+	jp set_hit_rowcol		;a743	c3 51 a7
 la746h:
 	sub 16		    ;a746	d6 10
 	cp b			;a748	b8
 	jp c,la750h		;a749	da 50 a7
 	scf			    ;a74c	37
-	jp la751h		;a74d	c3 51 a7
+	jp set_hit_rowcol		;a74d	c3 51 a7
 la750h:
 	or a			;a750	b7
-la751h:
+
+set_hit_rowcol:
     ; Set the row and col of the brick hit
-    ; Row: (COMPUTED_HIT_Y_NEG)
+    ; Row: (HIY_Y_EDGE_A)
     ; col: reg. B
 	push af			            ;a751	f5
-	ld a,(COMPUTED_HIT_Y_NEG)	;a752	3a c4 e2
-	ld (BRICK_HIT_ROW),a		;a755	32 3c e5
+	ld a,(HIY_Y_EDGE_A)	;a752	3a c4 e2
+	ld (BRICK_HIT_Y_PIXEL),a		;a755	32 3c e5
 	ld a,b			            ;a758	78
-	ld (BRICK_HIT_COL),a		;a759	32 3d e5
+	ld (BRICK_HIT_X_PIXEL),a		;a759	32 3d e5
 	pop af			            ;a75c	f1
 	ret			                ;a75d	c9
 
+
 la75eh:
+    ; Here Y_SPEED >= 0 and X_SPEED < 0
+
     ; A = 16*BRICK_COL + 16
 	ld a,(BRICK_COL)	;a75e	3a ab e2
 	sla a		        ;a761	cb 27
@@ -1707,31 +1846,32 @@ la75eh:
 	jp c,la774h		;a76c	da 74 a7
 	ld b,a			;a76f	47
 	or a			;a770	b7
-	jp la78ah		;a771	c3 8a a7
+	jp set_hit_rowcol_case2		;a771	c3 8a a7
 la774h:
 	add a, 31		;a774	c6 1f
 	cp b			;a776	b8
 	jp nc,la77fh	;a777	d2 7f a7
 	ld b,a			;a77a	47
 	scf			    ;a77b	37
-	jp la78ah		;a77c	c3 8a a7
+	jp set_hit_rowcol_case2		;a77c	c3 8a a7
 la77fh:
 	sub 16		    ;a77f	d6 10
 	cp b			;a781	b8
 	jp c,la789h		;a782	da 89 a7
 	scf			    ;a785	37
-	jp la78ah		;a786	c3 8a a7
+	jp set_hit_rowcol_case2		;a786	c3 8a a7
 la789h:
 	or a			;a789	b7
-la78ah:
+
+set_hit_rowcol_case2:
     ; Set the row and col of the brick hit
-    ; Row: (COMPUTED_HIT_Y_NEG)
+    ; Row: (HIY_Y_EDGE_A)
     ; col: reg. B
 	push af			            ;a78a	f5
-	ld a,(COMPUTED_HIT_Y_NEG)	;a78b	3a c4 e2
-	ld (BRICK_HIT_ROW),a		;a78e	32 3c e5
+	ld a,(HIY_Y_EDGE_A)	;a78b	3a c4 e2
+	ld (BRICK_HIT_Y_PIXEL),a		;a78e	32 3c e5
 	ld a,b			            ;a791	78
-	ld (BRICK_HIT_COL),a		;a792	32 3d e5
+	ld (BRICK_HIT_X_PIXEL),a		;a792	32 3d e5
 	pop af			            ;a795	f1
 	ret			                ;a796	c9
 
@@ -1766,10 +1906,10 @@ la7c9h:
 	or a			;a7c9	b7 	. 
 la7cah:
 	push af			;a7ca	f5 	. 
-	ld a,(COMPUTED_HIT_Y)		;a7cb	3a c5 e2 	: . . 
-	ld (BRICK_HIT_ROW),a		;a7ce	32 3c e5 	2 < . 
+	ld a,(HIY_Y_EDGE_B)		;a7cb	3a c5 e2 	: . . 
+	ld (BRICK_HIT_Y_PIXEL),a		;a7ce	32 3c e5 	2 < . 
 	ld a,b			;a7d1	78 	x 
-	ld (BRICK_HIT_COL),a		;a7d2	32 3d e5 	2 = . 
+	ld (BRICK_HIT_X_PIXEL),a		;a7d2	32 3d e5 	2 = . 
 	pop af			;a7d5	f1 	. 
 	ret			;a7d6	c9 	. 
 la7d7h:
@@ -1801,15 +1941,15 @@ la802h:
 	or a			;a802	b7 	. 
 la803h:
 	push af			;a803	f5 	. 
-	ld a,(COMPUTED_HIT_Y)		;a804	3a c5 e2 	: . . 
-	ld (BRICK_HIT_ROW),a		;a807	32 3c e5 	2 < . 
+	ld a,(HIY_Y_EDGE_B)		;a804	3a c5 e2 	: . . 
+	ld (BRICK_HIT_Y_PIXEL),a		;a807	32 3c e5 	2 < . 
 	ld a,b			;a80a	78 	x 
-	ld (BRICK_HIT_COL),a		;a80b	32 3d e5 	2 = . 
+	ld (BRICK_HIT_X_PIXEL),a		;a80b	32 3d e5 	2 = . 
 	pop af			;a80e	f1 	. 
 	ret			;a80f	c9 	. 
 
 ; Perform a double impact of the ball at two bricks
-APPLY_CORNER_HIT_VERTICAL:
+HANDLE_CORNER_CASE_2:
 	ld hl,TICKS_TO_HIT		;a810	21 41 e5 	! A . 
 	ld (hl), 0		;a813	36 00 	6 . 
 	ld de,BALL_X_SLOPE		;a815	11 42 e5 	. B . 
@@ -1825,9 +1965,9 @@ APPLY_CORNER_HIT_VERTICAL:
 	ld b, 19		;a82f	06 13 	. . 
 la831h:
 	add a,b			;a831	80 	. 
-	ld (COMPUTED_HIT_Y_NEG),a		;a832	32 c4 e2 	2 . . 
+	ld (HIY_Y_EDGE_A),a		;a832	32 c4 e2 	2 . . 
 	add a, 7		;a835	c6 07 	. . 
-	ld (COMPUTED_HIT_Y),a		;a837	32 c5 e2 	2 . . 
+	ld (HIY_Y_EDGE_B),a		;a837	32 c5 e2 	2 . . 
 	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a83a	fd 7e 06 	. ~ . 
 	bit 7,a		;a83d	cb 7f 	. ␡ 
 	jp z,la844h		;a83f	ca 44 a8 	. D . 
@@ -1854,7 +1994,7 @@ la866h:
 	ld (BALL_Y_SLOPE),a		;a866	32 43 e5 	2 C . 
 	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
 
-; Table to obtain pairs of (BALL_X_SLOPE, BALL_X_SLOPE) from the ball's skewness
+; Table to obtain pairs of (BALL_X_SLOPE, BALL_Y_SLOPE) from the ball's skewness
 ; All Y values are negatives, as the actual sign is adjusted using Y_SPEED.
 TBL_SPEED_FROM_SKEWNESS:   ;a86c
     db  4, -1
@@ -1870,10 +2010,10 @@ la87ch:
 	ld a, (0xe543)      ;a87c    
 	ld b,a			;a87f	47 	G 
 	ld a,(PREV_Y_PX)		;a880	3a 86 e5 	: . . 
-	ld hl,COMPUTED_HIT_Y		;a883	21 c5 e2 	! . . 
+	ld hl,HIY_Y_EDGE_B		;a883	21 c5 e2 	! . . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a886	fd cb 02 7e 	. . . ~ 
 	jp nz,la8a2h		;a88a	c2 a2 a8 	. . . 
-	ld hl,COMPUTED_HIT_Y_NEG		;a88d	21 c4 e2 	! . . 
+	ld hl,HIY_Y_EDGE_A		;a88d	21 c4 e2 	! . . 
 	inc (hl)			;a890	34 	4 
 la891h:
 	push af			;a891	f5 	. 
@@ -1932,10 +2072,10 @@ la8e6h:
 	ld b,a			;a8ec	47 	G 
 la8edh:
 	ld (ix+SPR_PARAMS_IDX_X),b		;a8ed	dd 70 01 	. p . 
-	ld a,(COMPUTED_HIT_Y_NEG)		;a8f0	3a c4 e2 	: . . 
+	ld a,(HIY_Y_EDGE_A)		;a8f0	3a c4 e2 	: . . 
 	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a8f3	fd cb 02 7e 	. . . ~ 
 	jp z,la8fdh		;a8f7	ca fd a8 	. . . 
-	ld a,(COMPUTED_HIT_Y)		;a8fa	3a c5 e2 	: . . 
+	ld a,(HIY_Y_EDGE_B)		;a8fa	3a c5 e2 	: . . 
 la8fdh:
 	ld (ix+SPR_PARAMS_IDX_Y),a		;a8fd	dd 77 00 	. w . 
 	ret			;a900	c9 	. 
@@ -1943,9 +2083,8 @@ la8fdh:
 
 ; Perform a double impact of the ball at two bricks
 ;
-; This function remove two bricks at the same time when the ball is going to their joint.
-; When the balls goes down left.
-APPLY_CORNER_HIT_HORIZONTAL:
+; This function resolves a corner-impact case at the joint of two bricks.
+HANDLE_CORNER_CASE_1:
     ; Clear two variables
 	ld hl,TICKS_TO_HIT		;a901	21 41 e5
 	ld (hl), 0		;a904	36 00
