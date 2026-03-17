@@ -50,7 +50,7 @@ ADVANCE_SOUND_STREAM_IF_READY:
 	and a		    ;b4b6	a7
 	ret z			;b4b7	c8
 
-    ; IX points to the structure 0xE5D3
+    ; IX points to the RAM structure SOUND_BUFFER_1
 	push hl			;b4b8	e5
 	pop ix		    ;b4b9	dd e1
     
@@ -119,7 +119,7 @@ PLAY_SOUND:
 	ld a,(de)			;b4ef	1a
 
     ; Jump if SOUND_NUMBER >= 128
-    ld hl,0e5d3h		;b4f0	21 d3 e5
+    ld hl, SOUND_BUFFER_1		;b4f0	21 d3 e5
 	cp 128		        ;b4f3	fe 80
 	jr nc,sound_more_eq_128		;b4f5	30 04   Jump if SOUND_NUMBER >= 128
     
@@ -151,7 +151,7 @@ sound_more_eq_192:
 	pop af			;b510	f1
 	inc a			;b511	3c
 lb512h:
-	ld hl,0e5e9h		;b512	21 e9 e5
+	ld hl, SOUND_BUFFER_2		;b512	21 e9 e5
 lb515h:
 	call QUEUE_SOUND_DESCRIPTOR		;b515	cd 1d b5 	. . . 
 lb518h:
@@ -165,7 +165,7 @@ lb518h:
 ; ToDo
 
 ; Input: A, descritor index
-; Input HL: pointer to the state structure. It can be 0xe5d3 or 0xe5e9
+; Input HL: pointer to the state structure. It can be SOUND_BUFFER_1 or SOUND_BUFFER_2
 ;
 ; It does the following:
 ; 1. constructs BC = 0xB4xx using A,
@@ -486,7 +486,7 @@ lb5deh:
 	pop af			;b5de	f1 	. 
 	ld (SOUND_PTR),bc		;b5df	ed 43 da e5 	. C . . 
 lb5e3h:
-	ld hl,0e5e9h		;b5e3	21 e9 e5 	! . . 
+	ld hl, SOUND_BUFFER_2		;b5e3	21 e9 e5 	! . . 
 	ld bc,(0e5f0h)		;b5e6	ed 4b f0 e5 	. K . . 
     
     
@@ -632,7 +632,7 @@ lb6dch:
 	ld d,002h		;b6e4	16 02 	. . 
 
 ; This is call each time it plays a "note"
-; Call from b67b, which is inside SOUND_CMD_DISPATCH_TABLE, a jump table.
+; Called from b67b, which is inside SOUND_CMD_DISPATCH_TABLE, a jump table.
 ; jp (hl)   ;b665
 CMD_SET_NOTE_ON_CHANNEL:
 	ld a,(ix+00bh)		;b6e6	dd 7e 0b 	. ~ . 
