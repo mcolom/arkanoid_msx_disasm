@@ -2,183 +2,49 @@
 ; be added into its own file.
 
 	jp PLAY_SOUND		;b400	c3 e8 b4 	. . . 
-	jp sub_b594h_sound		;b403	c3 94 b5 	. . . 
+	jp SOUND_ISR_UPDATE		;b403	c3 94 b5 	. . . 
 
-; Sound #0
-	db 0x22             ;b406	22
-; Sound #1
-	db 0x27             ;b407	27
-; Sound #2
-	db 0x2c             ;b408	2c
-	ld sp,03b36h		;b409	31 36 3b 	1 6 ; 
-	ld b,b			;b40c	40 	@ 
-	ld b,l			;b40d	45 	E 
-	ld c,d			;b40e	4a 	J 
-	ld c,a			;b40f	4f 	O 
-	ld d,h			;b410	54 	T 
-	ld e,c			;b411	59 	Y 
-	ld e,(hl)			;b412	5e 	^ 
-	ld h,e			;b413	63 	c 
-	ld l,b			;b414	68 	h 
-	ld l,l			;b415	6d 	m 
-	ld (hl),d			;b416	72 	r 
-	ld (hl),a			;b417	77 	w 
-	ld a,h			;b418	7c 	| 
-	add a,c			;b419	81 	. 
-	add a,(hl)			;b41a	86 	. 
-	adc a,e			;b41b	8b 	. 
-	sub b			;b41c	90 	. 
-	sub l			;b41d	95 	. 
-	sbc a,d			;b41e	9a 	. 
-	sbc a,a			;b41f	9f 	. 
-	and h			;b420	a4 	. 
-	xor c			;b421	a9 	. 
-	pop af			;b422	f1 	. 
-	rst 38h			;b423	ff 	. 
-	pop af			;b424	f1 	. 
-	ld d,l			;b425	55 	U 
-	cp b			;b426	b8 	. 
-	add a,c			;b427	81 	. 
-	rst 38h			;b428	ff 	. 
-	add a,c			;b429	81 	. 
-	ld e,l			;b42a	5d 	] 
-	cp b			;b42b	b8 	. 
-	add a,c			;b42c	81 	. 
-	rst 38h			;b42d	ff 	. 
-	add a,c			;b42e	81 	. 
-	ld l,d			;b42f	6a 	j 
-	cp b			;b430	b8 	. 
-	add a,c			;b431	81 	. 
-	rst 38h			;b432	ff 	. 
-	add a,c			;b433	81 	. 
-	ld (hl),a			;b434	77 	w 
-	cp b			;b435	b8 	. 
-	add a,c			;b436	81 	. 
-	rst 38h			;b437	ff 	. 
-	add a,c			;b438	81 	. 
-	add a,l			;b439	85 	. 
-	cp b			;b43a	b8 	. 
-	pop de			;b43b	d1 	. 
-	rst 38h			;b43c	ff 	. 
-	pop de			;b43d	d1 	. 
-	or (hl)			;b43e	b6 	. 
-	cp b			;b43f	b8 	. 
-	and c			;b440	a1 	. 
-	rst 38h			;b441	ff 	. 
-	and c			;b442	a1 	. 
-	pop bc			;b443	c1 	. 
-	cp b			;b444	b8 	. 
-	pop bc			;b445	c1 	. 
-	rst 38h			;b446	ff 	. 
-	pop bc			;b447	c1 	. 
-	exx			;b448	d9 	. 
-	cp b			;b449	b8 	. 
-	add a,c			;b44a	81 	. 
-	rst 38h			;b44b	ff 	. 
-	add a,c			;b44c	81 	. 
-	ei			;b44d	fb 	. 
-	cp b			;b44e	b8 	. 
-	and c			;b44f	a1 	. 
-	rst 38h			;b450	ff 	. 
-	and c			;b451	a1 	. 
-	ex af,af'			;b452	08 	. 
-	cp c			;b453	b9 	. 
-	or c			;b454	b1 	. 
-	rst 38h			;b455	ff 	. 
-	or c			;b456	b1 	. 
-	adc a,(hl)			;b457	8e 	. 
-	cp b			;b458	b8 	. 
-	or c			;b459	b1 	. 
-	rst 38h			;b45a	ff 	. 
-	or c			;b45b	b1 	. 
-	dec (hl)			;b45c	35 	5 
-	cp c			;b45d	b9 	. 
-	pop bc			;b45e	c1 	. 
-	rst 38h			;b45f	ff 	. 
-	pop bc			;b460	c1 	. 
-	sbc a,c			;b461	99 	. 
-	cp b			;b462	b8 	. 
-	pop bc			;b463	c1 	. 
-	rst 38h			;b464	ff 	. 
-	pop bc			;b465	c1 	. 
-	ld b,b			;b466	40 	@ 
-	cp c			;b467	b9 	. 
-	or c			;b468	b1 	. 
-	rst 38h			;b469	ff 	. 
-	or c			;b46a	b1 	. 
-	xor c			;b46b	a9 	. 
-	cp b			;b46c	b8 	. 
-	or c			;b46d	b1 	. 
-	rst 38h			;b46e	ff 	. 
-	or c			;b46f	b1 	. 
-	ld c,(hl)			;b470	4e 	N 
-	cp c			;b471	b9 	. 
-	pop bc			;b472	c1 	. 
-	nop			;b473	00 	. 
-	pop bc			;b474	c1 	. 
-	ld d,0bah		;b475	16 ba 	. . 
-	pop bc			;b477	c1 	. 
-	rst 38h			;b478	ff 	. 
-	pop bc			;b479	c1 	. 
-	ld e,(hl)			;b47a	5e 	^ 
-	cp c			;b47b	b9 	. 
-	pop bc			;b47c	c1 	. 
-	nop			;b47d	00 	. 
-	pop bc			;b47e	c1 	. 
-	ld l,b			;b47f	68 	h 
-	cp d			;b480	ba 	. 
-	pop bc			;b481	c1 	. 
-	rst 38h			;b482	ff 	. 
-	pop bc			;b483	c1 	. 
-	adc a,e			;b484	8b 	. 
-	cp d			;b485	ba 	. 
-	pop bc			;b486	c1 	. 
-	nop			;b487	00 	. 
-	pop bc			;b488	c1 	. 
-	push af			;b489	f5 	. 
-	cp d			;b48a	ba 	. 
-	pop bc			;b48b	c1 	. 
-	rst 38h			;b48c	ff 	. 
-	pop bc			;b48d	c1 	. 
-	inc bc			;b48e	03 	. 
-	cp e			;b48f	bb 	. 
-	pop bc			;b490	c1 	. 
-	nop			;b491	00 	. 
-	pop bc			;b492	c1 	. 
-	inc h			;b493	24 	$ 
-	cp e			;b494	bb 	. 
-	pop bc			;b495	c1 	. 
-	rst 38h			;b496	ff 	. 
-	pop bc			;b497	c1 	. 
-	dec (hl)			;b498	35 	5 
-	cp e			;b499	bb 	. 
-	pop bc			;b49a	c1 	. 
-	add a,0c2h		;b49b	c6 c2 	. . 
-	add a,e			;b49d	83 	. 
-	cp e			;b49e	bb 	. 
-	pop bc			;b49f	c1 	. 
-	add a,0c2h		;b4a0	c6 c2 	. . 
-	sub e			;b4a2	93 	. 
-	cp h			;b4a3	bc 	. 
-	pop bc			;b4a4	c1 	. 
-	nop			;b4a5	00 	. 
-	pop bc			;b4a6	c1 	. 
-	exx			;b4a7	d9 	. 
-	cp (hl)			;b4a8	be 	. 
-	pop bc			;b4a9	c1 	. 
-	rst 38h			;b4aa	ff 	. 
-	pop bc			;b4ab	c1 	. 
-	ld b,h			;b4ac	44 	D 
-	cp a			;b4ad	bf 	. 
+; /db_block.py ../a.bin --offset 16384 --start 46086 --end 46261
+TBL_SOUND_PARAMS:
+    db 0x22, 0x27, 0x2c, 0x31, 0x36, 0x3b, 0x40, 0x45 ; 0xb406 - 0xb40d
+    db 0x4a, 0x4f, 0x54, 0x59, 0x5e, 0x63, 0x68, 0x6d ; 0xb40e - 0xb415
+    db 0x72, 0x77, 0x7c, 0x81, 0x86, 0x8b, 0x90, 0x95 ; 0xb416 - 0xb41d
+    db 0x9a, 0x9f, 0xa4, 0xa9, 0xf1, 0xff, 0xf1, 0x55 ; 0xb41e - 0xb425
+    db 0xb8, 0x81, 0xff, 0x81, 0x5d, 0xb8, 0x81, 0xff ; 0xb426 - 0xb42d
+    db 0x81, 0x6a, 0xb8, 0x81, 0xff, 0x81, 0x77, 0xb8 ; 0xb42e - 0xb435
+    db 0x81, 0xff, 0x81, 0x85, 0xb8, 0xd1, 0xff, 0xd1 ; 0xb436 - 0xb43d
+    db 0xb6, 0xb8, 0xa1, 0xff, 0xa1, 0xc1, 0xb8, 0xc1 ; 0xb43e - 0xb445
+    db 0xff, 0xc1, 0xd9, 0xb8, 0x81, 0xff, 0x81, 0xfb ; 0xb446 - 0xb44d
+    db 0xb8, 0xa1, 0xff, 0xa1, 0x8, 0xb9, 0xb1, 0xff ; 0xb44e - 0xb455
+    db 0xb1, 0x8e, 0xb8, 0xb1, 0xff, 0xb1, 0x35, 0xb9 ; 0xb456 - 0xb45d
+    db 0xc1, 0xff, 0xc1, 0x99, 0xb8, 0xc1, 0xff, 0xc1 ; 0xb45e - 0xb465
+    db 0x40, 0xb9, 0xb1, 0xff, 0xb1, 0xa9, 0xb8, 0xb1 ; 0xb466 - 0xb46d
+    db 0xff, 0xb1, 0x4e, 0xb9, 0xc1, 0x0, 0xc1, 0x16 ; 0xb46e - 0xb475
+    db 0xba, 0xc1, 0xff, 0xc1, 0x5e, 0xb9, 0xc1, 0x0 ; 0xb476 - 0xb47d
+    db 0xc1, 0x68, 0xba, 0xc1, 0xff, 0xc1, 0x8b, 0xba ; 0xb47e - 0xb485
+    db 0xc1, 0x0, 0xc1, 0xf5, 0xba, 0xc1, 0xff, 0xc1 ; 0xb486 - 0xb48d
+    db 0x3, 0xbb, 0xc1, 0x0, 0xc1, 0x24, 0xbb, 0xc1 ; 0xb48e - 0xb495
+    db 0xff, 0xc1, 0x35, 0xbb, 0xc1, 0xc6, 0xc2, 0x83 ; 0xb496 - 0xb49d
+    db 0xbb, 0xc1, 0xc6, 0xc2, 0x93, 0xbc, 0xc1, 0x0 ; 0xb49e - 0xb4a5
+    db 0xc1, 0xd9, 0xbe, 0xc1, 0xff, 0xc1, 0x44, 0xbf ; 0xb4a6 - 0xb4ad
 lb4aeh:
-	nop			;b4ae	00 	. 
-	or b			;b4af	b0 	. 
-	call z,02890h		;b4b0	cc 90 28 	. . ( 
-	adc a,c			;b4b3	89 	. 
-	db 0x28         ;b4b4   28
+    db 0x0, 0xb0, 0xcc, 0x90, 0x28, 0x89, 0x28        ; 0xb4ae - 0xb4b4
 
-; ToDo
-sub_b4b5_sound:
+
+; Advance the sound stream, if ready.
+; It's a musical command interpreter.
+;
+; It does the following:
+;
+; 1. if the structure is inactive, exit,
+; 2. decrement a wait counter,
+; 3. if it hasn't reached zero yet, exit,
+; 4. if it reaches zero:
+;   - use BC a pointer to the stream,
+;   - parse several bytes,
+;   - update the structure,
+;   - return a carry if parsing must continue immediately. 
+ADVANCE_SOUND_STREAM_IF_READY:
     ; Exit if no sound need to be played
 	ld a, (hl)		;b4b5	7e
 	and a		    ;b4b6	a7
@@ -189,7 +55,7 @@ sub_b4b5_sound:
 	pop ix		    ;b4b9	dd e1
     
     ; Exit if not zero yet
-	dec (ix+009h)	;b4bb	dd 35 09
+	dec (ix+AUDIO_TABLE_IDX_TICKS_COUNTDOWN)	;b4bb	dd 35 09
 	ret nz			;b4be	c0
 
     ; The first value at 0xb855 was read here at b4bf, when it
@@ -227,10 +93,21 @@ lb4d1h:
 	dec hl			;b4de	2b 	+ 
 	jr lb545h		;b4df	18 64 	. d 
 lb4e1h:
-	ld (ix+000h),000h		;b4e1	dd 36 00 00 	. 6 . . 
-	ld (SOUND_NUMBER),a		;b4e5	32 c0 e5 	2 . . 
+	ld (ix+AUDIO_TABLE_IDX_ACTIVE),0		        ;b4e1	dd 36 00 00
+	ld (SOUND_NUMBER),a	    ;b4e5	32 c0 e5
 
-; ToDo
+; The PLAY_SOUND routine does the following:
+; 1. reads SOUND_NUMBER,
+; 2. maps it according to its range:
+;   < 128
+;   128..191: uses table 0xb406
+;   192..239
+;   >= 240: commands
+; 3. uses a table to convert that number into a descriptor,
+; 4. loads internal playback structures.
+; The key parts:
+
+
 PLAY_SOUND:
 	push hl			;b4e8	e5
 	push de			;b4e9	d5
@@ -241,7 +118,7 @@ PLAY_SOUND:
     ld de,SOUND_NUMBER	;b4ec	11 c0 e5
 	ld a,(de)			;b4ef	1a
 
-    ; Jump if [0xe5d3] >= 128
+    ; Jump if SOUND_NUMBER >= 128
     ld hl,0e5d3h		;b4f0	21 d3 e5
 	cp 128		        ;b4f3	fe 80
 	jr nc,sound_more_eq_128		;b4f5	30 04   Jump if SOUND_NUMBER >= 128
@@ -266,17 +143,17 @@ sound_more_eq_192:
     ; SOUND_NUMBER < 240
     
     ; A = (A + 48)*2  + 16
-	add a,48		;b507	c6 30 	. 0 
-	add a,a			;b509	87 	. 
-	add a,16		;b50a	c6 10 	. . 
-	push af			;b50c	f5 	. 
-	call sub_b51dh_sound		;b50d	cd 1d b5 	. . . 
-	pop af			;b510	f1 	. 
-	inc a			;b511	3c 	< 
+	add a,48		;b507	c6 30
+	add a,a			;b509	87
+	add a,16		;b50a	c6 10
+	push af			;b50c	f5
+	call QUEUE_SOUND_DESCRIPTOR		;b50d	cd 1d b5
+	pop af			;b510	f1
+	inc a			;b511	3c
 lb512h:
-	ld hl,0e5e9h		;b512	21 e9 e5 	! . . 
+	ld hl,0e5e9h		;b512	21 e9 e5
 lb515h:
-	call sub_b51dh_sound		;b515	cd 1d b5 	. . . 
+	call QUEUE_SOUND_DESCRIPTOR		;b515	cd 1d b5 	. . . 
 lb518h:
 	pop af			;b518	f1 	. 
 	pop bc			;b519	c1 	. 
@@ -287,16 +164,34 @@ lb518h:
 ; Sound related...
 ; ToDo
 
-; Input: A, related to the SOUND_NUMBER
-; Input HL: pointer, it can be 0xe5d3 or 0xe5e9
-sub_b51dh_sound:
+; Input: A, descritor index
+; Input HL: pointer to the state structure. It can be 0xe5d3 or 0xe5e9
+;
+; It does the following:
+; 1. constructs BC = 0xB4xx using A,
+; 2. reads bytes from that table,
+; 3. checks if the sound can be added (CAN_ADD_SOUND),
+; 4. if the channel was already occupied, compares priorities:
+;   and 0f0h
+;   cp (hl)
+; 5. if the new priority is lower, aborts,
+; 6. otherwise, fills several fields of the structure.
+; The first byte of the descriptor contains:
+;   - priority in the high nibble
+;   - some type or subchannel in the low nibble
+; And then come:
+;   - pointers to the sequence,
+;   - timers,
+;   - initial parameters.
+
+QUEUE_SOUND_DESCRIPTOR:
     ; BC = 0xb4.. , with A
-	ld b,0xb4		;b51d	06 b4
+    ld b, (TBL_SOUND_PARAMS & 0xFF00) >> 8; ;b51d	06 b4
 	ld c,a			;b51f	4f
 
-	; C = [0xb4..]
+    ; Read C
     ld a,(bc)		;b520	0a
-    ld c,a			;b521	4f 	O 
+    ld c,a			;b521	4f
     
 	; Check if we can add a sound now
     ld a,(CAN_ADD_SOUND)	;b522	3a c2 e5
@@ -304,31 +199,32 @@ sub_b51dh_sound:
 	ret z			;b526	c8
 
 	di			    ;b527	f3
-	
     
     ld a,(hl)		;b528	7e          A <-- (hl)
 	ld (hl), 1		;b529	36 01       (hl) <-- 1
     inc hl			;b52b	23          hl++
-    
+
 	and a			;b52c	a7
 	jr z,lb534h		;b52d	28 05       Jump if A == 0
 	
     ; A != 0
+    ; Compare priority.
     ld a,(bc)		;b52f	0a
 	and 0f0h		;b530	e6 f0       A <-- (BC) & 0xf0
 	cp (hl)			;b532	be          Compare (BC) & 0xf0 with (hl)
 	ret c			;b533	d8          Return if (BC) & 0xf0 < (hl)
+    ; Priority OK: go on
 lb534h:
     ; Read in D
-	ld a,(bc)			;b534	0a 	. 
-	and 00fh		;b535	e6 0f 	. . 
-	ld d,a			;b537	57 	W 
-	inc bc			;b538	03 	. 
+	ld a,(bc)		;b534	0a
+	and 00fh		;b535	e6 0f
+	ld d,a			;b537	57
+	inc bc			;b538	03
 
     ; Read in E
-	ld a,(bc)			;b539	0a 	. 
-	ld e,a			;b53a	5f 	_ 
-	inc bc			;b53b	03 	. 
+	ld a,(bc)		;b539	0a
+	ld e,a			;b53a	5f
+	inc bc			;b53b	03
 
     ; Read in A
 	ld a,(bc)			;b53c	0a 	. 
@@ -393,9 +289,12 @@ lb56ah:
 	ex de,hl			;b56d	eb 	. 
 	ld e,0bfh		;b56e	1e bf 	. . 
 
-; Sound related
-; ToDo
-write_E_to_PSG_reg_A_safe:
+; 1. select PSG register 7,
+; 2. read the current value,
+; 3. preserve bits 7 and 6 (and 0xc0),
+; 4. mix in the new control value,
+; 5. rewrite the register.
+WRITE_PSG_REG7_PRESERVING_IO_BITS:
     ; Select PSG register 7: voice and I/O port control register
 	ld a, 7		;b570	3e 07 PSG register 7
     
@@ -423,7 +322,7 @@ write_E_to_PSG_reg_A_safe:
 
     ; Write E to PSG register 7: voice and I/O port control register
 	ld a, 7		                ;b57f	3e 07
-	jr write_E_to_PSG_reg_A		;b581	18 09
+	jr WRITE_PSG_REG_VALUE		;b581	18 09
 
 
 lb583h:
@@ -433,7 +332,7 @@ lb583h:
 
 ; Write the next value from (HL) to the next PSG register in A
 ; Exit if bit 0 of C is 0
-WRITE_NEXT_REG_PSG:
+WRITE_MASKED_PSG_REG_AND_ADVANCE:
     ; Point to the next PSG register and next position in the HL buffer
 	inc a			;b586	3c
 	inc hl			;b587	23
@@ -448,7 +347,7 @@ WRITE_NEXT_REG_PSG:
 
     ; Read value from (HL) into E
 	ld e,(hl)			;b58b
-write_E_to_PSG_reg_A:
+WRITE_PSG_REG_VALUE:
     ; Write value E to PSG register A
 
     ; Selected PSG register <-- A
@@ -461,10 +360,13 @@ write_E_to_PSG_reg_A:
 	pop af			;b592	f1
 	ret			    ;b593	c9
 
-; Sound related
-; ToDo
 ; This is called from the interrupt handler
-sub_b594h_sound:
+; It does the following:
+;   - Write only the tracks marked as modified to the PSG,
+;   - Advance the active sequencers,
+;   - update envelopes, pitch, noise, and mix,
+;   - trigger new notes/events when playing.
+SOUND_ISR_UPDATE:
     ; Get out if sound in inhibited.
     ; However, the game nevers inhibits the sound.
 	ld a, (SOUND_INHIBIT)	;b594	3a c1 e5
@@ -485,7 +387,7 @@ sub_b594h_sound:
 	ld (hl),a			    ;b59e	77
     
     ; Decrement A (register number), because
-    ; WRITE_NEXT_REG_PSG considers A+1
+    ; WRITE_MASKED_PSG_REG_AND_ADVANCE considers A+1
     ; Actually, this simple sets A=-1 so A+1=0.    
 	dec a			        ;b59f	3d
     
@@ -494,7 +396,7 @@ sub_b594h_sound:
 	ld b,d			;b5a2	42
 
 ; Write PSG registers
-; Here we have HL=SOUNDS_REGS_BUFFER-1 and WRITE_NEXT_REG_PSG will
+; Here we have HL=SOUNDS_REGS_BUFFER-1 and WRITE_MASKED_PSG_REG_AND_ADVANCE will
 ; consider HL+1 = SOUNDS_REGS_BUFFER.
 lb5a3h:
     ; Repeat B=3 times
@@ -502,37 +404,37 @@ lb5a3h:
     
     ; Write the next value from (HL) to the next PSG register in A
     ; Write voice frequency, 8 LSB
-	call WRITE_NEXT_REG_PSG		;b5a3	cd 86 b5
-    ; Undue the rrc in WRITE_NEXT_REG_PSG
+	call WRITE_MASKED_PSG_REG_AND_ADVANCE		;b5a3	cd 86 b5
+    ; Undue the rrc in WRITE_MASKED_PSG_REG_AND_ADVANCE
 	rlc c		                ;b5a6	cb 01
 
     ; Write voice frequency, 4 MSB
-	call WRITE_NEXT_REG_PSG		;b5a8	cd 86 b5
+	call WRITE_MASKED_PSG_REG_AND_ADVANCE		;b5a8	cd 86 b5
 	djnz lb5a3h		            ;b5ab	10 f6
 
     ; Write register 6: enable or disable the noise generator
-	call WRITE_NEXT_REG_PSG		;b5ad	cd 86 b5
+	call WRITE_MASKED_PSG_REG_AND_ADVANCE		;b5ad	cd 86 b5
 
     ; Point to voice control (SOUND_VOICE_CONTROL) and write
 	inc hl			            ;b5b0	23
 	ld e,(hl)			        ;b5b1	5e
     ;
     ; This call also updates (hl)
-	call write_E_to_PSG_reg_A_safe		;b5b2	cd 70 b5 	. p . 
+	call WRITE_PSG_REG7_PRESERVING_IO_BITS		;b5b2	cd 70 b5
     
 ; Write the amplitudes 1, 2, 3 by repeating 3 times
 ; This writes to registers 8, 9, and 10.
 	ld b,d			            ;b5b5	42 B=3
 lb5b6h:
-	call WRITE_NEXT_REG_PSG		;b5b6	cd 86 b5
+	call WRITE_MASKED_PSG_REG_AND_ADVANCE		;b5b6	cd 86 b5
 	djnz lb5b6h		            ;b5b9	10 fb
 
 ; Write the envelope period and shape
 ; This writes to registers 11, 12, and 13.
 	ld b,d			            ;b5bb	42  B=3
 lb5bch:
-	call WRITE_NEXT_REG_PSG		;b5bc	cd 86 b5
-    ; Undue the rrc in WRITE_NEXT_REG_PSG
+	call WRITE_MASKED_PSG_REG_AND_ADVANCE		;b5bc	cd 86 b5
+    ; Undue the rrc in WRITE_MASKED_PSG_REG_AND_ADVANCE
 	rlc c		                ;b5bf	cb 01
 	djnz lb5bch		            ;b5c1	10 f9
 
@@ -544,7 +446,7 @@ lb5bch:
     ; Reg. 14 is the "Parallel Port Registers", so probably never used
     ;
 	bit 3,(hl)		                    ;b5c5	cb 5e
-	call nz, write_E_to_PSG_reg_A		;b5c7	c4 8c b5    This call also updates (hl)
+	call nz, WRITE_PSG_REG_VALUE		;b5c7	c4 8c b5    This call also updates (hl)
 
     ; Reset parallel port flag
 	res 3,(hl)		                    ;b5ca	cb 9e
@@ -555,12 +457,12 @@ lb5bch:
     
 	ld bc,(SOUND_PTR)		;b5cd	ed 4b da e5 	. K . . 
 
-	call sub_b4b5_sound		;b5d1	cd b5 b4 	. . . 
+	call ADVANCE_SOUND_STREAM_IF_READY		;b5d1	cd b5 b4 	. . . 
 	
     jr nc,lb5e3h		;b5d4	30 0d 	0 . 
 	ld (0e5dch),a		;b5d6	32 dc e5 	2 . . 
 lb5d9h:
-	call sub_b63eh_sound		;b5d9	cd 3e b6 	. > . 
+	call DISPATCH_PRIMARY_SOUND_COMMAND		;b5d9	cd 3e b6 	. > . 
 	jr lb5d9h		;b5dc	18 fb 	. . 
 lb5deh:
 	pop af			;b5de	f1 	. 
@@ -571,13 +473,13 @@ lb5e3h:
     
     
     ; If no sound is being played, it'll jump to lb5fch
-	call sub_b4b5_sound		;b5ea	cd b5 b4 	. . . 
+	call ADVANCE_SOUND_STREAM_IF_READY		;b5ea	cd b5 b4 	. . . 
 	jr nc,lb5fch		;b5ed	30 0d 	0 . 
 	
     ; It reaches here when a sound is being played
     ld (0e5f2h),a		;b5ef	32 f2 e5 	2 . . 
 lb5f2h:
-	call sub_b649h_sound		;b5f2	cd 49 b6 	. I . 
+	call DISPATCH_SECONDARY_SOUND_COMMAND		;b5f2	cd 49 b6 	. I . 
 	jr lb5f2h		;b5f5	18 fb 	. . 
 lb5f7h:
 	pop af			;b5f7	f1 	. 
@@ -586,29 +488,29 @@ lb5fch:
 	ld hl,0e5deh		;b5fc	21 de e5 	! . . 
 	ld d,001h		;b5ff	16 01 	. . 
 	ld bc,(SOUNDS_UNKNOWN_TYPE)		;b601	ed 4b c4 e5 	. K . . 
-	call sub_b77bh_sound		;b605	cd 7b b7 	. { . 
+	call UPDATE_PERIOD_EFFECT		;b605	cd 7b b7 	. { . 
 	ld (SOUNDS_UNKNOWN_TYPE),bc		;b608	ed 43 c4 e5 	. C . . 
 	ld hl,0e5e1h		;b60c	21 e1 e5 	! . . 
 	ld d,010h		;b60f	16 10 	. . 
 	ld a,(0e5cch)		;b611	3a cc e5 	: . . 
-	call sub_b79bh_sound		;b614	cd 9b b7 	. . . 
-	call sub_b7cfh_sound		;b617	cd cf b7 	. . . 
+	call UPDATE_VOLUME_EFFECT		;b614	cd 9b b7 	. . . 
+	call UPDATE_DELAYED_FLAG_EFFECT		;b617	cd cf b7 	. . . 
 	ld a,c			;b61a	79 	y 
 	ld (0e5cch),a		;b61b	32 cc e5 	2 . . 
 	ld hl,0e5f4h		;b61e	21 f4 e5 	! . . 
 	ld d,002h		;b621	16 02 	. . 
 	ld bc,(0e5c6h)		;b623	ed 4b c6 e5 	. K . . 
-	call sub_b77bh_sound		;b627	cd 7b b7 	. { . 
+	call UPDATE_PERIOD_EFFECT		;b627	cd 7b b7 	. { . 
 	ld (0e5c6h),bc		;b62a	ed 43 c6 e5 	. C . . 
 	ld hl,0e5f7h		;b62e	21 f7 e5 	! . . 
 	ld d,040h		;b631	16 40 	. @ 
 	ld a,(0e5ceh)		;b633	3a ce e5 	: . . 
-	call sub_b79bh_sound		;b636	cd 9b b7 	. . . 
+	call UPDATE_VOLUME_EFFECT		;b636	cd 9b b7 	. . . 
 	ld a,c			;b639	79 	y 
 	ld (0e5ceh),a		;b63a	32 ce e5 	2 . . 
 	ret			;b63d	c9 	. 
 
-sub_b63eh_sound:
+DISPATCH_PRIMARY_SOUND_COMMAND:
 	inc bc			;b63e	03 	. 
 	ld a,(bc)			;b63f	0a 	. 
 	bit 7,a		;b640	cb 7f 	. ␡ 
@@ -616,7 +518,7 @@ sub_b63eh_sound:
 	ld hl,TBL_b666		;b644	21 66 b6 	! f . 
 	jr lb652h		;b647	18 09 	. . 
 
-sub_b649h_sound:
+DISPATCH_SECONDARY_SOUND_COMMAND:
 	inc bc			;b649	03 	. 
 	ld a,(bc)			;b64a	0a 	. 
 	bit 7,a		;b64b	cb 7f 	. ␡ 
@@ -632,7 +534,7 @@ lb652h:
 	ld d,000h		;b659	16 00 	. . 
 	add hl,de			;b65b	19 	. 
 	ld e,(hl)			;b65c	5e 	^ 
-	ld hl, TBL_b676		;b65d	21 76 b6 	! v . 
+	ld hl, SOUND_CMD_DISPATCH_TABLE		;b65d	21 76 b6 	! v . 
 	add hl,de			;b660	19 	. 
 	ld a,(bc)			;b661	0a 	. 
 	and 00fh		;b662	e6 0f 	. . 
@@ -645,10 +547,10 @@ TBL_b666:
 TBL_b66e:
     db 0x6b, 0xa7, 0x9a, 0xaf, 0xbf, 0xcf, 0xdd, 0xeb ; 0xb66e - 0xb675
 
-TBL_b676: ; 0xb676
+SOUND_CMD_DISPATCH_TABLE: ; 0xb676
     ld hl, 0xe5c5
     ld d, 1
-    call sub_b6e6h
+    call CMD_SET_NOTE_ON_CHANNEL
 
 lb67eh:
 	ld de,0e5e6h		;b67e	11 e6 e5 	. . . 
@@ -669,7 +571,7 @@ lb690h:
 	bit 3,a		;b69b	cb 5f 	. _ 
 	jr z,lb6cdh		;b69d	28 2e 	( . 
 	ld de,00801h		;b69f	11 01 08 	. . . 
-	call sub_b82dh		;b6a2	cd 2d b8 	. - . 
+	call UPDATE_MIXER_FROM_CHANNEL_MASK		;b6a2	cd 2d b8 	. - . 
 	sub a			;b6a5	97 	. 
 	ld (0e5e7h),a		;b6a6	32 e7 e5 	2 . . 
 	call lb6aeh		;b6a9	cd ae b6 	. . . 
@@ -712,9 +614,9 @@ lb6dch:
 	ld d,002h		;b6e4	16 02 	. . 
 
 ; This is call each time it plays a "note"
-; Call from b67b, which is inside TBL_b676, a jump table.
+; Call from b67b, which is inside SOUND_CMD_DISPATCH_TABLE, a jump table.
 ; jp (hl)   ;b665
-sub_b6e6h:
+CMD_SET_NOTE_ON_CHANNEL:
 	ld a,(ix+00bh)		;b6e6	dd 7e 0b 	. ~ . 
 	and 007h		;b6e9	e6 07 	. . 
 	ld (ix+00ch),a		;b6eb	dd 77 0c 	. w . 
@@ -742,7 +644,7 @@ lb70eh:
 	bit 3,a		;b713	cb 5f 	. _ 
 	jr z,lb6cdh		;b715	28 b6 	( . 
 	ld de,01002h		;b717	11 02 10 	. . . 
-	call sub_b82dh		;b71a	cd 2d b8 	. - . 
+	call UPDATE_MIXER_FROM_CHANNEL_MASK		;b71a	cd 2d b8 	. - . 
 	ld d,020h		;b71d	16 20 	.   
 	ld a,e			;b71f	7b 	{ 
 	ld (0e5cdh),a		;b720	32 cd e5 	2 . . 
@@ -797,12 +699,12 @@ sub_b765h:
 
 lb76fh:
 	ld de,02004h		;b76f	11 04 20 	. .   
-	call sub_b831h		;b772	cd 31 b8 	. 1 . 
+	call CONFIGURE_CHANNEL_ENABLES		;b772	cd 31 b8 	. 1 . 
 	sub a			;b775	97 	. 
 	call sub_b765h		;b776	cd 65 b7 	. e . 
 	jr lb753h		;b779	18 d8 	. . 
 
-sub_b77bh_sound:
+UPDATE_PERIOD_EFFECT:
 	ld e,(hl)			;b77b	5e 	^ 
 	bit 7,e		;b77c	cb 7b 	. { 
 	ret z			;b77e	c8 	. 
@@ -830,7 +732,7 @@ lb796h:
 	ld c,l			;b798	4d 	M 
 	jr lb759h		;b799	18 be 	. . 
 
-sub_b79bh_sound:
+UPDATE_VOLUME_EFFECT:
 	push hl			;b79b	e5 	. 
 	pop ix		;b79c	dd e1 	. . 
 	ld c,a			;b79e	4f 	O 
@@ -871,10 +773,10 @@ lb7c1h:
 	ld (hl),a			;b7c6	77 	w 
 	dec hl			;b7c7	2b 	+ 
 	jr nz,lb807h		;b7c8	20 3d 	  = 
-	ld (ix+000h),000h		;b7ca	dd 36 00 00 	. 6 . . 
+	ld (ix+AUDIO_TABLE_IDX_ACTIVE), 0	;b7ca	dd 36 00 00
 	ret			;b7ce	c9 	. 
 
-sub_b7cfh_sound:
+UPDATE_DELAYED_FLAG_EFFECT:
 	ld a,c			;b7cf	79 	y 
 	and a			;b7d0	a7 	. 
 	ret z			;b7d1	c8 	. 
@@ -955,9 +857,9 @@ lb824h:
 lb82ch:
 	ret			;b82c	c9 	. 
 
-sub_b82dh:
+UPDATE_MIXER_FROM_CHANNEL_MASK:
 	ld (ix+00bh),000h		;b82d	dd 36 0b 00 	. 6 . . 
-sub_b831h:
+CONFIGURE_CHANNEL_ENABLES:
 	ld a,(SOUND_VOICE_CONTROL)		;b831	3a cb e5 	: . . 
 	ld l,a			;b834	6f 	o 
 	ld a,(bc)			;b835	0a 	. 
@@ -994,6 +896,8 @@ lb848h:
 
 ; The first value at 0xb855 was read here at b4bf, when it
 ; played the level start song.
+
+; Music sequences
 
 db 0x1, 0x90, 0xa0, 0x80, 0x0, 0xb0, 0xc0, 0x0 ; 0xb855 - 0xb85c
 db 0x7f, 0x9f, 0xa9, 0x80, 0x73, 0xa2, 0x73, 0xc7 ; 0xb85d - 0xb864

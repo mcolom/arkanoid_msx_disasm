@@ -470,7 +470,7 @@ CLEAR_SCREEN:
 
 VDP_HOOK_HANDLER:
 	call RDVDP		;424a	cd 3e 01
-	call sub_b594h_sound	;424d	cd 94 b5
+	call SOUND_ISR_UPDATE	;424d	cd 94 b5
     
     ; Read keyboard matrix and obtain these keys:
     ; STOP, GRAPH, STOP,  CURSOR RIGHT, CURSOR LEFT, CURSOR DOWN, CURSOR UP.    
