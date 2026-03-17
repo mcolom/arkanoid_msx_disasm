@@ -34,6 +34,7 @@ parser.add_argument("input")
 parser.add_argument("--offset", default=0x8000, type=int)
 parser.add_argument("--start", default=0xB574, type=int)
 parser.add_argument("--end", default=0xB673, type=int)
+parser.add_argument("--bpl", default=8, type=int) # bytes per lines
 parser.parse_args()
 args = parser.parse_args()
 
@@ -42,6 +43,7 @@ input_filename = args.input
 offset = args.offset
 start = args.start
 end = args.end
+bpl = args.bpl
 
 # Read words
 with open(input_filename, 'rb') as f:
@@ -58,7 +60,7 @@ start_addr = start
 for i, v in enumerate(datab):
 	values.append(v)
 	
-	if (i+1) % 8 == 0:
+	if (i+1) % bpl == 0:
 		string = get_db_line(values)
 		
 		end_addr = start_addr + len(values) - 1
