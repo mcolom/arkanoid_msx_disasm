@@ -23,7 +23,8 @@ SOUND_VOICE_CONTROL: equ 0xe5cb
 
 ; Unknown sound ptr
 ; ToDo
-SOUND_PTR: equ 0xe5da
+SOUND_PTR_1: equ 0xe5da
+SOUND_PTR_2: equ 0xe5f0
 
 ; How many sounds are being played
 SOUNDS_COUNT: equ 0xe51e
@@ -45,3 +46,5 @@ SOUND_BUFFER_2: equ 0xe5e9
 
 AUDIO_TABLE_IDX_ACTIVE: equ 0
 AUDIO_TABLE_IDX_TICKS_COUNTDOWN: equ 9
+
+SOUND_SEQUENCE_LEN: equ 8
