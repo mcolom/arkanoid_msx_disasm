@@ -186,10 +186,13 @@ lb518h:
 
 QUEUE_SOUND_DESCRIPTOR:
     ; BC = 0xb4.. , with A
+    
+    ; OBtain the pointer BC
+    ; B is fixed=0xB4 and C comes from A
     ld b, (TBL_SOUND_PARAMS & 0xFF00) >> 8; ;b51d	06 b4
 	ld c,a			;b51f	4f
 
-    ; Read C
+    ; Read byte #0 in C
     ld a,(bc)		;b520	0a
     ld c,a			;b521	4f
     
@@ -199,7 +202,8 @@ QUEUE_SOUND_DESCRIPTOR:
 	ret z			;b526	c8
 
 	di			    ;b527	f3
-    
+
+    ; Write byte #0
     ld a,(hl)		;b528	7e          A <-- (hl)
 	ld (hl), 1		;b529	36 01       (hl) <-- 1
     inc hl			;b52b	23          hl++
@@ -215,60 +219,74 @@ QUEUE_SOUND_DESCRIPTOR:
 	ret c			;b533	d8          Return if (BC) & 0xf0 < (hl)
     ; Priority OK: go on
 lb534h:
-    ; Read in D
+
+    ; Read in DE (2 bytes)
+
+    ; Read byte #0 in D
 	ld a,(bc)		;b534	0a
 	and 00fh		;b535	e6 0f
 	ld d,a			;b537	57
 	inc bc			;b538	03
 
-    ; Read in E
+    ; Read byte #1 in E
 	ld a,(bc)		;b539	0a
 	ld e,a			;b53a	5f
 	inc bc			;b53b	03
 
-    ; Read in A
+    ; Write (HL) <-- A, E, D
+    ; Read byte #2 in A
 	ld a,(bc)			;b53c	0a 	. 
 	and 0f0h		;b53d	e6 f0 	. . 
-
-    ; Write (HL) <-- A, E, D
+    ; Write byte #1
 	ld (hl),a			;b53f	77 	w 
 	inc hl			;b540	23 	# 
+
+    ; Write E
+    ; Write byte #2
 	ld (hl),e			;b541	73 	s 
 	inc hl			;b542	23 	# 
+
+    ; Write D
+    ; Write byte #3
 	ld (hl),d			;b543	72 	r 
 	inc hl			;b544	23 	# 
 lb545h:
-    ; Read in A
+    ; Read byte #2 in A
 	ld a,(bc)			;b545	0a 	. 
 	and 00fh		;b546	e6 0f 	. . 
     
     ; Write (HL) <-- A, C, B 
+    ; Write byte #4
 	ld (hl),a			;b548	77 	w 
 	inc hl			;b549	23 	# 
+    ; Write byte #5
 	ld (hl),c			;b54a	71 	q 
 	inc hl			;b54b	23 	# 
+
+    ; Write byte #6
 	ld (hl),b			;b54c	70 	p 
 lb54dh:
 	inc bc			;b54d	03 	. 
 
-    ; Read in A
+    ; Read byte #3  in A
 	ld a,(bc)			;b54e	0a 	. 
 	inc hl			;b54f	23 	# 
     
-    ; Write (HL) <-- A
+    ; Write byte #7 (HL) <-- A
 	ld (hl),a			;b550	77 	w 
 	inc bc			;b551	03 	. 
 
-    ; Read in A
+    ; Read byte #4 in A
 	ld a,(bc)			;b552	0a 	. 
 	inc hl			;b553	23 	# 
     
-    ; Write (HL) <-- A
+    ; Write byte #8 (HL) <-- A
 	ld (hl),a			;b554	77 	w 
 	inc hl			;b555	23 	# 
 	
-    ld (hl),001h		;b556	36 01 	6 . 
-	ret			;b558	c9 	. 
+    ; Write byte #9 (a 1)
+    ld (hl), 1	;b556	36 01
+	ret			;b558	c9
 
 sound_more_eq_240:
 	ld bc,lb518h		;b559	01 18 b5 	. . . 
