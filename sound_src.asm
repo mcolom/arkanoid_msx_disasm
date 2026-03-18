@@ -658,7 +658,7 @@ DISPATCH_PRIMARY_SOUND_COMMAND:
 	ld a,(bc)			;b63f	0a 	. 
 	bit 7,a		;b640	cb 7f 	. ␡ 
 	jr z,lb5deh		;b642	28 9a 	( . 
-	ld hl,TBL_TBL_SECONDARY_SOUND_CMD_ENTRY_OFFSETS		;b644	21 66 b6 	! f . 
+	ld hl,TBL_SECONDARY_SOUND_CMD_ENTRY_OFFSETS		;b644	21 66 b6 	! f . 
 	jr lb652h		;b647	18 09 	. . 
 
 ; Command bytes are structured roughly as:
@@ -673,7 +673,7 @@ DISPATCH_SECONDARY_SOUND_COMMAND:
 	ld a,(bc)			;b64a	0a 	. 
 	bit 7,a		;b64b	cb 7f 	. ␡ 
 	jr z,lb5f7h		;b64d	28 a8 	( . 
-	ld hl,TBL_b66e		;b64f	21 6e b6 	! n . 
+	ld hl,TBL_PRIMARY_SOUND_CMD_ENTRY_OFFSETS		;b64f	21 6e b6 	! n . 
 lb652h:
 	rrca			;b652	0f 	. 
 	rrca			;b653	0f 	. 
@@ -691,10 +691,10 @@ lb652h:
 	ld e,a			;b664	5f 	_ 
 	jp (hl)			;b665	e9 	. 
 
-TBL_TBL_SECONDARY_SOUND_CMD_ENTRY_OFFSETS:
+TBL_SECONDARY_SOUND_CMD_ENTRY_OFFSETS:
     db 0x0, 0xe, 0x22, 0x38, 0x43, 0x41, 0x50, 0x4e ; 0xb666 - 0xb66d
 
-TBL_b66e:
+TBL_PRIMARY_SOUND_CMD_ENTRY_OFFSETS:
     db 0x6b, 0xa7, 0x9a, 0xaf, 0xbf, 0xcf, 0xdd, 0xeb ; 0xb66e - 0xb675
 
 SOUND_CMD_HANDLER_BLOCK: ; 0xb676
