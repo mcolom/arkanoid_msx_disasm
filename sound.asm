@@ -56,9 +56,6 @@ SOUNDS_COUNT: equ 0xe51e
 ; The values in this buffer are copied to the PSG registers
 SOUNDS_REGS_BUFFER: equ 0xe5c4
 
-; ToDo
-SOUNDS_UNKNOWN_TYPE: equ 0xe5c4
-
 
 CAN_ADD_SOUND: equ 0xe5c2
 

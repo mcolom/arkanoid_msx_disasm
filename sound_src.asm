@@ -625,13 +625,14 @@ lb5f7h:
 	pop af			;b5f7	f1 	. 
 	ld (SOUND_PTR_2),bc		;b5f8	ed 43 f0 e5 	. C . . 
 lb5fch:
-	ld hl,PERIOD_EFFECT_STATE_1		;b5fc	21 de e5 	! . . 
-	ld d,001h		;b5ff	16 01 	. . 
-	ld bc,(SOUNDS_UNKNOWN_TYPE)		;b601	ed 4b c4 e5 	. K . . 
-	call UPDATE_PERIOD_EFFECT		;b605	cd 7b b7 	. { . 
-	ld (SOUNDS_UNKNOWN_TYPE),bc		;b608	ed 43 c4 e5 	. C . . 
+	ld hl,PERIOD_EFFECT_STATE_1		;b5fc	21 de e5
+	ld d, 1		                    ;b5ff	16 01
+	ld bc, (SOUNDS_REGS_BUFFER)		;b601	ed 4b c4 e5
+	call UPDATE_PERIOD_EFFECT		;b605	cd 7b b7
+
+	ld (SOUNDS_REGS_BUFFER),bc		;b608	ed 43 c4 e5 	. C . . 
 	ld hl,VOLUME_EFFECT_STATE_1		;b60c	21 e1 e5 	! . . 
-	ld d,010h		;b60f	16 10 	. . 
+	ld d, 16		;b60f	16 10 	. . 
 	ld a,(0e5cch)		;b611	3a cc e5 	: . . 
 	call UPDATE_VOLUME_EFFECT		;b614	cd 9b b7 	. . . 
 	call UPDATE_DELAYED_REPEAT_EFFECT		;b617	cd cf b7 	. . . 
@@ -761,7 +762,7 @@ lb6dch:
 	ld d,002h		;b6e4	16 02 	. . 
 
 ; This is called each time it plays a "note"
-; Called from b67b, which is inside SOUND_CMD_HANDLER_BLOCK, a jump table.
+; Called from b67b, which is inside SOUND_CMD_HANDLER_BLOCK, a selector table.
 ; jp (hl)   ;b665
 CMD_SET_ONE_NOTE_ON_CHANNEL:
 	ld a,(ix+00bh)		;b6e6	dd 7e 0b 	. ~ . 
