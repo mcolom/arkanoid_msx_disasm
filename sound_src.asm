@@ -102,7 +102,7 @@ TBL_SOUND_PARAMS:
     db 0xc1, 0xff, 0xc1
     dw 0xbf44
 
-lb4aeh:
+SOUND_EFFECT_PRESET_TABLE:
     db 0x0, 0xb0, 0xcc, 0x90, 0x28, 0x89, 0x28        ; 0xb4ae - 0xb4b4
 
 
@@ -120,6 +120,12 @@ lb4aeh:
 ;   - update the structure,
 ;   - return a carry if parsing must continue immediately. 
 
+
+; This advances one active stream when its delay counter reaches zero.
+;
+; It uses SOUND_BUFFER_1 in IX as the working buffer and
+; SOUND_PTR_1 to read audio data from.
+;
 ; HL: SOUND_BUFFER_1 or SOUND_BUFFER_1
 ; BC: (SOUND_PTR_1)
 ADVANCE_SOUND_STREAM_IF_READY:
@@ -131,18 +137,26 @@ ADVANCE_SOUND_STREAM_IF_READY:
     ; IX points to the RAM structure SOUND_BUFFER_1 or SOUND_BUFFER_1
 	push hl			;b4b8	e5
 	pop ix		    ;b4b9	dd e1
+    
+    ; IX: SOUND_BUFFER_
+    ; BC: SOUND_PTR_
 
-    ; Exit if not zero yet
+    ; Decrement per-stream countdown
 	dec (ix+AUDIO_TABLE_IDX_TICKS_COUNTDOWN)	;b4bb	dd 35 09
 	ret nz			                            ;b4be	c0
 
     ; The first value at 0xb855 was read here at b4bf, when it
     ; played the level start song.
     
-	ld a,(bc)			;b4bf	0a 	. 
-	and a			;b4c0	a7 	. 
-	scf			;b4c1	37 	7 
-	ret nz			;b4c2	c0 	. 
+    ; Exit if this is an immediate command to parse from the stream.
+	ld a,(bc)	;b4bf	0a
+	and a		;b4c0	a7
+	scf			;b4c1	37 Set carry
+	ret nz		;b4c2	c0 Exit if A isn't zero
+    
+    ; Handle repetition locally
+    
+    ; ToDo: decode this positions
 	inc hl			;b4c3	23 	# 
 	inc hl			;b4c4	23 	# 
 	or (hl)			;b4c5	b6 	. 
@@ -177,10 +191,10 @@ lb4e1h:
 ; The PLAY_SOUND routine does the following:
 ; 1. reads SOUND_NUMBER,
 ; 2. maps it according to its range:
-;   < 128
-;   128..191: uses table 0xb406
-;   192..239
-;   >= 240: commands
+;   < 128: low sound numbers map directly into TBL_SOUND_PARAMS and go to SOUND_BUFFER_1
+;   128..191: uses table TBL_SOUND_PARAMS
+;   192..239: two related descriptors, for paired sounds, richer or layered sounds
+;   >= 240: immediate commands
 ; 3. uses a table to convert that number into a descriptor,
 ; 4. loads internal playback structures.
 ; The key parts:
@@ -239,10 +253,9 @@ lb518h:
 	pop hl			;b51b	e1 	. 
 	ret			;b51c	c9 	. 
 
-; Sound related...
-; ToDo
+; This converts a SOUND_NUMBER into a small RAM playback structure.
 
-; Input: A, descritor index
+; Input: A, descriptor index
 ; Input HL: pointer to the state structure. It can be SOUND_BUFFER_1 or SOUND_BUFFER_2
 ;
 ; It does the following:
@@ -261,8 +274,6 @@ lb518h:
 ;   - pointers to the sequence,
 ;   - timers,
 ;   - initial parameters.
-
-; HL = SOUND_BUFFER_1 or SOUND_BUFFER_2
 QUEUE_SOUND_DESCRIPTOR:
     ; BC = 0xb4.. , with A
     
@@ -277,6 +288,15 @@ QUEUE_SOUND_DESCRIPTOR:
     ; If we call B0 B1 B2 B3 B4 the input sequence, it'll write into
     ; SOUND_BUFFER_1 (or 2) these 10 bytes:
     ; 01, B0 & 0xF0, B1, B0 & 0x0F, B2 & 0x0F, <BC pointer>, B3, B4, 01
+    
+    ; active            = 1
+    ; class_or_flags    = B2 & 0xF0
+    ; follow_sound      = B1
+    ; chain_count       = B0 & 0x0F
+    ; repeat_count      = B2 & 0x0F
+    ; desc_ptr          = address of descriptor byte 2
+    ; stream_ptr        = sequence_ptr
+    ; ticks_countdown   = 1
     
     ; The decoded sequence will be processes by ADVANCE_SOUND_STREAM_IF_READY
 
@@ -351,16 +371,16 @@ lb545h:
 
     ; Bytes #5 and #6 are the BC pointer itself
     
-    ; Write byte #5
+    ; Write byte #5: C nibble of BC
 	ld (hl),c		;b54a	71
 	inc hl			;b54b	23
 
-    ; Write byte #6
+    ; Write byte #6: B nibble of BC
 	ld (hl),b		;b54c	70
 lb54dh:
 	inc bc			;b54d	03
 
-    ; Read byte #3  in A
+    ; Read byte #3  in A: one byte of SOUND_PTR_
 	ld a,(bc)		;b54e	0a
 	inc hl			;b54f	23
     
@@ -368,7 +388,7 @@ lb54dh:
 	ld (hl),a		;b550	77
 	inc bc			;b551	03
 
-    ; Read byte #4 in A
+    ; Read byte #4 in A: one byte of SOUND_PTR_
 	ld a,(bc)		;b552	0a
 	inc hl			;b553	23
     
@@ -381,6 +401,11 @@ lb54dh:
 	ret			;b558	c9
 
 sound_more_eq_240:
+    ; write directly to a sound-control byte,
+    ; update SOUND_VOICE_CONTROL,
+    ; possibly update the PSG mixer register 7,
+    ; possibly store one-byte control parameters.
+
 	ld bc,lb518h	;b559	01 18 b5 	. . . 
 	push bc			;b55c	c5 	. 
 	inc de			;b55d	13 	. 
@@ -470,12 +495,18 @@ WRITE_PSG_REG_VALUE:
 	pop af			;b592	f1
 	ret			    ;b593	c9
 
-; This is called from the interrupt handler
-; It does the following:
+; This is the core mixer/interpreter.
+;
+; It is called from the interrupt handler and does the following:
 ;   - Write only the tracks marked as modified to the PSG,
 ;   - Advance the active sequencers,
 ;   - update envelopes, pitch, noise, and mix,
 ;   - trigger new notes/events when playing.
+;
+; flushes modified PSG registers,
+; advances stream 1 and stream 2,
+; dispatches embedded sound commands,
+; updates period/volume/delay effects.
 SOUND_ISR_UPDATE:
     ; Get out if sound in inhibited.
     ; However, the game nevers inhibits the sound.
@@ -594,24 +625,24 @@ lb5f7h:
 	pop af			;b5f7	f1 	. 
 	ld (SOUND_PTR_2),bc		;b5f8	ed 43 f0 e5 	. C . . 
 lb5fch:
-	ld hl,0e5deh		;b5fc	21 de e5 	! . . 
+	ld hl,PERIOD_EFFECT_STATE_1		;b5fc	21 de e5 	! . . 
 	ld d,001h		;b5ff	16 01 	. . 
 	ld bc,(SOUNDS_UNKNOWN_TYPE)		;b601	ed 4b c4 e5 	. K . . 
 	call UPDATE_PERIOD_EFFECT		;b605	cd 7b b7 	. { . 
 	ld (SOUNDS_UNKNOWN_TYPE),bc		;b608	ed 43 c4 e5 	. C . . 
-	ld hl,0e5e1h		;b60c	21 e1 e5 	! . . 
+	ld hl,VOLUME_EFFECT_STATE_1		;b60c	21 e1 e5 	! . . 
 	ld d,010h		;b60f	16 10 	. . 
 	ld a,(0e5cch)		;b611	3a cc e5 	: . . 
 	call UPDATE_VOLUME_EFFECT		;b614	cd 9b b7 	. . . 
-	call UPDATE_DELAYED_FLAG_EFFECT		;b617	cd cf b7 	. . . 
+	call UPDATE_DELAYED_REPEAT_EFFECT		;b617	cd cf b7 	. . . 
 	ld a,c			;b61a	79 	y 
 	ld (0e5cch),a		;b61b	32 cc e5 	2 . . 
-	ld hl,0e5f4h		;b61e	21 f4 e5 	! . . 
+	ld hl,PERIOD_EFFECT_STATE_2		;b61e	21 f4 e5 	! . . 
 	ld d,002h		;b621	16 02 	. . 
 	ld bc,(0e5c6h)		;b623	ed 4b c6 e5 	. K . . 
 	call UPDATE_PERIOD_EFFECT		;b627	cd 7b b7 	. { . 
 	ld (0e5c6h),bc		;b62a	ed 43 c6 e5 	. C . . 
-	ld hl,0e5f7h		;b62e	21 f7 e5 	! . . 
+	ld hl,VOLUME_EFFECT_STATE_2		;b62e	21 f7 e5 	! . . 
 	ld d,040h		;b631	16 40 	. @ 
 	ld a,(0e5ceh)		;b633	3a ce e5 	: . . 
 	call UPDATE_VOLUME_EFFECT		;b636	cd 9b b7 	. . . 
@@ -624,9 +655,16 @@ DISPATCH_PRIMARY_SOUND_COMMAND:
 	ld a,(bc)			;b63f	0a 	. 
 	bit 7,a		;b640	cb 7f 	. ␡ 
 	jr z,lb5deh		;b642	28 9a 	( . 
-	ld hl,TBL_b666		;b644	21 66 b6 	! f . 
+	ld hl,TBL_TBL_SECONDARY_SOUND_CMD_ENTRY_OFFSETS		;b644	21 66 b6 	! f . 
 	jr lb652h		;b647	18 09 	. . 
 
+; Command bytes are structured roughly as:
+; bit 7: command/event marker
+; upper nibble: opcode family
+; lower nibble: parameter
+;
+; high nibble selects one of 8 entry offsets
+; low nibble goes into E as a small argument
 DISPATCH_SECONDARY_SOUND_COMMAND:
 	inc bc			;b649	03 	. 
 	ld a,(bc)			;b64a	0a 	. 
@@ -643,28 +681,28 @@ lb652h:
 	ld d,000h		;b659	16 00 	. . 
 	add hl,de			;b65b	19 	. 
 	ld e,(hl)			;b65c	5e 	^ 
-	ld hl, SOUND_CMD_DISPATCH_TABLE		;b65d	21 76 b6 	! v . 
+	ld hl, SOUND_CMD_HANDLER_BLOCK		;b65d	21 76 b6 	! v . 
 	add hl,de			;b660	19 	. 
 	ld a,(bc)			;b661	0a 	. 
 	and 00fh		;b662	e6 0f 	. . 
 	ld e,a			;b664	5f 	_ 
 	jp (hl)			;b665	e9 	. 
 
-TBL_b666:
+TBL_TBL_SECONDARY_SOUND_CMD_ENTRY_OFFSETS:
     db 0x0, 0xe, 0x22, 0x38, 0x43, 0x41, 0x50, 0x4e ; 0xb666 - 0xb66d
 
 TBL_b66e:
     db 0x6b, 0xa7, 0x9a, 0xaf, 0xbf, 0xcf, 0xdd, 0xeb ; 0xb66e - 0xb675
 
-SOUND_CMD_DISPATCH_TABLE: ; 0xb676
+SOUND_CMD_HANDLER_BLOCK: ; 0xb676
     ld hl, 0xe5c5
     ld d, 1
-    call CMD_SET_NOTE_ON_CHANNEL
+    call CMD_SET_ONE_NOTE_ON_CHANNEL
 
 lb67eh:
-	ld de,0e5e6h		;b67e	11 e6 e5 	. . . 
-	call sub_b7e6h		;b681	cd e6 b7 	. . . 
-	ld hl,0e5e7h		;b684	21 e7 e5 	! . . 
+	ld de,DELAYED_EFFECT_STATE_A_STREAM1		;b67e	11 e6 e5 	. . . 
+	call INIT_EFFECT_FROM_PRESET		;b681	cd e6 b7 	. . . 
+	ld hl,DELAYED_REPEAT_STATUS		;b684	21 e7 e5 	! . . 
 	ld a,(hl)			;b687	7e 	~ 
 	and 01fh		;b688	e6 1f 	. . 
 	jr z,lb690h		;b68a	28 04 	( . 
@@ -676,26 +714,26 @@ lb690h:
 	ld a,e			;b692	7b 	{ 
 	ld (0e5cch),a		;b693	32 cc e5 	2 . . 
 	jr lb70eh		;b696	18 76 	. v 
-	ld hl,0e5deh		;b698	21 de e5 	! . . 
+	ld hl,PERIOD_EFFECT_STATE_1		;b698	21 de e5 	! . . 
 	bit 3,a		;b69b	cb 5f 	. _ 
 	jr z,lb6cdh		;b69d	28 2e 	( . 
 	ld de,00801h		;b69f	11 01 08 	. . . 
 	call UPDATE_MIXER_FROM_CHANNEL_MASK		;b6a2	cd 2d b8 	. - . 
 	sub a			;b6a5	97 	. 
-	ld (0e5e7h),a		;b6a6	32 e7 e5 	2 . . 
+	ld (DELAYED_REPEAT_STATUS),a		;b6a6	32 e7 e5 	2 . . 
 	call lb6aeh		;b6a9	cd ae b6 	. . . 
 	jr lb690h		;b6ac	18 e2 	. . 
 lb6aeh:
-	ld (0e5e6h),a		;b6ae	32 e6 e5 	2 . . 
+	ld (DELAYED_EFFECT_STATE_A_STREAM1),a		;b6ae	32 e6 e5 	2 . . 
 	jr nz,lb67eh		;b6b1	20 cb 	  . 
-	ld (0e5e1h),a		;b6b3	32 e1 e5 	2 . . 
+	ld (VOLUME_EFFECT_STATE_1),a		;b6b3	32 e1 e5 	2 . . 
 	ret			;b6b6	c9 	. 
 	or 010h		;b6b7	f6 10 	. . 
 	jr z,lb6c0h		;b6b9	28 05 	( . 
-	ld (0e5e8h),a		;b6bb	32 e8 e5 	2 . . 
+	ld (DELAYED_EFFECT_STATE_C_STREAM1),a		;b6bb	32 e8 e5 	2 . . 
 	or 080h		;b6be	f6 80 	. . 
 lb6c0h:
-	ld (0e5e7h),a		;b6c0	32 e7 e5 	2 . . 
+	ld (DELAYED_REPEAT_STATUS),a		;b6c0	32 e7 e5 	2 . . 
 	ret			;b6c3	c9 	. 
 	or 010h		;b6c4	f6 10 	. . 
 	ld (SOUND_NOISE),a		;b6c6	32 ca e5 	2 . . 
@@ -723,9 +761,9 @@ lb6dch:
 	ld d,002h		;b6e4	16 02 	. . 
 
 ; This is called each time it plays a "note"
-; Called from b67b, which is inside SOUND_CMD_DISPATCH_TABLE, a jump table.
+; Called from b67b, which is inside SOUND_CMD_HANDLER_BLOCK, a jump table.
 ; jp (hl)   ;b665
-CMD_SET_NOTE_ON_CHANNEL:
+CMD_SET_ONE_NOTE_ON_CHANNEL:
 	ld a,(ix+00bh)		;b6e6	dd 7e 0b 	. ~ . 
 	and 007h		;b6e9	e6 07 	. . 
 	ld (ix+00ch),a		;b6eb	dd 77 0c 	. w . 
@@ -749,7 +787,7 @@ lb700h:
 	set 3,(hl)		;b70c	cb de 	. . 
 lb70eh:
 	jr lb759h		;b70e	18 49 	. I 
-	ld hl,0e5f4h		;b710	21 f4 e5 	! . . 
+	ld hl,PERIOD_EFFECT_STATE_2		;b710	21 f4 e5 	! . . 
 	bit 3,a		;b713	cb 5f 	. _ 
 	jr z,lb6cdh		;b715	28 b6 	( . 
 	ld de,01002h		;b717	11 02 10 	. . . 
@@ -784,8 +822,8 @@ lb739h:
 	ld d,004h		;b748	16 04 	. . 
 	call lb700h		;b74a	cd 00 b7 	. . . 
 lb74dh:
-	ld de,0e5fch		;b74d	11 fc e5 	. . . 
-	call sub_b7e6h		;b750	cd e6 b7 	. . . 
+	ld de,DELAYED_EFFECT_STATE_A_STREAM2		;b74d	11 fc e5 	. . . 
+	call INIT_EFFECT_FROM_PRESET		;b750	cd e6 b7 	. . . 
 lb753h:
 	ld d,040h		;b753	16 40 	. @ 
 	ld a,e			;b755	7b 	{ 
@@ -800,10 +838,10 @@ lb759h:
 	jr nz,lb76fh		;b763	20 0a 	  . 
 
 sub_b765h:
-	ld (0e5fch),a		;b765	32 fc e5 	2 . . 
+	ld (DELAYED_EFFECT_STATE_A_STREAM2),a		;b765	32 fc e5 	2 . . 
 	and a			;b768	a7 	. 
 	jr nz,lb74dh		;b769	20 e2 	  . 
-	ld (0e5f7h),a		;b76b	32 f7 e5 	2 . . 
+	ld (VOLUME_EFFECT_STATE_2),a		;b76b	32 f7 e5 	2 . . 
 	ret			;b76e	c9 	. 
 
 lb76fh:
@@ -812,6 +850,25 @@ lb76fh:
 	sub a			;b775	97 	. 
 	call sub_b765h		;b776	cd 65 b7 	. e . 
 	jr lb753h		;b779	18 d8 	. . 
+
+; Pitch slide / vibrato-step / tone period modulation helper.
+;
+; It operates on a small state block:
+;
+; active flag in bit 7
+; sign in bit 6
+; low 3 bits = reload period
+
+; Behavior:
+;
+; if inactive, return
+; decrement countdown
+; when countdown expires:
+; reload countdown from low 3 bits
+; take signed step from next byte
+; apply it to BC
+;
+;set the appropriate PSG dirty bit through lb759h
 
 UPDATE_PERIOD_EFFECT:
 	ld e,(hl)			;b77b	5e 	^ 
@@ -841,31 +898,57 @@ lb796h:
 	ld c,l			;b798	4d 	M 
 	jr lb759h		;b799	18 be 	. . 
 
+; It uses:
+;
+; bit 7 = active
+; bit 6 = direction mode
+; low nibble = reload period
+; and updates C, which is later written back to a RAM shadow of volume state.
+
+; Behavior:
+; every N ticks, increment or decrement volume
+; clamp to 0..15
+
 UPDATE_VOLUME_EFFECT:
-	push hl			;b79b	e5 	. 
-	pop ix		;b79c	dd e1 	. . 
-	ld c,a			;b79e	4f 	O 
-	ld b,(hl)			;b79f	46 	F 
-	bit 7,b		;b7a0	cb 78 	. x 
-	ret z			;b7a2	c8 	. 
-	inc hl			;b7a3	23 	# 
-	dec (hl)			;b7a4	35 	5 
-	ret nz			;b7a5	c0 	. 
-	ld a,b			;b7a6	78 	x 
-	and 00fh		;b7a7	e6 0f 	. . 
-	ld (hl),a			;b7a9	77 	w 
-	inc hl			;b7aa	23 	# 
-	dec (hl)			;b7ab	35 	5 
-	jr z,lb7c1h		;b7ac	28 13 	( . 
-	bit 6,b		;b7ae	cb 70 	. p 
-	jr z,lb7bbh		;b7b0	28 09 	( . 
-	inc c			;b7b2	0c 	. 
-	inc c			;b7b3	0c 	. 
-	ld a,00fh		;b7b4	3e 0f 	> . 
-	cp c			;b7b6	b9 	. 
-	jr nc,lb759h		;b7b7	30 a0 	0 . 
-	ld c,a			;b7b9	4f 	O 
-	ret			;b7ba	c9 	. 
+    ; Get pointer in IX
+	push hl			;b79b	e5
+	pop ix		    ;b79c	dd e1
+    
+    ; Exit if not active
+	ld c,a			;b79e	4f
+	ld b,(hl)		;b79f	46
+	bit 7,b		    ;b7a0	cb 78
+	ret z			;b7a2	c8
+    
+	; Decrement ticks
+    inc hl			;b7a3	23
+	dec (hl)		;b7a4	35
+	ret nz			;b7a5	c0
+    
+	; Get volume
+    ld a,b			;b7a6	78
+	and 15		    ;b7a7	e6 0f
+	ld (hl),a		;b7a9	77
+    
+	; Set inactive if expired
+    inc hl			;b7aa	23
+	dec (hl)		;b7ab	35
+	jr z,lb7c1h		;b7ac	28 13
+    
+    ; Check direcrtion
+	bit 6,b		    ;b7ae	cb 70
+	jr z,lb7bbh		;b7b0	28 09
+    
+    ; Increment volume
+	inc c			;b7b2	0c
+	inc c			;b7b3	0c
+
+    ; Clamp volumen in C to 15
+	ld a,15		    ;b7b4	3e 0f
+	cp c			;b7b6	b9
+	jr nc,lb759h	;b7b7	30 a0
+	ld c,a			;b7b9	4f
+	ret			    ;b7ba	c9
 
 lb7bbh:
 	ld a,c			;b7bb	79 	y 
@@ -881,15 +964,15 @@ lb7c1h:
 	add a,(hl)			;b7c5	86 	. 
 	ld (hl),a			;b7c6	77 	w 
 	dec hl			;b7c7	2b 	+ 
-	jr nz,lb807h		;b7c8	20 3d 	  = 
+	jr nz,LOAD_NEXT_EFFECT_PRESET_STEP		;b7c8	20 3d 	  = 
 	ld (ix+AUDIO_TABLE_IDX_ACTIVE), 0	;b7ca	dd 36 00 00
 	ret			;b7ce	c9 	. 
 
-UPDATE_DELAYED_FLAG_EFFECT:
+UPDATE_DELAYED_REPEAT_EFFECT:
 	ld a,c			;b7cf	79 	y 
 	and a			;b7d0	a7 	. 
 	ret z			;b7d1	c8 	. 
-	ld hl,0e5e7h		;b7d2	21 e7 e5 	! . . 
+	ld hl,DELAYED_REPEAT_STATUS		;b7d2	21 e7 e5 	! . . 
 	ld a,(hl)			;b7d5	7e 	~ 
 	bit 7,a		;b7d6	cb 7f 	. ␡ 
 	ret z			;b7d8	c8 	. 
@@ -904,35 +987,42 @@ UPDATE_DELAYED_FLAG_EFFECT:
 	ld (hl),a			;b7e3	77 	w 
 	jr lb7bfh		;b7e4	18 d9 	. . 
 
-sub_b7e6h:
-	ld a,(de)			;b7e6	1a 	. 
-	and a			;b7e7	a7 	. 
-	jr z,lb803h		;b7e8	28 19 	( . 
-	ld hl,lb4aeh		;b7ea	21 ae b4 	! . . 
-	add a,l			;b7ed	85 	. 
-	ld l,a			;b7ee	6f 	o 
-	ld l,(hl)			;b7ef	6e 	n 
-	ex de,hl			;b7f0	eb 	. 
-	dec hl			;b7f1	2b 	+ 
-	ld a,(de)			;b7f2	1a 	. 
-	and 070h		;b7f3	e6 70 	. p 
-	ld (hl),a			;b7f5	77 	w 
-	dec hl			;b7f6	2b 	+ 
-	ld (hl),e			;b7f7	73 	s 
-	ld a,(de)			;b7f8	1a 	. 
-	bit 7,a		;b7f9	cb 7f 	. ␡ 
-	jr z,lb806h		;b7fb	28 09 	( . 
-	and 00fh		;b7fd	e6 0f 	. . 
-	push af			;b7ff	f5 	. 
-	call lb807h		;b800	cd 07 b8 	. . . 
+
+; Initialize effect from preset
+;
+; DESC_FLAGS0
+; DESC_FOLLOW_SOUND_ID
+; DESC_FLAGS2
+; DESC_STREAM_PTR
+INIT_EFFECT_FROM_PRESET:
+	ld a,(de)		;b7e6	1a
+	and a			;b7e7	a7
+	jr z,lb803h		;b7e8	28 19
+	ld hl,SOUND_EFFECT_PRESET_TABLE		;b7ea	21 ae b4
+	add a,l			                    ;b7ed	85
+	ld l,a			                    ;b7ee	6f
+	ld l,(hl)			                ;b7ef	6e
+	ex de,hl			                ;b7f0	eb
+	dec hl			                    ;b7f1	2b
+	ld a,(de)			                ;b7f2	1a
+	and 070h		                    ;b7f3	e6 70
+	ld (hl),a			                ;b7f5	77
+	dec hl			                    ;b7f6	2b
+	ld (hl),e			                ;b7f7	73
+	ld a,(de)			                ;b7f8	1a
+	bit 7,a		                        ;b7f9	cb 7f
+	jr z,lb806h		                    ;b7fb	28 09
+	and 00fh		                    ;b7fd	e6 0f
+	push af			                    ;b7ff	f5
+	call LOAD_NEXT_EFFECT_PRESET_STEP	;b800	cd 07 b8
 lb803h:
-	pop af			;b803	f1 	. 
-	ld e,a			;b804	5f 	_ 
-	ret			;b805	c9 	. 
+	pop af			;b803	f1
+	ld e,a			;b804	5f
+	ret			    ;b805	c9
 
 lb806h:
 	pop af			;b806	f1 	. 
-lb807h:
+LOAD_NEXT_EFFECT_PRESET_STEP:
 	inc (hl)			;b807	34 	4 
 	ld e,(hl)			;b808	5e 	^ 
 	ld d,0b4h		;b809	16 b4 	. . 
@@ -965,6 +1055,21 @@ lb824h:
 	ld (hl),a			;b82b	77 	w 
 lb82ch:
 	ret			;b82c	c9 	. 
+
+
+; This block manipulates SOUND_VOICE_CONTROL, which then goes to PSG register 7.
+;
+; Register 7 on AY-3-8910 / PSG controls:
+;   - tone enable A/B/C
+;   - noise enable A/B/C
+;   - I/O port direction bits
+;
+; So these routines are building a new mixer mask from:
+;   - the existing SOUND_VOICE_CONTROL
+;   - a stream byte from (bc)
+;   - masks in DE
+;
+; they mark register 7 dirty with bit 0x10
 
 UPDATE_MIXER_FROM_CHANNEL_MASK:
 	ld (ix+00bh),000h		;b82d	dd 36 0b 00 	. 6 . . 
@@ -999,15 +1104,17 @@ lb848h:
 	pop af			;b853	f1 	. 
 	ret			;b854	c9 	. 
 
-; This table is related to show, but unknown how.
-; 0xb855 obtained from (SOUND_PTR_1)
-; ToDo
-
-; The first value at 0xb855 was read here at b4bf, when it
-; played the level start song.
 
 ; Music sequences
 
+; Pointers to this music sequences are obtained from TBL_SOUND_PARAMS and
+; put in SOUND_PTR_
+
+; Structure (WIP!)
+; <ID> 
+
+; The first value at 0xb855 was read here at b4bf, when it
+; played the level start song.
 SOUND_SEQUENCES:
 db 0x1, 0x90, 0xa0, 0x80, 0x0, 0xb0, 0xc0, 0x0 ; 0xb855 - 0xb85c
 db 0x7f, 0x9f, 0xa9, 0x80, 0x73, 0xa2, 0x73, 0xc7 ; 0xb85d - 0xb864
