@@ -601,7 +601,7 @@ lb5bch:
 	call ADVANCE_SOUND_STREAM_IF_READY		;b5d1	cd b5 b4 	. . . 
 	
     jr nc,lb5e3h		;b5d4	30 0d 	0 . 
-	ld (0e5dch),a		;b5d6	32 dc e5 	2 . . 
+	ld (SOUND_BUFFER_1 + AUDIO_TABLE_IDX_TICKS_COUNTDOWN),a		;b5d6	32 dc e5 	2 . . 
 lb5d9h:
 	call DISPATCH_PRIMARY_SOUND_COMMAND		;b5d9	cd 3e b6 	. > . 
 	jr lb5d9h		;b5dc	18 fb 	. . 
@@ -680,9 +680,9 @@ lb652h:
 	rrca			;b653	0f 	. 
 	rrca			;b654	0f 	. 
 	rrca			;b655	0f 	. 
-	and 007h		;b656	e6 07 	. . 
+	and 7		;b656	e6 07 	. . 
 	ld e,a			;b658	5f 	_ 
-	ld d,000h		;b659	16 00 	. . 
+	ld d, 0		;b659	16 00 	. . 
 	add hl,de			;b65b	19 	. 
 	ld e,(hl)			;b65c	5e 	^ 
 	ld hl, SOUND_CMD_HANDLER_BLOCK		;b65d	21 76 b6 	! v . 
@@ -699,7 +699,7 @@ TBL_b66e:
     db 0x6b, 0xa7, 0x9a, 0xaf, 0xbf, 0xcf, 0xdd, 0xeb ; 0xb66e - 0xb675
 
 SOUND_CMD_HANDLER_BLOCK: ; 0xb676
-    ld hl, 0xe5c5
+    ld hl, PERIOD_EFFECT0_DELTA
     ld d, 1
     call CMD_SET_ONE_NOTE_ON_CHANNEL
 
@@ -721,7 +721,7 @@ lb690h:
 	ld hl,PERIOD_EFFECT_STATE_1		;b698	21 de e5 	! . . 
 	bit 3,a		;b69b	cb 5f 	. _ 
 	jr z,lb6cdh		;b69d	28 2e 	( . 
-	ld de,00801h		;b69f	11 01 08 	. . . 
+	ld de, 0x0801		;b69f	11 01 08 	. . . 
 	call UPDATE_MIXER_FROM_CHANNEL_MASK		;b6a2	cd 2d b8 	. - . 
 	sub a			;b6a5	97 	. 
 	ld (DELAYED_REPEAT_STATUS),a		;b6a6	32 e7 e5 	2 . . 
@@ -761,8 +761,8 @@ lb6dch:
 	inc hl			;b6de	23 	# 
 	ld (hl),a			;b6df	77 	w 
 	ret			;b6e0	c9 	. 
-	ld hl,0e5c7h		;b6e1	21 c7 e5 	! . . 
-	ld d,002h		;b6e4	16 02 	. . 
+	ld hl,SOUND_PERIOD_CONTROL_HI		;b6e1	21 c7 e5 	! . . 
+	ld d, 2		;b6e4	16 02 	. . 
 
 ; This is called each time it plays a "note"
 ; Called from b67b, which is inside SOUND_CMD_HANDLER_BLOCK, a selector table.
@@ -798,7 +798,7 @@ lb70eh:
 	call UPDATE_MIXER_FROM_CHANNEL_MASK		;b71a	cd 2d b8 	. - . 
 	ld d,020h		;b71d	16 20 	.   
 	ld a,e			;b71f	7b 	{ 
-	ld (0e5cdh),a		;b720	32 cd e5 	2 . . 
+	ld (PSG_ENVELOPE_SHAPE),a		;b720	32 cd e5 	2 . . 
 	jr lb759h		;b723	18 34 	. 4 
 	bit 3,a		;b725	cb 5f 	. _ 
 	jr nz,lb72eh		;b727	20 05 	  . 
@@ -807,7 +807,7 @@ lb70eh:
 	ret			;b72d	c9 	. 
 
 lb72eh:
-	ld (0e5d1h),a		;b72e	32 d1 e5 	2 . . 
+	ld (COMPLEX_EFFECT_FLAGS),a		;b72e	32 d1 e5 	2 . . 
 	inc bc			;b731	03 	. 
 	ld a,(bc)			;b732	0a 	. 
 	jr lb739h		;b733	18 04 	. . 
@@ -816,15 +816,15 @@ lb72eh:
 	rlca			;b737	07 	. 
 	rlca			;b738	07 	. 
 lb739h:
-	ld (0e5cfh),a		;b739	32 cf e5 	2 . . 
+	ld (COMPLEX_EFFECT_PARAM_A),a		;b739	32 cf e5 	2 . . 
 	inc bc			;b73c	03 	. 
 	ld a,(bc)			;b73d	0a 	. 
-	ld (0e5d0h),a		;b73e	32 d0 e5 	2 . . 
+	ld (COMPLEX_EFFECT_PARAM_B),a		;b73e	32 d0 e5 	2 . . 
 	ld d,080h		;b741	16 80 	. . 
 	jr lb759h		;b743	18 14 	. . 
-	ld hl,0e5c9h		;b745	21 c9 e5 	! . . 
-	ld d,004h		;b748	16 04 	. . 
-	call lb700h		;b74a	cd 00 b7 	. . . 
+	ld hl,AUX_TONE_PERIOD_HI		;b745	21 c9 e5
+	ld d, 4		        ;b748	16 04
+	call lb700h		    ;b74a	cd 00 b7
 lb74dh:
 	ld de,DELAYED_EFFECT_STATE_A_STREAM2		;b74d	11 fc e5 	. . . 
 	call INIT_EFFECT_FROM_PRESET		;b750	cd e6 b7 	. . . 
