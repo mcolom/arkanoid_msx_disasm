@@ -622,34 +622,37 @@ lb5f2h:
 	call DISPATCH_SECONDARY_SOUND_COMMAND		;b5f2	cd 49 b6 	. I . 
 	jr lb5f2h		;b5f5	18 fb 	. . 
 lb5f7h:
-	pop af			;b5f7	f1 	. 
-	ld (SOUND_PTR_2),bc		;b5f8	ed 43 f0 e5 	. C . . 
+	pop af			                ;b5f7	f1
+	ld (SOUND_PTR_2),bc		        ;b5f8	ed 43 f0 e5
 lb5fch:
 	ld hl,PERIOD_EFFECT_STATE_1		;b5fc	21 de e5
 	ld d, 1		                    ;b5ff	16 01
 	ld bc, (SOUNDS_REGS_BUFFER)		;b601	ed 4b c4 e5
 	call UPDATE_PERIOD_EFFECT		;b605	cd 7b b7
+	ld (SOUNDS_REGS_BUFFER),bc		;b608	ed 43 c4 e5
 
-	ld (SOUNDS_REGS_BUFFER),bc		;b608	ed 43 c4 e5 	. C . . 
-	ld hl,VOLUME_EFFECT_STATE_1		;b60c	21 e1 e5 	! . . 
-	ld d, 16		;b60f	16 10 	. . 
-	ld a,(0e5cch)		;b611	3a cc e5 	: . . 
-	call UPDATE_VOLUME_EFFECT		;b614	cd 9b b7 	. . . 
-	call UPDATE_DELAYED_REPEAT_EFFECT		;b617	cd cf b7 	. . . 
-	ld a,c			;b61a	79 	y 
-	ld (0e5cch),a		;b61b	32 cc e5 	2 . . 
-	ld hl,PERIOD_EFFECT_STATE_2		;b61e	21 f4 e5 	! . . 
-	ld d,002h		;b621	16 02 	. . 
-	ld bc,(0e5c6h)		;b623	ed 4b c6 e5 	. K . . 
-	call UPDATE_PERIOD_EFFECT		;b627	cd 7b b7 	. { . 
-	ld (0e5c6h),bc		;b62a	ed 43 c6 e5 	. C . . 
-	ld hl,VOLUME_EFFECT_STATE_2		;b62e	21 f7 e5 	! . . 
-	ld d,040h		;b631	16 40 	. @ 
-	ld a,(0e5ceh)		;b633	3a ce e5 	: . . 
-	call UPDATE_VOLUME_EFFECT		;b636	cd 9b b7 	. . . 
-	ld a,c			;b639	79 	y 
-	ld (0e5ceh),a		;b63a	32 ce e5 	2 . . 
-	ret			;b63d	c9 	. 
+	ld hl,VOLUME_EFFECT_STATE_1		;b60c	21 e1 e5
+	ld d, 16		                ;b60f	16 10
+	ld a,(SOUND_VOLUME_CONTROL)		;b611	3a cc e5
+	call UPDATE_VOLUME_EFFECT		;b614	cd 9b b7
+	call UPDATE_DELAYED_REPEAT_EFFECT		;b617	cd cf b7
+
+	ld a,c			                ;b61a	79
+	ld (SOUND_VOLUME_CONTROL),a		;b61b	32 cc e5
+	ld hl,PERIOD_EFFECT_STATE_2		;b61e	21 f4 e5
+
+	ld d,2		                    ;b621	16 02
+	ld bc,(SOUND_PERIOD_CONTROL)	;b623	ed 4b c6 e5
+	call UPDATE_PERIOD_EFFECT		;b627	cd 7b b7
+	ld (SOUND_PERIOD_CONTROL),bc	;b62a	ed 43 c6 e5
+
+	ld hl,VOLUME_EFFECT_STATE_2		;b62e	21 f7 e5
+	ld d, 64		                ;b631	16 40
+	ld a,(SOUND_VOLUME)		        ;b633	3a ce e5
+	call UPDATE_VOLUME_EFFECT		;b636	cd 9b b7
+	ld a,c			                ;b639	79
+	ld (SOUND_VOLUME),a		        ;b63a	32 ce e5
+	ret			                    ;b63d	c9
 
 DISPATCH_PRIMARY_SOUND_COMMAND:
 	inc bc			;b63e	03 	. 
@@ -713,7 +716,7 @@ lb67eh:
 lb690h:
 	ld d,010h		;b690	16 10 	. . 
 	ld a,e			;b692	7b 	{ 
-	ld (0e5cch),a		;b693	32 cc e5 	2 . . 
+	ld (SOUND_VOLUME_CONTROL),a		;b693	32 cc e5 	2 . . 
 	jr lb70eh		;b696	18 76 	. v 
 	ld hl,PERIOD_EFFECT_STATE_1		;b698	21 de e5 	! . . 
 	bit 3,a		;b69b	cb 5f 	. _ 
@@ -828,7 +831,7 @@ lb74dh:
 lb753h:
 	ld d,040h		;b753	16 40 	. @ 
 	ld a,e			;b755	7b 	{ 
-	ld (0e5ceh),a		;b756	32 ce e5 	2 . . 
+	ld (SOUND_VOLUME),a		;b756	32 ce e5 	2 . . 
 lb759h:
 	ld a,(SOUND_REG_MASK)		;b759	3a c3 e5 	: . . 
 	or d			;b75c	b2 	. 
