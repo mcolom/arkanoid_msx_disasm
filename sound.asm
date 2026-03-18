@@ -4,14 +4,11 @@ SOUNDS_BUFFER: equ 0xe520
 ; The code for the SOUND being played
 SOUND_NUMBER: equ 0xe5c0
 
-
 AUX_TONE_PERIOD_LO: equ 0xe5c8  
 AUX_TONE_PERIOD_HI: equ 0xe5c9
 
-
 COMPLEX_EFFECT_PARAM_B: equ 0xe5d0
 COMPLEX_EFFECT_FLAGS: equ 0xe5d1
-
 
 ; Period/volumen states 1 and 2
 PERIOD_EFFECT_STATE_1: equ 0xe5de
@@ -22,13 +19,8 @@ VOLUME_EFFECT_STATE_2: equ 0xe5f7
 DELAYED_EFFECT_STATE_A_STREAM1: equ 0xe5e6
 ;DELAYED_EFFECT_STATE_B_STREAM1: equ 0xe5e7
 DELAYED_EFFECT_STATE_C_STREAM1: equ 0xe5e8
-
 DELAYED_EFFECT_STATE_A_STREAM2: equ 0xe5fc
-
-
-
 DELAYED_REPEAT_STATUS: equ 0xe5e7
-
 
 ; The sound is played only if zero
 ; The game nevers inhibits the sounds
@@ -53,18 +45,15 @@ COMPLEX_EFFECT_PARAM_A: equ 0xe5cf
 
 SOUND_VOLUME: equ 0xe5ce
 
-
 ; How many sounds are being played
 SOUNDS_COUNT: equ 0xe51e
 
-; We see a lot of activity from 0xe5c3 to 0xe5bf when music is played
+; We can see a lot of activity from 0xe5c3 to 0xe5bf when music is played
 
 ; The values in this buffer are copied to the PSG registers
 SOUNDS_REGS_BUFFER: equ 0xe5c4
 
-
 CAN_ADD_SOUND: equ 0xe5c2
-
 
 ; *** Audio buffers ***
 
@@ -92,6 +81,3 @@ AUDIO_TABLE_IDX_TICKS_COUNTDOWN:  equ 9
 ;0xE5DA  SOUND_PTR_1_LO
 ;0xE5DB  SOUND_PTR_1_HI
 ;0xE5DC  AUDIO1_TICKS_COUNTDOWN
-
-
-SOUND_SEQUENCE_LEN: equ 8
