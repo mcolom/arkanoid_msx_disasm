@@ -600,23 +600,23 @@ lb5bch:
 	call ADVANCE_SOUND_STREAM_IF_READY		;b5d1	cd b5 b4 	. . . 
 	
     jr nc,lb5e3h		;b5d4	30 0d 	0 . 
-	ld (SOUND_BUFFER_1 + AUDIO_TABLE_IDX_TICKS_COUNTDOWN),a		;b5d6	32 dc e5 	2 . . 
+	ld (SOUND_BUFFER_1 + AUDIO_TABLE_IDX_TICKS_COUNTDOWN),a		;b5d6	32 dc e5
 lb5d9h:
-	call DISPATCH_PRIMARY_SOUND_COMMAND		;b5d9	cd 3e b6 	. > . 
-	jr lb5d9h		;b5dc	18 fb 	. . 
+	call DISPATCH_PRIMARY_SOUND_COMMAND		;b5d9	cd 3e b6
+	jr lb5d9h		        ;b5dc	18 fb
 lb5deh:
-	pop af			;b5de	f1 	. 
-	ld (SOUND_PTR_1),bc		;b5df	ed 43 da e5 	. C . . 
+	pop af			        ;b5de	f1
+	ld (SOUND_PTR_1),bc		;b5df	ed 43 da e5
 lb5e3h:
-	ld hl, SOUND_BUFFER_2		;b5e3	21 e9 e5 	! . . 
-	ld bc,(SOUND_PTR_2)		;b5e6	ed 4b f0 e5 	. K . . 
+	ld hl, SOUND_BUFFER_2	;b5e3	21 e9 e5
+	ld bc,(SOUND_PTR_2)		;b5e6	ed 4b f0 e5
     
     ; If no sound is being played, it'll jump to lb5fch
-	call ADVANCE_SOUND_STREAM_IF_READY		;b5ea	cd b5 b4 	. . . 
-	jr nc,lb5fch		;b5ed	30 0d 	0 . 
+	call ADVANCE_SOUND_STREAM_IF_READY	;b5ea	cd b5 b4
+	jr nc,lb5fch		                ;b5ed	30 0d
 	
     ; It reaches here when a sound is being played
-    ld (0e5f2h),a		;b5ef	32 f2 e5 	2 . . 
+    ld (SOUND_BUFFER_2 + AUDIO_TABLE_IDX_TICKS_COUNTDOWN),a		;b5ef	32 f2 e5
 lb5f2h:
 	call DISPATCH_SECONDARY_SOUND_COMMAND		;b5f2	cd 49 b6 	. I . 
 	jr lb5f2h		;b5f5	18 fb 	. . 
