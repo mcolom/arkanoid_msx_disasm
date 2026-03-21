@@ -8,6 +8,8 @@ This is a manually-annotated disassembly of the Taito's Arkanoid game for MSX.<b
 The only aim of this work is educational and because of its historical interest.<br>
 The third reason can be found in the Queen's It's a Hard Life song: I did it for love :)
 
+Start reading from file [disassembly.asm](disassembly.asm).
+
 Commercial use is strictly prohibited.
 
 Arkanoid is (c) Taito.<br>
