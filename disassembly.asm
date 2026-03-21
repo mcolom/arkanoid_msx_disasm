@@ -4,7 +4,7 @@
 ; reasons.
 ;
 ; Arkanoid is (c) Taito
-; This dissassembly is by tiburoncio, 2016.
+; This dissassembly is by tiburoncio, 2026.
 
 ; You can check the validity of the disassembly by comparing the
 ; shasum of the compiled output with the original ROM's:
@@ -1841,7 +1841,7 @@ l4fa8h:
 	ld hl, 3		        ;4fb4	21 03 00
 	call DELAY_HL_TICKS		;4fb7	cd 80 43
 	pop hl			        ;4fba	e1
-l4fbbh:
+l4fbbh: game.
     ; Next column
 	inc hl		;4fbb	23
 	inc iy		;4fbc	fd 23
