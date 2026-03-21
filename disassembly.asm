@@ -1,8 +1,21 @@
-; z80dasm 1.1.6
-; command line: z80dasm -g0x4000 -l -t arkanoid.rom
+; Disassembly of the MSX's code of Taito's Arkanoid.
+;
+; This is a manually-annotated disassembly, only for historical
+; reasons.
+;
+; Arkanoid is (c) Taito
+; This dissassembly is by tiburoncio, 2016.
+
+; You can check the validity of the disassembly by comparing the
+; shasum of the compiled output with the original ROM's:
 ;
 ; $ z80asm disassembly.asm && shasum a.bin 
 ; 2183f07fa3ba87360100b2fa21fda0f55c0f8814  a.bin
+
+; Raw disassembly command line:
+; z80dasm 1.1.6
+; command line: z80dasm -g0x4000 -l -t arkanoid.rom
+
 
 include 'headers/bios.asm'
 
@@ -781,10 +794,7 @@ l4322h:
 	out (0a0h),a	;433e	d3 a0
 	in a,(0a2h)		;4340	db a2
 
-    ; ToDO
-    ; I think PADDLE_STATUS+1 is used to know if it's the Vaus paddle or
-    ; a normal joystick.
-    ; And PADDLE_STATUS seems unused.
+    ; Write paddle status
 	ld e,a			        ;4342	5f
 	ld hl,PADDLE_STATUS		;4343	21 c4 e0
 	ld a,(hl)			    ;4346	7e
