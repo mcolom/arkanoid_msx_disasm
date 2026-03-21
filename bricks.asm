@@ -10,10 +10,10 @@ BRICK_BIT_COUNT: equ 0xe489 ; This tracks which bit of the brick tilemap we're c
 BRICK_BLOCK: equ 0xe48a ; This tracks which 8-bit block of bricks (the bitmask) we're considering
 
 ; This controls how the screen is repainted with bricks
-BRICK_REPAINT_TYPE: equ 0xe022
-BRICK_REPAINT_INITIAL: equ 0   ; set the initial configuration, all the bricks of the level
-BRICK_REPAINT_UNKNOWN: equ 1   ; ???
-BRICK_REPAINT_REMAINING: equ 2 ; only paint the non-destroyed bricks
+LEVEL_TRANSITION_TYPE: equ 0xe022
+LEVEL_TRANSITION_NEXT: equ 0   ; set the initial configuration, all the bricks of the level
+LEVEL_TRANSITION_NEXT2: equ 1  ; this goes exactly to the same action as LEVEL_TRANSITION_NEXT
+LEVEL_TRANSITION_SAME: equ 2   ; stay in the same level (when a life is lost)
 
 ; The brick map in RAM, from 0xe027 to 0xe037 ==> 17 bytes
 ; Each byte encodes 8 bits in a row. A total of 17*8 = 136 bricks.
@@ -25,8 +25,6 @@ BRICK_ROWS: equ 11
 
 ; Number of bricks to break
 BRICKS_LEFT: equ 0xe038
-
-
 
 ; This is a table that for each brick tells how many hits are
 ; still needed to break a hard brick. Assuming there's a
@@ -59,7 +57,6 @@ CURR_BRICK_X: equ 0xe58b
 PREV_BRICK_Y: equ 0xe58c
 PREV_BRICK_X: equ 0xe58d
 
-;ToDo:
 ; These are assigned when the ball collides at something and
 ; it'll bounce. Depending on the speed of the ball it stores the
 ; value in a negative o positive variable.

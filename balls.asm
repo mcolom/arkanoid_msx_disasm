@@ -37,8 +37,9 @@ BALL_TABLE_IDX_SPEED_COUNTER: equ 13
 BALL_TABLE_IDX_GLUE_COUNTER: equ 14
 BALL_TABLE_IDX_VAUS_HIT_X: equ 16 ; X-position in Vaus on which it received the ball
 
-
-;ToDo: this in incremented and compared to the BALL_X_SLOPE OR BALL_Y_SLOPE
+; This is a discrete sub-step counter used by the refined collision
+; helpers. It represents how many steps along an auxiliary slope are needed
+; before crossing a candidate brick boundary..
 TICKS_TO_HIT: equ 0xe541
 ; After each brick hit, this contains the new ball's X speed
 BALL_X_SLOPE: equ 0xe542
@@ -52,11 +53,7 @@ BALL_BOUNCES_COUNTER: equ 0xe51c
 ; Counter to change the ball skewness
 ACTION_SKEWNESS_COUNTER: equ 0xe5ac
 
-
-; ToDO
-; The games does
-;	ld a,(ix+SPR_PARAMS_IDX_Y)		;9c64
-;	sub (iy+BALL_TABLE_IDX_Y_SPEED)
-;	ld (0e586h),a
+; Previous ball position in sprite/pixel coordinates, not brick-grid indices.
+; It's the position before the velocity is added to the position.
 PREV_Y_PX: equ 0xe586
 PREV_X_PX: equ 0xe587

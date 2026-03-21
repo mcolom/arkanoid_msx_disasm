@@ -1269,11 +1269,12 @@ l4ca2h:
 	ld a,(hl)			;4cb7	7e
 	ld (LEVEL),a		;4cb8	32 1b e0
 
-    ; Bricks in the initial configuration
-    ; BRICK_REPAINT_INITIAL
-	xor a			            ;4cbb	af
-	ld (BRICK_REPAINT_TYPE),a	;4cbc	32 22 e0
-	jp l4d09h		            ;4cbf	c3 09 4d
+    ; LEVEL_TRANSITION_NEXT
+	xor a			                ;4cbb	af  
+	ld (LEVEL_TRANSITION_TYPE),a	;4cbc	32 22 e0
+	jp l4d09h		                ;4cbf	c3 09 4d
+
+; The levels shown in the demo
 DEMO_LEVELS_TABLE:
     db 12, 3, 6, 1
 
@@ -1334,8 +1335,8 @@ l4d00h:
 	jp l4d09h		            ;4d06	c3 09 4d    Quite a redundant instruction!
 l4d09h:
     ; Skip initialization to zero if there's no need to reset the brick config
-	ld a,(BRICK_REPAINT_TYPE)		;4d09	3a 22 e0
-	cp BRICK_REPAINT_REMAINING      ;4d0c	fe 02
+	ld a,(LEVEL_TRANSITION_TYPE)		;4d09	3a 22 e0
+	cp LEVEL_TRANSITION_SAME      ;4d0c	fe 02
 	jp z,l4d22h		                ;4d0e	ca 22 4d
 
     ; Clear variables
@@ -1550,8 +1551,8 @@ l4e22h:
 	ld hl,LEVELS_PTR_TABLE		;4e45	21 ef 5d
 
     ; Skip the following if we're not doing a full brick repaint
-	ld a,(BRICK_REPAINT_TYPE)	;4e48	3a 22 e0
-	cp BRICK_REPAINT_REMAINING  ;4e4b	fe 02
+	ld a,(LEVEL_TRANSITION_TYPE)	;4e48	3a 22 e0
+	cp LEVEL_TRANSITION_SAME  ;4e4b	fe 02
 	jp z,l4e65h		            ;4e4d	ca 65 4e
     
     ; Copy current level (the bricks tilemap) to RAM
@@ -1583,10 +1584,9 @@ l4e65h:
 l4e71h:
 	call DRAW_DOH		                    ;4e71	cd 80 51
 l4e74h:
-    ; Full brick repaint
-    ; BRICK_REPAINT_INITIAL
+    ; LEVEL_TRANSITION_NEXT
 	xor a			                ;4e74	af
-	ld (BRICK_REPAINT_TYPE),a		;4e75	32 22 e0
+	ld (LEVEL_TRANSITION_TYPE),a	;4e75	32 22 e0
 
     ; Vaus and the READY string as sprites
 	ld hl,VAUS_AND_READY_SPRITE_TABLE		;4e78	21 49 51
@@ -2598,8 +2598,8 @@ ADD_BRICKS_TO_TILEMAP:
     ; Then, we add the bricks
     
     ; Skip the following if we're not doing a full brick repaint
-	ld a,(BRICK_REPAINT_TYPE)	;5c18	3a 22 e0
-	cp BRICK_REPAINT_REMAINING  ;5c1b	fe 02
+	ld a,(LEVEL_TRANSITION_TYPE)	;5c18	3a 22 e0
+	cp LEVEL_TRANSITION_SAME  ;5c1b	fe 02
 	jp z,l5c45h		            ;5c1d	ca 45 5c
     
     ; Do a full repaint
@@ -2682,8 +2682,8 @@ l5c45h:
 
     ; Set HL=BRICK_MAP if we're doing a full brick repaint.
     ; Otherwise, we'll keep HL = LEVELS_PTR_TABLE[2*LEVEL].
-	ld a,(BRICK_REPAINT_TYPE)		;5c69	3a 22 e0
-	cp BRICK_REPAINT_REMAINING      ;5c6c	fe 02
+	ld a,(LEVEL_TRANSITION_TYPE)		;5c69	3a 22 e0
+	cp LEVEL_TRANSITION_SAME      ;5c6c	fe 02
 	jp nz,l5c74h		            ;5c6e	c2 74 5c
 	ld hl,BRICK_MAP		            ;5c71	21 27 e0
 l5c74h:
@@ -3470,19 +3470,19 @@ vaus_crosses_portal:
     ; Increment portaling step counter
     ; Leave if it's not 10 yet
 	ld ix,VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1		;6adb	dd 21 53 e5
-	inc (ix+000h)		;6adf	dd 34 00
-	ld a,(ix+000h)		;6ae2	dd 7e 00
+	inc (ix+0)		;6adf	dd 34 00
+	ld a,(ix+0)		;6ae2	dd 7e 00
 	cp 10		        ;6ae5	fe 0a
 	ret nz			    ;6ae7	c0
     
     ; Reset VAUS_TABLE_IDX_VAUS_PORTALING_STEP1 counter
-	ld (ix+000h), 0		;6ae8	dd 36 00 00
+	ld (ix+0), 0		;6ae8	dd 36 00 00
             
     ; Since ix = VAUS_TABLE + VAUS_TABLE_IDX_VAUS_PORTALING_STEP1 (idx 8),
-    ; ix+001h is index 9 in VAUS_TABLE: VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+    ; ix+1 is index 9 in VAUS_TABLE: VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
 
     ; DE = VAUS_TABLE_IDX_VAUS_PORTALING_STEP2 \ 2
-	ld e,(ix+001h)		;6aec	dd 5e 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	ld e,(ix+1)		;6aec	dd 5e 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
 	sla e		        ;6aef	cb 23
     ld d, 0		        ;6af1	16 00
     
@@ -3512,11 +3512,13 @@ vaus_crosses_portal:
     
     ; Next portaling step.
     ; Leave if it's not 4
-	inc (ix+001h)		            ;6b13	dd 34 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
-	ld a,(ix+001h)		            ;6b16	dd 7e 01 	VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
-	cp 4		                    ;6b19	fe 04
-	ret nz			                ;6b1b	c0
+	inc (ix+1)		            ;6b13	dd 34 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	ld a,(ix+1)		            ;6b16	dd 7e 01 	VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	cp 4		                ;6b19	fe 04
+	ret nz			            ;6b1b	c0
 
+; Move to the next level
+; This is called when Vaus goes through the portal
 move_to_next_level:
     ; Vaus normal state
 	ld a,VAUS_ACTION_STATE_WAIT_READY		            ;6b1c	3e 00
@@ -3526,9 +3528,12 @@ move_to_next_level:
 	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		        ;6b21	3e 02
 	ld (GAME_TRANSITION_ACTION),a		                ;6b23	32 0a e0
 
-    ; Make a repaint. ToDo: why unknown?
-	ld a,BRICK_REPAINT_UNKNOWN		;6b26	3e 01
-	ld (BRICK_REPAINT_TYPE),a		;6b28	32 22 e0
+    ; The game has to codes LEVEL_TRANSITION_NEXT and
+    ; LEVEL_TRANSITION_NEXT2, but the are associated with the same
+    ; action. Probably the idea was to do something different in this
+    ; case, but finally it seems it wasn't implemented.    
+	ld a,LEVEL_TRANSITION_NEXT2		;6b26	3e 01
+	ld (LEVEL_TRANSITION_TYPE),a	;6b28	32 22 e0
 	ret			                    ;6b2b	c9
 
 vaus_goes_to_portal_resizing:
@@ -3548,10 +3553,10 @@ vaus_goes_to_portal_resizing:
     
     ; Next portaling step.
     ; Leave if it's not 5
-	inc (ix+001h)		;6b3c	dd 34 01
-	ld a,(ix+001h)		;6b3f	dd 7e 01
-	cp 5		        ;6b42	fe 05
-	ret nz			    ;6b44	c0
+	inc (ix+1)		;6b3c	dd 34 01    VAUS_TABLE_IDX_VAUS_PORTALING_STEP2
+	ld a,(ix+1)		;6b3f	dd 7e 01
+	cp 5		    ;6b42	fe 05
+	ret nz			;6b44	c0
     
     ; Done
 	jp move_to_next_level   ;6b45	c3 1c 6b
@@ -4130,8 +4135,8 @@ l6f12h:
 	ld (VAUS_X2),a		                    ;6f21	32 3e e5
 	ld (ix+VAUS_TABLE_IDX_HAS_LASER), 0		;6f24	dd 36 06 00
 
-	ld a,BRICK_REPAINT_REMAINING	;6f28	3e 02
-	ld (BRICK_REPAINT_TYPE),a		;6f2a	32 22 e0
+	ld a,LEVEL_TRANSITION_SAME	;6f28	3e 02
+	ld (LEVEL_TRANSITION_TYPE),a		;6f2a	32 22 e0
 	ld (GAME_TRANSITION_ACTION),a	;6f2d	32 0a e0
 	ret			                    ;6f30	c9
 
@@ -6342,29 +6347,29 @@ NEXT_OR_SAME_LEVEL:
 	or a			        ;7b97	b7
 	jp z,brick_repaint_action_done  ;7b98	ca 44 7c
 
-    ; HL = 2*BRICK_REPAINT_TYPE
-	ld a,(BRICK_REPAINT_TYPE)	;7b9b	3a 22 e0
+    ; HL = 2*LEVEL_TRANSITION_TYPE
+	ld a,(LEVEL_TRANSITION_TYPE)	;7b9b	3a 22 e0
 	ld l,a			            ;7b9e	6f
 	ld h, 0		                ;7b9f	26 00
 	add hl,hl			        ;7ba1	29
     
-	; HL = l7babh + 2*BRICK_REPAINT_TYPE
-    ld de,l7babh		        ;7ba2	11 ab 7b
+	; HL = TBL_ACTION_LEVEL + 2*LEVEL_TRANSITION_TYPE
+    ld de,TBL_ACTION_LEVEL		        ;7ba2	11 ab 7b
 	add hl,de			        ;7ba5	19    
     
-    ; DE = l7babh[2*BRICK_REPAINT_TYPE]
+    ; DE = TBL_ACTION_LEVEL[2*LEVEL_TRANSITION_TYPE]
 	ld e,(hl)			        ;7ba6	5e
 	inc hl			            ;7ba7	23
 	ld d,(hl)			        ;7ba8	56
     
-    ; Jump to l7babh[2*BRICK_REPAINT_TYPE]
+    ; Jump to TBL_ACTION_LEVEL[2*LEVEL_TRANSITION_TYPE]
 	ex de,hl			        ;7ba9	eb
 	jp (hl)			            ;7baa	e9
 
-l7babh:
-    dw ACTION_INC_LEVEL
-    dw ACTION_INC_LEVEL
-    dw ACTION_LIFE_LOST
+TBL_ACTION_LEVEL:
+    dw ACTION_INC_LEVEL     ; LEVEL_TRANSITION_NEXT
+    dw ACTION_INC_LEVEL     ; LEVEL_TRANSITION_NEXT2 (same action)
+    dw ACTION_LIFE_LOST     ; LEVEL_TRANSITION_SAME
 
 ACTION_INC_LEVEL:
     ; Increment the displayed level
@@ -8103,9 +8108,9 @@ DEC_BRICKS_CHECK_LEVEL_DONE:
 	ld (BRICKS_LEFT),a		;ab81	32 38 e0
 	jr nz,ERASE_BRICK		    ;ab84	20 09
 
-    ; BRICK_REPAINT_INITIAL
+    ; LEVEL_TRANSITION_NEXT
 	xor a			            ;ab86	af
-	ld (BRICK_REPAINT_TYPE),a	;ab87	32 22 e0
+	ld (LEVEL_TRANSITION_TYPE),a	;ab87	32 22 e0
 
     ; Transition to the next level
 	ld a,GAME_TRANSITION_ACTION_NEXT_LEVEL		;ab8a	3e 02

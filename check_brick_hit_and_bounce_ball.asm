@@ -1965,49 +1965,50 @@ la803h:
 
 ; Perform a double impact of the ball at two bricks
 HANDLE_CORNER_CASE_VERTICAL:
-	ld hl,TICKS_TO_HIT		;a810	21 41 e5 	! A . 
-	ld (hl), 0		;a813	36 00 	6 . 
-	ld de,BALL_X_SLOPE		;a815	11 42 e5 	. B . 
-	ld bc, 2		;a818	01 02 00 	. . . 
-	ldir		;a81b	ed b0 	. . 
-	ld a,(BRICK_ROW)		;a81d	3a aa e2 	: . . 
-	sla a		;a820	cb 27 	. ' 
-	sla a		;a822	cb 27 	. ' 
-	sla a		;a824	cb 27 	. ' 
-	ld b, 24		;a826	06 18 	. . 
-	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a828	fd cb 02 7e 	. . . ~ 
-	jp nz,la831h		;a82c	c2 31 a8 	. 1 . 
-	ld b, 19		;a82f	06 13 	. . 
+	ld hl,TICKS_TO_HIT		;a810	21 41 e5
+	ld (hl), 0		        ;a813	36 00
+	ld de,BALL_X_SLOPE		;a815	11 42 e5
+	ld bc, 2		        ;a818	01 02 00
+	ldir		            ;a81b	ed b0
+	ld a,(BRICK_ROW)		;a81d	3a aa e2
+	sla a		;a820	cb 27
+	sla a		;a822	cb 27
+	sla a		;a824	cb 27
+
+	ld b, 24		                        ;a826	06 18
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a828	fd cb 02 7e   Check negative
+	jp nz,la831h		                    ;a82c	c2 31 a8
+	ld b, 19		                        ;a82f	06 13
 la831h:
-	add a,b			;a831	80 	. 
-	ld (HIY_Y_EDGE_A),a		;a832	32 c4 e2 	2 . . 
-	add a, 7		;a835	c6 07 	. . 
-	ld (HIY_Y_EDGE_B),a		;a837	32 c5 e2 	2 . . 
-	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a83a	fd 7e 06 	. ~ . 
-	bit 7,a		;a83d	cb 7f 	. ␡ 
-	jp z,la844h		;a83f	ca 44 a8 	. D . 
-	neg		;a842	ed 44 	. D 
+	add a,b			                        ;a831	80
+	ld (HIY_Y_EDGE_A),a		                ;a832	32 c4 e2
+	add a, 7		                        ;a835	c6 07
+	ld (HIY_Y_EDGE_B),a		                ;a837	32 c5 e2
+	ld a,(iy+BALL_TABLE_IDX_SKEWNESS)		;a83a	fd 7e 06
+	bit 7,a		                            ;a83d	cb 7f   Check negative
+	jp z,la844h		                        ;a83f	ca 44 a8
+	neg		                                ;a842	ed 44
 la844h:
-	dec a			;a844	3d 	= 
-	sla a		;a845	cb 27 	. ' 
-	ld l,a			;a847	6f 	o 
-	ld h, 0		;a848	26 00 	& . 
-	ld de,TBL_SPEED_FROM_SKEWNESS		;a84a	11 6c a8 	. l . 
-	add hl,de			;a84d	19 	. 
-	ld a,(hl)			;a84e	7e 	~ 
-	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a84f	fd cb 02 7e 	. . . ~ 
-	jp nz,la858h		;a853	c2 58 a8 	. X . 
-	neg		;a856	ed 44 	. D 
+	dec a		;a844	3d
+	sla a		;a845	cb 27
+	ld l,a		;a847	6f
+	ld h, 0		;a848	26 00
+	ld de,TBL_SPEED_FROM_SKEWNESS		;a84a	11 6c a8
+	add hl,de			                ;a84d	19
+	ld a,(hl)			                ;a84e	7e
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)	;a84f	fd cb 02 7e
+	jp nz,la858h		;a853	c2 58 a8
+	neg		            ;a856	ed 44
 la858h:
-	ld (BALL_X_SLOPE),a		;a858	32 42 e5 	2 B . 
-	inc hl			;a85b	23 	# 
-	ld a,(hl)			;a85c	7e 	~ 
-	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a85d	fd cb 02 7e 	. . . ~ 
-	jp nz,la866h		;a861	c2 66 a8 	. f . 
-	neg		;a864	ed 44 	. D 
+	ld (BALL_X_SLOPE),a		;a858	32 42 e5
+	inc hl			        ;a85b	23
+	ld a,(hl)			    ;a85c	7e
+	bit 7,(iy+BALL_TABLE_IDX_Y_SPEED)		;a85d	fd cb 02 7e
+	jp nz,la866h		                    ;a861	c2 66 a8
+	neg		                                ;a864	ed 44
 la866h:
-	ld (BALL_Y_SLOPE),a		;a866	32 43 e5 	2 C . 
-	jp la87ch		;a869	c3 7c a8 	. | .       ToDo: rewrite code
+	ld (BALL_Y_SLOPE),a		                ;a866	32 43 e5
+	jp la87ch		                        ;a869	c3 7c a8
 
 ; Table to obtain pairs of (BALL_X_SLOPE, BALL_Y_SLOPE) from the ball's skewness
 ; All Y values are negatives, as the actual sign is adjusted using Y_SPEED.
