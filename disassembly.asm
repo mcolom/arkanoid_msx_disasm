@@ -5366,9 +5366,7 @@ CHARS_DOH_OPEN_MOUTH: ;75f9
     db 0xc2, 0xc3, 0xc4, 0xc5
     db 0xca, 0xcb, 0xcc, 0xcd
 
-; ToDo
-; This is quite a long function!
-; It'll be very useful to understand the alien's table
+; Update aliens
 UPDATE_ALIENS:
     ld ix, ALIEN_TABLE
     ld iy, ALIEN_SPR_PARAMS
@@ -7460,7 +7458,9 @@ l9a36h:
 	jr l9a60h		;9a5b	18 03 	. . 
 l9a5dh:
     ; Not final level
-    ; ToDo: check and process ball bounces from bricks
+    ; This quite large function handles the ball movements, including
+    ; cases when it can hit a brick from different sides, or even
+    ; double impacts.
 	call CHECK_BRICK_HIT_AND_BOUNCE_BALL		;9a5d	cd 2d 9c
 l9a60h:
 	pop iy		;9a60	fd e1

@@ -1,5 +1,7 @@
 ; Function CHECK_BRICK_HIT_AND_BOUNCE_BALL is large and complex.
-; It handles the case where the ball can hit a brick from different sides, or even double impacts.
+; It handles the ball movements, including cases when it can hit a
+; brick from different sides, or even double impacts.
+
 
 ; ============================================================================
 ; CHECK_BRICK_HIT_AND_BOUNCE_BALL

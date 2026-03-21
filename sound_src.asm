@@ -154,38 +154,38 @@ ADVANCE_SOUND_STREAM_IF_READY:
 	ret nz		;b4c2	c0 Exit if A isn't zero
     
     ; Handle repetition locally
-    
-    ; ToDo: decode this positions
-	inc hl			;b4c3	23 	# 
-	inc hl			;b4c4	23 	# 
-	or (hl)			;b4c5	b6 	. 
-	inc hl			;b4c6	23 	# 
-	inc hl			;b4c7	23 	# 
-	dec (hl)			;b4c8	35 	5 
-	jr z,lb4d1h		;b4c9	28 06 	( . 
-	inc hl			;b4cb	23 	# 
-	ld c,(hl)			;b4cc	4e 	N 
-	inc hl			;b4cd	23 	# 
-	ld b,(hl)			;b4ce	46 	F 
-	jr lb54dh		;b4cf	18 7c 	. | 
+
+	inc hl			;b4c3	23
+	inc hl			;b4c4	23
+	or (hl)			;b4c5	b6
+	inc hl			;b4c6	23
+	inc hl			;b4c7	23
+	dec (hl)		;b4c8	35
+	jr z,lb4d1h		;b4c9	28 06
+	inc hl			;b4cb	23
+	ld c,(hl)		;b4cc	4e
+	inc hl			;b4cd	23
+	ld b,(hl)		;b4ce	46
+	jr lb54dh		;b4cf	18 7c
 lb4d1h:
-	dec hl			;b4d1	2b 	+ 
-	dec (hl)			;b4d2	35 	5 
-	inc hl			;b4d3	23 	# 
-	inc hl			;b4d4	23 	# 
-	jr z,lb4e1h		;b4d5	28 0a 	( . 
-	ld c,(hl)			;b4d7	4e 	N 
-	inc hl			;b4d8	23 	# 
-	ld b,(hl)			;b4d9	46 	F 
-	inc bc			;b4da	03 	. 
-	inc bc			;b4db	03 	. 
-	inc bc			;b4dc	03 	. 
-	dec hl			;b4dd	2b 	+ 
-	dec hl			;b4de	2b 	+ 
-	jr lb545h		;b4df	18 64 	. d 
+	dec hl			;b4d1	2b
+	dec (hl)		;b4d2	35
+	inc hl			;b4d3	23
+	inc hl			;b4d4	23
+	jr z,lb4e1h		;b4d5	28 0a
+	ld c,(hl)		;b4d7	4e
+	inc hl			;b4d8	23
+	ld b,(hl)		;b4d9	46
+	inc bc			;b4da	03
+	inc bc			;b4db	03
+	inc bc			;b4dc	03
+	dec hl			;b4dd	2b
+	dec hl			;b4de	2b
+	jr lb545h		;b4df	18 64
 lb4e1h:
-	ld (ix+AUDIO_TABLE_IDX_ACTIVE),0		        ;b4e1	dd 36 00 00
-	ld (SOUND_NUMBER),a	    ;b4e5	32 c0 e5
+    ; Mark sound as done
+	ld (ix+AUDIO_TABLE_IDX_ACTIVE),0		;b4e1	dd 36 00 00
+	ld (SOUND_NUMBER),a	                    ;b4e5	32 c0 e5
 
 ; The PLAY_SOUND routine does the following:
 ; 1. reads SOUND_NUMBER,
