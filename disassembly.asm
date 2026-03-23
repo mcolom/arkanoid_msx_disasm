@@ -6554,8 +6554,8 @@ db 0xff, 0xff, 0x13
 SPRITE_DEFINITIONS:
 include 'sprite_data.asm'
 
-; Unused or unknonwn data
-include 'unused_or_unknown.asm'
+; Unused sprite patterns
+include 'unused_sprite_patterns.asm'
 
 ; 8*0x300 / 3 = 2048 (one third) of the title's tiles.
 ; However, title_patterns.asm has less that 2048 bytes.
