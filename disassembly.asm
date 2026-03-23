@@ -1841,7 +1841,7 @@ l4fa8h:
 	ld hl, 3		        ;4fb4	21 03 00
 	call DELAY_HL_TICKS		;4fb7	cd 80 43
 	pop hl			        ;4fba	e1
-l4fbbh: game.
+l4fbbh:
     ; Next column
 	inc hl		;4fbb	23
 	inc iy		;4fbc	fd 23
